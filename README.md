@@ -9,7 +9,7 @@ publica sin tu aprobación.
 - Análisis y decisiones: [docs/ANALISIS.md](docs/ANALISIS.md)
 - La Estación (la Mac): [docs/ESTACION.md](docs/ESTACION.md)
 - Candados: [docs/CANDADOS.md](docs/CANDADOS.md)
-- Auditoría de YouTube: [docs/AUTORIA-YOUTUBE.md](docs/AUDITORIA-YOUTUBE.md)
+- Auditoría de YouTube: [docs/AUDITORIA-YOUTUBE.md](docs/AUDITORIA-YOUTUBE.md)
 
 ## Carpetas
 
