@@ -12,7 +12,9 @@ Mac hace lo pesado: voz, clips, render. **Los MP4 se quedan en la Mac.**
 | `estacion/.env`        | Richard pega las claves, la IA arma el archivo | la Estación arranca sin quejarse |
 | Chrome para renderizar | Remotion lo baja solo la primera vez           | tarda 1–2 min la primera vez     |
 
-Variables de `estacion/.env` (copiar de `estacion/.env.example`):
+Variables de `estacion/.env` (copiar de `estacion/.env.example`). **Ya hay un
+`estacion/.env.produccion` armado con el panel en vivo y el secreto correcto;
+cuando el sitio exista, la IA lo renombra a `.env`.**
 
 - `PANEL_URL` — `https://escenia.sitios.dev`
 - `ESTACION_SECRETO` — el mismo que está en el panel (YaDominios Cloud → variables)
