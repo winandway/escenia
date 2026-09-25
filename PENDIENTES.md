@@ -3,7 +3,6 @@
 ## 👤 Esperando por Richard
 
 - 👤 Pegar en YaDominios Cloud → tarjeta de `escenia` → Variables de entorno: `PANEL_CLAVE_HUELLA` (sale de `npm run clave`), `ESTACION_SECRETO` (está en `estacion/.env`) y `ANTHROPIC_API_KEY`. Hasta entonces https://escenia.sitios.dev/datos/salud dice `error`.
-- 👤 Decir cuántas personas tiene Windoce contando contratistas (Remotion gratis ≤3; si no, licencia Automators $100/mes).
 - 👤 Elegir plan de ElevenLabs (Creator $22 con clon profesional, o Starter $6 con clon instantáneo) y pasar API key + voice_id.
 - 👤 Pasar PEXELS_API_KEY (gratis en https://www.pexels.com/api/) para clips de fondo; sin ella salen fondos de color.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
@@ -17,6 +16,7 @@
 - [x] Fase 1: prueba de punta a punta en local (panel empaquetado + Estación) — 25 sep 2026
 - [x] Fase 1: texto de la auditoría de YouTube → docs/AUDITORIA-YOUTUBE.md
 - [x] Publicar: repo público https://github.com/winandway/escenia + Action verde → rama `yapanel-build` → sitio EN VIVO en https://escenia.sitios.dev (25 sep 2026, plan Galaxia). Base con las 9 fichas de producto y los ajustes por defecto, comprobada por HTTP.
+- [x] Licencia de Remotion: Windoce es 1 persona (Richard, 25 sep 2026) → licencia gratis, no hay nada que pagar.
 - [x] Estación instalada como LaunchAgent en la Mac (arranca sola al iniciar sesión y se reinicia si se cae).
 - [ ] Fase 2: temática `MiniDocumental`, Shorts 9:16, miniaturas, biblioteca de recursos, cortes comerciales
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas

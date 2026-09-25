@@ -18,6 +18,8 @@
 
 ## Reglas del motor
 
+- Windoce es una sola persona (Richard). Remotion se usa con la licencia gratis (≤3 personas); no volver a preguntarlo.
+
 - Nada se publica sin aprobación de Richard; «Aprobar» exige su opinión escrita (≥ 40 letras).
 - Piloto solo en el canal de IA; Caprichoso TV entra después (temáticas `activa: false`).
 - Temas, prompts finos y spots viven en la base, no en el código (el repo es público).

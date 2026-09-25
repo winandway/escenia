@@ -33,9 +33,7 @@ arreglo ya decidido.
 - Gratis solo para empresas de **hasta 3 personas** (contratistas incluidos). (https://github.com/remotion-dev/remotion/blob/main/LICENSE.md)
 - Todo código que llame a `renderMedia()` o `npx remotion render` cuenta como
   «automatización» → licencia **Automators: $0.01 por render, mínimo $100/mes**. (https://www.remotion.dev/docs/license/faq · https://www.remotion.pro/license)
-- **Decisión:** si Windoce son 3 personas o menos, se usa gratis. Si son más,
-  hay que comprar la licencia antes de producir en serio. **Esto lo decide
-  Richard** (es dinero).
+- **Decisión (Richard, 25 sep 2026): Windoce es una sola persona → licencia gratis.** Si algún día se suman contratistas y pasan de 3, se compra la licencia antes de seguir produciendo.
 
 ### Hueco 3 — Sin auditoría de la API, YouTube sube todo en PRIVADO
 
