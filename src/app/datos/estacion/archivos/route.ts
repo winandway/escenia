@@ -41,9 +41,14 @@ export async function POST(req: Request) {
       { status: 413 },
     );
   if (!req.body) return Response.json({ error: "Sin contenido." }, { status: 400 });
+  // R2 exige conocer el largo del cuerpo; un stream de Next no lo trae. Se lee entero (tope 40 MB).
+  const contenido = await req.arrayBuffer();
+  if (contenido.byteLength === 0 || contenido.byteLength > MAX_BYTES) {
+    return Response.json({ error: "El archivo llegó vacío o demasiado grande." }, { status: 413 });
+  }
 
   const clave = `guiones/${d.guion_id}/${d.tipo}-${Date.now()}.${d.extension}`;
-  await bucket.put(clave, req.body, {
+  await bucket.put(clave, contenido, {
     httpMetadata: { contentType: CONTENT_TYPES[d.extension] ?? "application/octet-stream" },
   });
   const fila = await db.ejecutar("INSERT INTO archivos (guion_id, tipo, clave, meta) VALUES (?, ?, ?, ?)", [
