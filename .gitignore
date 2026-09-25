@@ -58,3 +58,4 @@ estacion/.env
 !estacion/.env.example
 out-deploy
 .dist-worker
+estacion/.panel-acceso.local

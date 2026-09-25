@@ -18,6 +18,14 @@ export type Entorno = z.infer<typeof esquemaEntorno>;
 
 type Enlaces = { DB?: unknown; BUCKET?: unknown } & Record<string, unknown>;
 
+/** Nombres de las variables obligatorias que faltan en el panel (sin lanzar error). */
+export async function variablesFaltantes(): Promise<string[]> {
+  const { env } = await getCloudflareContext({ async: true });
+  const parseo = esquemaEntorno.safeParse(env as unknown as Enlaces);
+  if (parseo.success) return [];
+  return [...new Set(parseo.error.issues.map((i) => String(i.path[0] ?? "")))].filter(Boolean);
+}
+
 export async function contexto(): Promise<{ env: Entorno; db: BaseDatos; bucket: R2Bucket | null }> {
   const { env } = await getCloudflareContext({ async: true });
   const enlaces = env as unknown as Enlaces;
