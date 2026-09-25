@@ -1,0 +1,7 @@
+# Configuración de gitleaks. Amplía las reglas por defecto.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "El _worker.js de la rama yapanel-build es el paquete compilado de Next: trae claves de vista previa que Next genera al azar en cada build (no son secretos nuestros ni sirven fuera de ese build)."
+paths = ['''^_worker\.js$''']

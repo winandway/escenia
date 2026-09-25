@@ -45,6 +45,18 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
   suena el reproductor de la voz (`/datos/archivos/guiones/<id>/voz-….mp3` → 200).
 - **No tocar:** no volver a pasar `req.body` directo al almacén.
 
+### 25 sep 2026 — gitleaks bloqueaba el push por el `_worker.js` publicado
+
+- **Cómo se veía:** `husky - pre-push script failed`, «leaks found: 7», todos en
+  `_worker.js` de la rama `yapanel-build`.
+- **Causa real:** el paquete compilado de Next trae `previewModeSigningKey`,
+  `previewModeEncryptionKey` y `encryptionKey`, valores que Next genera al azar
+  en cada build. No son secretos nuestros y cambian con cada publicación.
+- **Arreglo:** `.gitleaks.toml` excluye solo la ruta `^_worker\.js$`. Todo lo
+  demás se sigue escaneando (ningún secreto real vive en el repo: van en el
+  panel de YaDominios y en `estacion/.env`, que está en `.gitignore`).
+- **No tocar:** no ampliar esa lista blanca a otras rutas.
+
 ## Canario en vivo
 
 `https://escenia.sitios.dev/datos/salud` responde `{estado, piezas}` con
