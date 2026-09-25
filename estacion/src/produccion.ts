@@ -28,6 +28,7 @@ export async function producir(
   avisar: Avisar,
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
+  // Carpeta pública SOLO de este trabajo: voz + clips que usa. Se empaqueta con ella.
   const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
   await mkdir(carpetaTrabajo, { recursive: true });
   await mkdir(carpetaPublica, { recursive: true });
@@ -49,7 +50,7 @@ export async function producir(
     if (!tramo) continue;
     let clip: PropsVideo["escenas"][number]["clip"] = null;
     if (e.visual.tipo === "stock" && e.visual.busqueda) {
-      const c = await buscarClip(e.visual.busqueda, false).catch(() => null);
+      const c = await buscarClip(e.visual.busqueda, false, carpetaPublica).catch(() => null);
       if (c) {
         clip = { ruta: c.ruta, duracionSeg: c.duracionSeg };
         creditos.push(c.credito);
@@ -66,7 +67,7 @@ export async function producir(
 
   const props: PropsVideo = {
     titulo: guion.titulo,
-    audio: `${clave}/voz.mp3`,
+    audio: "voz.mp3",
     duracionMs: voz.duracionMs,
     palabras: voz.palabras,
     escenas,
@@ -78,7 +79,7 @@ export async function producir(
   await avisar("armando el video (16:9)", 40);
   const rutaMp4 = path.join(carpetaTrabajo, "video-16x9.mp4");
   let ultimo = 40;
-  const r = await renderizar("TechExplainer", props, rutaMp4, (p) => {
+  const r = await renderizar("TechExplainer", props, carpetaPublica, rutaMp4, (p) => {
     const pct = 40 + Math.round(p * 58);
     if (pct >= ultimo + 5) {
       ultimo = pct;

@@ -2,7 +2,7 @@
 // autor en la descripción). Sin clave, la plantilla usa fondos de color.
 // Los clips se guardan en caché para no volver a bajarlos ni gastar cuota.
 import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
+import { copyFile, link, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { config } from "./config";
 
@@ -19,7 +19,11 @@ type RespuestaPexels = {
 
 const usados = new Set<number>();
 
-export async function buscarClip(busqueda: string, vertical: boolean): Promise<Clip | null> {
+export async function buscarClip(
+  busqueda: string,
+  vertical: boolean,
+  carpetaPublica: string,
+): Promise<Clip | null> {
   if (!config.PEXELS_API_KEY || !busqueda.trim()) return null;
   const q = new URLSearchParams({
     query: busqueda,
@@ -45,7 +49,7 @@ export async function buscarClip(busqueda: string, vertical: boolean): Promise<C
     .sort((a, b) => b.width - a.width)[0];
   if (!archivo) return null;
 
-  const carpeta = path.join(config.CARPETA_PUBLICA, "clips");
+  const carpeta = path.join(config.CARPETA_CLIPS);
   await mkdir(carpeta, { recursive: true });
   const nombre = `pexels-${video.id}-${archivo.width}.mp4`;
   const destino = path.join(carpeta, nombre);
@@ -55,6 +59,11 @@ export async function buscarClip(busqueda: string, vertical: boolean): Promise<C
     await writeFile(destino, Buffer.from(await d.arrayBuffer()));
   }
   usados.add(video.id);
+  // Copia (enlace duro) del caché a la carpeta pública del trabajo.
+  await mkdir(path.join(carpetaPublica, "clips"), { recursive: true });
+  await link(destino, path.join(carpetaPublica, "clips", nombre)).catch(() =>
+    copyFile(destino, path.join(carpetaPublica, "clips", nombre)),
+  );
   return {
     ruta: `clips/${nombre}`,
     duracionSeg: video.duration,

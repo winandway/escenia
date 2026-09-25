@@ -16,6 +16,23 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
 | C-PILOTO-1   | Solo temáticas del canal de IA están activas                                                   | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
 | C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                   | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
 
+## Fallos encontrados y cómo se arreglaron
+
+### 25 sep 2026 — La Estación fallaba con «404 voz.mp3» (C-EMPAQUE-1)
+
+- **Cómo se veía:** el trabajo llegaba a «armando el video» y moría con
+  `Received a status code of 404 while downloading .../public/t1/voz.mp3`.
+- **Causa real:** Remotion **copia** la carpeta `publicDir` en el momento de
+  empaquetar. La Estación empaquetaba una vez al arrancar, y la voz se
+  escribía después: para Remotion ese archivo no existía.
+- **Arreglo:** `renderizar()` empaqueta en cada trabajo con la carpeta pública
+  de ESE trabajo (`cache/public/t<id>/`, con `voz.mp3` y sus `clips/`). Los
+  clips se guardan en un caché aparte (`cache/clips/`) y se enlazan al trabajo.
+- **Commit:** ver `git log --grep=C-EMPAQUE-1`.
+- **Cómo se comprueba:** aprobar un guion con la Estación encendida y ver el
+  trabajo llegar a «hecho» con su MP4 en `estacion/out/t<id>/`.
+- **No tocar:** no volver a un `bundle()` global «para ahorrar tiempo».
+
 ## Canario en vivo
 
 `https://escenia.sitios.dev/datos/salud` responde `{estado, piezas}` con

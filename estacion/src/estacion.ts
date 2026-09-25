@@ -4,7 +4,6 @@
 import { config } from "./config";
 import { panel } from "./panel";
 import { producir } from "./produccion";
-import { empaquetar } from "./render";
 
 const ESPERA_MS = 30_000;
 const ESPERA_ERROR_MS = 60_000;
@@ -51,8 +50,6 @@ async function principal() {
   console.log(
     `Voz: ${config.ELEVENLABS_API_KEY ? "ElevenLabs" : "de prueba (sistema)"} · Clips: ${config.PEXELS_API_KEY ? "Pexels" : "fondos de color"}`,
   );
-  console.log("Empaquetando la plantilla de video…");
-  await empaquetar();
   console.log("Lista. Esperando trabajos.");
   for (;;) {
     let espera = ESPERA_MS;
