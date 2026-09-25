@@ -17,6 +17,7 @@ Variables de `estacion/.env` (copiar de `estacion/.env.example`). **Ya hay un
 cuando el sitio exista, la IA lo renombra a `.env`.**
 
 - `PANEL_URL` — `https://escenia.sitios.dev`
+- `YAPANEL_DB_TOKEN` — token para consultar la base desde fuera (solo migraciones o revisiones; la Estación normal no lo usa)
 - `ESTACION_SECRETO` — el mismo que está en el panel (YaDominios Cloud → variables)
 - `ELEVENLABS_API_KEY` y `ELEVENLABS_VOICE_ID` — la voz de Richard. **Sin
   ellas, la Estación usa la voz de prueba del sistema** (suena robótica pero
@@ -25,6 +26,28 @@ cuando el sitio exista, la IA lo renombra a `.env`.**
 - `PEXELS_API_KEY` — clips de fondo. Sin ella, fondos de color.
 
 ## Encenderla
+
+**Ya está encendida siempre.** Desde el 25 sep 2026 corre como LaunchAgent de
+macOS (`~/Library/LaunchAgents/com.windoce.escenia-estacion.plist`): arranca
+sola cuando Richard inicia sesión en la Mac y se reinicia si se cae. Registro
+en `estacion/out/estacion.log`.
+
+```bash
+cd /Users/windocellc/Motor-Escenia/estacion && tail -20 out/estacion.log
+```
+
+Para pararla o volver a arrancarla a mano:
+
+```bash
+launchctl bootout gui/$(id -u)/com.windoce.escenia-estacion
+```
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.windoce.escenia-estacion.plist
+```
+
+Si se cambia la versión de Node (nvm), hay que actualizar la ruta de `node`
+dentro del plist. Arrancarla a mano (sin LaunchAgent):
 
 ```bash
 cd /Users/windocellc/Motor-Escenia/estacion && npm run estacion

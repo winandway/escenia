@@ -10,9 +10,10 @@
 ## Perímetro
 
 - Carpeta: `/Users/windocellc/Motor-Escenia`. Nada fuera de aquí.
-- Publicación: YaDominios Cloud, sitio `escenia.sitios.dev` (aprobado por Richard el 25 sep 2026), rama `yapanel-build`.
+- Publicación: YaDominios Cloud, sitio `escenia` → https://escenia.sitios.dev, **en vivo desde el 25 sep 2026**, conectado a `winandway/escenia` rama `yapanel-build`. Cuenta de YaDominios: torplanet1@gmail.com, plan Galaxia (de pago; no pasar a «sistema»). Variables y secretos SOLO se cargan en el panel (tarjeta del sitio → Variables de entorno).
+- El token de la base (para consultarla desde fuera por HTTP) vive en `estacion/.env` como `YAPANEL_DB_TOKEN`, fuera de git. El panel publicado NO lo usa: habla con `env.DB` directo.
 - Base y archivos: `env.DB` / `env.BUCKET` de ese sitio. **Sin Supabase.**
-- Los MP4 se quedan en la Mac; nunca suben a la nube.
+- Los MP4 se quedan en la Mac; nunca suben a la nube. La Estación corre siempre en la Mac como LaunchAgent `com.windoce.escenia-estacion` (ver docs/ESTACION.md).
 - Losupe es OTRO proyecto: solo se lee su feed público, jamás su base ni su repo.
 
 ## Reglas del motor
