@@ -33,6 +33,18 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
   trabajo llegar a «hecho» con su MP4 en `estacion/out/t<id>/`.
 - **No tocar:** no volver a un `bundle()` global «para ahorrar tiempo».
 
+### 25 sep 2026 — La subida de la voz al panel daba 500 (C-SUBIDA-1)
+
+- **Cómo se veía:** el trabajo llegaba al 99 % («subiendo voz y subtítulos») y
+  fallaba con «El panel respondió 500 en /datos/estacion/archivos».
+- **Causa real:** el almacén (R2) exige conocer el largo del cuerpo; el stream
+  que entrega Next no lo trae (`Provided readable stream must have a known length`).
+- **Arreglo:** `archivos/route.ts` lee el cuerpo entero con `req.arrayBuffer()`
+  (tope 40 MB) antes de `bucket.put`.
+- **Cómo se comprueba:** un trabajo llega a «hecho» y en la página del guion
+  suena el reproductor de la voz (`/datos/archivos/guiones/<id>/voz-….mp3` → 200).
+- **No tocar:** no volver a pasar `req.body` directo al almacén.
+
 ## Canario en vivo
 
 `https://escenia.sitios.dev/datos/salud` responde `{estado, piezas}` con

@@ -31,5 +31,8 @@ export default defineConfig([
     "cloudflare-env.d.ts",
     "estacion/node_modules/**",
     "estacion/out/**",
+    "estacion/cache/**",
+    "out-deploy/**",
+    ".dist-worker/**",
   ]),
 ]);

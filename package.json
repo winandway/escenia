@@ -16,7 +16,8 @@
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run audit && npm run secrets",
     "clave": "node scripts/clave.mjs",
     "preview": "opennextjs-cloudflare build && wrangler dev",
-    "prepare": "husky"
+    "prepare": "husky",
+    "humo": "node scripts/humo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
