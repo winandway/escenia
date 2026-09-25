@@ -1,0 +1,8 @@
+.next
+.open-next
+.wrangler
+coverage
+node_modules
+estacion/node_modules
+estacion/out
+package-lock.json

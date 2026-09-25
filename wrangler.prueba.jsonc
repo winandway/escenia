@@ -1,0 +1,12 @@
+// Solo para probar en local el _worker.js YA empaquetado (lo mismo que publica YaDominios Cloud).
+{
+  "name": "escenia-prueba",
+  "main": "out-deploy/_worker.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "escenia-local", "database_id": "00000000-0000-0000-0000-000000000000" }
+  ],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "escenia-local" }]
+}

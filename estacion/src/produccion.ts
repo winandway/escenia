@@ -1,0 +1,102 @@
+// Produce UN video de punta a punta: voz → subtítulos → clips → render.
+import { cp, mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import type { Guion } from "@compartido/guion";
+import { config } from "./config";
+import type { PropsVideo } from "./remotion/props";
+import { renderizar } from "./render";
+import { buscarClip } from "./visuales";
+import { generarVoz } from "./voz";
+
+export type Avisar = (paso: string, progreso: number) => Promise<unknown>;
+
+export type ResultadoProduccion = {
+  rutaMp4: string;
+  bytes: number;
+  duracionSeg: number;
+  vozDePrueba: boolean;
+  rutaVoz: string;
+  rutaSubtitulos: string;
+  costoVozUsd: number;
+  creditos: string[];
+};
+
+export async function producir(
+  clave: string,
+  guion: Guion,
+  producto: { nombre: string; url: string } | null,
+  avisar: Avisar,
+): Promise<ResultadoProduccion> {
+  const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
+  const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
+  await mkdir(carpetaTrabajo, { recursive: true });
+  await mkdir(carpetaPublica, { recursive: true });
+
+  const voz = await generarVoz(
+    guion.escenas.map((e) => e.narracion),
+    carpetaTrabajo,
+    avisar,
+  );
+  await cp(voz.rutaMp3, path.join(carpetaPublica, "voz.mp3"));
+  const rutaSubtitulos = path.join(carpetaTrabajo, "subtitulos.json");
+  await writeFile(rutaSubtitulos, JSON.stringify({ palabras: voz.palabras, tramos: voz.tramos }, null, 2));
+
+  await avisar("buscando clips de fondo", 35);
+  const creditos: string[] = [];
+  const escenas: PropsVideo["escenas"] = [];
+  for (const [i, e] of guion.escenas.entries()) {
+    const tramo = voz.tramos[i];
+    if (!tramo) continue;
+    let clip: PropsVideo["escenas"][number]["clip"] = null;
+    if (e.visual.tipo === "stock" && e.visual.busqueda) {
+      const c = await buscarClip(e.visual.busqueda, false).catch(() => null);
+      if (c) {
+        clip = { ruta: c.ruta, duracionSeg: c.duracionSeg };
+        creditos.push(c.credito);
+      }
+    }
+    escenas.push({
+      parte: e.parte,
+      inicioMs: tramo.inicioMs,
+      finMs: tramo.finMs,
+      textoEnPantalla: e.visual.texto_en_pantalla ?? "",
+      clip,
+    });
+  }
+
+  const props: PropsVideo = {
+    titulo: guion.titulo,
+    audio: `${clave}/voz.mp3`,
+    duracionMs: voz.duracionMs,
+    palabras: voz.palabras,
+    escenas,
+    producto,
+    vozDePrueba: voz.vozDePrueba,
+  };
+  await writeFile(path.join(carpetaTrabajo, "props.json"), JSON.stringify(props, null, 2));
+
+  await avisar("armando el video (16:9)", 40);
+  const rutaMp4 = path.join(carpetaTrabajo, "video-16x9.mp4");
+  let ultimo = 40;
+  const r = await renderizar("TechExplainer", props, rutaMp4, (p) => {
+    const pct = 40 + Math.round(p * 58);
+    if (pct >= ultimo + 5) {
+      ultimo = pct;
+      void avisar(`armando el video (16:9) ${Math.round(p * 100)}%`, pct);
+    }
+  });
+
+  if (creditos.length)
+    await writeFile(path.join(carpetaTrabajo, "creditos.txt"), [...new Set(creditos)].join("\n"));
+
+  return {
+    rutaMp4,
+    bytes: r.bytes,
+    duracionSeg: r.duracionSeg,
+    vozDePrueba: voz.vozDePrueba,
+    rutaVoz: voz.rutaMp3,
+    rutaSubtitulos,
+    costoVozUsd: voz.costoUsd,
+    creditos: [...new Set(creditos)],
+  };
+}

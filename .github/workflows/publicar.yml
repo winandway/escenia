@@ -1,0 +1,33 @@
+# Compila el panel y lo empuja a la rama yapanel-build, que es la que
+# YaDominios Cloud tiene conectada (la plataforma no corre builds).
+name: Publicar en YaDominios Cloud
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+concurrency: publicar
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - name: Comprobar el par Next / adaptador
+        run: |
+          RANGO=$(node -p "require('./node_modules/@opennextjs/cloudflare/package.json').peerDependencies.next")
+          MIA=$(node -p "require('./node_modules/next/package.json').version")
+          [ -n "$RANGO" ] && [ -n "$MIA" ] || { echo "::error::No se pudo leer las versiones."; exit 1; }
+          npx --yes semver -r "$RANGO" "$MIA" >/dev/null || { echo "::error::Next $MIA no lo acepta el adaptador ($RANGO)"; exit 1; }
+      - run: npx opennextjs-cloudflare build
+      - name: Empaquetar en un solo _worker.js
+        run: |
+          npx wrangler deploy --dry-run --outdir=.dist-worker --minify
+          node scripts/empaquetar-worker.mjs
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: yapanel-build
+          publish_dir: ./out-deploy

@@ -16,6 +16,7 @@ arreglo ya decidido.
 ## 1. Los 7 huecos y cómo se tapan
 
 ### Hueco 1 — Supabase gratis no aguanta los videos
+
 - Supabase gratis: archivos de **50 MB máximo**, 1 GB total, se **duerme a los 7 días** sin uso. (https://supabase.com/docs/guides/storage/uploads/file-limits · https://supabase.com/pricing)
 - Un MP4 de 3 min en 1080p pesa 60–200 MB **(opinión, depende del bitrate)**.
 - **Decisión:** el panel, la base y los archivos chicos van en **YaDominios Cloud**
@@ -28,6 +29,7 @@ arreglo ya decidido.
   $1.99/mes). En el plan gratis `env.DB` no existe.
 
 ### Hueco 2 — Remotion no es gratis para un motor automático
+
 - Gratis solo para empresas de **hasta 3 personas** (contratistas incluidos). (https://github.com/remotion-dev/remotion/blob/main/LICENSE.md)
 - Todo código que llame a `renderMedia()` o `npx remotion render` cuenta como
   «automatización» → licencia **Automators: $0.01 por render, mínimo $100/mes**. (https://www.remotion.dev/docs/license/faq · https://www.remotion.pro/license)
@@ -36,6 +38,7 @@ arreglo ya decidido.
   Richard** (es dinero).
 
 ### Hueco 3 — Sin auditoría de la API, YouTube sube todo en PRIVADO
+
 - «Videos subidos por proyectos de API no verificados creados después del 28 jul
   2020 quedan en privado». (https://developers.google.com/youtube/v3/docs/videos/insert)
 - En modo «Testing», la conexión OAuth **vence cada 7 días**. (https://developers.google.com/identity/protocols/oauth2)
@@ -47,6 +50,7 @@ arreglo ya decidido.
   día**; la cuota ya no es problema. (https://developers.google.com/youtube/v3/determine_quota_cost)
 
 ### Hueco 4 — «Contenido no auténtico» castiga al CANAL ENTERO
+
 - Desde el 15 jul 2025 YouTube desmonetiza lo «hecho con plantillas genéricas
   que da impresión de producción masiva» y las «historias de plantilla». La
   revisión es del **canal completo** y la sanción quita **toda** la monetización,
@@ -65,6 +69,7 @@ arreglo ya decidido.
      de la API es `status.containsSyntheticMedia`. (https://support.google.com/youtube/answer/14328491)
 
 ### Hueco 5 — Las biografías de músicos son una mina de Content ID
+
 - Content ID reclama automáticamente audio de canciones y clips de TV; «no
   puede decidir uso legítimo» y dar crédito no protege. (https://support.google.com/youtube/answer/9783148)
 - Pexels **no tiene fotos de artistas famosos**, y las fotos de prensa tienen dueño.
@@ -75,6 +80,7 @@ arreglo ya decidido.
   motor no lo propone. Este es el mayor riesgo de contenido del proyecto.
 
 ### Hueco 6 — Cortes comerciales de 30–40 s matan la retención
+
 - **(opinión)** Un corte propio de 30–40 s en un video de 3 min es el 20 % del
   video, y compite con los anuncios de YouTube. La gente se va, y la retención
   es lo que más pesa para que YouTube recomiende.
@@ -86,6 +92,7 @@ arreglo ya decidido.
   spot lo dice en voz y en pantalla: «esto es de nuestra empresa».
 
 ### Hueco 7 — YaDominios Cloud no tiene cron, y el render no puede ir en la nube
+
 - La plataforma **no dispara tareas programadas** (se ignoran en silencio), y un
   worker no puede renderizar video.
 - **Decisión:** arquitectura de **dos piezas** (ver sección 2). El radar de la
@@ -111,6 +118,7 @@ arreglo ya decidido.
 ```
 
 Por qué así:
+
 - La Mac hace lo pesado (render) y lo que no cabe en la nube (MP4 de cientos de MB).
 - La nube hace lo que tiene que estar siempre disponible (panel, aprobar desde el celular).
 - Si la Mac está apagada, los trabajos esperan en la cola. Nada se pierde.
@@ -138,14 +146,14 @@ YaDominios Cloud — así la estrategia de contenido no queda expuesta en GitHub
 
 ## 4. Costo por video (estimado)
 
-| Pieza | Costo | Fuente |
-| --- | --- | --- |
-| Guion (Claude Sonnet 5, ~3 k entrada / 3 k salida) | ~$0.04 | https://platform.claude.com/docs/en/about-claude/pricing |
-| Voz 3 min (Multilingual v2, ~$0.10/min) | ~$0.30 | https://elevenlabs.io/pricing/api |
-| 3 Shorts (reusan el audio) | $0 | — |
-| Pexels | $0 | https://www.pexels.com/license/ |
-| Render Remotion | $0 (≤3 personas) o $0.01 | https://www.remotion.pro/license |
-| **Total** | **~$0.35 por video** | |
+| Pieza                                              | Costo                    | Fuente                                                   |
+| -------------------------------------------------- | ------------------------ | -------------------------------------------------------- |
+| Guion (Claude Sonnet 5, ~3 k entrada / 3 k salida) | ~$0.04                   | https://platform.claude.com/docs/en/about-claude/pricing |
+| Voz 3 min (Multilingual v2, ~$0.10/min)            | ~$0.30                   | https://elevenlabs.io/pricing/api                        |
+| 3 Shorts (reusan el audio)                         | $0                       | —                                                        |
+| Pexels                                             | $0                       | https://www.pexels.com/license/                          |
+| Render Remotion                                    | $0 (≤3 personas) o $0.01 | https://www.remotion.pro/license                         |
+| **Total**                                          | **~$0.35 por video**     |                                                          |
 
 Costos fijos al mes: YaDominios Cloud desde $1.99 · ElevenLabs Creator $22
 (clon profesional) o Starter $6 (clon instantáneo) · Remotion $0 o $100.
@@ -159,12 +167,12 @@ sirve**: no permite uso comercial. (https://elevenlabs.io/docs/help-center/legal
 
 ## 5. Lo que cambia en las fases
 
-| Fase | Antes (prompt) | Ahora |
-| --- | --- | --- |
-| 1 | Supabase + render manual | YaDominios Cloud + Estación en la Mac + cola; **se pide la auditoría de YouTube** |
-| 2 | Biografías y cortes de 30–40 s | Biografías con reglas anti-Content ID; cortes de 10–20 s |
-| 3 | Subida pública | Subida en privado hasta que llegue la auditoría; `containsSyntheticMedia` automático |
-| 4 | Cron | La Mac dispara el radar (la plataforma no tiene cron) |
+| Fase | Antes (prompt)                 | Ahora                                                                                |
+| ---- | ------------------------------ | ------------------------------------------------------------------------------------ |
+| 1    | Supabase + render manual       | YaDominios Cloud + Estación en la Mac + cola; **se pide la auditoría de YouTube**    |
+| 2    | Biografías y cortes de 30–40 s | Biografías con reglas anti-Content ID; cortes de 10–20 s                             |
+| 3    | Subida pública                 | Subida en privado hasta que llegue la auditoría; `containsSyntheticMedia` automático |
+| 4    | Cron                           | La Mac dispara el radar (la plataforma no tiene cron)                                |
 
 Piloto: **solo el canal de IA** hasta tener 15–20 videos publicados sin avisos.
 
@@ -179,6 +187,7 @@ Piloto: **solo el canal de IA** hasta tener 15–20 videos publicados sin avisos
 4. **El nombre del sitio:** propuesto `escenia.sitios.dev`.
 
 ## 7. Fuentes sin verificar (se comprueban al construir)
+
 - Si `with-timestamps` acepta `eleven_v3` (si no, se usa `eleven_multilingual_v2`).
 - Si la autopromoción obliga a marcar «promoción pagada».
 - Calidad real del español con la voz de Richard: hay que escucharla.

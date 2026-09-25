@@ -1,0 +1,15 @@
+// Solo sirve para el desarrollo local y para empaquetar en el Action.
+// YaDominios Cloud lee de aquí compatibility_date y compatibility_flags y nada más:
+// la base (DB) y el almacén (BUCKET) de producción los pone la plataforma.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "escenia",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "escenia-local", "database_id": "00000000-0000-0000-0000-000000000000" }
+  ],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "escenia-local" }]
+}

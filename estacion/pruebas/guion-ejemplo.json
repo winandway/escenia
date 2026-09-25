@@ -1,0 +1,43 @@
+{
+  "titulo": "Cómo aprende un modelo de lenguaje",
+  "gancho": "¿Cómo puede una máquina completar tus frases mejor que tú? No es magia: es estadística a lo bestia.",
+  "escenas": [
+    {
+      "parte": "gancho",
+      "narracion": "¿Cómo puede una máquina completar tus frases mejor que tú? No es magia. Es estadística, a una escala que cuesta imaginar.",
+      "visual": {
+        "tipo": "stock",
+        "busqueda": "server room blue lights",
+        "texto_en_pantalla": "No es magia"
+      },
+      "momento": "sorpresa"
+    },
+    {
+      "parte": "contexto",
+      "narracion": "Un modelo de lenguaje lee miles de millones de frases y aprende una sola cosa: qué palabra suele venir después de otra.",
+      "visual": {
+        "tipo": "stock",
+        "busqueda": "library books rows",
+        "texto_en_pantalla": "Predecir la siguiente palabra"
+      }
+    },
+    {
+      "parte": "demo",
+      "narracion": "Si le das «el cielo es», la respuesta más probable es «azul». Si le das todo un párrafo, la predicción usa todo ese contexto. Y eso, repetido palabra por palabra, es una respuesta completa.",
+      "visual": { "tipo": "texto", "texto_en_pantalla": "el cielo es → azul" }
+    },
+    {
+      "parte": "opinion",
+      "narracion": "[opinión del editor]",
+      "visual": { "tipo": "texto", "texto_en_pantalla": "Mi opinión" }
+    },
+    {
+      "parte": "cta",
+      "narracion": "Si quieres construir algo con esto sin escribir código, prueba Blisor. El enlace está en la descripción.",
+      "visual": { "tipo": "stock", "busqueda": "developer typing laptop", "texto_en_pantalla": "blisor.com" }
+    }
+  ],
+  "hechos_a_verificar": [],
+  "descripcion_youtube": "",
+  "etiquetas": ["ia", "modelos de lenguaje"]
+}

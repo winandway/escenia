@@ -1,0 +1,32 @@
+{
+  "name": "escenia-estacion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "La Estación: el proceso que corre en la Mac y arma los videos.",
+  "scripts": {
+    "estacion": "tsx src/estacion.ts",
+    "render": "tsx src/render-local.ts",
+    "studio": "remotion studio src/remotion/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.529",
+    "@remotion/captions": "^4.0.529",
+    "@remotion/cli": "^4.0.529",
+    "@remotion/google-fonts": "^4.0.529",
+    "@remotion/media": "^4.0.529",
+    "@remotion/renderer": "^4.0.529",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.529",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
