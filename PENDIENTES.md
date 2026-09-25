@@ -17,7 +17,7 @@
 - [x] Fase 1: Estación (voz con tiempos, subtítulos por palabra, clips Pexels, render Remotion 16:9)
 - [x] Fase 1: prueba de punta a punta en local (panel empaquetado + Estación) — 25 sep 2026
 - [x] Fase 1: texto de la auditoría de YouTube → docs/AUDITORIA-YOUTUBE.md
-- [ ] Publicar: repo público en GitHub + Action → rama `yapanel-build` (depende del plan de YaDominios para verlo en vivo)
+- [x] Publicar: repo público https://github.com/winandway/escenia + Action verde → rama `yapanel-build` lista (25 sep 2026). Falta que Richard cree el sitio en YaDominios Cloud (plan de pago).
 - [ ] Fase 2: temática `MiniDocumental`, Shorts 9:16, miniaturas, biblioteca de recursos, cortes comerciales
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)
