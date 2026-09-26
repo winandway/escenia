@@ -128,3 +128,17 @@ INSERT OR IGNORE INTO productos (id, nombre, url, descripcion_corta) VALUES
   ('tokiia', 'Tokiia', 'https://tokiia.com', 'Billetera cripto en Polygon con intercambio P2P.'),
   ('mercatren', 'Mercatren', 'https://mercatren.com', 'Marketplace: compra en EE.UU. y recíbelo donde estés.'),
   ('losupe', 'Losupe', 'https://losupe.com', 'Revista digital bilingüe automática (ES/EN) con robot redactor propio.');
+
+-- Videos terminados guardados en el almacén del sitio (plan Galaxia, 20 GB),
+-- para verlos y descargarlos desde el panel. La Mac conserva su copia.
+CREATE TABLE IF NOT EXISTS videos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  guion_id INTEGER NOT NULL REFERENCES guiones(id),
+  formato TEXT NOT NULL CHECK (formato IN ('16x9','9x16')),
+  clave TEXT NOT NULL UNIQUE,
+  bytes INTEGER NOT NULL DEFAULT 0,
+  duracion_seg REAL NOT NULL DEFAULT 0,
+  voz_de_prueba INTEGER NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS videos_guion ON videos(guion_id, id);
