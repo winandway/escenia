@@ -7,10 +7,12 @@ import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
 import { renderizar } from "./render";
 import { buscarFoto } from "./fotos";
+import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
 import { generarVoz } from "./voz";
 
 export type Avisar = (paso: string, progreso: number) => Promise<unknown>;
+export type Gastar = (servicio: string, detalle: string, costoUsd: number) => Promise<unknown>;
 
 export type ResultadoProduccion = {
   rutaMp4: string;
@@ -62,6 +64,7 @@ export async function producir(
   producto: { nombre: string; url: string } | null,
   avisar: Avisar,
   plantilla: Plantilla = "TechExplainer",
+  gastar: Gastar = async () => {},
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
@@ -98,18 +101,52 @@ export async function producir(
         creditos.push(f.credito);
       }
     }
-    // El clip de fondo va siempre (detrás de la foto, difuminado).
+    // Imagen generada con IA para el momento sin foto (solo si hay FAL_KEY; si falla, va clip).
+    if (e.visual.tipo === "ia" && e.visual.prompt_imagen && imagenesActivas()) {
+      const epoca = /\b(19[0-6]\d)\b/.test(`${e.visual.prompt_imagen} ${e.visual.texto_en_pantalla ?? ""}`);
+      const img = await generarImagen(e.visual.prompt_imagen, carpetaPublica, { blancoYNegro: epoca }).catch(
+        (err) => {
+          console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
+          return null;
+        },
+      );
+      if (img) {
+        foto = { ruta: img.ruta, ancho: img.ancho, alto: img.alto };
+        creditos.push(img.credito);
+        if (img.costoUsd > 0) await gastar("fal.ai", `imagen escena ${i + 1}`, img.costoUsd);
+      }
+    }
+    const esRecorte = e.visual.tipo === "periodico" || e.visual.tipo === "red" || e.visual.tipo === "titular";
+    const recorte: PropsVideo["escenas"][number]["recorte"] = esRecorte
+      ? {
+          tipo: e.visual.tipo as "periodico" | "red" | "titular",
+          titular: e.visual.titular ?? e.visual.texto_en_pantalla ?? "",
+          fecha: e.visual.fecha ?? "",
+          cuerpo: e.visual.cuerpo ?? "",
+        }
+      : null;
+    // El clip de fondo va siempre (detrás de la foto o del recorte, difuminado).
     const c = await buscarClip(foto ? busquedas.slice(1) : busquedas, false, carpetaPublica);
     if (c) creditos.push(c.credito);
     const esFrase = e.visual.tipo === "texto" || e.visual.tipo === "titulo";
+    const estilo: PropsVideo["escenas"][number]["estilo"] = foto
+      ? "foto"
+      : recorte
+        ? recorte.tipo === "titular"
+          ? "titular"
+          : "recorte"
+        : esFrase
+          ? "frase"
+          : "clip";
     escenas.push({
       parte: e.parte,
       inicioMs: tramo.inicioMs,
       finMs: tramo.finMs,
       textoEnPantalla: e.visual.texto_en_pantalla ?? "",
-      estilo: foto ? "foto" : esFrase ? "frase" : "clip",
+      estilo,
       clip: c ? { ruta: c.ruta, duracionSeg: c.duracionSeg } : null,
       foto,
+      recorte,
     });
     void avisar(
       `clips de fondo: escena ${i + 1} de ${guion.escenas.length}`,

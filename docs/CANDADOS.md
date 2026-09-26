@@ -20,6 +20,8 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
 
 | C-LICENCIA-1 | Solo entran fotos con licencia libre para uso comercial (CC BY, CC BY-SA, CC0, dominio público); NC/ND se rechazan | `compartido/licencias.ts` + `estacion/src/fotos.ts` | `pruebas/licencias.test.ts` |
 
+| C-IMAGEN-1 | Solo corre el modelo de imagen permitido (~$0.03) y nada por encima de $0.05, ni como respaldo | `compartido/modelos.ts` (`asegurarModeloImagen`) + `estacion/src/imagenes.ts` | `pruebas/modelos.test.ts` |
+
 ## Fallos encontrados y cómo se arreglaron
 
 ### 25 sep 2026 — La Estación fallaba con «404 voz.mp3» (C-EMPAQUE-1)

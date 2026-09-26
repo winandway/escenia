@@ -69,7 +69,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         const desde = msAFrame(e.inicioMs);
         const dur = Math.max(1, msAFrame(e.finMs) - desde + (i < p.escenas.length - 1 ? TRANSICION : 0));
         const colores = PALETA[i % PALETA.length] ?? PALETA[0];
-        const whoosh = whooshes.length ? whooshes[i % whooshes.length] : null;
+        const whoosh = whooshes.length ? (whooshes[i % whooshes.length] ?? null) : null;
         return (
           <Sequence key={i} from={desde} durationInFrames={dur} name={`escena ${i + 1} · ${e.parte}`}>
             <EscenaVista
@@ -82,6 +82,8 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               retraso={i === 0 ? Math.round(FPS * 3.2) : TRANSICION}
               acento={acento}
               fuenteTitulos={fuenteTitulos}
+              boom={p.sfx.boom}
+              whoosh={whoosh}
             />
             {whoosh && i > 0 && <Audio src={staticFile(whoosh)} volume={0.4} />}
           </Sequence>
@@ -169,18 +171,70 @@ const EscenaVista: React.FC<{
   retraso: number;
   acento: string;
   fuenteTitulos: string;
-}> = ({ escena, colores, durFrames, vertical, fundir, pop, retraso, acento, fuenteTitulos }) => {
+  boom: string | null;
+  whoosh: string | null;
+}> = ({
+  escena,
+  colores,
+  durFrames,
+  vertical,
+  fundir,
+  pop,
+  retraso,
+  acento,
+  fuenteTitulos,
+  boom,
+  whoosh,
+}) => {
   const frame = useCurrentFrame();
   const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
   const esFrase = escena.estilo === "frase";
   const esFoto = escena.estilo === "foto" && escena.foto !== null;
+  const esTitular = escena.estilo === "titular" && escena.recorte !== null;
+  const esRecorte = escena.estilo === "recorte" && escena.recorte !== null;
   return (
     <AbsoluteFill style={{ opacity: opacidad }}>
-      <Fondo clip={escena.clip} colores={colores} durFrames={durFrames} difuminado={esFrase || esFoto} />
+      <Fondo
+        clip={escena.clip}
+        colores={colores}
+        durFrames={durFrames}
+        difuminado={esFrase || esFoto || esTitular || esRecorte}
+      />
       {esFoto && escena.foto && (
         <FotoConMovimiento foto={escena.foto} durFrames={durFrames} vertical={vertical} />
       )}
-      {escena.textoEnPantalla &&
+      {esTitular && escena.recorte && (
+        <TitularGolpe
+          titular={escena.recorte.titular}
+          fecha={escena.recorte.fecha}
+          retraso={retraso}
+          acento={acento}
+          fuente={fuenteTitulos}
+          vertical={vertical}
+          boom={boom}
+        />
+      )}
+      {esRecorte && escena.recorte && escena.recorte.tipo === "periodico" && (
+        <Periodico
+          recorte={escena.recorte}
+          retraso={retraso}
+          acento={acento}
+          vertical={vertical}
+          whoosh={whoosh}
+        />
+      )}
+      {esRecorte && escena.recorte && escena.recorte.tipo === "red" && (
+        <TarjetaRed
+          recorte={escena.recorte}
+          retraso={retraso}
+          acento={acento}
+          vertical={vertical}
+          whoosh={whoosh}
+        />
+      )}
+      {!esTitular &&
+        !esRecorte &&
+        escena.textoEnPantalla &&
         (esFrase ? (
           <FraseGrande
             texto={escena.textoEnPantalla}
@@ -250,6 +304,205 @@ const Fondo: React.FC<{
         transform: `scale(${zoom})`,
       }}
     />
+  );
+};
+
+/** Titular enorme que entra de golpe (con boom), para hitos y giros. */
+const TitularGolpe: React.FC<{
+  titular: string;
+  fecha: string;
+  retraso: number;
+  acento: string;
+  fuente: string;
+  vertical: boolean;
+  boom: string | null;
+}> = ({ titular, fecha, retraso, acento, fuente, vertical, boom }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const golpe = spring({ frame: frame - retraso, fps, config: { damping: 9, stiffness: 260, mass: 0.9 } });
+  const sacudida = frame > retraso && frame < retraso + 8 ? Math.sin(frame * 9) * (8 - (frame - retraso)) : 0;
+  const fechaEntra = spring({ frame: frame - retraso - 10, fps, config: { damping: 14, stiffness: 140 } });
+  return (
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: vertical ? 60 : 120 }}>
+      {boom && (
+        <Sequence from={retraso} name="boom-titular">
+          <Audio src={staticFile(boom)} volume={0.55} />
+        </Sequence>
+      )}
+      <div
+        style={{
+          transform: `scale(${0.6 + golpe * 0.4}) translate(${sacudida}px, ${-sacudida}px)`,
+          opacity: Math.min(1, golpe * 1.4),
+          fontFamily: fuente,
+          fontSize: vertical ? 120 : 150,
+          fontWeight: 900,
+          lineHeight: 0.95,
+          textAlign: "center",
+          color: "#fff",
+          textTransform: "uppercase",
+          letterSpacing: -2,
+          textShadow: `0 0 40px rgba(0,0,0,.9), 0 12px 0 ${acento}`,
+          maxWidth: "100%",
+        }}
+      >
+        {titular}
+      </div>
+      {fecha && (
+        <div
+          style={{
+            marginTop: 30,
+            opacity: fechaEntra,
+            transform: `translateY(${(1 - fechaEntra) * 30}px)`,
+            fontSize: vertical ? 56 : 64,
+            fontWeight: 700,
+            color: acento,
+            letterSpacing: 6,
+            backgroundColor: "rgba(0,0,0,.55)",
+            padding: "6px 28px",
+            borderRadius: 8,
+          }}
+        >
+          {fecha}
+        </div>
+      )}
+    </AbsoluteFill>
+  );
+};
+
+/** Recorte de periódico que entra deslizándose con whoosh. */
+const Periodico: React.FC<{
+  recorte: NonNullable<Escena["recorte"]>;
+  retraso: number;
+  acento: string;
+  vertical: boolean;
+  whoosh: string | null;
+}> = ({ recorte, retraso, acento, vertical, whoosh }) => {
+  const frame = useCurrentFrame();
+  const { fps, width } = useVideoConfig();
+  const entrada = spring({ frame: frame - retraso, fps, config: { damping: 16, stiffness: 120 } });
+  const balanceo = Math.sin(frame / 18) * 0.6;
+  const relleno =
+    recorte.cuerpo ||
+    "Lorem ipsum no: aquí va el texto corto que escribe la IA. Se lee poco, pero da la sensación de recorte real de la época.";
+  return (
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+      {whoosh && (
+        <Sequence from={Math.max(0, retraso - 4)} name="whoosh-recorte">
+          <Audio src={staticFile(whoosh)} volume={0.5} />
+        </Sequence>
+      )}
+      <div
+        style={{
+          width: vertical ? "88%" : Math.min(1100, width * 0.62),
+          transform: `translateX(${(1 - entrada) * -width * 0.7}px) rotate(${-2.5 + balanceo}deg)`,
+          backgroundColor: "#f3ecd8",
+          color: "#1b1b1b",
+          padding: vertical ? "36px 40px" : "44px 56px",
+          boxShadow: "0 30px 80px rgba(0,0,0,.75)",
+          backgroundImage:
+            "repeating-linear-gradient(0deg, rgba(0,0,0,.025) 0px, rgba(0,0,0,.025) 1px, transparent 1px, transparent 4px)",
+          fontFamily: serif,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            borderBottom: "3px double #1b1b1b",
+            paddingBottom: 8,
+            marginBottom: 18,
+            fontSize: vertical ? 22 : 24,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            fontFamily: fontFamily,
+            fontWeight: 700,
+          }}
+        >
+          <span>Diario</span>
+          <span>{recorte.fecha || " "}</span>
+        </div>
+        <div style={{ fontSize: vertical ? 54 : 66, fontWeight: 900, lineHeight: 1.02, marginBottom: 18 }}>
+          {recorte.titular}
+        </div>
+        <div
+          style={{
+            columnCount: vertical ? 1 : 2,
+            columnGap: 28,
+            fontSize: vertical ? 22 : 24,
+            lineHeight: 1.35,
+            color: "#333",
+            fontFamily: fontFamily,
+          }}
+        >
+          {relleno}
+        </div>
+        <div style={{ height: 6, backgroundColor: acento, marginTop: 20, width: "30%" }} />
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/** Tarjeta de red social (comentario del público de hoy), sube desde abajo con whoosh. */
+const TarjetaRed: React.FC<{
+  recorte: NonNullable<Escena["recorte"]>;
+  retraso: number;
+  acento: string;
+  vertical: boolean;
+  whoosh: string | null;
+}> = ({ recorte, retraso, acento, vertical, whoosh }) => {
+  const frame = useCurrentFrame();
+  const { fps, height } = useVideoConfig();
+  const entrada = spring({ frame: frame - retraso, fps, config: { damping: 15, stiffness: 130 } });
+  const iniciales = (recorte.titular || "Público").slice(0, 1).toUpperCase();
+  return (
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+      {whoosh && (
+        <Sequence from={Math.max(0, retraso - 4)} name="whoosh-red">
+          <Audio src={staticFile(whoosh)} volume={0.45} />
+        </Sequence>
+      )}
+      <div
+        style={{
+          width: vertical ? "86%" : 900,
+          transform: `translateY(${(1 - entrada) * height * 0.6}px) rotate(${1.5 - entrada * 1.5}deg)`,
+          backgroundColor: "#fff",
+          color: "#111",
+          borderRadius: 24,
+          padding: "28px 34px",
+          boxShadow: "0 30px 80px rgba(0,0,0,.7)",
+          fontFamily: fontFamily,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              backgroundColor: acento,
+              color: "#111",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 900,
+              fontSize: 30,
+            }}
+          >
+            {iniciales}
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 28 }}>{recorte.titular || "Comentario"}</div>
+            <div style={{ color: "#667", fontSize: 22 }}>{recorte.fecha || "hoy"}</div>
+          </div>
+        </div>
+        <div style={{ fontSize: vertical ? 34 : 36, lineHeight: 1.3, fontWeight: 500 }}>{recorte.cuerpo}</div>
+        <div style={{ marginTop: 18, color: "#889", fontSize: 22, display: "flex", gap: 28 }}>
+          <span>♥ 12,4 mil</span>
+          <span>↻ 2.108</span>
+          <span>💬 934</span>
+        </div>
+      </div>
+    </AbsoluteFill>
   );
 };
 

@@ -17,10 +17,20 @@ export const esquemaEscenaVideo = z.object({
   textoEnPantalla: z.string().default(""),
   // "clip": clip de fondo con rótulo arriba. "frase": clip difuminado con la frase
   // grande al centro. "foto": fotografía real con movimiento lento y marco.
-  estilo: z.enum(["clip", "frase", "foto"]).default("clip"),
+  // "titular": titular enorme con golpe. "recorte": recorte de periódico o tarjeta de red social.
+  estilo: z.enum(["clip", "frase", "foto", "titular", "recorte"]).default("clip"),
   // Ruta relativa al publicDir (staticFile) del clip de fondo, o null si no hubo ninguno.
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable(),
   foto: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }).nullable().default(null),
+  recorte: z
+    .object({
+      tipo: z.enum(["periodico", "red", "titular"]),
+      titular: z.string().default(""),
+      fecha: z.string().default(""),
+      cuerpo: z.string().default(""),
+    })
+    .nullable()
+    .default(null),
 });
 
 export const esquemaSfx = z.object({

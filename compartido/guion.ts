@@ -3,7 +3,20 @@
 import { z } from "zod";
 
 export const PARTES = ["gancho", "problema", "contexto", "demo", "dato", "opinion", "cierre", "cta"] as const;
-export const TIPOS_VISUAL = ["stock", "foto", "texto", "titulo", "pantalla"] as const;
+// stock: clip de fondo · foto: foto real con licencia · ia: imagen generada con IA ·
+// texto: frase grande · titulo: portada · titular: titular enorme con golpe ·
+// periodico: recorte de periódico · red: tarjeta de red social · pantalla: grabación web
+export const TIPOS_VISUAL = [
+  "stock",
+  "foto",
+  "ia",
+  "texto",
+  "titulo",
+  "titular",
+  "periodico",
+  "red",
+  "pantalla",
+] as const;
 
 export const esquemaVisual = z.object({
   tipo: z.enum(TIPOS_VISUAL),
@@ -11,6 +24,12 @@ export const esquemaVisual = z.object({
   busqueda: z.string().trim().max(80).optional(),
   // Dirección a grabar en pantalla (solo si tipo = pantalla).
   url: z.string().trim().max(300).optional(),
+  // Descripción EN INGLÉS de la imagen a generar (solo si tipo = ia).
+  prompt_imagen: z.string().trim().max(400).optional(),
+  // Recortes y titulares (tipos titular, periodico, red).
+  titular: z.string().trim().max(90).optional(),
+  fecha: z.string().trim().max(40).optional(),
+  cuerpo: z.string().trim().max(300).optional(),
   // Frase corta que aparece grande en pantalla.
   texto_en_pantalla: z.string().trim().max(90).optional(),
 });

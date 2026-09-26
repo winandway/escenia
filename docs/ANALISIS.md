@@ -77,6 +77,19 @@ arreglo ya decidido.
   material propio de Caprichoso TV**. Si no hay visual legal para un artista, el
   motor no lo propone. Este es el mayor riesgo de contenido del proyecto.
 
+### Sobre las imágenes con IA de personas reales (26 sep 2026)
+
+- YouTube exige declarar «contenido alterado o sintético» cuando una imagen
+  realista muestra a una persona real haciendo algo (https://support.google.com/youtube/answer/14328491).
+  Se declara y listo: no desmonetiza. El motor lo marca solo en la Fase 3.
+- En EE. UU. una imagen generada por IA no tiene dueño (no es «nuestra», pero
+  tampoco de nadie): no hay reclamo de Content ID posible **(opinión, con base
+  en la postura de la Oficina de Derechos de Autor)**.
+- El derecho de imagen de artistas fallecidos existe en varios estados; el uso
+  biográfico/editorial suele estar protegido, pero por prudencia las imágenes
+  van en estilo ilustración editorial, no como foto falsa, y siempre que exista
+  una foto real con licencia se usa la real **(opinión)**.
+
 ### Hueco 6 — Cortes comerciales de 30–40 s matan la retención
 
 - **(opinión)** Un corte propio de 30–40 s en un video de 3 min es el 20 % del

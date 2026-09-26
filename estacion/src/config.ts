@@ -13,6 +13,7 @@ const esquema = z.object({
   ELEVENLABS_VOICE_ID: z.string().optional(),
   ELEVENLABS_MODELO: z.string().default("eleven_multilingual_v2"),
   PEXELS_API_KEY: z.string().optional(),
+  FAL_KEY: z.string().optional(),
   CARPETA_SALIDA: z.string().default("./out"),
 });
 

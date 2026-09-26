@@ -24,6 +24,7 @@ cuando el sitio exista, la IA lo renombra a `.env`.**
   sirve para ver el video completo sin gastar). El video queda marcado «VOZ DE
   PRUEBA» en la esquina.
 - `PEXELS_API_KEY` — clips de fondo. Sin ella, fondos de color.
+- `FAL_KEY` — imágenes generadas con IA (fal.ai, prepago). Sin ella, esas escenas van con clip.
 
 ## Encenderla
 
@@ -94,6 +95,20 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
    obras derivadas (CC BY, CC BY-SA, CC0, dominio público; nunca NC ni ND).
    Cada foto deja su crédito y licencia en `creditos.txt`, para pegarlo en la
    descripción del video. Caché en `estacion/cache/clips/fotos/`.
+   3c. **Imágenes con IA (`visual.tipo = ia`).** Para momentos de una biografía
+   sin foto real. Corre en fal.ai con el único modelo permitido en
+   `compartido/modelos.ts` (Seedream 4, ~$0.03 por imagen; tope en código de
+   $0.05: nada más caro corre, ni de respaldo). Necesita `FAL_KEY` (cuenta
+   PREPAGO) en `estacion/.env`; sin ella, esas escenas van con clip. Cada
+   imagen se anota como gasto en el panel y deja en `creditos.txt` la marca
+   «contenido sintético»: al subir a YouTube hay que declarar contenido
+   alterado o sintético (Fase 3 lo hará sola). Estilo por defecto: ilustración
+   editorial, no foto falsa; en época anterior a 1970 sale en blanco y negro.
+   3d. **Titulares y recortes (`titular`, `periodico`, `red`).** Se dibujan en la
+   plantilla (no gastan nada): titular enorme con golpe y sacudida, recorte
+   de periódico con fecha y texto corto que entra con whoosh, y tarjeta de red
+   social que sube desde abajo. El texto lo escribe la IA en el guion
+   (`visual.titular`, `visual.fecha`, `visual.cuerpo`).
 4. **Render.** Remotion (`TechExplainer` para tecnología, `MiniDocumental`
    para biografías: serif, dorado, fotos con movimiento lento y marco;
    1920×1080, 30 fps, H.264): fundido

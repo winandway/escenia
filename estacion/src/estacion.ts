@@ -25,6 +25,7 @@ async function unaVuelta(): Promise<boolean> {
       trabajo.producto,
       avisar,
       trabajo.plantilla,
+      (servicio, detalle, costo) => panel.gasto(trabajo.id, servicio, detalle, costo).catch(() => {}),
     );
     if (r.costoVozUsd > 0)
       await panel.gasto(trabajo.id, "elevenlabs", `voz guion ${trabajo.guion_id}`, r.costoVozUsd);

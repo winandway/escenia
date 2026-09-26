@@ -54,3 +54,22 @@ export function asegurarModeloVoz(modelo: string): ModeloVoz {
 export function costoVozUsd(modelo: ModeloVoz, caracteres: number): number {
   return (caracteres / 1000) * VOCES_PERMITIDAS[modelo];
 }
+
+// Imágenes: solo modelos de ~$0.03 por imagen (regla global: los caros están
+// bloqueados en código, ni como respaldo). Precio de fal.ai, 26-sep-2026.
+export const IMAGENES_PERMITIDAS = {
+  "fal-ai/bytedance/seedream/v4/text-to-image": 0.03,
+} as const;
+
+export type ModeloImagen = keyof typeof IMAGENES_PERMITIDAS;
+export const MODELO_IMAGEN_POR_DEFECTO: ModeloImagen = "fal-ai/bytedance/seedream/v4/text-to-image";
+export const TOPE_IMAGEN_USD = 0.05;
+
+export function asegurarModeloImagen(modelo: string): ModeloImagen {
+  if (!Object.prototype.hasOwnProperty.call(IMAGENES_PERMITIDAS, modelo)) {
+    throw new Error(`Modelo de imagen bloqueado: «${modelo}».`);
+  }
+  const precio = IMAGENES_PERMITIDAS[modelo as ModeloImagen];
+  if (precio > TOPE_IMAGEN_USD) throw new Error(`Modelo de imagen demasiado caro: «${modelo}» ($${precio}).`);
+  return modelo as ModeloImagen;
+}

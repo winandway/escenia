@@ -106,7 +106,8 @@ async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto
         .split("|")
         .map((x) => x.trim());
       const nombreCompleto = nombre.join(" ");
-      const enTitulo = nombre.every((w) => titulo.includes(w));
+      // El nombre va como frase seguida («pedro knight»), no palabras sueltas («Pedro Ramos … Knight Foundation»).
+      const enTitulo = titulo.includes(nombreCompleto);
       const enCategoria = categorias.some((cat) => cat === nombreCompleto);
       const pixeles = (c.ii?.width ?? 0) * (c.ii?.height ?? 0);
       const puntaje =

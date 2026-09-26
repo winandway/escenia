@@ -1,0 +1,61 @@
+{
+  "titulo": "Celia Cruz: la voz que cruzó el mar",
+  "gancho": "Una niña de La Habana cantaba para dormir a sus hermanos. Décadas después, el mundo entero gritaba «¡Azúcar!».",
+  "escenas": [
+    {
+      "parte": "gancho",
+      "narracion": "Una niña de La Habana cantaba para dormir a sus hermanos. Décadas después, el mundo entero gritaba «¡Azúcar!».",
+      "visual": { "tipo": "foto", "busqueda": "Celia Cruz", "texto_en_pantalla": "La Habana, 1925" }
+    },
+    {
+      "parte": "dato",
+      "narracion": "En mil novecientos cincuenta entró a la Sonora Matancera. Ese fue el momento que lo cambió todo.",
+      "visual": {
+        "tipo": "titular",
+        "titular": "Entra a la Sonora",
+        "fecha": "1950",
+        "busqueda": "vintage microphone stage"
+      }
+    },
+    {
+      "parte": "contexto",
+      "narracion": "Los periódicos de la época hablaban de una voz nueva que llenaba los teatros de La Habana.",
+      "visual": {
+        "tipo": "periodico",
+        "titular": "Una voz nueva conquista La Habana",
+        "fecha": "Julio de 1951",
+        "cuerpo": "La joven cantante de Santos Suárez agotó las entradas del teatro por tercera noche consecutiva. El público pidió tres bises.",
+        "busqueda": "old newspaper printing press"
+      }
+    },
+    {
+      "parte": "dato",
+      "narracion": "Salió de Cuba en mil novecientos sesenta y nunca pudo volver.",
+      "visual": {
+        "tipo": "titular",
+        "titular": "Nunca pudo volver",
+        "fecha": "1960",
+        "busqueda": "airplane window clouds"
+      }
+    },
+    {
+      "parte": "opinion",
+      "narracion": "Hoy, veinte años después de su muerte, la gente sigue escribiendo sobre ella en redes.",
+      "visual": {
+        "tipo": "red",
+        "titular": "Mariana R.",
+        "fecha": "hace 2 horas",
+        "cuerpo": "Mi abuela la escuchaba en la cocina y yo la escucho en el gimnasio. Celia es eterna. 🎤",
+        "busqueda": "people dancing party lights"
+      }
+    },
+    {
+      "parte": "cierre",
+      "narracion": "Murió en dos mil tres en Nueva Jersey. Su grito de «¡Azúcar!» sigue sonando en cada fiesta donde se baila salsa.",
+      "visual": { "tipo": "foto", "busqueda": "Celia Cruz 1957", "texto_en_pantalla": "Reina de la Salsa" }
+    }
+  ],
+  "hechos_a_verificar": [],
+  "descripcion_youtube": "",
+  "etiquetas": ["biografía", "salsa"]
+}

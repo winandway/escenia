@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  asegurarModeloImagen,
+  IMAGENES_PERMITIDAS,
+  TOPE_IMAGEN_USD,
   asegurarModelo,
   asegurarModeloVoz,
   costoTokensUsd,
@@ -21,6 +24,13 @@ describe("candado de modelos", () => {
 
   it("ningún modelo permitido pasa de $10 por millón de tokens de salida", () => {
     for (const m of Object.values(MODELOS_PERMITIDOS)) expect(m.salida).toBeLessThanOrEqual(10);
+  });
+
+  it("bloquea modelos de imagen fuera de la lista y ninguno pasa del tope", () => {
+    expect(() => asegurarModeloImagen("fal-ai/flux-pro/v1.1-ultra")).toThrow(/bloqueado/);
+    expect(() => asegurarModeloImagen("gpt-image-1")).toThrow(/bloqueado/);
+    expect(asegurarModeloImagen("fal-ai/bytedance/seedream/v4/text-to-image")).toBeTruthy();
+    for (const p of Object.values(IMAGENES_PERMITIDAS)) expect(p).toBeLessThanOrEqual(TOPE_IMAGEN_USD);
   });
 
   it("calcula el costo con los precios oficiales", () => {
