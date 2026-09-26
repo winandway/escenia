@@ -14,6 +14,15 @@ export type ImagenIA = { ruta: string; ancho: number; alto: number; credito: str
 const ESTILO_BASE =
   "editorial documentary illustration, painterly realism, soft film grain, natural light, no text, no captions, no watermark, no logos";
 
+/** Solo se manda la clave a direcciones de fal.ai por https; a cualquier otra, nunca. */
+function urlDeFal(direccion: string): string {
+  const u = new URL(direccion);
+  if (u.protocol !== "https:" || u.hostname !== "queue.fal.run") {
+    throw new Error(`fal.ai devolvió una dirección inesperada (${u.hostname}); no se envía la clave.`);
+  }
+  return u.toString();
+}
+
 export function imagenesActivas(): boolean {
   return Boolean(config.FAL_KEY);
 }
@@ -55,7 +64,7 @@ export async function generarImagen(
     const inicio = Date.now();
     let listo = false;
     while (Date.now() - inicio < 90_000) {
-      const est = await fetch(cola.status_url, { headers: cabeceras });
+      const est = await fetch(urlDeFal(cola.status_url), { headers: cabeceras });
       const estado = (await est.json()) as { status: string };
       if (estado.status === "COMPLETED") {
         listo = true;
@@ -66,7 +75,7 @@ export async function generarImagen(
     }
     if (!listo) throw new Error("fal.ai tardó demasiado en generar la imagen.");
 
-    const res = await fetch(cola.response_url, { headers: cabeceras });
+    const res = await fetch(urlDeFal(cola.response_url), { headers: cabeceras });
     const salida = (await res.json()) as { images?: { url: string; width?: number; height?: number }[] };
     const url = salida.images?.[0]?.url;
     if (!url) throw new Error("fal.ai devolvió una respuesta sin imagen.");
