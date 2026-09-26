@@ -103,13 +103,17 @@ export async function producir(
     }
     // Imagen generada con IA para el momento sin foto (solo si hay FAL_KEY; si falla, va clip).
     if (e.visual.tipo === "ia" && e.visual.prompt_imagen && imagenesActivas()) {
-      const epoca = /\b(19[0-6]\d)\b/.test(`${e.visual.prompt_imagen} ${e.visual.texto_en_pantalla ?? ""}`);
-      const img = await generarImagen(e.visual.prompt_imagen, carpetaPublica, { blancoYNegro: epoca }).catch(
-        (err) => {
-          console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
-          return null;
-        },
-      );
+      const epoca = /\b19[0-6]\d(s)?\b/.test(`${e.visual.prompt_imagen} ${e.visual.texto_en_pantalla ?? ""}`);
+      // La persona del video tiene que estar en la imagen: si la IA no la nombró, se antepone.
+      const persona = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
+      const nombraPersona =
+        persona && e.visual.prompt_imagen.toLowerCase().includes(persona.toLowerCase().split(" ")[0] ?? "");
+      const promptImagen =
+        nombraPersona || !persona ? e.visual.prompt_imagen : `${persona}, ${e.visual.prompt_imagen}`;
+      const img = await generarImagen(promptImagen, carpetaPublica, { blancoYNegro: epoca }).catch((err) => {
+        console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
+        return null;
+      });
       if (img) {
         foto = { ruta: img.ruta, ancho: img.ancho, alto: img.alto };
         creditos.push(img.credito);
