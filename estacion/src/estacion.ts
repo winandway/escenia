@@ -69,7 +69,7 @@ async function unaVuelta(): Promise<boolean> {
 async function principal() {
   console.log(`Estación ${config.VERSION} → ${config.PANEL_URL}`);
   console.log(
-    `Voz: ${config.ELEVENLABS_API_KEY ? "ElevenLabs" : "de prueba (sistema)"} · Clips: ${config.PEXELS_API_KEY ? "Pexels" : "fondos de color"}`,
+    `Voz: ${config.ELEVENLABS_API_KEY ? "ElevenLabs" : "de prueba (sistema)"} · Clips: ${config.PEXELS_API_KEY ? "Pexels" : "fondos de color"} · Imágenes IA: ${config.FAL_KEY ? "fal.ai" : "apagadas"}`,
   );
   console.log("Lista. Esperando trabajos.");
   for (;;) {
