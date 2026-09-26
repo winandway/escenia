@@ -94,17 +94,24 @@ export const TEMATICAS: Tematica[] = [
     id: "biografias",
     nombre: "Biografía de artista (mini documental)",
     canal: "caprichoso-tv",
-    // Fase 2: primero el piloto en el canal de IA, y reglas anti Content ID.
-    activa: false,
-    tono: "narrativo, cálido, de mini documental musical",
+    // Se puede producir y revisar; publicar en Caprichoso sigue cerrado (PUBLICACION_PERMITIDA).
+    activa: true,
+    tono: "narrativo, cálido, de mini documental musical, con datos concretos y sin adornos",
     duracionObjetivo: { largo: 480, short: 50 },
     plantilla: "MiniDocumental",
     ctaProductos: [],
-    estructuras: [["gancho", "contexto", "dato", "cierre"]],
+    estructuras: [
+      ["gancho", "contexto", "dato", "contexto", "dato", "opinion", "cierre"],
+      ["gancho", "dato", "contexto", "dato", "opinion", "cierre"],
+    ],
     bibliotecaEtiquetas: ["tension", "exito"],
     densidadRecursos: "baja",
     cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
-    reglas: ["Cero música del artista.", "Solo fotos con licencia o de dominio público."],
+    reglas: [
+      "Cero música del artista: no se cita ni se reproduce ninguna canción; se puede nombrar títulos como dato.",
+      "Las fotos salen de Wikimedia Commons con licencia libre: en `visual.busqueda` pon el nombre del artista y, si ayuda, una época o lugar (ej.: «Celia Cruz 1990s», «Celia Cruz concert»).",
+      "Cuenta la vida como una historia: infancia, el momento que lo cambió todo, la cima, la caída o la pérdida, el legado. Fechas y lugares solo si están en el contexto.",
+    ],
   },
   {
     id: "entrevistas-archivo",
@@ -126,6 +133,16 @@ export const TEMATICAS: Tematica[] = [
 export function buscarTematica(id: string): Tematica | undefined {
   return TEMATICAS.find((t) => t.id === id);
 }
+
+/**
+ * Dónde se puede PUBLICAR hoy. Producir y revisar un video se puede en cualquier
+ * canal; publicar en Caprichoso TV queda cerrado hasta que Richard lo abra
+ * (la sanción de YouTube por contenido no auténtico alcanza al canal entero).
+ */
+export const PUBLICACION_PERMITIDA: Record<Canal, boolean> = {
+  "canal-ia": true,
+  "caprichoso-tv": false,
+};
 
 export const NOMBRE_CANAL: Record<Canal, string> = {
   "canal-ia": "Canal de IA",

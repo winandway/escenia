@@ -1,0 +1,46 @@
+{
+  "titulo": "Celia Cruz: la voz que cruzó el mar",
+  "gancho": "Una niña de La Habana cantaba para dormir a sus hermanos. Décadas después, el mundo entero gritaba «¡Azúcar!».",
+  "escenas": [
+    {
+      "parte": "gancho",
+      "narracion": "Una niña de La Habana cantaba para dormir a sus hermanos. Décadas después, el mundo entero gritaba «¡Azúcar!».",
+      "visual": { "tipo": "foto", "busqueda": "Celia Cruz", "texto_en_pantalla": "La Habana, 1925" }
+    },
+    {
+      "parte": "contexto",
+      "narracion": "Celia Caridad Cruz y Alfonso nació el 21 de octubre de 1925 en el barrio de Santos Suárez. Su padre quería que fuera maestra. Ella quería cantar.",
+      "visual": {
+        "tipo": "stock",
+        "busqueda": "havana old street",
+        "texto_en_pantalla": "Santos Suárez, La Habana"
+      }
+    },
+    {
+      "parte": "dato",
+      "narracion": "En 1950 entró a la Sonora Matancera, la orquesta más importante de Cuba. Ese fue el momento que lo cambió todo.",
+      "visual": {
+        "tipo": "foto",
+        "busqueda": "Celia Cruz Sonora Matancera",
+        "texto_en_pantalla": "1950 · Sonora Matancera"
+      }
+    },
+    {
+      "parte": "texto",
+      "narracion": "Salió de Cuba en 1960 y nunca pudo volver.",
+      "visual": {
+        "tipo": "texto",
+        "busqueda": "airplane window clouds",
+        "texto_en_pantalla": "Nunca pudo volver"
+      }
+    },
+    {
+      "parte": "cierre",
+      "narracion": "Murió en 2003 en Nueva Jersey. Su grito de «¡Azúcar!» sigue sonando en cada fiesta donde se baila salsa.",
+      "visual": { "tipo": "foto", "busqueda": "Celia Cruz 1990s", "texto_en_pantalla": "Reina de la Salsa" }
+    }
+  ],
+  "hechos_a_verificar": [],
+  "descripcion_youtube": "",
+  "etiquetas": ["biografía", "salsa"]
+}

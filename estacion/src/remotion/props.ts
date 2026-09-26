@@ -15,10 +15,12 @@ export const esquemaEscenaVideo = z.object({
   inicioMs: z.number(),
   finMs: z.number(),
   textoEnPantalla: z.string().default(""),
-  // "clip": clip de fondo con rótulo arriba. "frase": clip difuminado con la frase grande al centro.
-  estilo: z.enum(["clip", "frase"]).default("clip"),
+  // "clip": clip de fondo con rótulo arriba. "frase": clip difuminado con la frase
+  // grande al centro. "foto": fotografía real con movimiento lento y marco.
+  estilo: z.enum(["clip", "frase", "foto"]).default("clip"),
   // Ruta relativa al publicDir (staticFile) del clip de fondo, o null si no hubo ninguno.
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable(),
+  foto: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }).nullable().default(null),
 });
 
 export const esquemaSfx = z.object({
@@ -37,6 +39,8 @@ export const esquemaPropsVideo = z.object({
   escenas: z.array(esquemaEscenaVideo),
   producto: z.object({ nombre: z.string(), url: z.string() }).nullable(),
   vozDePrueba: z.boolean().default(false),
+  // "tech": explicador de tecnología. "documental": biografías, más pausado y con serif.
+  tema: z.enum(["tech", "documental"]).default("tech"),
   sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null }),
 });
 

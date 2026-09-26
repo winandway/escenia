@@ -6,6 +6,7 @@ import type { Guion } from "@compartido/guion";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
 import { renderizar } from "./render";
+import { buscarFoto } from "./fotos";
 import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
 import { generarVoz } from "./voz";
 
@@ -53,11 +54,14 @@ async function prepararSfx(carpetaPublica: string): Promise<PropsVideo["sfx"]> {
   };
 }
 
+export type Plantilla = "TechExplainer" | "MiniDocumental";
+
 export async function producir(
   clave: string,
   guion: Guion,
   producto: { nombre: string; url: string } | null,
   avisar: Avisar,
+  plantilla: Plantilla = "TechExplainer",
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
@@ -86,7 +90,16 @@ export async function producir(
       e.visual.busqueda ?? "",
       ...(RESERVA_POR_PARTE[e.parte] ?? RESERVA_POR_PARTE.contexto ?? []),
     ];
-    const c = await buscarClip(busquedas, false, carpetaPublica);
+    let foto: PropsVideo["escenas"][number]["foto"] = null;
+    if (e.visual.tipo === "foto" && e.visual.busqueda) {
+      const f = await buscarFoto([e.visual.busqueda, guion.titulo], carpetaPublica);
+      if (f) {
+        foto = { ruta: f.ruta, ancho: f.ancho, alto: f.alto };
+        creditos.push(f.credito);
+      }
+    }
+    // El clip de fondo va siempre (detrás de la foto, difuminado).
+    const c = await buscarClip(foto ? busquedas.slice(1) : busquedas, false, carpetaPublica);
     if (c) creditos.push(c.credito);
     const esFrase = e.visual.tipo === "texto" || e.visual.tipo === "titulo";
     escenas.push({
@@ -94,8 +107,9 @@ export async function producir(
       inicioMs: tramo.inicioMs,
       finMs: tramo.finMs,
       textoEnPantalla: e.visual.texto_en_pantalla ?? "",
-      estilo: esFrase ? "frase" : "clip",
+      estilo: foto ? "foto" : esFrase ? "frase" : "clip",
       clip: c ? { ruta: c.ruta, duracionSeg: c.duracionSeg } : null,
+      foto,
     });
     void avisar(
       `clips de fondo: escena ${i + 1} de ${guion.escenas.length}`,
@@ -111,6 +125,7 @@ export async function producir(
     escenas,
     producto,
     vozDePrueba: voz.vozDePrueba,
+    tema: plantilla === "MiniDocumental" ? "documental" : "tech",
     sfx,
   };
   await writeFile(path.join(carpetaTrabajo, "props.json"), JSON.stringify(props, null, 2));
@@ -118,7 +133,7 @@ export async function producir(
   await avisar("armando el video (16:9)", 40);
   const rutaMp4 = path.join(carpetaTrabajo, "video-16x9.mp4");
   let ultimo = 40;
-  const r = await renderizar("TechExplainer", props, carpetaPublica, rutaMp4, (p) => {
+  const r = await renderizar(plantilla, props, carpetaPublica, rutaMp4, (p) => {
     const pct = 40 + Math.round(p * 58);
     if (pct >= ultimo + 5) {
       ultimo = pct;

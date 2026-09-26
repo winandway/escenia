@@ -1,9 +1,11 @@
 import { createTikTokStyleCaptions } from "@remotion/captions";
 import { loadFont } from "@remotion/google-fonts/Inter";
+import { loadFont as loadSerif } from "@remotion/google-fonts/PlayfairDisplay";
 import { useMemo } from "react";
 import {
   AbsoluteFill,
   Audio,
+  Img,
   interpolate,
   Loop,
   OffthreadVideo,
@@ -20,7 +22,13 @@ const { fontFamily } = loadFont("normal", {
   subsets: ["latin", "latin-ext"],
 });
 
+const { fontFamily: serif } = loadSerif("normal", {
+  weights: ["700", "900"],
+  subsets: ["latin", "latin-ext"],
+});
+
 const AMBAR = "#f59e0b";
+const ORO = "#e8b04b";
 const TRANSICION = 12; // frames de fundido entre escenas
 const PALETA = [
   ["#0f172a", "#1e3a8a"],
@@ -50,6 +58,9 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
   );
   const pagina = pages.find((pg) => tMs >= pg.startMs && tMs < pg.startMs + pg.durationMs);
   const whooshes = p.sfx.whoosh;
+  const documental = p.tema === "documental";
+  const acento = documental ? ORO : AMBAR;
+  const fuenteTitulos = documental ? serif : fontFamily;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", fontFamily }}>
@@ -69,6 +80,8 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               fundir={i > 0}
               pop={p.sfx.pop}
               retraso={i === 0 ? Math.round(FPS * 3.2) : TRANSICION}
+              acento={acento}
+              fuenteTitulos={fuenteTitulos}
             />
             {whoosh && i > 0 && <Audio src={staticFile(whoosh)} volume={0.4} />}
           </Sequence>
@@ -77,7 +90,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
 
       {/* Título de apertura */}
       <Sequence from={0} durationInFrames={Math.round(FPS * 3.2)} name="título">
-        <Titulo texto={p.titulo} vertical={vertical} />
+        <Titulo texto={p.titulo} vertical={vertical} acento={acento} fuente={fuenteTitulos} />
         {p.sfx.riser && <Audio src={staticFile(p.sfx.riser)} volume={0.35} />}
         {p.sfx.boom && (
           <Sequence from={18} name="boom">
@@ -103,7 +116,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
             }}
           >
             {pagina.tokens.map((tk, k) => (
-              <span key={k} style={{ color: tMs >= tk.fromMs ? AMBAR : "#fff" }}>
+              <span key={k} style={{ color: tMs >= tk.fromMs ? acento : "#fff" }}>
                 {tk.text}
               </span>
             ))}
@@ -114,14 +127,14 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       {/* Cierre con producto */}
       {p.producto && (
         <Sequence from={Math.max(0, durationInFrames - FPS * 6)} name="cta">
-          <Cierre nombre={p.producto.nombre} url={p.producto.url} vertical={vertical} />
+          <Cierre nombre={p.producto.nombre} url={p.producto.url} vertical={vertical} acento={acento} />
           {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
         </Sequence>
       )}
 
       {/* Barra de progreso */}
       <AbsoluteFill style={{ justifyContent: "flex-end" }}>
-        <div style={{ height: 8, width: `${(frame / durationInFrames) * 100}%`, backgroundColor: AMBAR }} />
+        <div style={{ height: 8, width: `${(frame / durationInFrames) * 100}%`, backgroundColor: acento }} />
       </AbsoluteFill>
 
       {/* Marca discreta de voz de prueba: solo los primeros 3 segundos, abajo a la derecha */}
@@ -154,18 +167,37 @@ const EscenaVista: React.FC<{
   fundir: boolean;
   pop: string | null;
   retraso: number;
-}> = ({ escena, colores, durFrames, vertical, fundir, pop, retraso }) => {
+  acento: string;
+  fuenteTitulos: string;
+}> = ({ escena, colores, durFrames, vertical, fundir, pop, retraso, acento, fuenteTitulos }) => {
   const frame = useCurrentFrame();
   const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
   const esFrase = escena.estilo === "frase";
+  const esFoto = escena.estilo === "foto" && escena.foto !== null;
   return (
     <AbsoluteFill style={{ opacity: opacidad }}>
-      <Fondo clip={escena.clip} colores={colores} durFrames={durFrames} difuminado={esFrase} />
+      <Fondo clip={escena.clip} colores={colores} durFrames={durFrames} difuminado={esFrase || esFoto} />
+      {esFoto && escena.foto && (
+        <FotoConMovimiento foto={escena.foto} durFrames={durFrames} vertical={vertical} />
+      )}
       {escena.textoEnPantalla &&
         (esFrase ? (
-          <FraseGrande texto={escena.textoEnPantalla} vertical={vertical} retraso={retraso} />
+          <FraseGrande
+            texto={escena.textoEnPantalla}
+            vertical={vertical}
+            retraso={retraso}
+            acento={acento}
+            fuente={fuenteTitulos}
+          />
         ) : (
-          <Rotulo texto={escena.textoEnPantalla} vertical={vertical} retraso={retraso} />
+          <Rotulo
+            texto={escena.textoEnPantalla}
+            vertical={vertical}
+            retraso={retraso}
+            acento={acento}
+            fuente={fuenteTitulos}
+            abajo={esFoto}
+          />
         ))}
       {escena.textoEnPantalla && pop && (
         <Sequence from={retraso} name="pop">
@@ -221,22 +253,67 @@ const Fondo: React.FC<{
   );
 };
 
+/** Fotografía real con movimiento lento y marco, sobre el clip difuminado. */
+const FotoConMovimiento: React.FC<{
+  foto: NonNullable<Escena["foto"]>;
+  durFrames: number;
+  vertical: boolean;
+}> = ({ foto, durFrames, vertical }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const entrada = spring({ frame, fps, config: { damping: 30, stiffness: 60 } });
+  const zoom = interpolate(frame, [0, Math.max(1, durFrames)], [1.0, 1.1], { extrapolateRight: "clamp" });
+  const desplazo = interpolate(frame, [0, Math.max(1, durFrames)], [-12, 12], { extrapolateRight: "clamp" });
+  const horizontal = foto.ancho >= foto.alto;
+  return (
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: vertical ? 60 : 90 }}>
+      <div
+        style={{
+          opacity: entrada,
+          transform: `scale(${0.96 + entrada * 0.04})`,
+          height: vertical ? "62%" : "84%",
+          maxWidth: "88%",
+          aspectRatio: `${foto.ancho} / ${foto.alto}`,
+          overflow: "hidden",
+          borderRadius: 14,
+          boxShadow: "0 30px 80px rgba(0,0,0,.7), 0 0 0 6px rgba(255,255,255,.08)",
+          backgroundColor: "#111",
+        }}
+      >
+        <Img
+          src={staticFile(foto.ruta)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transform: `scale(${zoom}) translate(${horizontal ? desplazo : 0}px, ${horizontal ? 0 : desplazo}px)`,
+          }}
+        />
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 /** Rótulo arriba a la izquierda: entra con un golpe corto. */
-const Rotulo: React.FC<{ texto: string; vertical: boolean; retraso: number }> = ({
-  texto,
-  vertical,
-  retraso,
-}) => {
+const Rotulo: React.FC<{
+  texto: string;
+  vertical: boolean;
+  retraso: number;
+  acento: string;
+  fuente: string;
+  abajo?: boolean;
+}> = ({ texto, vertical, retraso, acento, fuente, abajo = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const entrada = spring({ frame: frame - retraso, fps, config: { damping: 12, stiffness: 160 } });
   return (
     <AbsoluteFill
       style={{
-        justifyContent: vertical ? "flex-start" : "flex-start",
+        justifyContent: abajo ? "flex-end" : "flex-start",
         alignItems: "flex-start",
         padding: vertical ? 60 : 80,
         paddingTop: vertical ? 180 : 80,
+        paddingBottom: abajo ? (vertical ? 560 : 200) : undefined,
       }}
     >
       <div
@@ -244,7 +321,8 @@ const Rotulo: React.FC<{ texto: string; vertical: boolean; retraso: number }> = 
           transform: `translateY(${(1 - entrada) * 40}px) scale(${0.9 + entrada * 0.1})`,
           opacity: entrada,
           backgroundColor: "rgba(0,0,0,.6)",
-          borderLeft: `10px solid ${AMBAR}`,
+          borderLeft: `10px solid ${acento}`,
+          fontFamily: fuente,
           padding: "16px 28px",
           fontSize: vertical ? 54 : 52,
           fontWeight: 700,
@@ -261,11 +339,13 @@ const Rotulo: React.FC<{ texto: string; vertical: boolean; retraso: number }> = 
 };
 
 /** Frase grande al centro, palabra por palabra, sobre el clip difuminado. */
-const FraseGrande: React.FC<{ texto: string; vertical: boolean; retraso: number }> = ({
-  texto,
-  vertical,
-  retraso,
-}) => {
+const FraseGrande: React.FC<{
+  texto: string;
+  vertical: boolean;
+  retraso: number;
+  acento: string;
+  fuente: string;
+}> = ({ texto, vertical, retraso, acento, fuente }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const palabras = texto.split(/\s+/).filter(Boolean);
@@ -280,6 +360,7 @@ const FraseGrande: React.FC<{ texto: string; vertical: boolean; retraso: number 
           color: "#fff",
           textShadow: "0 8px 40px rgba(0,0,0,.9)",
           maxWidth: "100%",
+          fontFamily: fuente,
         }}
       >
         {palabras.map((w, k) => {
@@ -296,7 +377,7 @@ const FraseGrande: React.FC<{ texto: string; vertical: boolean; retraso: number 
                 marginRight: "0.28em",
                 opacity: s,
                 transform: `translateY(${(1 - s) * 60}px) scale(${0.8 + s * 0.2})`,
-                color: k === palabras.length - 1 ? AMBAR : "#fff",
+                color: k === palabras.length - 1 ? acento : "#fff",
               }}
             >
               {w}
@@ -308,7 +389,12 @@ const FraseGrande: React.FC<{ texto: string; vertical: boolean; retraso: number 
   );
 };
 
-const Titulo: React.FC<{ texto: string; vertical: boolean }> = ({ texto, vertical }) => {
+const Titulo: React.FC<{ texto: string; vertical: boolean; acento: string; fuente: string }> = ({
+  texto,
+  vertical,
+  acento,
+  fuente,
+}) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const entrada = spring({ frame, fps, config: { damping: 200 } });
@@ -330,6 +416,7 @@ const Titulo: React.FC<{ texto: string; vertical: boolean }> = ({ texto, vertica
           lineHeight: 1.05,
           textShadow: "0 6px 40px rgba(0,0,0,.9)",
           maxWidth: vertical ? "100%" : "80%",
+          fontFamily: fuente,
         }}
       >
         {texto}
@@ -339,7 +426,7 @@ const Titulo: React.FC<{ texto: string; vertical: boolean }> = ({ texto, vertica
           marginTop: 28,
           height: 10,
           width: `${barra * (vertical ? 60 : 30)}%`,
-          backgroundColor: AMBAR,
+          backgroundColor: acento,
           borderRadius: 6,
         }}
       />
@@ -347,7 +434,12 @@ const Titulo: React.FC<{ texto: string; vertical: boolean }> = ({ texto, vertica
   );
 };
 
-const Cierre: React.FC<{ nombre: string; url: string; vertical: boolean }> = ({ nombre, url, vertical }) => {
+const Cierre: React.FC<{ nombre: string; url: string; vertical: boolean; acento: string }> = ({
+  nombre,
+  url,
+  vertical,
+  acento,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const entrada = spring({ frame, fps, config: { damping: 16, stiffness: 120 } });
@@ -359,7 +451,7 @@ const Cierre: React.FC<{ nombre: string; url: string; vertical: boolean }> = ({ 
           transform: `translateY(${(1 - entrada) * 60}px) scale(${0.9 + entrada * 0.1})`,
           opacity: entrada,
           backgroundColor: "rgba(0,0,0,.72)",
-          border: `4px solid ${AMBAR}`,
+          border: `4px solid ${acento}`,
           borderRadius: 32,
           padding: vertical ? "40px 60px" : "48px 96px",
           textAlign: "center",

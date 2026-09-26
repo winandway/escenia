@@ -20,6 +20,9 @@
 - [x] Los videos terminados se ven y descargan dentro del panel (26 sep 2026).
 - [x] Plantilla v2 «profesional» (26 sep 2026): clips en todas las escenas con búsquedas de reserva, fundidos con whoosh, rótulos con pop, frases grandes animadas, riser en el título, campana en el cierre; marca de voz de prueba discreta (3 s).
 - [x] Estación instalada como LaunchAgent en la Mac (arranca sola al iniciar sesión y se reinicia si se cae).
+- [x] Fase 2 (parte): biografías producibles con fotos libres de Wikimedia Commons + plantilla MiniDocumental (26 sep 2026). Publicar en Caprichoso sigue cerrado.
+- [x] Ruta `/datos/estacion/guiones` para crear guiones desde fuera con el secreto (la usará el radar).
+- [ ] Fase 2: capturas de pantalla reales del software (visual «pantalla» con `url`: grabar la página con Playwright) — pedido por Richard el 26 sep 2026
 - [ ] Fase 2: biblioteca de recursos con licencia por archivo (el pack de sonidos de Richard entra ahí; memes/música con derechos solo con su confirmación por video)
 - [ ] Fase 2: temática `MiniDocumental`, Shorts 9:16, miniaturas, biblioteca de recursos, cortes comerciales
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas

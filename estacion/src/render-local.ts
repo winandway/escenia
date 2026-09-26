@@ -6,6 +6,7 @@ import { esquemaGuion } from "@compartido/guion";
 import { producir } from "./produccion";
 
 const archivo = process.argv[2];
+const plantilla = process.argv[3] === "MiniDocumental" ? "MiniDocumental" : "TechExplainer";
 if (!archivo) {
   console.error("Uso: npm run render -- <ruta-del-guion.json>");
   process.exit(1);
@@ -19,6 +20,7 @@ const r = await producir(
   async (paso, progreso) => {
     console.log(`${String(progreso).padStart(3)}% ${paso}`);
   },
+  plantilla,
 );
 console.log(
   `\nVideo: ${r.rutaMp4}\n${(r.bytes / 1_048_576).toFixed(1)} MB · ${r.duracionSeg.toFixed(1)} s · voz ${r.vozDePrueba ? "de prueba" : "ElevenLabs"}`,

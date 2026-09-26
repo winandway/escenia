@@ -19,7 +19,13 @@ async function unaVuelta(): Promise<boolean> {
       .catch((e) => console.warn("  (no se pudo avisar al panel)", e));
   };
   try {
-    const r = await producir(`t${trabajo.id}`, trabajo.contenido, trabajo.producto, avisar);
+    const r = await producir(
+      `t${trabajo.id}`,
+      trabajo.contenido,
+      trabajo.producto,
+      avisar,
+      trabajo.plantilla,
+    );
     if (r.costoVozUsd > 0)
       await panel.gasto(trabajo.id, "elevenlabs", `voz guion ${trabajo.guion_id}`, r.costoVozUsd);
     await avisar("subiendo el video al panel", 98);

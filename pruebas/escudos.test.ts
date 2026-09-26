@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { estacionAutorizada } from "@/lib/estacion-auth";
 import { turnstileOk } from "@/lib/turnstile";
 import { elegirEstructura, instruccionesSistema, mensajeUsuario } from "@/lib/prompt";
-import { buscarTematica, TEMATICAS } from "@compartido/tematicas";
+import { buscarTematica, PUBLICACION_PERMITIDA, TEMATICAS } from "@compartido/tematicas";
 
 describe("turnstile", () => {
   it("se apaga solo sin secreto", async () => {
@@ -44,8 +44,11 @@ describe("temáticas y prompt", () => {
     }
   });
 
-  it("en el piloto solo están activas las temáticas del canal de IA", () => {
-    for (const t of TEMATICAS.filter((x) => x.activa)) expect(t.canal).toBe("canal-ia");
+  it("publicar en Caprichoso TV sigue cerrado aunque se puedan producir sus videos", () => {
+    expect(PUBLICACION_PERMITIDA["caprichoso-tv"]).toBe(false);
+    expect(PUBLICACION_PERMITIDA["canal-ia"]).toBe(true);
+    // Producir sí: las biografías están activas para revisarlas en el panel.
+    expect(buscarTematica("biografias")?.activa).toBe(true);
   });
 
   it("rota la estructura menos usada", () => {

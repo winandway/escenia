@@ -3,12 +3,14 @@
 import { z } from "zod";
 
 export const PARTES = ["gancho", "problema", "contexto", "demo", "dato", "opinion", "cierre", "cta"] as const;
-export const TIPOS_VISUAL = ["stock", "texto", "titulo", "pantalla"] as const;
+export const TIPOS_VISUAL = ["stock", "foto", "texto", "titulo", "pantalla"] as const;
 
 export const esquemaVisual = z.object({
   tipo: z.enum(TIPOS_VISUAL),
-  // Palabras en inglés para buscar el clip en Pexels (solo si tipo = stock).
+  // Palabras para buscar el clip en Pexels (stock) o la foto en Wikimedia Commons (foto).
   busqueda: z.string().trim().max(80).optional(),
+  // Dirección a grabar en pantalla (solo si tipo = pantalla).
+  url: z.string().trim().max(300).optional(),
   // Frase corta que aparece grande en pantalla.
   texto_en_pantalla: z.string().trim().max(90).optional(),
 });

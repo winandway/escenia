@@ -3,20 +3,22 @@
 Cada candado tiene su prueba automática en `pruebas/`. Si alguien rompe la
 pieza, la prueba se pone en rojo antes de que llegue a producción.
 
-| Candado      | Qué protege                                                                                    | Dónde vive                                                      | Prueba                                                        |
-| ------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
-| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                           | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`) | `pruebas/modelos.test.ts`                                     |
-| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                           | `src/lib/presupuesto.ts`                                        | `pruebas/sesion-presupuesto.test.ts`                          |
-| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                 | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`           | `pruebas/guion.test.ts` (inserción)                           |
-| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                         | `src/lib/variedad.ts`                                           | `pruebas/variedad.test.ts`                                    |
-| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                      | `compartido/subtitulos.ts`                                      | `pruebas/subtitulos.test.ts`                                  |
-| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min | `src/lib/sesion.ts`, `src/lib/clave.ts`                         | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
-| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                              | `src/componentes/useBorrador.ts`                                | `pruebas/borrador.test.tsx`                                   |
-| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                     |
-| C-PILOTO-1   | Solo temáticas del canal de IA están activas                                                   | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
-| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                   | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
+| Candado      | Qué protege                                                                                        | Dónde vive                                                      | Prueba                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
+| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                               | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`) | `pruebas/modelos.test.ts`                                     |
+| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                               | `src/lib/presupuesto.ts`                                        | `pruebas/sesion-presupuesto.test.ts`                          |
+| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                     | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`           | `pruebas/guion.test.ts` (inserción)                           |
+| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                             | `src/lib/variedad.ts`                                           | `pruebas/variedad.test.ts`                                    |
+| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                          | `compartido/subtitulos.ts`                                      | `pruebas/subtitulos.test.ts`                                  |
+| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min     | `src/lib/sesion.ts`, `src/lib/clave.ts`                         | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
+| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                  | `src/componentes/useBorrador.ts`                                | `pruebas/borrador.test.tsx`                                   |
+| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                    | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                     |
+| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
+| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                       | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
+
+| C-LICENCIA-1 | Solo entran fotos con licencia libre para uso comercial (CC BY, CC BY-SA, CC0, dominio público); NC/ND se rechazan | `compartido/licencias.ts` + `estacion/src/fotos.ts` | `pruebas/licencias.test.ts` |
 
 ## Fallos encontrados y cómo se arreglaron
 

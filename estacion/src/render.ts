@@ -20,7 +20,7 @@ export function empaquetar(carpetaPublica: string): Promise<string> {
 }
 
 export async function renderizar(
-  composicion: "TechExplainer" | "TechExplainerShort",
+  composicion: "TechExplainer" | "TechExplainerShort" | "MiniDocumental",
   props: PropsVideo,
   carpetaPublica: string,
   salida: string,

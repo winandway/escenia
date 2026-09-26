@@ -89,7 +89,14 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
    guardan en `estacion/cache/clips/` (caché) y el crédito del autor queda en
    `creditos.txt`. Las escenas de tipo «texto» usan el clip difuminado con la
    frase grande al centro.
-4. **Render.** Remotion (`TechExplainer`, 1920×1080, 30 fps, H.264): fundido
+   3b. **Fotos (biografías).** Las escenas de tipo «foto» buscan en Wikimedia
+   Commons (`fotos.ts`) y solo aceptan licencias que permiten uso comercial y
+   obras derivadas (CC BY, CC BY-SA, CC0, dominio público; nunca NC ni ND).
+   Cada foto deja su crédito y licencia en `creditos.txt`, para pegarlo en la
+   descripción del video. Caché en `estacion/cache/clips/fotos/`.
+4. **Render.** Remotion (`TechExplainer` para tecnología, `MiniDocumental`
+   para biografías: serif, dorado, fotos con movimiento lento y marco;
+   1920×1080, 30 fps, H.264): fundido
    entre escenas con «whoosh», rótulos que entran con «pop», subida de tensión
    bajo el título y campana en el cierre. Los efectos de sonido son propios,
    generados con ffmpeg (`estacion/recursos/sfx/`, sin licencia de terceros);
