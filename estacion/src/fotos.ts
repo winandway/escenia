@@ -33,7 +33,7 @@ function sinHtml(t: string): string {
 
 // Títulos de archivo que casi nunca son un retrato: vestidos de museo, estatuas, tumbas, sellos…
 const NO_ES_RETRATO =
-  /\b(dress|costume|statue|sculpture|grave|tomb|plaque|mural|stamp|star|sign|poster|album|cover|logo|map|building|street|museum|exhibit)\b/i;
+  /\b(dress|costume|statue|sculpture|grave|tomb|mausoleum|memorial|plaque|mural|stamp|star|sign|poster|album|cover|logo|map|building|street|way|avenue|boulevard|plaza|square|park|school|museum|exhibit|festival|carnaval|carnival|parade|tribute|impersonator|cosplay|quarter|coin|medal|banknote|collage|montage|drawing|painting|caricature|museo|estatua|escultura|tumba|mausoleo|parque|calle|avenida|plaza|escuela|placa|sello|moneda|disco|portada|dibujo|pintura|caricatura|homenaje|exposici[oó]n|vestido)\b/i;
 
 /** Palabras del nombre de la persona (sin años ni contexto), para valorar los títulos. */
 function nombreBase(busqueda: string): string[] {
@@ -93,18 +93,33 @@ async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto
     })
     // Puntaje: el título trae el nombre de la persona (+), no parece objeto/lugar (−), y es grande (+).
     .map((c) => {
-      const titulo = c.p.title.toLowerCase();
+      // «9.7.14CeliaCruzParkByLuigiNovi.jpg» → «9 7 14 celia cruz park by luigi novi jpg»
+      const titulo = c.p.title
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_.()-]+/g, " ")
+        .toLowerCase();
       const nombre = nombreBase(busqueda);
-      const conNombre = nombre.filter((w) => titulo.includes(w)).length;
+      // El nombre COMPLETO tiene que estar en el título o en las categorías del archivo
+      // («Santa Cruz» no es «Celia Cruz»).
+      const categorias = (c.ii?.extmetadata?.Categories?.value ?? "")
+        .toLowerCase()
+        .split("|")
+        .map((x) => x.trim());
+      const nombreCompleto = nombre.join(" ");
+      const enTitulo = nombre.every((w) => titulo.includes(w));
+      const enCategoria = categorias.some((cat) => cat === nombreCompleto);
       const pixeles = (c.ii?.width ?? 0) * (c.ii?.height ?? 0);
       const puntaje =
-        conNombre * 3 - (NO_ES_RETRATO.test(c.p.title) ? 4 : 0) + Math.min(2, pixeles / 3_000_000);
-      return { ...c, puntaje };
+        (enTitulo ? 4 : 0) +
+        (enCategoria ? 3 : 0) -
+        (NO_ES_RETRATO.test(titulo) ? 10 : 0) +
+        Math.min(2, pixeles / 3_000_000);
+      return { ...c, puntaje, conNombre: enTitulo || enCategoria };
     })
     .sort((a, b) => b.puntaje - a.puntaje);
-  const elegida = candidatas.find(({ ii, puntaje }) => {
+  const elegida = candidatas.find(({ ii, puntaje, conNombre }) => {
     const prop = (ii?.width ?? 1) / (ii?.height ?? 1);
-    return puntaje > 0 && prop > 0.5 && prop < 2.2;
+    return conNombre && puntaje > 0 && prop > 0.5 && prop < 2.2;
   });
   if (!elegida?.ii) return null;
   const { p, ii } = elegida;
