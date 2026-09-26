@@ -32,6 +32,8 @@ export async function renderizar(
     composition: comp,
     serveUrl,
     codec: "h264",
+    // Calidad alta pero sin pasarse de peso: ~40–60 MB por video de 2–3 min en vez de 110+.
+    crf: 23,
     outputLocation: salida,
     inputProps: props,
     onProgress: ({ progress }) => avisar(progress),
