@@ -64,3 +64,6 @@ estacion/.panel-acceso.local
 PACK de SONIDOS*/
 estacion/recursos/sfx-local/
 estacion/recursos/musica-local/
+
+# Muestras de voz de Richard (personales): nunca al repo
+estacion/voz/
