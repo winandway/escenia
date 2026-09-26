@@ -8,7 +8,8 @@
     "estacion": "tsx src/estacion.ts",
     "render": "tsx src/render-local.ts",
     "studio": "remotion studio src/remotion/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "subir-video": "tsx src/subir-video.ts"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.529",

@@ -2,7 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
-import { archivosDeGuion, guionPorId, productoPorId, rendersDeGuion, trabajosDeGuion } from "@/lib/consultas";
+import {
+  archivosDeGuion,
+  guionPorId,
+  productoPorId,
+  rendersDeGuion,
+  trabajosDeGuion,
+  videosDeGuion,
+} from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
 import { duracionEstimadaSeg, esquemaGuion } from "@compartido/guion";
 import { buscarTematica } from "@compartido/tematicas";
@@ -30,11 +37,12 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
   if (!guion) notFound();
 
   const contenido = esquemaGuion.parse(JSON.parse(guion.contenido));
-  const [producto, trabajos, renders, archivos] = await Promise.all([
+  const [producto, trabajos, renders, archivos, videos] = await Promise.all([
     guion.producto_id ? productoPorId(db, guion.producto_id) : null,
     trabajosDeGuion(db, numero),
     rendersDeGuion(db, numero),
     archivosDeGuion(db, numero),
+    videosDeGuion(db, numero),
   ]);
   const tematica = buscarTematica(guion.tematica_id);
   const trabajo = trabajos[0];
@@ -75,12 +83,35 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
             )}
           </div>
           {trabajo.error && <p className="mt-2 text-red-300">{trabajo.error}</p>}
-          {voz && (
+          {videos.map((v) => (
+            <div key={v.id} className="mt-3 space-y-2">
+              <video
+                controls
+                preload="metadata"
+                playsInline
+                src={`/datos/archivos/${v.clave}`}
+                className="w-full rounded-md bg-black"
+                style={{ aspectRatio: v.formato === "9x16" ? "9 / 16" : "16 / 9", maxHeight: 520 }}
+              >
+                Tu navegador no puede reproducir el video.
+              </video>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
+                <span>
+                  Video {v.formato} · {Math.round(v.duracion_seg)} s · {(v.bytes / 1_048_576).toFixed(0)} MB
+                  {v.voz_de_prueba ? " · voz de prueba del sistema" : ""}
+                </span>
+                <a href={`/datos/archivos/${v.clave}?descargar=1`} className="boton-suave ml-auto px-3 py-1">
+                  Descargar
+                </a>
+              </div>
+            </div>
+          ))}
+          {voz && videos.length === 0 && (
             <audio controls preload="none" src={`/datos/archivos/${voz.clave}`} className="mt-3 w-full">
               Tu navegador no puede reproducir el audio.
             </audio>
           )}
-          {renders.length > 0 && (
+          {renders.length > 0 && videos.length === 0 && (
             <ul className="mt-3 space-y-1 text-neutral-300">
               {renders.map((r) => (
                 <li key={r.id}>

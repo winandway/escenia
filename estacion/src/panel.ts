@@ -1,5 +1,5 @@
 // Cliente HTTP del panel. Todo pasa por /datos/estacion/* con el secreto.
-import { readFile } from "node:fs/promises";
+import { open, readFile } from "node:fs/promises";
 import { esquemaGuion, type Guion } from "@compartido/guion";
 import { z } from "zod";
 import { config } from "./config";
@@ -23,10 +23,10 @@ export type Trabajo = NonNullable<z.infer<typeof esquemaTrabajo>["trabajo"]> & {
 async function llamar(
   ruta: string,
   cuerpo: unknown,
-  opciones: { crudo?: Buffer; contentType?: string } = {},
+  opciones: { crudo?: Buffer; contentType?: string; metodo?: "POST" | "PUT" } = {},
 ): Promise<unknown> {
   const r = await fetch(`${config.PANEL_URL}${ruta}`, {
-    method: "POST",
+    method: opciones.metodo ?? "POST",
     headers: {
       authorization: `Bearer ${config.ESTACION_SECRETO}`,
       "content-type": opciones.contentType ?? "application/json",
@@ -59,6 +59,54 @@ export const panel = {
       voz_de_prueba: boolean;
     }[],
   ) => llamar(`/datos/estacion/trabajos/${id}`, { accion: "hecho", renders }),
+  /** Sube el MP4 al almacén del panel por partes de 8 MB (multipart de R2). */
+  async subirVideo(
+    guionId: number,
+    formato: "16x9" | "9x16",
+    ruta: string,
+    datos: { duracion_seg: number; voz_de_prueba: boolean },
+    avisar: (pct: number) => void = () => {},
+  ): Promise<{ clave: string; bytes: number }> {
+    const PARTE = 8 * 1024 * 1024;
+    const inicio = (await llamar("/datos/estacion/videos/iniciar", { guion_id: guionId, formato })) as {
+      clave: string;
+      uploadId: string;
+    };
+    const archivo = await open(ruta, "r");
+    const partes: { partNumber: number; etag: string }[] = [];
+    try {
+      const total = (await archivo.stat()).size;
+      let posicion = 0;
+      let n = 1;
+      while (posicion < total) {
+        const largo = Math.min(PARTE, total - posicion);
+        const trozo = Buffer.alloc(largo);
+        await archivo.read(trozo, 0, largo, posicion);
+        const q = new URLSearchParams({ clave: inicio.clave, uploadId: inicio.uploadId, n: String(n) });
+        const r = (await llamar(`/datos/estacion/videos/parte?${q}`, null, {
+          crudo: trozo,
+          contentType: "application/octet-stream",
+          metodo: "PUT",
+        })) as { partNumber: number; etag: string };
+        partes.push({ partNumber: r.partNumber, etag: r.etag });
+        posicion += largo;
+        n++;
+        avisar(Math.round((posicion / total) * 100));
+      }
+    } finally {
+      await archivo.close();
+    }
+    const fin = (await llamar("/datos/estacion/videos/terminar", {
+      guion_id: guionId,
+      formato,
+      clave: inicio.clave,
+      uploadId: inicio.uploadId,
+      partes,
+      duracion_seg: datos.duracion_seg,
+      voz_de_prueba: datos.voz_de_prueba,
+    })) as { clave: string; bytes: number };
+    return fin;
+  },
   async subirArchivo(
     guionId: number,
     tipo: string,

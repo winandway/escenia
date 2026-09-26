@@ -53,6 +53,17 @@ export type FilaRender = {
   creado_en: string;
 };
 
+export type FilaVideo = {
+  id: number;
+  guion_id: number;
+  formato: "16x9" | "9x16";
+  clave: string;
+  bytes: number;
+  duracion_seg: number;
+  voz_de_prueba: number;
+  creado_en: string;
+};
+
 export type FilaArchivo = {
   id: number;
   guion_id: number;
@@ -91,6 +102,9 @@ export const trabajosDeGuion = (db: BaseDatos, guionId: number) =>
 
 export const rendersDeGuion = (db: BaseDatos, guionId: number) =>
   db.todos<FilaRender>("SELECT * FROM renders WHERE guion_id = ? ORDER BY id DESC", [guionId]);
+
+export const videosDeGuion = (db: BaseDatos, guionId: number) =>
+  db.todos<FilaVideo>("SELECT * FROM videos WHERE guion_id = ? ORDER BY id DESC", [guionId]);
 
 export const archivosDeGuion = (db: BaseDatos, guionId: number) =>
   db.todos<FilaArchivo>("SELECT * FROM archivos WHERE guion_id = ? ORDER BY id DESC", [guionId]);

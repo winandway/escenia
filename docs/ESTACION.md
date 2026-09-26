@@ -87,8 +87,16 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
    `visual.busqueda`, baja el clip a `estacion/cache/public/clips/` (caché) y
    guarda el crédito del autor en `creditos.txt`.
 4. **Render.** Remotion (`TechExplainer`, 1920×1080, 30 fps, H.264).
-5. **Reporte.** Sube al panel la voz (MP3) y los subtítulos (JSON) — pesan
-   poco — y registra la ruta local del MP4.
+5. **Reporte.** Sube al panel el MP4 (por partes de 8 MB, al almacén del
+   sitio), la voz (MP3) y los subtítulos (JSON), y registra la ruta local del
+   MP4. En el panel el video se ve y se descarga desde la página del guion.
+
+Para subir un video que ya estaba renderizado antes de que existiera la subida
+automática:
+
+```bash
+cd /Users/windocellc/Motor-Escenia/estacion && npm run subir-video -- <guion_id> out/t<id>/video-16x9.mp4 --voz-de-prueba
+```
 
 Si algo falla, el trabajo queda en «error» con el motivo, y en el panel hay un
 botón «Reintentar». Si la Estación se apaga a mitad de un trabajo, el panel lo

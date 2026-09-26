@@ -16,6 +16,8 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
 | C-PILOTO-1   | Solo temáticas del canal de IA están activas                                                   | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
 | C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                   | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
 
+| C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
+
 ## Fallos encontrados y cómo se arreglaron
 
 ### 25 sep 2026 — La Estación fallaba con «404 voz.mp3» (C-EMPAQUE-1)

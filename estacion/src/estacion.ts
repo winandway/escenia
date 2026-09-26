@@ -22,6 +22,20 @@ async function unaVuelta(): Promise<boolean> {
     const r = await producir(`t${trabajo.id}`, trabajo.contenido, trabajo.producto, avisar);
     if (r.costoVozUsd > 0)
       await panel.gasto(trabajo.id, "elevenlabs", `voz guion ${trabajo.guion_id}`, r.costoVozUsd);
+    await avisar("subiendo el video al panel", 98);
+    let ultimoPct = 0;
+    await panel.subirVideo(
+      trabajo.guion_id,
+      "16x9",
+      r.rutaMp4,
+      { duracion_seg: r.duracionSeg, voz_de_prueba: r.vozDePrueba },
+      (pct) => {
+        if (pct >= ultimoPct + 25) {
+          ultimoPct = pct;
+          void avisar(`subiendo el video al panel ${pct}%`, 98);
+        }
+      },
+    );
     await avisar("subiendo voz y subtítulos al panel", 99);
     await panel.subirArchivo(trabajo.guion_id, "voz", "mp3", r.rutaVoz, { voz_de_prueba: r.vozDePrueba });
     await panel.subirArchivo(trabajo.guion_id, "subtitulos", "json", r.rutaSubtitulos, {
