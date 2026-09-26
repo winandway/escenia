@@ -115,7 +115,9 @@ async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto
         (enCategoria ? 3 : 0) -
         (NO_ES_RETRATO.test(titulo) ? 10 : 0) +
         Math.min(2, pixeles / 3_000_000);
-      return { ...c, puntaje, conNombre: enTitulo || enCategoria };
+      // Sin la categoría de la persona, un homónimo se cuela («Celia Cruz» funcionaria de la FDA).
+      // Los artistas conocidos siempre tienen su categoría en Commons.
+      return { ...c, puntaje, conNombre: enCategoria };
     })
     .sort((a, b) => b.puntaje - a.puntaje);
   const elegida = candidatas.find(({ ii, puntaje, conNombre }) => {
