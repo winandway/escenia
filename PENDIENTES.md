@@ -2,8 +2,6 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Abrir cuenta PREPAGO en fal.ai (https://fal.ai), cargar $10 y pasar la API key (`FAL_KEY`). Destranca las imágenes con IA en las biografías (~$0.03 por imagen, tope en código).
-
 - 👤 Elegir plan de ElevenLabs (Creator $22 con clon profesional, o Starter $6 con clon instantáneo) y pasar API key + voice_id.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
 
@@ -24,6 +22,7 @@
 - [x] Estación instalada como LaunchAgent en la Mac (arranca sola al iniciar sesión y se reinicia si se cae).
 - [x] Fase 2 (parte): biografías producibles con fotos libres de Wikimedia Commons + plantilla MiniDocumental (26 sep 2026). Publicar en Caprichoso sigue cerrado.
 - [x] Ruta `/datos/estacion/guiones` para crear guiones desde fuera con el secreto (la usará el radar).
+- [x] Clave de fal.ai recibida (26 sep 2026): imágenes con IA activas en la Mac; biografía de Celia Cruz producida con ellas (guion #3, trabajo #7).
 - [x] Fase 2 (parte): titulares con golpe, recortes de periódico y tarjetas de red social dibujados en la plantilla; imágenes con IA listas (falta la clave de fal.ai) — 26 sep 2026
 - [ ] Fase 2: capturas de pantalla reales del software (visual «pantalla» con `url`: grabar la página con Playwright) — pedido por Richard el 26 sep 2026
 - [ ] Fase 2: biblioteca de recursos con licencia por archivo (el pack de sonidos de Richard entra ahí; memes/música con derechos solo con su confirmación por video)
