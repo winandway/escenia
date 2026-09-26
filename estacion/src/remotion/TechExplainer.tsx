@@ -200,8 +200,11 @@ const EscenaVista: React.FC<{
         durFrames={durFrames}
         difuminado={esFrase || esFoto || esTitular || esRecorte}
       />
-      {esFoto && escena.foto && (
+      {esFoto && escena.foto && escena.fotos.length <= 1 && (
         <FotoConMovimiento foto={escena.foto} durFrames={durFrames} vertical={vertical} />
+      )}
+      {esFoto && escena.fotos.length > 1 && (
+        <FotosEnSecuencia fotos={escena.fotos} durFrames={durFrames} vertical={vertical} whoosh={whoosh} />
       )}
       {esTitular && escena.recorte && (
         <TitularGolpe
@@ -502,6 +505,45 @@ const TarjetaRed: React.FC<{
           <span>💬 934</span>
         </div>
       </div>
+    </AbsoluteFill>
+  );
+};
+
+/** Varias imágenes en la misma escena: una por frase, con fundido entre ellas. */
+const FotosEnSecuencia: React.FC<{
+  fotos: Escena["fotos"];
+  durFrames: number;
+  vertical: boolean;
+  whoosh: string | null;
+}> = ({ fotos, durFrames, vertical, whoosh }) => {
+  const porFoto = Math.max(1, Math.floor(durFrames / fotos.length));
+  return (
+    <AbsoluteFill>
+      {fotos.map((f, k) => {
+        const desde = k * porFoto;
+        const dur = k === fotos.length - 1 ? Math.max(1, durFrames - desde) : porFoto + TRANSICION;
+        return (
+          <Sequence key={k} from={desde} durationInFrames={dur} name={`cuadro ${k + 1}`}>
+            <CuadroFundido foto={f} durFrames={dur} vertical={vertical} fundir={k > 0} />
+            {whoosh && k > 0 && <Audio src={staticFile(whoosh)} volume={0.25} />}
+          </Sequence>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+const CuadroFundido: React.FC<{
+  foto: NonNullable<Escena["foto"]>;
+  durFrames: number;
+  vertical: boolean;
+  fundir: boolean;
+}> = ({ foto, durFrames, vertical, fundir }) => {
+  const frame = useCurrentFrame();
+  const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
+  return (
+    <AbsoluteFill style={{ opacity: opacidad }}>
+      <FotoConMovimiento foto={foto} durFrames={durFrames} vertical={vertical} />
     </AbsoluteFill>
   );
 };

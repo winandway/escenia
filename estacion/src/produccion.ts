@@ -101,24 +101,43 @@ export async function producir(
         creditos.push(f.credito);
       }
     }
-    // Imagen generada con IA para el momento sin foto (solo si hay FAL_KEY; si falla, va clip).
-    if (e.visual.tipo === "ia" && e.visual.prompt_imagen && imagenesActivas()) {
-      const epoca = /\b19[0-6]\d(s)?\b/.test(`${e.visual.prompt_imagen} ${e.visual.texto_en_pantalla ?? ""}`);
-      // La persona del video tiene que estar en la imagen: si la IA no la nombró, se antepone.
+    // Imágenes generadas con IA: un cuadro por frase de la narración (o una sola
+    // si la IA solo dio `prompt_imagen`). Solo con FAL_KEY; si falla, va clip.
+    const fotos: PropsVideo["escenas"][number]["fotos"] = [];
+    if (e.visual.tipo === "ia" && imagenesActivas()) {
       const persona = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
-      const nombraPersona =
-        persona && e.visual.prompt_imagen.toLowerCase().includes(persona.toLowerCase().split(" ")[0] ?? "");
-      const promptImagen =
-        nombraPersona || !persona ? e.visual.prompt_imagen : `${persona}, ${e.visual.prompt_imagen}`;
-      const img = await generarImagen(promptImagen, carpetaPublica, { blancoYNegro: epoca }).catch((err) => {
-        console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
-        return null;
+      const prompts = (e.visual.cuadros?.map((c) => c.prompt_imagen) ?? [])
+        .concat(e.visual.cuadros?.length ? [] : e.visual.prompt_imagen ? [e.visual.prompt_imagen] : [])
+        .filter(Boolean);
+      const epoca = /\b19[0-6]\d(s)?\b/.test(`${prompts.join(" ")} ${e.visual.texto_en_pantalla ?? ""}`);
+      // La persona del video tiene que estar en cada imagen: si la IA no la nombró, se antepone.
+      const conPersona = prompts.map((pr) => {
+        const nombra = persona && pr.toLowerCase().includes(persona.toLowerCase().split(" ")[0] ?? "");
+        return nombra || !persona ? pr : `${persona}, ${pr}`;
       });
-      if (img) {
-        foto = { ruta: img.ruta, ancho: img.ancho, alto: img.alto };
-        creditos.push(img.credito);
-        if (img.costoUsd > 0) await gastar("fal.ai", `imagen escena ${i + 1}`, img.costoUsd);
+      // De a tres a la vez, para no tardar.
+      for (let k = 0; k < conPersona.length; k += 3) {
+        const lote = conPersona.slice(k, k + 3);
+        const resultados = await Promise.all(
+          lote.map((pr) =>
+            generarImagen(pr, carpetaPublica, { blancoYNegro: epoca }).catch((err) => {
+              console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
+              return null;
+            }),
+          ),
+        );
+        for (const img of resultados) {
+          if (!img) continue;
+          fotos.push({ ruta: img.ruta, ancho: img.ancho, alto: img.alto });
+          creditos.push(img.credito);
+          if (img.costoUsd > 0) await gastar("fal.ai", `imagen escena ${i + 1}`, img.costoUsd);
+        }
+        void avisar(
+          `imágenes con IA: escena ${i + 1}, ${Math.min(k + 3, conPersona.length)} de ${conPersona.length}`,
+          36,
+        );
       }
+      if (fotos[0]) foto = fotos[0];
     }
     const esRecorte = e.visual.tipo === "periodico" || e.visual.tipo === "red" || e.visual.tipo === "titular";
     const recorte: PropsVideo["escenas"][number]["recorte"] = esRecorte
@@ -150,6 +169,7 @@ export async function producir(
       estilo,
       clip: c ? { ruta: c.ruta, duracionSeg: c.duracionSeg } : null,
       foto,
+      fotos,
       recorte,
     });
     void avisar(

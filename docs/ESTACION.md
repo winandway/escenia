@@ -96,7 +96,10 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
    Cada foto deja su crédito y licencia en `creditos.txt`, para pegarlo en la
    descripción del video. Caché en `estacion/cache/clips/fotos/`.
    3c. **Imágenes con IA (`visual.tipo = ia`).** Para momentos de una biografía
-   sin foto real. Corre en fal.ai con el único modelo permitido en
+   sin foto real. Cada escena «ia» trae `visual.cuadros` (2 a 5 imágenes, una
+   por frase de la narración, pedido por Richard el 26 sep 2026: ~5 imágenes
+   por minuto); se generan de a tres a la vez y se muestran en orden con
+   fundido dentro de la escena. Corre en fal.ai con el único modelo permitido en
    `compartido/modelos.ts` (Seedream 4, ~$0.03 por imagen; tope en código de
    $0.05: nada más caro corre, ni de respaldo). Necesita `FAL_KEY` (cuenta
    PREPAGO) en `estacion/.env`; sin ella, esas escenas van con clip. Cada

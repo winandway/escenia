@@ -16,6 +16,7 @@ const vacio: PropsVideo = {
       estilo: "clip",
       clip: null,
       foto: null,
+      fotos: [],
       recorte: null,
     },
   ],

@@ -26,6 +26,12 @@ export const esquemaVisual = z.object({
   url: z.string().trim().max(300).optional(),
   // Descripción EN INGLÉS de la imagen a generar (solo si tipo = ia).
   prompt_imagen: z.string().trim().max(400).optional(),
+  // Varias imágenes en la misma escena, una por frase o idea de la narración
+  // (tipo = ia): se muestran en orden, repartidas en el tiempo de la escena.
+  cuadros: z
+    .array(z.object({ prompt_imagen: z.string().trim().min(10).max(400) }))
+    .max(6)
+    .optional(),
   // Recortes y titulares (tipos titular, periodico, red).
   titular: z.string().trim().max(90).optional(),
   fecha: z.string().trim().max(40).optional(),

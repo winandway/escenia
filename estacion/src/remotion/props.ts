@@ -22,6 +22,9 @@ export const esquemaEscenaVideo = z.object({
   // Ruta relativa al publicDir (staticFile) del clip de fondo, o null si no hubo ninguno.
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable(),
   foto: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }).nullable().default(null),
+  // Varias imágenes en la misma escena (una por frase de la narración): se
+  // muestran en orden, cada una con su movimiento, repartidas en el tiempo.
+  fotos: z.array(z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() })).default([]),
   recorte: z
     .object({
       tipo: z.enum(["periodico", "red", "titular"]),

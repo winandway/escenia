@@ -1,0 +1,43 @@
+{
+  "titulo": "Celia Cruz: la voz que cruzó el mar",
+  "gancho": "Una niña de La Habana cantaba para dormir a sus hermanos. Décadas después, el mundo entero gritaba «¡Azúcar!».",
+  "escenas": [
+    {
+      "parte": "gancho",
+      "narracion": "Una niña de La Habana cantaba para dormir a sus hermanos. Su padre quería que fuera maestra. Ella quería cantar en la radio.",
+      "visual": {
+        "tipo": "ia",
+        "busqueda": "havana old street",
+        "cuadros": [
+          {
+            "prompt_imagen": "Celia Cruz, the Afro-Cuban salsa singer, as a young girl in a modest 1930s Havana home singing softly beside a wooden crib with a baby"
+          },
+          {
+            "prompt_imagen": "Celia Cruz, the Afro-Cuban salsa singer, as a teenager in 1940s Havana, her stern father in a white guayabera pointing at a school book at a kitchen table"
+          },
+          {
+            "prompt_imagen": "Celia Cruz, the Afro-Cuban salsa singer, as a young woman singing into a vintage ribbon microphone in a 1940s Havana radio studio, engineers behind glass"
+          }
+        ]
+      }
+    },
+    {
+      "parte": "dato",
+      "narracion": "En mil novecientos cincuenta entró a la Sonora Matancera. Ese fue el momento que lo cambió todo.",
+      "visual": {
+        "tipo": "titular",
+        "titular": "Entra a la Sonora",
+        "fecha": "1950",
+        "busqueda": "vintage microphone stage"
+      }
+    },
+    {
+      "parte": "cierre",
+      "narracion": "Murió en dos mil tres en Nueva Jersey. Su grito de «¡Azúcar!» sigue sonando en cada fiesta donde se baila salsa.",
+      "visual": { "tipo": "foto", "busqueda": "Celia Cruz 1957", "texto_en_pantalla": "Reina de la Salsa" }
+    }
+  ],
+  "hechos_a_verificar": [],
+  "descripcion_youtube": "",
+  "etiquetas": ["biografía", "salsa"]
+}
