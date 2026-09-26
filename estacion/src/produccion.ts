@@ -92,7 +92,7 @@ export async function producir(
     ];
     let foto: PropsVideo["escenas"][number]["foto"] = null;
     if (e.visual.tipo === "foto" && e.visual.busqueda) {
-      const f = await buscarFoto([e.visual.busqueda, guion.titulo], carpetaPublica);
+      const f = await buscarFoto([e.visual.busqueda, guion.titulo.split(/[:—-]/)[0] ?? ""], carpetaPublica);
       if (f) {
         foto = { ruta: f.ruta, ancho: f.ancho, alto: f.alto };
         creditos.push(f.credito);

@@ -26,7 +26,7 @@
       }
     },
     {
-      "parte": "texto",
+      "parte": "dato",
       "narracion": "Salió de Cuba en 1960 y nunca pudo volver.",
       "visual": {
         "tipo": "texto",

@@ -31,8 +31,27 @@ function sinHtml(t: string): string {
     .trim();
 }
 
+// Títulos de archivo que casi nunca son un retrato: vestidos de museo, estatuas, tumbas, sellos…
+const NO_ES_RETRATO =
+  /\b(dress|costume|statue|sculpture|grave|tomb|plaque|mural|stamp|star|sign|poster|album|cover|logo|map|building|street|museum|exhibit)\b/i;
+
+/** Palabras del nombre de la persona (sin años ni contexto), para valorar los títulos. */
+function nombreBase(busqueda: string): string[] {
+  return busqueda
+    .split(/\s+/)
+    .filter((w) => !/^\d/.test(w))
+    .slice(0, 2)
+    .map((w) => w.toLowerCase());
+}
+
 export async function buscarFoto(busquedas: string[], carpetaPublica: string): Promise<Foto | null> {
-  for (const b of busquedas.map((x) => x.trim()).filter(Boolean)) {
+  const lista = busquedas.map((x) => x.trim()).filter(Boolean);
+  // Reserva: solo el nombre (sin época) por si la búsqueda con contexto no da nada.
+  for (const b of [...lista]) {
+    const base = nombreBase(b).join(" ");
+    if (base && !lista.includes(base)) lista.push(base);
+  }
+  for (const b of lista) {
     const foto = await buscarUna(b, carpetaPublica).catch((e) => {
       console.warn(`Commons falló con «${b}»: ${e instanceof Error ? e.message : e}`);
       return null;
@@ -72,11 +91,20 @@ async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto
       const esFoto = !/\.(svg|gif|pdf|tif|tiff)$/i.test(p.title);
       return esFoto && ii.width >= 900 && licenciaLibre(licencia);
     })
-    // Primero las más grandes y con proporción de foto (ni tiras ni logos).
-    .sort((a, b) => (b.ii?.width ?? 0) * (b.ii?.height ?? 0) - (a.ii?.width ?? 0) * (a.ii?.height ?? 0));
-  const elegida = candidatas.find(({ ii }) => {
+    // Puntaje: el título trae el nombre de la persona (+), no parece objeto/lugar (−), y es grande (+).
+    .map((c) => {
+      const titulo = c.p.title.toLowerCase();
+      const nombre = nombreBase(busqueda);
+      const conNombre = nombre.filter((w) => titulo.includes(w)).length;
+      const pixeles = (c.ii?.width ?? 0) * (c.ii?.height ?? 0);
+      const puntaje =
+        conNombre * 3 - (NO_ES_RETRATO.test(c.p.title) ? 4 : 0) + Math.min(2, pixeles / 3_000_000);
+      return { ...c, puntaje };
+    })
+    .sort((a, b) => b.puntaje - a.puntaje);
+  const elegida = candidatas.find(({ ii, puntaje }) => {
     const prop = (ii?.width ?? 1) / (ii?.height ?? 1);
-    return prop > 0.5 && prop < 2.2;
+    return puntaje > 0 && prop > 0.5 && prop < 2.2;
   });
   if (!elegida?.ii) return null;
   const { p, ii } = elegida;

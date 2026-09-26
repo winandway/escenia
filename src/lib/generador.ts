@@ -26,7 +26,10 @@ export async function generarGuion(
   const cliente = new Anthropic({ apiKey: opciones.apiKey, fetch: opciones.fetch, maxRetries: 2 });
   const respuesta = await cliente.messages.parse({
     model: modelo,
-    max_tokens: 8000,
+    // Un guion largo (biografías) pasa de 8 000 tokens; y sin razonamiento
+    // interno, para que todo el presupuesto vaya al JSON del guion.
+    max_tokens: 16000,
+    thinking: { type: "disabled" },
     system: instruccionesSistema(),
     messages: [{ role: "user", content: mensajeUsuario(entrada) }],
     output_config: { format: zodOutputFormat(esquemaGuion) },
@@ -35,6 +38,9 @@ export async function generarGuion(
   const costoUsd = costoTokensUsd(modelo, respuesta.usage.input_tokens, respuesta.usage.output_tokens);
   await anotarGasto(db, "claude", `guion: ${entrada.tema.titulo}`, costoUsd);
 
+  if (respuesta.stop_reason === "max_tokens") {
+    throw new Error("El guion salió demasiado largo y se cortó. Pide un video más corto o menos escenas.");
+  }
   if (respuesta.stop_reason === "refusal") {
     throw new Error("La IA no quiso escribir este guion. Cambia el tema o el contexto.");
   }
