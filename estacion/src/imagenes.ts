@@ -48,15 +48,14 @@ export async function generarImagen(
     });
     if (!envio.ok)
       throw new Error(`fal.ai respondió ${envio.status} al encolar: ${(await envio.text()).slice(0, 200)}`);
-    const { request_id: requestId } = (await envio.json()) as { request_id: string };
+    // fal devuelve las direcciones exactas de estado y resultado (no cuelgan del id del modelo).
+    const cola = (await envio.json()) as { request_id: string; status_url: string; response_url: string };
 
     // Espera hasta 90 s a que termine.
     const inicio = Date.now();
     let listo = false;
     while (Date.now() - inicio < 90_000) {
-      const est = await fetch(`https://queue.fal.run/${modelo}/requests/${requestId}/status`, {
-        headers: cabeceras,
-      });
+      const est = await fetch(cola.status_url, { headers: cabeceras });
       const estado = (await est.json()) as { status: string };
       if (estado.status === "COMPLETED") {
         listo = true;
@@ -67,7 +66,7 @@ export async function generarImagen(
     }
     if (!listo) throw new Error("fal.ai tardó demasiado en generar la imagen.");
 
-    const res = await fetch(`https://queue.fal.run/${modelo}/requests/${requestId}`, { headers: cabeceras });
+    const res = await fetch(cola.response_url, { headers: cabeceras });
     const salida = (await res.json()) as { images?: { url: string; width?: number; height?: number }[] };
     const url = salida.images?.[0]?.url;
     if (!url) throw new Error("fal.ai devolvió una respuesta sin imagen.");
