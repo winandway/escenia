@@ -1,11 +1,12 @@
 // Produce UN video de punta a punta: voz → subtítulos → clips → render.
-import { cp, mkdir, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Guion } from "@compartido/guion";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
 import { renderizar } from "./render";
-import { buscarClip } from "./visuales";
+import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
 import { generarVoz } from "./voz";
 
 export type Avisar = (paso: string, progreso: number) => Promise<unknown>;
@@ -21,6 +22,27 @@ export type ResultadoProduccion = {
   creditos: string[];
 };
 
+const aqui = path.dirname(fileURLToPath(import.meta.url));
+const CARPETA_SFX = path.resolve(aqui, "../recursos/sfx");
+
+/** Copia los efectos de sonido propios a la carpeta pública del trabajo. */
+async function prepararSfx(carpetaPublica: string): Promise<PropsVideo["sfx"]> {
+  const destino = path.join(carpetaPublica, "sfx");
+  await mkdir(destino, { recursive: true });
+  const archivos = (await readdir(CARPETA_SFX).catch(() => [] as string[])).filter((a) => a.endsWith(".mp3"));
+  for (const a of archivos) await cp(path.join(CARPETA_SFX, a), path.join(destino, a));
+  const tiene = (n: string) => (archivos.includes(n) ? `sfx/${n}` : null);
+  return {
+    whoosh: archivos
+      .filter((a) => a.startsWith("whoosh-"))
+      .sort()
+      .map((a) => `sfx/${a}`),
+    pop: tiene("pop.mp3"),
+    riser: tiene("riser.mp3"),
+    ding: tiene("ding.mp3"),
+  };
+}
+
 export async function producir(
   clave: string,
   guion: Guion,
@@ -28,7 +50,7 @@ export async function producir(
   avisar: Avisar,
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
-  // Carpeta pública SOLO de este trabajo: voz + clips que usa. Se empaqueta con ella.
+  // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
   const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
   await mkdir(carpetaTrabajo, { recursive: true });
   await mkdir(carpetaPublica, { recursive: true });
@@ -41,6 +63,7 @@ export async function producir(
   await cp(voz.rutaMp3, path.join(carpetaPublica, "voz.mp3"));
   const rutaSubtitulos = path.join(carpetaTrabajo, "subtitulos.json");
   await writeFile(rutaSubtitulos, JSON.stringify({ palabras: voz.palabras, tramos: voz.tramos }, null, 2));
+  const sfx = await prepararSfx(carpetaPublica);
 
   await avisar("buscando clips de fondo", 35);
   const creditos: string[] = [];
@@ -48,21 +71,26 @@ export async function producir(
   for (const [i, e] of guion.escenas.entries()) {
     const tramo = voz.tramos[i];
     if (!tramo) continue;
-    let clip: PropsVideo["escenas"][number]["clip"] = null;
-    if (e.visual.tipo === "stock" && e.visual.busqueda) {
-      const c = await buscarClip(e.visual.busqueda, false, carpetaPublica).catch(() => null);
-      if (c) {
-        clip = { ruta: c.ruta, duracionSeg: c.duracionSeg };
-        creditos.push(c.credito);
-      }
-    }
+    // Toda escena lleva clip: primero la búsqueda de la IA, luego las de reserva por parte.
+    const busquedas = [
+      e.visual.busqueda ?? "",
+      ...(RESERVA_POR_PARTE[e.parte] ?? RESERVA_POR_PARTE.contexto ?? []),
+    ];
+    const c = await buscarClip(busquedas, false, carpetaPublica);
+    if (c) creditos.push(c.credito);
+    const esFrase = e.visual.tipo === "texto" || e.visual.tipo === "titulo";
     escenas.push({
       parte: e.parte,
       inicioMs: tramo.inicioMs,
       finMs: tramo.finMs,
       textoEnPantalla: e.visual.texto_en_pantalla ?? "",
-      clip,
+      estilo: esFrase ? "frase" : "clip",
+      clip: c ? { ruta: c.ruta, duracionSeg: c.duracionSeg } : null,
     });
+    void avisar(
+      `clips de fondo: escena ${i + 1} de ${guion.escenas.length}`,
+      35 + Math.round((i / guion.escenas.length) * 5),
+    );
   }
 
   const props: PropsVideo = {
@@ -73,6 +101,7 @@ export async function producir(
     escenas,
     producto,
     vozDePrueba: voz.vozDePrueba,
+    sfx,
   };
   await writeFile(path.join(carpetaTrabajo, "props.json"), JSON.stringify(props, null, 2));
 

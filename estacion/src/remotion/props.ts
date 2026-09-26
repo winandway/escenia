@@ -15,8 +15,17 @@ export const esquemaEscenaVideo = z.object({
   inicioMs: z.number(),
   finMs: z.number(),
   textoEnPantalla: z.string().default(""),
-  // Ruta relativa al publicDir (staticFile) del clip de fondo, o null para fondo de color.
+  // "clip": clip de fondo con rótulo arriba. "frase": clip difuminado con la frase grande al centro.
+  estilo: z.enum(["clip", "frase"]).default("clip"),
+  // Ruta relativa al publicDir (staticFile) del clip de fondo, o null si no hubo ninguno.
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable(),
+});
+
+export const esquemaSfx = z.object({
+  whoosh: z.array(z.string()).default([]),
+  pop: z.string().nullable().default(null),
+  riser: z.string().nullable().default(null),
+  ding: z.string().nullable().default(null),
 });
 
 export const esquemaPropsVideo = z.object({
@@ -27,6 +36,7 @@ export const esquemaPropsVideo = z.object({
   escenas: z.array(esquemaEscenaVideo),
   producto: z.object({ nombre: z.string(), url: z.string() }).nullable(),
   vozDePrueba: z.boolean().default(false),
+  sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null }),
 });
 
 export type PropsVideo = z.infer<typeof esquemaPropsVideo>;

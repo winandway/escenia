@@ -33,8 +33,9 @@ export function instruccionesSistema(): string {
     "- El gancho de los primeros 5 segundos plantea una tensión o una pregunta concreta, no un saludo.",
     "- La escena de opinión la escribe el editor humano: deja en ella una narración corta de relleno que diga «[opinión del editor]».",
     "- El producto (si hay) aparece al final como una recomendación natural y honesta, sin exagerar.",
-    "- En `visual.busqueda` escribe 2 a 5 palabras EN INGLÉS para buscar un clip de stock (ej.: «programmer laptop night»). Nunca pidas personas famosas ni marcas.",
-    "- En `visual.texto_en_pantalla` pon frases de 2 a 6 palabras que refuercen la idea.",
+    "- Tipos de visual: «stock» = clip de fondo con un rótulo corto arriba (la mayoría de las escenas); «texto» = una frase grande al centro, para el dato o la idea clave (úsalo en 2 o 3 escenas, no más); «titulo» solo para la primera escena si hace falta; «pantalla» como «stock».",
+    "- SIEMPRE llena `visual.busqueda` con 2 a 5 palabras EN INGLÉS, concretas y visuales, que describan lo que se ve en un clip de stock (ej.: «laundry shop counter», «hands scanning qr code», «person stressed phone»). Nunca personas famosas ni marcas. También en las escenas de tipo «texto».",
+    "- `visual.texto_en_pantalla`: en escenas «stock», un rótulo de 2 a 5 palabras que funcione como titular (sin comas sueltas ni palabras aisladas; ej.: «Cada prenda con su QR»). En escenas «texto», la frase completa de 4 a 8 palabras que se leerá grande al centro.",
   ].join("\n");
 }
 

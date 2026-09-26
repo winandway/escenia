@@ -18,6 +18,7 @@
 - [x] Variables del panel cargadas por Richard (26 sep 2026): canario en verde, Estación conectada al panel en vivo, prueba de humo ok.
 - [x] Clave de Pexels recibida y puesta en la Mac (26 sep 2026): los videos salen con clips reales.
 - [x] Los videos terminados se ven y descargan dentro del panel (26 sep 2026).
+- [x] Plantilla v2 «profesional» (26 sep 2026): clips en todas las escenas con búsquedas de reserva, fundidos con whoosh, rótulos con pop, frases grandes animadas, riser en el título, campana en el cierre; marca de voz de prueba discreta (3 s).
 - [x] Estación instalada como LaunchAgent en la Mac (arranca sola al iniciar sesión y se reinicia si se cae).
 - [ ] Fase 2: temática `MiniDocumental`, Shorts 9:16, miniaturas, biblioteca de recursos, cortes comerciales
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas

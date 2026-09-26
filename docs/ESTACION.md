@@ -83,10 +83,18 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
    escenas. El costo se anota en el panel (candado de gasto).
 2. **Subtítulos.** `compartido/subtitulos.ts` convierte letras → palabras con
    tiempos, y calcula dónde empieza y termina cada escena.
-3. **Clips.** Para cada escena con `visual.tipo = stock`, busca en Pexels con
-   `visual.busqueda`, baja el clip a `estacion/cache/public/clips/` (caché) y
-   guarda el crédito del autor en `creditos.txt`.
-4. **Render.** Remotion (`TechExplainer`, 1920×1080, 30 fps, H.264).
+3. **Clips.** TODAS las escenas llevan clip: primero la búsqueda que escribió
+   la IA (`visual.busqueda`), y si no da resultado, las búsquedas de reserva
+   por parte del guion (`RESERVA_POR_PARTE` en `visuales.ts`). Los clips se
+   guardan en `estacion/cache/clips/` (caché) y el crédito del autor queda en
+   `creditos.txt`. Las escenas de tipo «texto» usan el clip difuminado con la
+   frase grande al centro.
+4. **Render.** Remotion (`TechExplainer`, 1920×1080, 30 fps, H.264): fundido
+   entre escenas con «whoosh», rótulos que entran con «pop», subida de tensión
+   bajo el título y campana en el cierre. Los efectos de sonido son propios,
+   generados con ffmpeg (`estacion/recursos/sfx/`, sin licencia de terceros);
+   se pueden reemplazar por otros con licencia poniendo archivos con el mismo
+   nombre (`whoosh-1.mp3`…, `pop.mp3`, `riser.mp3`, `ding.mp3`).
 5. **Reporte.** Sube al panel el MP4 (por partes de 8 MB, al almacén del
    sitio), la voz (MP3) y los subtítulos (JSON), y registra la ruta local del
    MP4. En el panel el video se ve y se descarga desde la página del guion.

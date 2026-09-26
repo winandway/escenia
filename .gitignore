@@ -59,3 +59,8 @@ estacion/.env
 out-deploy
 .dist-worker
 estacion/.panel-acceso.local
+
+# Sonidos de Richard: licencias mixtas, nunca al repo público
+PACK de SONIDOS*/
+estacion/recursos/sfx-local/
+estacion/recursos/musica-local/
