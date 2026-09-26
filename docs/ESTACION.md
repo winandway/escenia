@@ -93,11 +93,22 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
    entre escenas con «whoosh», rótulos que entran con «pop», subida de tensión
    bajo el título y campana en el cierre. Los efectos de sonido son propios,
    generados con ffmpeg (`estacion/recursos/sfx/`, sin licencia de terceros);
-   se pueden reemplazar por otros con licencia poniendo archivos con el mismo
-   nombre (`whoosh-1.mp3`…, `pop.mp3`, `riser.mp3`, `ding.mp3`).
-5. **Reporte.** Sube al panel el MP4 (por partes de 8 MB, al almacén del
-   sitio), la voz (MP3) y los subtítulos (JSON), y registra la ruta local del
-   MP4. En el panel el video se ve y se descarga desde la página del guion.
+   se pueden reemplazar por otros poniendo archivos con el mismo nombre
+   (`whoosh-1.mp3`…, `pop.mp3`, `riser.mp3`, `ding.mp3`, `boom.mp3`) en
+   `estacion/recursos/sfx-local/`, que vive solo en la Mac (está en
+   `.gitignore`) y gana sobre los del repositorio. El 26 sep 2026 se recortaron
+   ahí, a partir del «PACK de SONIDOS 2026» de Richard, los swoosh, el riser,
+   el boom, la transición y las campanas (buscando el golpe con
+   `silencedetect`, recortando, con fundido y volumen normalizado a −16 LUFS).
+
+**Ojo con el pack de sonidos:** la carpeta `PACK de SONIDOS 2026/` NUNCA va al
+repositorio (es público y trae clips con derechos: memes, música, voces).
+Los efectos genéricos (swoosh, boom, campanas, teclado) se usan como
+ambiente; los memes y la música con derechos quedan para la biblioteca de
+la Fase 2, marcados «licencia: otro», y solo entran a un video si Richard lo
+confirma en ese video. 5. **Reporte.** Sube al panel el MP4 (por partes de 8 MB, al almacén del
+sitio), la voz (MP3) y los subtítulos (JSON), y registra la ruta local del
+MP4. En el panel el video se ve y se descarga desde la página del guion.
 
 Para subir un video que ya estaba renderizado antes de que existiera la subida
 automática:

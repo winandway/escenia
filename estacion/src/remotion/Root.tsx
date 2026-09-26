@@ -10,7 +10,7 @@ const vacio: PropsVideo = {
   escenas: [{ parte: "gancho", inicioMs: 0, finMs: 3000, textoEnPantalla: "", estilo: "clip", clip: null }],
   producto: null,
   vozDePrueba: false,
-  sfx: { whoosh: [], pop: null, riser: null, ding: null },
+  sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null },
 };
 
 export const Root: React.FC = () => (

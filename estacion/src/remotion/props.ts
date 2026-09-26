@@ -26,6 +26,7 @@ export const esquemaSfx = z.object({
   pop: z.string().nullable().default(null),
   riser: z.string().nullable().default(null),
   ding: z.string().nullable().default(null),
+  boom: z.string().nullable().default(null),
 });
 
 export const esquemaPropsVideo = z.object({
@@ -36,7 +37,7 @@ export const esquemaPropsVideo = z.object({
   escenas: z.array(esquemaEscenaVideo),
   producto: z.object({ nombre: z.string(), url: z.string() }).nullable(),
   vozDePrueba: z.boolean().default(false),
-  sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null }),
+  sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null }),
 });
 
 export type PropsVideo = z.infer<typeof esquemaPropsVideo>;

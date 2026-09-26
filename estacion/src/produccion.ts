@@ -23,23 +23,33 @@ export type ResultadoProduccion = {
 };
 
 const aqui = path.dirname(fileURLToPath(import.meta.url));
-const CARPETA_SFX = path.resolve(aqui, "../recursos/sfx");
+// `sfx` va en el repositorio (sonidos generados, sin licencia de terceros).
+// `sfx-local` vive solo en la Mac (los sonidos de Richard) y, si trae un
+// archivo con el mismo nombre, gana.
+const CARPETAS_SFX = [path.resolve(aqui, "../recursos/sfx"), path.resolve(aqui, "../recursos/sfx-local")];
 
-/** Copia los efectos de sonido propios a la carpeta pública del trabajo. */
+/** Copia los efectos de sonido a la carpeta pública del trabajo. */
 async function prepararSfx(carpetaPublica: string): Promise<PropsVideo["sfx"]> {
   const destino = path.join(carpetaPublica, "sfx");
   await mkdir(destino, { recursive: true });
-  const archivos = (await readdir(CARPETA_SFX).catch(() => [] as string[])).filter((a) => a.endsWith(".mp3"));
-  for (const a of archivos) await cp(path.join(CARPETA_SFX, a), path.join(destino, a));
-  const tiene = (n: string) => (archivos.includes(n) ? `sfx/${n}` : null);
+  const archivos = new Set<string>();
+  for (const carpeta of CARPETAS_SFX) {
+    const lista = (await readdir(carpeta).catch(() => [] as string[])).filter((a) => a.endsWith(".mp3"));
+    for (const a of lista) {
+      await cp(path.join(carpeta, a), path.join(destino, a));
+      archivos.add(a);
+    }
+  }
+  const tiene = (n: string) => (archivos.has(n) ? `sfx/${n}` : null);
   return {
-    whoosh: archivos
+    whoosh: [...archivos]
       .filter((a) => a.startsWith("whoosh-"))
       .sort()
       .map((a) => `sfx/${a}`),
     pop: tiene("pop.mp3"),
     riser: tiene("riser.mp3"),
     ding: tiene("ding.mp3"),
+    boom: tiene("boom.mp3"),
   };
 }
 

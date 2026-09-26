@@ -79,6 +79,11 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       <Sequence from={0} durationInFrames={Math.round(FPS * 3.2)} name="título">
         <Titulo texto={p.titulo} vertical={vertical} />
         {p.sfx.riser && <Audio src={staticFile(p.sfx.riser)} volume={0.35} />}
+        {p.sfx.boom && (
+          <Sequence from={18} name="boom">
+            <Audio src={staticFile(p.sfx.boom)} volume={0.45} />
+          </Sequence>
+        )}
       </Sequence>
 
       {/* Subtítulos palabra por palabra */}
