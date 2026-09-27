@@ -20,14 +20,15 @@ type Candidata = {
   anio: number | null;
 };
 
-/** Año de la foto: primero el del título («Celia Cruz, 1957.jpg»), si no el de la cámara. */
-function anioDeCandidata(p: PaginaCommons, meta: Record<string, { value: string }>): number | null {
+/**
+ * Año de la foto SOLO si está en el título («Celia Cruz, 1957.jpg»). La fecha
+ * de la cámara no sirve: suele ser la del escaneo o la subida, y con ella una
+ * estatua de 2014 pasó por «foto de Celia en 2014».
+ */
+function anioDeCandidata(p: PaginaCommons): number | null {
   const ahora = new Date().getFullYear();
   const enTitulo = /\b(18[5-9]\d|19\d\d|20\d\d)\b/.exec(p.title)?.[1];
-  if (enTitulo && Number(enTitulo) <= ahora) return Number(enTitulo);
-  const fecha = meta.DateTimeOriginal?.value ?? "";
-  const enFecha = /\b(18[5-9]\d|19\d\d|20\d\d)\b/.exec(sinHtml(fecha))?.[1];
-  return enFecha && Number(enFecha) <= ahora ? Number(enFecha) : null;
+  return enTitulo && Number(enTitulo) <= ahora ? Number(enTitulo) : null;
 }
 
 const AGENTE = "Escenia/0.1 (https://windoce.com; escenia@windoce.com)";
@@ -138,7 +139,7 @@ async function candidatasCommons(busqueda: string, anchoMinimo = 900): Promise<C
           Math.min(2, pixeles / 3_000_000);
         // Sin la categoría de la persona, un homónimo se cuela («Celia Cruz» funcionaria de la FDA).
         // Los artistas conocidos siempre tienen su categoría en Commons.
-        return { ...c, puntaje, conNombre: enCategoria, anio: anioDeCandidata(c.p, c.ii?.extmetadata ?? {}) };
+        return { ...c, puntaje, conNombre: enCategoria, anio: anioDeCandidata(c.p) };
       })
       .sort((a, b) => b.puntaje - a.puntaje)
   );
