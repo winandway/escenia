@@ -6,7 +6,7 @@ import { z } from "zod";
 import { exigirSesion } from "@/lib/auth";
 import { guionPorId } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
-import { esquemaEscena, esquemaGuion, insertarOpinion, OPINION_MINIMA } from "@compartido/guion";
+import { esquemaEscena, esquemaGuion, insertarOpinion, OPINION_MINIMA, VOCES } from "@compartido/guion";
 
 const esquemaEdicion = z.object({
   id: z.coerce.number().int().positive(),
@@ -14,6 +14,7 @@ const esquemaEdicion = z.object({
   gancho: z.string().trim().min(5).max(300),
   opinion: z.string().trim().max(2000).default(""),
   notas: z.string().trim().max(2000).default(""),
+  voz: z.enum(VOCES).default("richard"),
   escenas: z.string().transform((s, ctx) => {
     try {
       return z.array(esquemaEscena).min(3).max(30).parse(JSON.parse(s));
@@ -41,7 +42,13 @@ async function guardarCambios(
     };
 
   const actual = esquemaGuion.parse(JSON.parse(guion.contenido));
-  const nuevo = esquemaGuion.parse({ ...actual, titulo: d.titulo, gancho: d.gancho, escenas: d.escenas });
+  const nuevo = esquemaGuion.parse({
+    ...actual,
+    titulo: d.titulo,
+    gancho: d.gancho,
+    escenas: d.escenas,
+    voz: d.voz,
+  });
   await db.ejecutar(
     `UPDATE guiones SET titulo = ?, contenido = ?, opinion_richard = ?, notas_richard = ?, actualizado_en = datetime('now') WHERE id = ?`,
     [nuevo.titulo, JSON.stringify(nuevo), d.opinion, d.notas, d.id],

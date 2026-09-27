@@ -1,7 +1,7 @@
 // Genera el guion con la IA, respetando el candado de modelos y el de gasto.
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { esquemaGuion, type Guion } from "@compartido/guion";
+import { esquemaGuionGenerado, type GuionGenerado } from "@compartido/guion";
 import { asegurarModelo, costoTokensUsd, MODELOS_PERMITIDOS } from "@compartido/modelos";
 import type { BaseDatos } from "./db";
 import { anotarGasto, autorizarGasto } from "./presupuesto";
@@ -10,7 +10,7 @@ import { instruccionesSistema, mensajeUsuario, type EntradaGuion } from "./promp
 // Un guion suele costar 2–4 centavos; se reserva un poco más por seguridad.
 const ESTIMADO_GUION_USD = 0.08;
 
-export type ResultadoGeneracion = { guion: Guion; modelo: string; costoUsd: number };
+export type ResultadoGeneracion = { guion: GuionGenerado; modelo: string; costoUsd: number };
 
 export async function generarGuion(
   db: BaseDatos,
@@ -32,7 +32,7 @@ export async function generarGuion(
     thinking: { type: "disabled" },
     system: instruccionesSistema(),
     messages: [{ role: "user", content: mensajeUsuario(entrada) }],
-    output_config: { format: zodOutputFormat(esquemaGuion) },
+    output_config: { format: zodOutputFormat(esquemaGuionGenerado) },
   });
 
   const costoUsd = costoTokensUsd(modelo, respuesta.usage.input_tokens, respuesta.usage.output_tokens);
@@ -47,5 +47,5 @@ export async function generarGuion(
   if (!respuesta.parsed_output) {
     throw new Error("La IA devolvió un guion con formato inválido. Vuelve a intentarlo.");
   }
-  return { guion: esquemaGuion.parse(respuesta.parsed_output), modelo, costoUsd };
+  return { guion: esquemaGuionGenerado.parse(respuesta.parsed_output), modelo, costoUsd };
 }

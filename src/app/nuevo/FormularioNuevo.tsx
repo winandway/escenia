@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { useBorrador } from "@/componentes/useBorrador";
+import { ETIQUETA_VOZ, VOCES } from "@compartido/guion";
 import { crearGuion, type EstadoNuevo } from "./acciones";
 
 type Props = {
@@ -63,6 +64,19 @@ export function FormularioNuevo({ tematicas, productos }: Props) {
           {productos.map((p) => (
             <option key={p.id} value={p.id}>
               {p.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="voz" className="etiqueta">
+          Quién narra
+        </label>
+        <select id="voz" name="voz" className="campo" defaultValue="richard">
+          {VOCES.map((v) => (
+            <option key={v} value={v}>
+              {ETIQUETA_VOZ[v]}
             </option>
           ))}
         </select>

@@ -3,7 +3,15 @@
 import { useActionState, useState } from "react";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { useBorrador } from "@/componentes/useBorrador";
-import { OPINION_MINIMA, PARTES, TIPOS_VISUAL, type Escena } from "@compartido/guion";
+import {
+  ETIQUETA_VOZ,
+  OPINION_MINIMA,
+  PARTES,
+  TIPOS_VISUAL,
+  VOCES,
+  type Escena,
+  type Voz,
+} from "@compartido/guion";
 import { aprobarGuion, guardarGuion, rechazarGuion, type EstadoGuion } from "./acciones";
 
 type Props = {
@@ -15,6 +23,7 @@ type Props = {
   hechos: string[];
   opinion: string;
   notas: string;
+  voz: Voz;
   producto: { nombre: string; url: string } | null;
 };
 
@@ -99,6 +108,19 @@ export function EditorGuion(p: Props) {
           className="campo"
           readOnly={soloLectura}
         />
+      </div>
+
+      <div>
+        <label htmlFor="voz" className="etiqueta">
+          Quién narra
+        </label>
+        <select id="voz" name="voz" defaultValue={p.voz} disabled={soloLectura} className="campo w-auto">
+          {VOCES.map((v) => (
+            <option key={v} value={v}>
+              {ETIQUETA_VOZ[v]}
+            </option>
+          ))}
+        </select>
       </div>
 
       {p.hechos.length > 0 && (

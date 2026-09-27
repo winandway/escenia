@@ -18,6 +18,11 @@ export const TIPOS_VISUAL = [
   "pantalla",
 ] as const;
 
+// Quién narra el video: la voz clonada de Richard o la voz femenina de la Estación.
+export const VOCES = ["richard", "femenina"] as const;
+export type Voz = (typeof VOCES)[number];
+export const ETIQUETA_VOZ: Record<Voz, string> = { richard: "Mi voz", femenina: "Voz femenina" };
+
 export const esquemaVisual = z.object({
   tipo: z.enum(TIPOS_VISUAL),
   // Palabras para buscar el clip en Pexels (stock) o la foto en Wikimedia Commons (foto).
@@ -48,7 +53,8 @@ export const esquemaEscena = z.object({
   momento: z.string().trim().max(30).optional(),
 });
 
-export const esquemaGuion = z.object({
+// Lo que escribe la IA (es el formato que se le exige a Claude).
+export const esquemaGuionGenerado = z.object({
   titulo: z.string().trim().min(5).max(100),
   gancho: z.string().trim().min(5).max(300),
   escenas: z.array(esquemaEscena).min(3).max(30),
@@ -59,6 +65,12 @@ export const esquemaGuion = z.object({
   etiquetas: z.array(z.string().trim().max(40)).max(20).default([]),
 });
 
+// Lo que se guarda y viaja a la Estación: lo generado más lo que elige Richard.
+export const esquemaGuion = esquemaGuionGenerado.extend({
+  voz: z.enum(VOCES).default("richard"),
+});
+
+export type GuionGenerado = z.infer<typeof esquemaGuionGenerado>;
 export type Guion = z.infer<typeof esquemaGuion>;
 export type Escena = z.infer<typeof esquemaEscena>;
 

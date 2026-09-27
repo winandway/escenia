@@ -11,7 +11,7 @@ import {
   videosDeGuion,
 } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
-import { duracionEstimadaSeg, esquemaGuion } from "@compartido/guion";
+import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ } from "@compartido/guion";
 import { buscarTematica } from "@compartido/tematicas";
 import { EditorGuion } from "./EditorGuion";
 import { reintentarTrabajo } from "./acciones";
@@ -56,7 +56,8 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
         </Link>
         <span className="mx-2">·</span>#{guion.id} · {tematica?.nombre ?? guion.tematica_id} · ~
         {Math.round(duracionEstimadaSeg(contenido.escenas) / 60)} min · costó ${guion.costo_usd.toFixed(3)} ·
-        estado <strong className="text-neutral-200">{guion.estado}</strong>
+        estado <strong className="text-neutral-200">{guion.estado}</strong> · narra{" "}
+        <strong className="text-neutral-200">{ETIQUETA_VOZ[contenido.voz].toLowerCase()}</strong>
       </div>
 
       {guion.aviso_parecido && (
@@ -134,6 +135,7 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
         hechos={contenido.hechos_a_verificar}
         opinion={guion.opinion_richard}
         notas={guion.notas_richard}
+        voz={contenido.voz}
         producto={producto ? { nombre: producto.nombre, url: producto.url } : null}
       />
     </Marco>

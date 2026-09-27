@@ -76,6 +76,7 @@ export async function producir(
     guion.escenas.map((e) => e.narracion),
     carpetaTrabajo,
     avisar,
+    guion.voz,
   );
   await cp(voz.rutaMp3, path.join(carpetaPublica, "voz.mp3"));
   const rutaSubtitulos = path.join(carpetaTrabajo, "subtitulos.json");

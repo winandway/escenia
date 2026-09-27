@@ -11,6 +11,7 @@ const esquema = z.object({
   ESTACION_SECRETO: z.string().min(24),
   ELEVENLABS_API_KEY: z.string().optional(),
   ELEVENLABS_VOICE_ID: z.string().optional(),
+  ELEVENLABS_VOICE_ID_FEMENINA: z.string().optional(),
   ELEVENLABS_MODELO: z.string().default("eleven_multilingual_v2"),
   PEXELS_API_KEY: z.string().optional(),
   FAL_KEY: z.string().optional(),

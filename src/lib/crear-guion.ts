@@ -7,7 +7,7 @@ import { generarGuion } from "./generador";
 import { PresupuestoAgotado } from "./presupuesto";
 import { elegirEstructura } from "./prompt";
 import { avisoDeParecido } from "./variedad";
-import { esquemaGuion } from "@compartido/guion";
+import { esquemaGuion, VOCES } from "@compartido/guion";
 import { MODELO_POR_DEFECTO } from "@compartido/modelos";
 import { buscarTematica } from "@compartido/tematicas";
 
@@ -17,6 +17,7 @@ export const esquemaNuevoTema = z.object({
   url_fuente: z.union([z.literal(""), z.string().trim().url("El enlace no es válido.")]).default(""),
   tematica_id: z.string().min(1),
   producto_id: z.string().default(""),
+  voz: z.enum(VOCES).default("richard"),
 });
 
 export type NuevoTema = z.infer<typeof esquemaNuevoTema>;
@@ -89,7 +90,7 @@ export async function crearGuionDesdeTema(
       tematica.id,
       producto?.id ?? null,
       resultado.guion.titulo,
-      JSON.stringify(resultado.guion),
+      JSON.stringify({ ...resultado.guion, voz: d.voz }),
       estructura.join(">"),
       resultado.modelo,
       resultado.costoUsd,

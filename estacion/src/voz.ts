@@ -11,7 +11,9 @@ import {
   type Alineacion,
   type Palabra,
 } from "@compartido/subtitulos";
+import type { Voz } from "@compartido/guion";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
+import { elegirIdDeVoz } from "@compartido/voces";
 import { config } from "./config";
 
 const exec = promisify(execFile);
@@ -30,9 +32,18 @@ export async function generarVoz(
   textos: string[],
   carpeta: string,
   avisar: (paso: string, progreso: number) => Promise<unknown>,
+  narrador: Voz = "richard",
 ): Promise<ResultadoVoz> {
   await mkdir(carpeta, { recursive: true });
-  const usaElevenLabs = Boolean(config.ELEVENLABS_API_KEY && config.ELEVENLABS_VOICE_ID);
+  const usaElevenLabs = Boolean(config.ELEVENLABS_API_KEY);
+  // Se resuelve ANTES de la primera llamada: si falta el id de la voz pedida,
+  // el trabajo falla con mensaje claro y sin gastar (C-VOZ-1).
+  const idVoz = usaElevenLabs
+    ? elegirIdDeVoz(narrador, {
+        richard: config.ELEVENLABS_VOICE_ID,
+        femenina: config.ELEVENLABS_VOICE_ID_FEMENINA,
+      })
+    : "";
   const piezas: string[] = [];
   const palabras: Palabra[] = [];
   const tramos: ResultadoVoz["tramos"] = [];
@@ -45,10 +56,10 @@ export async function generarVoz(
     const rutaPieza = path.join(carpeta, `escena-${i + 1}.mp3`);
     let alineacion: Alineacion;
     if (usaElevenLabs) {
-      alineacion = await vozElevenLabs(texto, rutaPieza);
+      alineacion = await vozElevenLabs(texto, rutaPieza, idVoz);
       costoUsd += costoVozUsd(asegurarModeloVoz(config.ELEVENLABS_MODELO), texto.length);
     } else {
-      alineacion = await vozDelSistema(texto, rutaPieza);
+      alineacion = await vozDelSistema(texto, rutaPieza, narrador);
     }
     const r = palabrasDesdeAlineacion(alineacion, [texto]);
     for (const p of r.palabras) {
@@ -74,10 +85,10 @@ export async function generarVoz(
   return { rutaMp3, palabras, tramos, duracionMs: total, vozDePrueba: !usaElevenLabs, costoUsd };
 }
 
-async function vozElevenLabs(texto: string, destino: string): Promise<Alineacion> {
+async function vozElevenLabs(texto: string, destino: string, idVoz: string): Promise<Alineacion> {
   const modelo = asegurarModeloVoz(config.ELEVENLABS_MODELO);
   const r = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${config.ELEVENLABS_VOICE_ID}/with-timestamps?output_format=mp3_44100_128`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${idVoz}/with-timestamps?output_format=mp3_44100_128`,
     {
       method: "POST",
       headers: { "xi-api-key": config.ELEVENLABS_API_KEY ?? "", "content-type": "application/json" },
@@ -96,10 +107,12 @@ async function vozElevenLabs(texto: string, destino: string): Promise<Alineacion
   return alineacion;
 }
 
-async function vozDelSistema(texto: string, destino: string): Promise<Alineacion> {
+async function vozDelSistema(texto: string, destino: string, narrador: Voz): Promise<Alineacion> {
   const aiff = destino.replace(/\.mp3$/, ".aiff");
-  // Voz en español del sistema. Si no existe, macOS usa la predeterminada.
-  await exec("say", ["-v", "Paulina", "-r", "175", "-o", aiff, texto]).catch(() =>
+  // Voz en español del sistema, masculina o femenina según el guion.
+  // Si no existe, macOS usa la predeterminada.
+  const nombre = narrador === "femenina" ? "Paulina" : "Eddy (Español (México))";
+  await exec("say", ["-v", nombre, "-r", "175", "-o", aiff, texto]).catch(() =>
     exec("say", ["-r", "175", "-o", aiff, texto]),
   );
   await exec("ffmpeg", [
