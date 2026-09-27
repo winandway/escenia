@@ -84,8 +84,8 @@ async function principal() {
   const pistas = await catalogoMusica();
   console.log(
     pistas.length
-      ? `Música de fondo: ${pistas.length} pista(s) en recursos/musica-local`
-      : "Música de fondo: NINGUNA (deja las pistas en estacion/recursos/musica-local; ver docs/MUSICA.md)",
+      ? `Música de fondo: ${pistas.length} pista(s) (${pistas.map((p) => p.archivo).join(", ")})`
+      : "Música de fondo: NINGUNA (deja las pistas en music-cortinas-libre-de-copy; ver docs/MUSICA.md)",
   );
   console.log("Lista. Esperando trabajos.");
   for (;;) {

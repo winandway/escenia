@@ -2,7 +2,7 @@
 // mientras hay voz, la música va MUY por debajo (VOLUMEN_BAJO); solo sube en
 // los interludios y en la cola final, con rampas suaves, y se apaga al cierre.
 export const VOLUMEN_BAJO = 0.12; // ≈ -18 dB: se siente, no compite con la voz
-export const VOLUMEN_ALTO = 0.5; // interludios y cola final
+export const VOLUMEN_ALTO = 0.8; // interludios y cola final: la música pasa al frente
 export const RAMPA_MS = 800;
 export const ENTRADA_MS = 1000;
 export const APAGADO_MS = 1500;

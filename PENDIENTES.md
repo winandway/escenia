@@ -4,7 +4,7 @@
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
-- 👤 Generar las 50 pistas instrumentales en Suno con los textos de docs/MUSICA.md y dejarlas en /Users/windocellc/Motor-Escenia/estacion/recursos/musica-local/ → los videos salen con música de fondo e interludios (hoy salen sin música).
+- 👤 Seguir generando las pistas de docs/MUSICA.md en Suno (ya hay 4 de salsa en /Users/windocellc/Motor-Escenia/music-cortinas-libre-de-copy/) → cada temática tendrá su música; sin pista que encaje, el video sale con la «neutral» o sin música.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
 
 ## Fila (lo hace la IA)
