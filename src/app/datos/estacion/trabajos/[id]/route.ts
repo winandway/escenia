@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
+import { tocarLatido } from "@/lib/estacion-estado";
 import { anotarGasto } from "@/lib/presupuesto";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,8 @@ export async function POST(req: Request, ctx: RouteContext<"/datos/estacion/trab
   const parseo = esquema.safeParse(await req.json().catch(() => null));
   if (!parseo.success) return Response.json({ error: "Cuerpo inválido." }, { status: 400 });
   const d = parseo.data;
+  // Cada aviso de avance cuenta como señal de vida (C-LATIDO-1).
+  await tocarLatido(db);
 
   const trabajo = await db.uno<{ id: number; guion_id: number; estado: string }>(
     "SELECT id, guion_id, estado FROM trabajos WHERE id = ?",

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
+import { tocarLatido } from "@/lib/estacion-estado";
 import { guionPorId, productoPorId, type FilaTrabajo } from "@/lib/consultas";
 import { esquemaGuion } from "@compartido/guion";
 import { buscarTematica } from "@compartido/tematicas";
@@ -18,11 +19,7 @@ export async function POST(req: Request) {
   const cuerpo = esquemaCuerpo.safeParse(await req.json().catch(() => ({})));
   if (!cuerpo.success) return Response.json({ error: "Cuerpo inválido." }, { status: 400 });
 
-  await db.ejecutar(
-    `INSERT INTO estacion_latido (id, visto_en, version) VALUES (1, datetime('now'), ?)
-     ON CONFLICT(id) DO UPDATE SET visto_en = excluded.visto_en, version = excluded.version`,
-    [cuerpo.data.version],
-  );
+  await tocarLatido(db, cuerpo.data.version);
 
   // Un trabajo «tomado» hace más de 2 horas se considera perdido y vuelve a la cola.
   await db.ejecutar(

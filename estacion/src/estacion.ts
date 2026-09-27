@@ -13,12 +13,19 @@ async function unaVuelta(): Promise<boolean> {
   const trabajo = await panel.siguiente();
   if (!trabajo) return false;
   console.log(`[${hora()}] Trabajo #${trabajo.id}: «${trabajo.contenido.titulo}»`);
+  let ultimo = { paso: "tomado", progreso: 0 };
   const avisar = (paso: string, progreso: number) => {
     console.log(`  ${progreso}% ${paso}`);
+    ultimo = { paso, progreso };
     return panel
       .avance(trabajo.id, paso, progreso)
       .catch((e) => console.warn("  (no se pudo avisar al panel)", e));
   };
+  // Señal de vida durante los pasos largos (empaquetar, render): repite el último
+  // avance cada 45 s para que el panel no dé la Estación por apagada.
+  const latido = setInterval(() => {
+    void panel.avance(trabajo.id, ultimo.paso, ultimo.progreso).catch(() => {});
+  }, 45_000);
   try {
     const r = await producir(
       `t${trabajo.id}`,
@@ -59,8 +66,10 @@ async function unaVuelta(): Promise<boolean> {
       },
     ]);
     console.log(`[${hora()}] Listo: ${r.rutaMp4} (${(r.bytes / 1_048_576).toFixed(0)} MB)`);
+    clearInterval(latido);
   } catch (e) {
     const msj = e instanceof Error ? e.message : String(e);
+    clearInterval(latido);
     console.error(`[${hora()}] Falló el trabajo #${trabajo.id}:`, msj);
     await panel.error(trabajo.id, msj).catch(() => {});
   }

@@ -125,3 +125,20 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** no poner un `<Audio>` de música con volumen fijo en la
   plantilla; todo pasa por `volumenMusica`. No subir `VOLUMEN_BAJO` de 0.15 sin
   oírlo con voz real.
+
+## C-LATIDO-1 — El panel no da la Estación por apagada mientras produce (27 sep 2026)
+
+- **Qué se rompía / cómo se veía:** Richard aprobó el guion 4, el panel decía
+  «#4 Produciendo» y a la vez «Estación: apagada». Confunde: parece que nada
+  avanza.
+- **Causa real:** el latido solo se escribía cuando la Estación pedía trabajo
+  (`/datos/estacion/siguiente`), cada 30 s. Mientras produce no pide trabajo, y
+  a los 2 minutos el panel la daba por muerta aunque estuviera avisando avances.
+- **Qué se hizo:** `tocarLatido(db)` en `src/lib/estacion-estado.ts`, y lo
+  llaman tanto la ruta de pedir trabajo como la de avisar avance/error/hecho.
+  Además la Estación repite el último avance cada 45 s durante los pasos largos
+  (empaquetar y render pueden pasar minutos sin avisar).
+- **Cómo se comprueba:** `pruebas/estacion-estado.test.ts`. En vivo: aprobar un
+  guion y mirar la portada del panel durante el render: «Estación: conectada».
+- **Qué NO tocar:** no volver a escribir el `INSERT` del latido a mano en una
+  ruta; siempre `tocarLatido`.
