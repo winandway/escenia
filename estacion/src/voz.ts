@@ -2,7 +2,7 @@
 // prueba del sistema (macOS `say`) cuando no hay clave, para poder ver el
 // video completo sin gastar. Devuelve un MP3 y las palabras con sus tiempos.
 import { execFile } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import {
@@ -12,6 +12,7 @@ import {
   type Palabra,
 } from "@compartido/subtitulos";
 import type { Voz } from "@compartido/guion";
+import { numerosEnLetras } from "@compartido/numeros";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
 import { elegirIdDeVoz } from "@compartido/voces";
 import { config } from "./config";
@@ -52,10 +53,16 @@ export async function generarVoz(
   const tramos: ResultadoVoz["tramos"] = [];
   let cursorMs = 0;
   let costoUsd = 0;
+  // Continuidad entre escenas: ElevenLabs recibe los ids de las últimas
+  // generaciones (hasta 3) para que el tono no salte de una a otra.
+  const idsAnteriores: string[] = [];
+  // Cifras → letras antes de nada (la voz lee mal «1925»); vale para el texto
+  // que se manda y para los subtítulos, que así muestran lo que se dice.
+  const textos = piezas.map((p) => numerosEnLetras(p.texto.trim()));
 
   for (let i = 0; i < piezas.length; i++) {
     const pieza = piezas[i] ?? { texto: "" };
-    const texto = pieza.texto.trim();
+    const texto = textos[i] ?? "";
     await avisar(`voz: escena ${i + 1} de ${piezas.length}`, Math.round(5 + (i / piezas.length) * 25));
     const rutaPieza = path.join(carpeta, `escena-${i + 1}.mp3`);
     let alineacion: Alineacion;
@@ -64,11 +71,21 @@ export async function generarVoz(
       await silencio(rutaPieza, pieza.silencioSeg ?? 6);
       alineacion = { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] };
     } else if (usaElevenLabs) {
-      alineacion = await vozElevenLabs(texto, rutaPieza, idVoz);
+      const r = await vozElevenLabs(texto, rutaPieza, idVoz, {
+        anterior: textos.slice(0, i).filter(Boolean).slice(-1)[0] ?? "",
+        siguiente: textos.slice(i + 1).filter(Boolean)[0] ?? "",
+        idsAnteriores,
+      });
+      alineacion = r.alineacion;
+      if (r.requestId) idsAnteriores.push(r.requestId);
+      while (idsAnteriores.length > 3) idsAnteriores.shift();
       costoUsd += costoVozUsd(asegurarModeloVoz(config.ELEVENLABS_MODELO), texto.length);
     } else {
       alineacion = await vozDelSistema(texto, rutaPieza, narrador);
     }
+    // Mismo volumen en todas las escenas (C-VOZ-2): cada generación sale con
+    // un nivel distinto y se notaba «la voz va y viene».
+    if (texto) await nivelar(rutaPieza);
     const r = texto ? palabrasDesdeAlineacion(alineacion, [texto]) : { palabras: [] as Palabra[] };
     for (const p of r.palabras) {
       palabras.push({
@@ -93,14 +110,26 @@ export async function generarVoz(
   return { rutaMp3, palabras, tramos, duracionMs: total, vozDePrueba: !usaElevenLabs, costoUsd };
 }
 
-async function vozElevenLabs(texto: string, destino: string, idVoz: string): Promise<Alineacion> {
+async function vozElevenLabs(
+  texto: string,
+  destino: string,
+  idVoz: string,
+  contexto: { anterior: string; siguiente: string; idsAnteriores: string[] },
+): Promise<{ alineacion: Alineacion; requestId: string | null }> {
   const modelo = asegurarModeloVoz(config.ELEVENLABS_MODELO);
   const r = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${idVoz}/with-timestamps?output_format=mp3_44100_128`,
     {
       method: "POST",
       headers: { "xi-api-key": config.ELEVENLABS_API_KEY ?? "", "content-type": "application/json" },
-      body: JSON.stringify({ text: texto, model_id: modelo }),
+      body: JSON.stringify({
+        text: texto,
+        model_id: modelo,
+        // Contexto de las escenas vecinas: misma entonación al unir las piezas.
+        previous_text: contexto.anterior || undefined,
+        next_text: contexto.siguiente || undefined,
+        previous_request_ids: contexto.idsAnteriores.length ? contexto.idsAnteriores : undefined,
+      }),
     },
   );
   if (!r.ok) throw new Error(`ElevenLabs respondió ${r.status}: ${(await r.text()).slice(0, 300)}`);
@@ -112,7 +141,50 @@ async function vozElevenLabs(texto: string, destino: string, idVoz: string): Pro
   await writeFile(destino, Buffer.from(datos.audio_base64, "base64"));
   const alineacion = datos.alignment ?? datos.normalized_alignment;
   if (!alineacion) throw new Error("ElevenLabs no devolvió la alineación de letras.");
-  return alineacion;
+  return { alineacion, requestId: r.headers.get("request-id") };
+}
+
+/**
+ * Nivela una pieza de voz a -16 LUFS en dos pasadas (medir y aplicar ganancia
+ * lineal): no cambia los tiempos, solo el volumen. Si la pieza es silencio, no
+ * hace nada.
+ */
+export async function nivelar(ruta: string, objetivoLufs = -16): Promise<void> {
+  const base = `loudnorm=I=${objetivoLufs}:TP=-1.5:LRA=11`;
+  const medida = await exec("ffmpeg", [
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    ruta,
+    "-af",
+    `${base}:print_format=json`,
+    "-f",
+    "null",
+    "-",
+  ]);
+  const inicio = medida.stderr.lastIndexOf("{");
+  const fin = medida.stderr.lastIndexOf("}");
+  if (inicio === -1 || fin < inicio) return;
+  const m = JSON.parse(medida.stderr.slice(inicio, fin + 1)) as Record<string, string>;
+  if (!Number.isFinite(Number(m.input_i))) return; // silencio: nada que nivelar
+  const tmp = ruta.replace(/\.mp3$/, ".nivelada.mp3");
+  await exec("ffmpeg", [
+    "-y",
+    "-loglevel",
+    "error",
+    "-i",
+    ruta,
+    "-af",
+    `${base}:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`,
+    "-ar",
+    "44100",
+    "-codec:a",
+    "libmp3lame",
+    "-b:a",
+    "128k",
+    tmp,
+  ]);
+  await rename(tmp, ruta);
 }
 
 async function silencio(destino: string, segundos: number): Promise<void> {

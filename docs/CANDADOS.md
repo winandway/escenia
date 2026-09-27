@@ -142,3 +142,27 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   guion y mirar la portada del panel durante el render: «Estación: conectada».
 - **Qué NO tocar:** no volver a escribir el `INSERT` del latido a mano en una
   ruta; siempre `tocarLatido`.
+
+## C-VOZ-2 — La voz suena pareja y lee bien los números (27 sep 2026)
+
+- **Qué se rompía / cómo se veía:** en el primer video con la voz clonada de
+  Richard (guion 4, trabajo 9) la voz «iba y venía»: unas escenas sonaban al
+  frente y otras al fondo. Y «1925» se leía mal.
+- **Causa real:** (1) la voz se genera escena por escena (una llamada por
+  escena) y cada generación sale con un volumen distinto: medido entre -15,9 y
+  -24,0 dB de una escena a otra. (2) El modelo Flash v2.5 no convierte cifras a
+  palabras en español (la API no permite `apply_text_normalization` en Flash).
+- **Qué se hizo:** en `estacion/src/voz.ts`: (a) `nivelar()` deja cada pieza a
+  -16 LUFS en dos pasadas de `ffmpeg loudnorm` con ganancia lineal (no cambia
+  los tiempos: comprobado, mismas duraciones antes y después, y las tres piezas
+  de prueba quedaron en -16,3/-16,4/-16,3 dB); (b) se mandan `previous_text`,
+  `next_text` y `previous_request_ids` (hasta 3) para que la entonación siga
+  de una escena a la otra; (c) `numerosEnLetras` (`compartido/numeros.ts`)
+  convierte años, miles, decimales, porcentajes, dólares y horas a palabras
+  antes de mandar el texto, y los subtítulos muestran lo mismo que se dice. El
+  prompt además pide los números en letras desde el guion.
+- **Cómo se comprueba:** `pruebas/numeros.test.ts` (falló en rojo con «v2.5»
+  antes del arreglo). Volumen: medir `out/t<id>/escena-*.mp3` con
+  `ffmpeg -af volumedetect`: todas alrededor de -16 dB.
+- **Qué NO tocar:** no quitar `nivelar` ni pasar `linear=false` (comprime la
+  voz); no mandar cifras a ElevenLabs.
