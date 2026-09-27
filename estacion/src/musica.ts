@@ -17,6 +17,8 @@ const aqui = path.dirname(fileURLToPath(import.meta.url));
 export const CARPETAS_MUSICA = [
   path.resolve(aqui, "../recursos/musica"),
   path.resolve(aqui, "../recursos/musica-local"),
+  // La carpeta donde Richard deja lo que genera en Suno (raíz del proyecto, ignorada por git).
+  path.resolve(aqui, "../../music-cortinas-libre-de-copy"),
 ];
 const ES_AUDIO = /\.(mp3|m4a|wav|aac|ogg)$/i;
 

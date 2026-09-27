@@ -10,8 +10,9 @@
 1. **Cada guion trae un estilo de música** (`musica`, en inglés, lo escribe la
    IA y Richard lo puede cambiar en el editor: «Música de fondo»). Ej.:
    `1950s Cuban salsa, brass and congas, festive`.
-2. **La Estación elige la pista** de la carpeta
-   `/Users/windocellc/Motor-Escenia/estacion/recursos/musica-local/` comparando
+2. **La Estación elige la pista** de las carpetas
+   `/Users/windocellc/Motor-Escenia/music-cortinas-libre-de-copy/` (la de Richard,
+   ignorada por git) y `/Users/windocellc/Motor-Escenia/estacion/recursos/musica-local/`, comparando
    las palabras del estilo con las palabras del nombre del archivo. Gana la que
    comparte más. Si ninguna encaja, usa la que se llama `neutral-…`. Si la
    carpeta está vacía, el video sale sin música y el paso del trabajo dice
