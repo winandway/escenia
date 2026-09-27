@@ -3,16 +3,45 @@
 // se queda con clip de fondo: nunca se escala a un modelo caro.
 // Sin FAL_KEY en estacion/.env, esta pieza está apagada.
 import { existsSync } from "node:fs";
-import { copyFile, link, mkdir, writeFile } from "node:fs/promises";
+import { copyFile, link, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { asegurarModeloImagen, IMAGENES_PERMITIDAS, MODELO_IMAGEN_POR_DEFECTO } from "@compartido/modelos";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import {
+  asegurarModeloImagen,
+  IMAGENES_PERMITIDAS,
+  MODELO_IMAGEN_CON_REFERENCIA,
+  MODELO_IMAGEN_POR_DEFECTO,
+} from "@compartido/modelos";
 import { config } from "./config";
+
+const exec = promisify(execFile);
 
 export type ImagenIA = { ruta: string; ancho: number; alto: number; credito: string; costoUsd: number };
 
+// Fotografía realista, no ilustración: Richard vio las «pinturas» y parecían
+// caricaturas (26 sep 2026). Candado C-IMAGEN-2.
 const ESTILO_BASE =
-  "editorial documentary illustration, painterly realism, soft film grain, natural light, no text, no captions, no watermark, no logos";
+  "photorealistic documentary photograph, natural skin texture, cinematic lighting, subtle film grain, no text, no captions, no watermark, no logos";
+// Con foto de referencia: se le exige al modelo conservar la cara de la persona real.
+const CON_REFERENCIA =
+  "Keep the exact same face, skin tone, features and identity of the person in the reference image. ";
+
+/** Referencia reducida a 1280 px y en base64 (fal no puede bajar de Wikimedia directamente). */
+async function referenciaEnBase64(ruta: string): Promise<{ dataUri: string; huella: string }> {
+  const carpeta = path.join(config.CARPETA_CLIPS, "ia", "referencias");
+  await mkdir(carpeta, { recursive: true });
+  const huella = createHash("sha1")
+    .update(await readFile(ruta))
+    .digest("hex")
+    .slice(0, 16);
+  const reducida = path.join(carpeta, `${huella}.jpg`);
+  if (!existsSync(reducida)) {
+    await exec("sips", ["-s", "format", "jpeg", "-Z", "1280", ruta, "--out", reducida]);
+  }
+  return { dataUri: `data:image/jpeg;base64,${(await readFile(reducida)).toString("base64")}`, huella };
+}
 
 /** Solo se manda la clave a direcciones de fal.ai por https; a cualquier otra, nunca. */
 function urlDeFal(direccion: string): string {
@@ -30,16 +59,20 @@ export function imagenesActivas(): boolean {
 export async function generarImagen(
   prompt: string,
   carpetaPublica: string,
-  opciones: { vertical?: boolean; blancoYNegro?: boolean } = {},
+  opciones: { vertical?: boolean; blancoYNegro?: boolean; referencia?: string } = {},
 ): Promise<ImagenIA | null> {
   if (!config.FAL_KEY) return null;
-  const modelo = asegurarModeloImagen(MODELO_IMAGEN_POR_DEFECTO);
-  const promptFinal = `${prompt.trim()}. ${opciones.blancoYNegro ? "black and white vintage photograph look, " : ""}${ESTILO_BASE}`;
+  const referencia = opciones.referencia ? await referenciaEnBase64(opciones.referencia) : null;
+  const modelo = asegurarModeloImagen(referencia ? MODELO_IMAGEN_CON_REFERENCIA : MODELO_IMAGEN_POR_DEFECTO);
+  const promptFinal = `${referencia ? CON_REFERENCIA : ""}${prompt.trim()}. ${opciones.blancoYNegro ? "black and white vintage photograph look, " : ""}${ESTILO_BASE}`;
   const tam = opciones.vertical ? { width: 1152, height: 2048 } : { width: 2048, height: 1152 };
 
   const carpeta = path.join(config.CARPETA_CLIPS, "ia");
   await mkdir(carpeta, { recursive: true });
-  const nombre = `ia-${createHash("sha1").update(`${modelo}|${promptFinal}|${tam.width}x${tam.height}`).digest("hex").slice(0, 16)}.jpg`;
+  const nombre = `ia-${createHash("sha1")
+    .update(`${modelo}|${promptFinal}|${tam.width}x${tam.height}|${referencia?.huella ?? ""}`)
+    .digest("hex")
+    .slice(0, 16)}.jpg`;
   const destino = path.join(carpeta, nombre);
   let costoUsd = 0;
 
@@ -50,6 +83,7 @@ export async function generarImagen(
       headers: cabeceras,
       body: JSON.stringify({
         prompt: promptFinal,
+        ...(referencia ? { image_urls: [referencia.dataUri] } : {}),
         image_size: tam,
         num_images: 1,
         enable_safety_checker: true,
@@ -93,7 +127,9 @@ export async function generarImagen(
     ruta: `ia/${nombre}`,
     ancho: tam.width,
     alto: tam.height,
-    credito: `Imagen generada con IA (${modelo}) · contenido sintético`,
+    credito: referencia
+      ? `Imagen generada con IA (${modelo}) a partir de una foto libre de la persona · contenido sintético`
+      : `Imagen generada con IA (${modelo}) · contenido sintético`,
     costoUsd,
   };
 }

@@ -3,6 +3,7 @@
 ## 👤 Esperando por Richard
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
+- 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
 - 👤 Generar las 50 pistas instrumentales en Suno con los textos de docs/MUSICA.md y dejarlas en /Users/windocellc/Motor-Escenia/estacion/recursos/musica-local/ → los videos salen con música de fondo e interludios (hoy salen sin música).
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
 
@@ -25,6 +26,8 @@
 - [x] Ruta `/datos/estacion/guiones` para crear guiones desde fuera con el secreto (la usará el radar).
 - [x] Varias imágenes con IA por escena, una por frase narrada (~5 por minuto), con fundido — pedido por Richard el 26 sep 2026.
 - [x] Clave de fal.ai recibida (26 sep 2026): imágenes con IA activas en la Mac; biografía de Celia Cruz producida con ellas (guion #3, trabajo #7).
+- [x] Voz pareja entre escenas, números en letras y H muda sin aspirar (27 sep 2026, C-VOZ-2 y C-VOZ-3).
+- [x] Imágenes con IA fotográficas y a partir de una foto libre de la persona (27 sep 2026, C-IMAGEN-2).
 - [x] Clon profesional de la voz de Richard listo y puesto en la Mac (26 sep 2026, modelo Flash v2.5): todo video con «Mi voz» sale con su voz.
 - [x] Voz real: clave de ElevenLabs probada y puesta en la Mac; guion #3 producido con voz de catálogo «Brian» (trabajo #8, 26 sep 2026) mientras entrena el clon.
 - [x] Música de fondo e interludios musicales (26 sep 2026): pista elegida por estilo desde `musica-local`, volumen normalizado, 12 % bajo la voz y 50 % en interludios y cola final; la IA escribe el estilo y mete 1 o 2 interludios; editables en el panel. Candado C-MUSICA-1. Falta que Richard genere las pistas (👤).

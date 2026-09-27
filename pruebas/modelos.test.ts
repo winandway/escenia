@@ -30,6 +30,7 @@ describe("candado de modelos", () => {
     expect(() => asegurarModeloImagen("fal-ai/flux-pro/v1.1-ultra")).toThrow(/bloqueado/);
     expect(() => asegurarModeloImagen("gpt-image-1")).toThrow(/bloqueado/);
     expect(asegurarModeloImagen("fal-ai/bytedance/seedream/v4/text-to-image")).toBeTruthy();
+    expect(asegurarModeloImagen("fal-ai/bytedance/seedream/v4/edit")).toBeTruthy();
     for (const p of Object.values(IMAGENES_PERMITIDAS)) expect(p).toBeLessThanOrEqual(TOPE_IMAGEN_USD);
   });
 

@@ -166,3 +166,35 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   `ffmpeg -af volumedetect`: todas alrededor de -16 dB.
 - **Qué NO tocar:** no quitar `nivelar` ni pasar `linear=false` (comprime la
   voz); no mandar cifras a ElevenLabs.
+
+## C-IMAGEN-2 — Las imágenes con IA son fotografías y se parecen a la persona (27 sep 2026)
+
+- **Qué se rompía / cómo se veía:** Richard vio el video de Celia (trabajo 10):
+  «parecen caricaturas de mala muerte, es otra cantante». Con razón: el estilo
+  pedido era «ilustración pictórica» y el modelo no conoce la cara de la artista.
+- **Causa real:** `ESTILO_BASE` pedía pintura, y el modelo de texto a imagen
+  inventa una cara cualquiera.
+- **Qué se hizo:** (1) estilo fotográfico realista; (2) en biografías, la
+  Estación busca una foto libre de la persona en Wikimedia Commons y la manda
+  como referencia al modelo de edición de Seedream 4 (`…/seedream/v4/edit`,
+  $0,03 por imagen, mismo precio; en `IMAGENES_PERMITIDAS`), con la orden de
+  conservar la cara. Probado el 27 sep 2026: con referencia nítida sí se parece
+  (foto de concierto años 70). Wikimedia no deja que fal baje la foto: se manda
+  en base64, reducida a 1280 px (`referenciaEnBase64`). Si no hay foto libre,
+  avisa en el paso del trabajo y genera sin referencia.
+- **Cómo se comprueba:** `pruebas/modelos.test.ts` (el modelo con referencia
+  está permitido y bajo el tope); en vivo, el paso «foto de referencia de X: sí»
+  y las imágenes de `out/t<id>/ia/`.
+- **Qué NO tocar:** no volver al estilo «painterly»; no mandar la URL de
+  Wikimedia a fal (falla); la referencia se pasa por `opciones.referencia`.
+- **Si no alcanza:** el generador de ChatGPT (gpt-image, calidad baja) conoce a
+  los famosos; requiere clave de OpenAI de Richard (pendiente en PENDIENTES.md).
+
+## C-VOZ-3 — La H muda no se aspira (27 sep 2026)
+
+- **Qué se rompía:** «Habana» sonaba «Jabana» con la voz clonada (Flash v2.5).
+- **Qué se hizo:** `compartido/pronunciacion.ts` quita la H muda solo en el
+  texto que se manda a la voz (con lista de préstamos donde sí suena: Houston,
+  hardware, hip hop…); los subtítulos conservan la palabra original porque
+  `paraLaVoz` nunca cambia la cantidad de palabras y `voz.ts` repone el texto.
+- **Cómo se comprueba:** `pruebas/pronunciacion.test.ts`.

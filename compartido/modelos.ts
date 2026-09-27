@@ -59,10 +59,13 @@ export function costoVozUsd(modelo: ModeloVoz, caracteres: number): number {
 // bloqueados en código, ni como respaldo). Precio de fal.ai, 26-sep-2026.
 export const IMAGENES_PERMITIDAS = {
   "fal-ai/bytedance/seedream/v4/text-to-image": 0.03,
+  // Con foto de referencia: la persona se parece a la real (biografías). Mismo precio.
+  "fal-ai/bytedance/seedream/v4/edit": 0.03,
 } as const;
 
 export type ModeloImagen = keyof typeof IMAGENES_PERMITIDAS;
 export const MODELO_IMAGEN_POR_DEFECTO: ModeloImagen = "fal-ai/bytedance/seedream/v4/text-to-image";
+export const MODELO_IMAGEN_CON_REFERENCIA: ModeloImagen = "fal-ai/bytedance/seedream/v4/edit";
 export const TOPE_IMAGEN_USD = 0.05;
 
 export function asegurarModeloImagen(modelo: string): ModeloImagen {

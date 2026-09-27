@@ -99,6 +99,23 @@ export async function producir(
   );
 
   await avisar("buscando clips de fondo", 35);
+  // Biografías: una foto real (libre) de la persona sirve de referencia para
+  // que las imágenes generadas se parezcan a ella (C-IMAGEN-2).
+  const personaDelTitulo = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
+  let referencia: string | undefined;
+  if (plantilla === "MiniDocumental" && personaDelTitulo && imagenesActivas()) {
+    const fotoRef = await buscarFoto([personaDelTitulo], carpetaPublica);
+    if (fotoRef) {
+      referencia = path.join(carpetaPublica, fotoRef.ruta);
+      creditos.push(fotoRef.credito);
+    }
+    await avisar(
+      fotoRef
+        ? `foto de referencia de ${personaDelTitulo}: sí (las imágenes se hacen a partir de ella)`
+        : `foto de referencia de ${personaDelTitulo}: no hay en Wikimedia Commons; las imágenes van sin referencia`,
+      35,
+    );
+  }
   const escenas: PropsVideo["escenas"] = [];
   for (const [i, e] of guion.escenas.entries()) {
     const tramo = voz.tramos[i];
@@ -135,7 +152,7 @@ export async function producir(
         const lote = conPersona.slice(k, k + 3);
         const resultados = await Promise.all(
           lote.map((pr) =>
-            generarImagen(pr, carpetaPublica, { blancoYNegro: epoca }).catch((err) => {
+            generarImagen(pr, carpetaPublica, { blancoYNegro: epoca, referencia }).catch((err) => {
               console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
               return null;
             }),

@@ -13,6 +13,7 @@ import {
 } from "@compartido/subtitulos";
 import type { Voz } from "@compartido/guion";
 import { numerosEnLetras } from "@compartido/numeros";
+import { paraLaVoz } from "@compartido/pronunciacion";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
 import { elegirIdDeVoz } from "@compartido/voces";
 import { config } from "./config";
@@ -59,10 +60,14 @@ export async function generarVoz(
   // Cifras → letras antes de nada (la voz lee mal «1925»); vale para el texto
   // que se manda y para los subtítulos, que así muestran lo que se dice.
   const textos = piezas.map((p) => numerosEnLetras(p.texto.trim()));
+  // Lo que se manda a la voz lleva además la ortografía «fonética» (sin H muda);
+  // los subtítulos conservan la palabra tal cual (C-VOZ-3).
+  const textosVoz = textos.map((t) => paraLaVoz(t));
 
   for (let i = 0; i < piezas.length; i++) {
     const pieza = piezas[i] ?? { texto: "" };
     const texto = textos[i] ?? "";
+    const textoVoz = textosVoz[i] ?? "";
     await avisar(`voz: escena ${i + 1} de ${piezas.length}`, Math.round(5 + (i / piezas.length) * 25));
     const rutaPieza = path.join(carpeta, `escena-${i + 1}.mp3`);
     let alineacion: Alineacion;
@@ -71,22 +76,31 @@ export async function generarVoz(
       await silencio(rutaPieza, pieza.silencioSeg ?? 6);
       alineacion = { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] };
     } else if (usaElevenLabs) {
-      const r = await vozElevenLabs(texto, rutaPieza, idVoz, {
-        anterior: textos.slice(0, i).filter(Boolean).slice(-1)[0] ?? "",
-        siguiente: textos.slice(i + 1).filter(Boolean)[0] ?? "",
+      const r = await vozElevenLabs(textoVoz, rutaPieza, idVoz, {
+        anterior: textosVoz.slice(0, i).filter(Boolean).slice(-1)[0] ?? "",
+        siguiente: textosVoz.slice(i + 1).filter(Boolean)[0] ?? "",
         idsAnteriores,
       });
       alineacion = r.alineacion;
       if (r.requestId) idsAnteriores.push(r.requestId);
       while (idsAnteriores.length > 3) idsAnteriores.shift();
-      costoUsd += costoVozUsd(asegurarModeloVoz(config.ELEVENLABS_MODELO), texto.length);
+      costoUsd += costoVozUsd(asegurarModeloVoz(config.ELEVENLABS_MODELO), textoVoz.length);
     } else {
-      alineacion = await vozDelSistema(texto, rutaPieza, narrador);
+      alineacion = await vozDelSistema(textoVoz, rutaPieza, narrador);
     }
     // Mismo volumen en todas las escenas (C-VOZ-2): cada generación sale con
     // un nivel distinto y se notaba «la voz va y viene».
     if (texto) await nivelar(rutaPieza);
-    const r = texto ? palabrasDesdeAlineacion(alineacion, [texto]) : { palabras: [] as Palabra[] };
+    const r = texto ? palabrasDesdeAlineacion(alineacion, [textoVoz]) : { palabras: [] as Palabra[] };
+    // Los subtítulos muestran la ortografía real: se reponen las palabras del
+    // texto original (misma cantidad de palabras, garantizado por paraLaVoz).
+    const originales = texto.split(/\s+/).filter(Boolean);
+    if (originales.length === r.palabras.length) {
+      r.palabras.forEach((p, k) => {
+        const o = originales[k];
+        if (o !== undefined) p.text = p.text.startsWith(" ") ? ` ${o}` : o;
+      });
+    }
     for (const p of r.palabras) {
       palabras.push({
         ...p,

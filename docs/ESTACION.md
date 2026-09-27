@@ -87,7 +87,8 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
 
 ## Qué hace con cada trabajo
 
-1. **Voz.** Los números van a letras (`compartido/numeros.ts`), cada pieza se
+1. **Voz.** Los números van a letras (`compartido/numeros.ts`), la H muda se quita
+   solo para la voz (`compartido/pronunciacion.ts`, C-VOZ-3), cada pieza se
    nivela a -16 LUFS y las llamadas llevan el contexto de las escenas vecinas
    (candado C-VOZ-2). Una llamada a ElevenLabs por escena (`/with-timestamps`, que
    devuelve el tiempo de cada letra). Se unen con 350 ms de silencio entre
