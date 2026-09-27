@@ -113,7 +113,7 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué se hizo:** (1) cada pista se normaliza una sola vez a -20 LUFS
   (`estacion/src/musica.ts`, `ffmpeg loudnorm`) y queda en `cache/musica/`;
   (2) el volumen lo decide una sola función pura, `volumenMusica` en
-  `estacion/src/remotion/musica.ts`: 12 % mientras hay voz, 50 % solo dentro de
+  `estacion/src/remotion/musica.ts`: 12 % mientras hay voz, 80 % solo dentro de
   los interludios (escenas `parte: "interludio"`, sin voz) y en la cola final,
   con rampas de 0,8 s y apagado de 1,5 s; (3) la pista se elige por palabras del
   nombre del archivo (`compartido/musica.ts`) y, si no hay ninguna, el trabajo

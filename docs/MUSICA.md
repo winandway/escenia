@@ -21,7 +21,7 @@
    el video va **muy por debajo de la voz** (12 %). La voz nunca se tapa
    (candado C-MUSICA-1, con prueba automática).
 4. **Interludios**: la IA mete 1 o 2 escenas `interludio` (5 a 8 s) después de
-   un momento fuerte. Ahí la voz calla, la música sube al 50 % y pasan 2 o 3
+   un momento fuerte. Ahí la voz calla, la música sube al 80 % y pasan 2 o 3
    imágenes. Richard puede agregar o quitar interludios en el editor (parte
    «interludio» + los segundos). Al final del video la música sube 4 s y se
    apaga.
