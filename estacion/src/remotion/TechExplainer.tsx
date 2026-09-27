@@ -16,7 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { FPS, type PropsVideo } from "./props";
+import { CIERRE_SHORT_MS, FPS, INTRO_SHORT_MS, type PropsVideo } from "./props";
 
 const { fontFamily } = loadFont("normal", {
   weights: ["500", "700", "900"],
@@ -47,7 +47,19 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
   const frame = useCurrentFrame();
   const { durationInFrames, width, height } = useVideoConfig();
   const vertical = height > width;
-  const tMs = (frame / FPS) * 1000;
+  // Short: se dibuja solo la ventana [inicioMs, finMs] del video largo, con un
+  // título propio al arrancar y un cierre al final. `tMs` es SIEMPRE el tiempo
+  // del video largo al que corresponde este frame.
+  const v = p.ventana;
+  const introFrames = v ? msAFrame(INTRO_SHORT_MS) : 0;
+  const cierreFrames = v ? msAFrame(CIERRE_SHORT_MS) : 0;
+  const inicioVentanaMs = v?.inicioMs ?? 0;
+  const finVentanaMs = v?.finMs ?? p.duracionMs;
+  const tMs = ((frame - introFrames) / FPS) * 1000 + inicioVentanaMs;
+  // De tiempo del video largo a frame de ESTE video.
+  const aFrame = (ms: number) => msAFrame(ms - inicioVentanaMs) + introFrames;
+  // Tiempos de la música en el reloj de ESTE video (en un short empiezan tras el título).
+  const aLocalMs = (ms: number) => ms - inicioVentanaMs + (v ? INTRO_SHORT_MS : 0);
 
   const { pages } = useMemo(
     () =>
@@ -57,12 +69,25 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       }),
     [p.palabras, vertical],
   );
-  const pagina = pages.find((pg) => tMs >= pg.startMs && tMs < pg.startMs + pg.durationMs);
+  const pagina =
+    frame >= introFrames && tMs < finVentanaMs
+      ? pages.find((pg) => tMs >= pg.startMs && tMs < pg.startMs + pg.durationMs)
+      : undefined;
   const interludios = useMemo(
-    () => p.escenas.filter((e) => e.interludio).map((e) => ({ inicioMs: e.inicioMs, finMs: e.finMs })),
-    [p.escenas],
+    () =>
+      p.escenas
+        .filter((e) => e.interludio && e.finMs > inicioVentanaMs && e.inicioMs < finVentanaMs)
+        .map((e) => ({
+          inicioMs: Math.max(e.inicioMs, inicioVentanaMs) - inicioVentanaMs + (v ? INTRO_SHORT_MS : 0),
+          finMs: Math.min(e.finMs, finVentanaMs) - inicioVentanaMs + (v ? INTRO_SHORT_MS : 0),
+        })),
+    [p.escenas, inicioVentanaMs, finVentanaMs, v],
   );
+  const finVozLocalMs = aLocalMs(finVentanaMs);
   const finVideoMs = (durationInFrames / FPS) * 1000;
+  const visibles = p.escenas
+    .map((e, i) => ({ e, i }))
+    .filter(({ e }) => e.finMs > inicioVentanaMs && e.inicioMs < finVentanaMs);
   // En un interludio no hay voz: se esconde el último subtítulo para que no se quede pegado.
   const enInterludio = interludios.some((tr) => tMs >= tr.inicioMs && tMs < tr.finMs);
   const whooshes = p.sfx.whoosh;
@@ -73,9 +98,14 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", fontFamily }}>
       {/* Escenas: cada una se funde sobre la anterior */}
-      {p.escenas.map((e, i) => {
-        const desde = msAFrame(e.inicioMs);
-        const dur = Math.max(1, msAFrame(e.finMs) - desde + (i < p.escenas.length - 1 ? TRANSICION : 0));
+      {visibles.map(({ e, i }, k) => {
+        const primera = k === 0;
+        const ultima = k === visibles.length - 1;
+        const desde = aFrame(Math.max(e.inicioMs, inicioVentanaMs));
+        const dur = Math.max(
+          1,
+          aFrame(Math.min(e.finMs, finVentanaMs)) - desde + (ultima ? cierreFrames : TRANSICION),
+        );
         const colores = PALETA[i % PALETA.length] ?? PALETA[0];
         const whoosh = whooshes.length ? (whooshes[i % whooshes.length] ?? null) : null;
         return (
@@ -85,22 +115,22 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               colores={colores}
               durFrames={dur}
               vertical={vertical}
-              fundir={i > 0}
+              fundir={!primera}
               pop={p.sfx.pop}
-              retraso={i === 0 ? Math.round(FPS * 3.2) : TRANSICION}
+              retraso={primera ? (v ? 6 : Math.round(FPS * 3.2)) : TRANSICION}
               acento={acento}
               fuenteTitulos={fuenteTitulos}
               boom={p.sfx.boom}
               whoosh={whoosh}
             />
-            {whoosh && i > 0 && <Audio src={staticFile(whoosh)} volume={0.4} />}
+            {whoosh && !primera && <Audio src={staticFile(whoosh)} volume={0.4} />}
           </Sequence>
         );
       })}
 
-      {/* Título de apertura */}
-      <Sequence from={0} durationInFrames={Math.round(FPS * 3.2)} name="título">
-        <Titulo texto={p.titulo} vertical={vertical} acento={acento} fuente={fuenteTitulos} />
+      {/* Título de apertura (en un short, el título del short) */}
+      <Sequence from={0} durationInFrames={v ? introFrames + 8 : Math.round(FPS * 3.2)} name="título">
+        <Titulo texto={v ? v.titulo : p.titulo} vertical={vertical} acento={acento} fuente={fuenteTitulos} />
         {p.sfx.riser && <Audio src={staticFile(p.sfx.riser)} volume={0.35} />}
         {p.sfx.boom && (
           <Sequence from={18} name="boom">
@@ -134,8 +164,16 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         </AbsoluteFill>
       )}
 
-      {/* Cierre con producto */}
-      {p.producto && (
+      {/* Cierre del short: invita a ver el video completo */}
+      {v && (
+        <Sequence from={Math.max(0, durationInFrames - cierreFrames)} name="cierre-short">
+          <CierreShort titulo={p.titulo} acento={acento} fuente={fuenteTitulos} />
+          {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
+        </Sequence>
+      )}
+
+      {/* Cierre con producto (solo en el video largo) */}
+      {!v && p.producto && (
         <Sequence from={Math.max(0, durationInFrames - FPS * 6)} name="cta">
           <Cierre nombre={p.producto.nombre} url={p.producto.url} vertical={vertical} acento={acento} />
           {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
@@ -164,7 +202,21 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         </div>
       )}
 
-      <Audio src={staticFile(p.audio)} />
+      {v ? (
+        <Sequence
+          from={introFrames}
+          durationInFrames={Math.max(1, msAFrame(finVentanaMs - inicioVentanaMs))}
+          name="voz"
+        >
+          <Audio
+            src={staticFile(p.audio)}
+            startFrom={msAFrame(inicioVentanaMs)}
+            endAt={msAFrame(finVentanaMs)}
+          />
+        </Sequence>
+      ) : (
+        <Audio src={staticFile(p.audio)} />
+      )}
       {/* Música en bucle a mano: con `loop`, el frame que recibe `volume` se
           reinicia en cada vuelta y la curva se desfasa (los interludios después
           del primer bucle sonaban bajos). Cada copia sabe su desplazamiento. */}
@@ -179,7 +231,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               <Audio
                 src={staticFile(p.musica?.ruta ?? "")}
                 volume={(f) =>
-                  volumenMusica(((f + desde) / FPS) * 1000, interludios, p.duracionMs, finVideoMs)
+                  volumenMusica(((f + desde) / FPS) * 1000, interludios, finVozLocalMs, finVideoMs)
                 }
               />
             </Sequence>
@@ -588,15 +640,21 @@ const FotoConMovimiento: React.FC<{
   const zoom = interpolate(frame, [0, Math.max(1, durFrames)], [1.0, 1.1], { extrapolateRight: "clamp" });
   const desplazo = interpolate(frame, [0, Math.max(1, durFrames)], [-12, 12], { extrapolateRight: "clamp" });
   const horizontal = foto.ancho >= foto.alto;
+  const { width: anchoVideo, height: altoVideo } = useVideoConfig();
+  // En vertical la foto va a lo ancho, completa (sin recortar caras ni letras);
+  // solo una foto muy alta se limita al 62 % de la pantalla.
+  const anchoCaja = anchoVideo - 120;
+  const altoCajaVertical = Math.min(altoVideo * 0.62, (anchoCaja * foto.alto) / foto.ancho);
   return (
     <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: vertical ? 60 : 90 }}>
       <div
         style={{
           opacity: entrada,
           transform: `scale(${0.96 + entrada * 0.04})`,
-          height: vertical ? "62%" : "84%",
-          maxWidth: "88%",
-          aspectRatio: `${foto.ancho} / ${foto.alto}`,
+          height: vertical ? altoCajaVertical : "84%",
+          width: vertical ? Math.min(anchoCaja, (altoCajaVertical * foto.ancho) / foto.alto) : undefined,
+          maxWidth: vertical ? undefined : "88%",
+          aspectRatio: vertical ? undefined : `${foto.ancho} / ${foto.alto}`,
           overflow: "hidden",
           borderRadius: 14,
           boxShadow: "0 30px 80px rgba(0,0,0,.7), 0 0 0 6px rgba(255,255,255,.08)",
@@ -753,6 +811,58 @@ const Titulo: React.FC<{ texto: string; vertical: boolean; acento: string; fuent
           borderRadius: 6,
         }}
       />
+    </AbsoluteFill>
+  );
+};
+
+/** Cierre de un short: «¿Te gustó? Ver video completo» con el título del largo. */
+const CierreShort: React.FC<{ titulo: string; acento: string; fuente: string }> = ({
+  titulo,
+  acento,
+  fuente,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const entrada = spring({ frame, fps, config: { damping: 14, stiffness: 130 } });
+  return (
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: 70 }}>
+      <AbsoluteFill style={{ backgroundColor: "rgba(0,0,0,.62)" }} />
+      <div
+        style={{
+          transform: `translateY(${(1 - entrada) * 80}px) scale(${0.9 + entrada * 0.1})`,
+          opacity: entrada,
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: 52, fontWeight: 700, color: "#fff", letterSpacing: 2 }}>¿TE GUSTÓ?</div>
+        <div
+          style={{
+            display: "inline-block",
+            marginTop: 26,
+            padding: "26px 54px",
+            borderRadius: 24,
+            backgroundColor: acento,
+            color: "#111",
+            fontSize: 64,
+            fontWeight: 900,
+            letterSpacing: 1,
+          }}
+        >
+          VER VIDEO COMPLETO
+        </div>
+        <div
+          style={{
+            marginTop: 40,
+            fontSize: 46,
+            fontWeight: 700,
+            color: "#fff",
+            lineHeight: 1.2,
+            fontFamily: fuente,
+          }}
+        >
+          {titulo}
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };

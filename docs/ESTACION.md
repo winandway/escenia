@@ -87,7 +87,8 @@ Abre Remotion Studio en el navegador con la composición `TechExplainer`.
 
 ## Qué hace con cada trabajo
 
-1. **Voz.** Los números van a letras (`compartido/numeros.ts`), la H muda se quita
+1. **Voz.** Los números van a letras (`compartido/numeros.ts`), el ritmo se
+   empareja a ~150 palabras por minuto (`compartido/ritmo.ts`, C-VOZ-4), la H muda se quita
    solo para la voz (`compartido/pronunciacion.ts`, C-VOZ-3), cada pieza se
    nivela a -16 LUFS y las llamadas llevan el contexto de las escenas vecinas
    (candado C-VOZ-2). Una llamada a ElevenLabs por escena (`/with-timestamps`, que
@@ -162,3 +163,10 @@ devuelve a la cola pasadas 2 horas.
 Gratis si Windoce tiene 3 personas o menos (contratistas incluidos). Si son
 más, hace falta la licencia «Automators» ($0.01 por render, mínimo $100/mes):
 https://www.remotion.pro/license. Esta decisión es de Richard.
+
+## Shorts
+
+Cada trabajo produce el video 16:9 y, con el mismo audio, de 3 a 5 Shorts 9:16
+(`out/t<id>/short-N.mp4`), planificados por `compartido/shorts.ts` y dibujados
+por la misma plantilla con la prop `ventana` (candado C-SHORTS-1). Suben al
+panel como videos `9x16` y aparecen en la página del guion debajo del largo.

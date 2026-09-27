@@ -51,6 +51,13 @@ async function unaVuelta(): Promise<boolean> {
         }
       },
     );
+    for (const [k, s] of r.shorts.entries()) {
+      await avisar(`subiendo el short ${k + 1} de ${r.shorts.length} al panel`, 98);
+      await panel.subirVideo(trabajo.guion_id, "9x16", s.ruta, {
+        duracion_seg: s.duracionSeg,
+        voz_de_prueba: r.vozDePrueba,
+      });
+    }
     await avisar("subiendo voz y subtítulos al panel", 99);
     await panel.subirArchivo(trabajo.guion_id, "voz", "mp3", r.rutaVoz, { voz_de_prueba: r.vozDePrueba });
     await panel.subirArchivo(trabajo.guion_id, "subtitulos", "json", r.rutaSubtitulos, {
@@ -64,7 +71,18 @@ async function unaVuelta(): Promise<boolean> {
         duracion_seg: r.duracionSeg,
         voz_de_prueba: r.vozDePrueba,
       },
+      ...r.shorts.map((s) => ({
+        formato: "9x16" as const,
+        ruta_local: s.ruta,
+        bytes: s.bytes,
+        duracion_seg: s.duracionSeg,
+        voz_de_prueba: r.vozDePrueba,
+      })),
     ]);
+    if (r.shorts.length)
+      console.log(
+        `  Shorts: ${r.shorts.map((s) => `«${s.titulo}» (${Math.round(s.duracionSeg)} s)`).join(" · ")}`,
+      );
     console.log(`[${hora()}] Listo: ${r.rutaMp4} (${(r.bytes / 1_048_576).toFixed(0)} MB)`);
     clearInterval(latido);
   } catch (e) {

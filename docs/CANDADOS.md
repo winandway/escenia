@@ -212,3 +212,39 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   hardware, hip hop…); los subtítulos conservan la palabra original porque
   `paraLaVoz` nunca cambia la cantidad de palabras y `voz.ts` repone el texto.
 - **Cómo se comprueba:** `pruebas/pronunciacion.test.ts`.
+
+## C-VOZ-4 — Ritmo de lectura parejo (27 sep 2026)
+
+- **Qué se rompía / cómo se veía:** Richard: «a veces se acelera y a veces se
+  pone lento, y cuando se pone lento aburre». Medido en el trabajo 14: de 104
+  a 163 palabras por minuto según la escena, porque cada escena es una
+  generación distinta de la voz.
+- **Qué se hizo:** `compartido/ritmo.ts` mide letras pronunciadas por segundo
+  de cada pieza y calcula un factor hacia 11 letras/s (≈150 palabras por
+  minuto, «un poco rápido»), acotado entre 0,85 y 1,25; `voz.ts` aplica
+  `ffmpeg atempo` (no cambia el tono) y reescala los tiempos de la alineación
+  para que los subtítulos sigan clavados. Después se nivela el volumen (C-VOZ-2).
+- **Cómo se comprueba:** `pruebas/ritmo.test.ts`; en vivo, el registro de la
+  Estación dice «ritmo escena N: ×1.18» y las escenas quedan todas entre 140 y
+  160 palabras por minuto.
+- **Qué NO tocar:** el orden es tempo → reescalar alineación → nivelar; el
+  factor máximo 1,25 (más se nota artificial).
+
+## C-SHORTS-1 — Cada video largo sale con sus Shorts 9:16 (27 sep 2026)
+
+- **Qué pidió Richard:** el mismo video en trozos verticales de 1 a 3 minutos,
+  cortados donde está la fuerza, con las imágenes y letras adaptadas (nada
+  cortado), 3 a 5 por video, mismo audio.
+- **Qué se hizo:** `compartido/shorts.ts` planifica los trozos (escenas
+  contiguas, nunca partidas; arrancan en gancho/dato/titular/periódico; 45 s a
+  3 min; 3 a 5 según el largo; nunca arrancan en interludio ni en la opinión).
+  La plantilla recibe `ventana` y dibuja solo ese tramo con título propio
+  (2,2 s), voz recortada con `startFrom/endAt`, música y subtítulos en el reloj
+  del short, foto a lo ancho sin recortar, y cierre «¿Te gustó? Ver video
+  completo» (3,2 s). La Estación empaqueta una sola vez y renderiza el 16:9 y
+  luego cada short (`short-N.mp4`), los sube como `9x16` y los lista en
+  `renders`.
+- **Cómo se comprueba:** `pruebas/shorts.test.ts`; en vivo, la página del guion
+  muestra el 16:9 y los shorts (9x16) debajo.
+- **Qué NO tocar:** `tMs` en la plantilla es SIEMPRE tiempo del video largo;
+  todo lo que se posiciona pasa por `aFrame()` / `aLocalMs()`.

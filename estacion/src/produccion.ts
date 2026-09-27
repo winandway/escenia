@@ -6,7 +6,8 @@ import { DURACION_INTERLUDIO, type Guion } from "@compartido/guion";
 import { anioDe, elegirReferencia } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
-import { renderizar } from "./render";
+import { empaquetar, renderizar } from "./render";
+import { planificarShorts, type EscenaParaShort } from "@compartido/shorts";
 import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
@@ -16,8 +17,11 @@ import { generarVoz } from "./voz";
 export type Avisar = (paso: string, progreso: number) => Promise<unknown>;
 export type Gastar = (servicio: string, detalle: string, costoUsd: number) => Promise<unknown>;
 
+export type ShortProducido = { ruta: string; bytes: number; duracionSeg: number; titulo: string };
+
 export type ResultadoProduccion = {
   rutaMp4: string;
+  shorts: ShortProducido[];
   bytes: number;
   duracionSeg: number;
   vozDePrueba: boolean;
@@ -114,6 +118,7 @@ export async function producir(
     );
   }
   const creditosReferencia = new Set<string>();
+  const paraShorts: EscenaParaShort[] = [];
   // Las biografías avanzan en el tiempo: una escena sin año hereda el de la anterior.
   let ultimoAnio: number | null = null;
   const escenas: PropsVideo["escenas"] = [];
@@ -213,6 +218,14 @@ export async function producir(
       recorte,
       interludio: e.parte === "interludio",
     });
+    paraShorts.push({
+      inicioMs: tramo.inicioMs,
+      finMs: tramo.finMs,
+      parte: e.parte,
+      narracion: e.narracion,
+      textoEnPantalla: e.visual.texto_en_pantalla,
+      titular: e.visual.titular,
+    });
     void avisar(
       `clips de fondo: escena ${i + 1} de ${guion.escenas.length}`,
       35 + Math.round((i / guion.escenas.length) * 5),
@@ -230,19 +243,46 @@ export async function producir(
     tema: plantilla === "MiniDocumental" ? "documental" : "tech",
     sfx,
     musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg } : null,
+    ventana: null,
   };
   await writeFile(path.join(carpetaTrabajo, "props.json"), JSON.stringify(props, null, 2));
 
   await avisar("armando el video (16:9)", 40);
+  const serveUrl = await empaquetar(carpetaPublica);
   const rutaMp4 = path.join(carpetaTrabajo, "video-16x9.mp4");
   let ultimo = 40;
-  const r = await renderizar(plantilla, props, carpetaPublica, rutaMp4, (p) => {
-    const pct = 40 + Math.round(p * 58);
-    if (pct >= ultimo + 5) {
-      ultimo = pct;
-      void avisar(`armando el video (16:9) ${Math.round(p * 100)}%`, pct);
-    }
-  });
+  const r = await renderizar(
+    plantilla,
+    props,
+    carpetaPublica,
+    rutaMp4,
+    (p) => {
+      const pct = 40 + Math.round(p * 40);
+      if (pct >= ultimo + 5) {
+        ultimo = pct;
+        void avisar(`armando el video (16:9) ${Math.round(p * 100)}%`, pct);
+      }
+    },
+    serveUrl,
+  );
+
+  // Shorts 9:16: el mismo video en trozos, cada uno con su título y su cierre.
+  const plan = planificarShorts(paraShorts);
+  const shorts: ShortProducido[] = [];
+  for (const [k, ventana] of plan.entries()) {
+    const base = 80 + Math.round((k / plan.length) * 17);
+    await avisar(`armando el short ${k + 1} de ${plan.length} (9:16): «${ventana.titulo}»`, base);
+    const salida = path.join(carpetaTrabajo, `short-${k + 1}.mp4`);
+    const rs = await renderizar(
+      "TechExplainerShort",
+      { ...props, ventana },
+      carpetaPublica,
+      salida,
+      () => {},
+      serveUrl,
+    );
+    shorts.push({ ruta: salida, bytes: rs.bytes, duracionSeg: rs.duracionSeg, titulo: ventana.titulo });
+  }
 
   creditos.push(...creditosReferencia);
   if (creditos.length)
@@ -250,6 +290,7 @@ export async function producir(
 
   return {
     rutaMp4,
+    shorts,
     bytes: r.bytes,
     duracionSeg: r.duracionSeg,
     vozDePrueba: voz.vozDePrueba,

@@ -35,6 +35,8 @@
 - [x] Fase 2 (parte): titulares con golpe, recortes de periódico y tarjetas de red social dibujados en la plantilla; imágenes con IA listas (falta la clave de fal.ai) — 26 sep 2026
 - [ ] Fase 2: capturas de pantalla reales del software (visual «pantalla» con `url`: grabar la página con Playwright) — pedido por Richard el 26 sep 2026
 - [ ] Fase 2: biblioteca de recursos con licencia por archivo (el pack de sonidos de Richard entra ahí; memes/música con derechos solo con su confirmación por video)
-- [ ] Fase 2: temática `MiniDocumental`, Shorts 9:16, miniaturas, biblioteca de recursos, cortes comerciales
+- [x] Shorts 9:16 automáticos por cada video largo (27 sep 2026, C-SHORTS-1): 3 a 5 trozos con título y cierre «ver video completo».
+- [x] Ritmo de lectura parejo (27 sep 2026, C-VOZ-4).
+- [ ] Fase 2: miniaturas, biblioteca de recursos, cortes comerciales
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)

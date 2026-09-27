@@ -25,8 +25,10 @@ export async function renderizar(
   carpetaPublica: string,
   salida: string,
   avisar: (progreso: number) => void,
+  serveUrl?: string,
 ): Promise<{ bytes: number; duracionSeg: number }> {
-  const serveUrl = await empaquetar(carpetaPublica);
+  // Un solo empaquetado por trabajo: el video largo y sus shorts comparten el mismo.
+  serveUrl ??= await empaquetar(carpetaPublica);
   const comp = await selectComposition({ serveUrl, id: composicion, inputProps: props });
   await renderMedia({
     composition: comp,

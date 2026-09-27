@@ -59,6 +59,18 @@ export const esquemaPropsVideo = z.object({
   sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null }),
   // Música de fondo (ruta relativa al publicDir), ya normalizada de volumen. Se repite en bucle.
   musica: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
+  // Short: trozo del video largo que se dibuja en 9:16, con su título al
+  // arrancar y un cierre de «ver video completo». Todo lo demás es lo mismo.
+  ventana: z
+    .object({
+      inicioMs: z.number(),
+      finMs: z.number(),
+      titulo: z.string(),
+      indice: z.number(),
+      total: z.number(),
+    })
+    .nullable()
+    .default(null),
 });
 
 export type PropsVideo = z.infer<typeof esquemaPropsVideo>;
@@ -70,4 +82,22 @@ export const COLA_CON_MUSICA_MS = 4000;
 
 export function duracionEnFrames(duracionMs: number, conMusica = false): number {
   return Math.ceil(((duracionMs + (conMusica ? COLA_CON_MUSICA_MS : COLA_FINAL_MS)) / 1000) * FPS);
+}
+
+export const INTRO_SHORT_MS = 2200;
+export const CIERRE_SHORT_MS = 3200;
+
+export function duracionShortEnFrames(ventana: { inicioMs: number; finMs: number }): number {
+  return Math.ceil(((INTRO_SHORT_MS + (ventana.finMs - ventana.inicioMs) + CIERRE_SHORT_MS) / 1000) * FPS);
+}
+
+/** Frames que dura un video con o sin ventana (lo usan las composiciones). */
+export function framesDe(props: {
+  duracionMs: number;
+  musica?: unknown;
+  ventana?: { inicioMs: number; finMs: number } | null;
+}): number {
+  return props.ventana
+    ? duracionShortEnFrames(props.ventana)
+    : duracionEnFrames(props.duracionMs, Boolean(props.musica));
 }

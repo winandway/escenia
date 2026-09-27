@@ -14,6 +14,7 @@ import {
 import type { Voz } from "@compartido/guion";
 import { numerosEnLetras } from "@compartido/numeros";
 import { paraLaVoz } from "@compartido/pronunciacion";
+import { escalarAlineacion, factorDeRitmo } from "@compartido/ritmo";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
 import { elegirIdDeVoz } from "@compartido/voces";
 import { config } from "./config";
@@ -88,9 +89,19 @@ export async function generarVoz(
     } else {
       alineacion = await vozDelSistema(textoVoz, rutaPieza, narrador);
     }
-    // Mismo volumen en todas las escenas (C-VOZ-2): cada generación sale con
-    // un nivel distinto y se notaba «la voz va y viene».
-    if (texto) await nivelar(rutaPieza);
+    if (texto) {
+      // Ritmo parejo (C-VOZ-4): cada generación lee a su velocidad; se lleva
+      // toda pieza al mismo ritmo (sin cambiar el tono) y se reescalan los tiempos.
+      const factor = factorDeRitmo(textoVoz, (await duracionMs(rutaPieza)) / 1000);
+      if (Math.abs(factor - 1) > 0.03) {
+        await cambiarTempo(rutaPieza, factor);
+        alineacion = escalarAlineacion(alineacion, factor);
+        console.log(`  ritmo escena ${i + 1}: ×${factor}`);
+      }
+      // Mismo volumen en todas las escenas (C-VOZ-2): cada generación sale con
+      // un nivel distinto y se notaba «la voz va y viene».
+      await nivelar(rutaPieza);
+    }
     const r = texto ? palabrasDesdeAlineacion(alineacion, [textoVoz]) : { palabras: [] as Palabra[] };
     // Los subtítulos muestran la ortografía real: se reponen las palabras del
     // texto original (misma cantidad de palabras, garantizado por paraLaVoz).
@@ -156,6 +167,28 @@ async function vozElevenLabs(
   const alineacion = datos.alignment ?? datos.normalized_alignment;
   if (!alineacion) throw new Error("ElevenLabs no devolvió la alineación de letras.");
   return { alineacion, requestId: r.headers.get("request-id") };
+}
+
+/** Acelera o frena una pieza sin cambiar el tono (ffmpeg atempo). */
+export async function cambiarTempo(ruta: string, factor: number): Promise<void> {
+  const tmp = ruta.replace(/\.mp3$/, ".tempo.mp3");
+  await exec("ffmpeg", [
+    "-y",
+    "-loglevel",
+    "error",
+    "-i",
+    ruta,
+    "-af",
+    `atempo=${factor}`,
+    "-ar",
+    "44100",
+    "-codec:a",
+    "libmp3lame",
+    "-b:a",
+    "128k",
+    tmp,
+  ]);
+  await rename(tmp, ruta);
 }
 
 /**
