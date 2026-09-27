@@ -63,6 +63,8 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
     [p.escenas],
   );
   const finVideoMs = (durationInFrames / FPS) * 1000;
+  // En un interludio no hay voz: se esconde el último subtítulo para que no se quede pegado.
+  const enInterludio = interludios.some((tr) => tMs >= tr.inicioMs && tMs < tr.finMs);
   const whooshes = p.sfx.whoosh;
   const documental = p.tema === "documental";
   const acento = documental ? ORO : AMBAR;
@@ -108,7 +110,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       </Sequence>
 
       {/* Subtítulos palabra por palabra */}
-      {pagina && (
+      {pagina && !enInterludio && (
         <AbsoluteFill
           style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: vertical ? 420 : 100 }}
         >
