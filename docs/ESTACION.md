@@ -19,6 +19,11 @@ cuando el sitio exista, la IA lo renombra a `.env`.**
 - `PANEL_URL` — `https://escenia.sitios.dev`
 - `YAPANEL_DB_TOKEN` — token para consultar la base desde fuera (solo migraciones o revisiones; la Estación normal no lo usa)
 - `ESTACION_SECRETO` — el mismo que está en el panel (YaDominios Cloud → variables)
+- `ELEVENLABS_VOICE_ID_FEMENINA` — la voz femenina, para los guiones donde Richard
+  elige «Voz femenina» (selector «Quién narra» en el panel, al crear y al editar el
+  guion). Si un guion la pide y falta, el trabajo falla con aviso claro antes de
+  gastar; nunca se usa la otra voz en silencio (candado C-VOZ-1). Hoy lleva la voz
+  de catálogo «Sarah».
 - `ELEVENLABS_API_KEY` y `ELEVENLABS_VOICE_ID` — la voz de Richard. **Sin
   ellas, la Estación usa la voz de prueba del sistema** (suena robótica pero
   sirve para ver el video completo sin gastar). El video queda marcado «VOZ DE

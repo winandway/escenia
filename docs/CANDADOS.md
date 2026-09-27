@@ -81,3 +81,25 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - `schema.sql` corre en cada publicación: nunca `DROP`, solo `IF NOT EXISTS`.
 - Rutas de backend siempre en `/datos/*`, nunca `/api/*` (YaDominios Cloud).
 - Los MP4 no se suben al almacén: 512 MB gratis / 5 GB pagos se llenarían en días.
+
+## C-VOZ-1 — La voz pedida por el guion es la que suena (26 sep 2026)
+
+- **Qué se rompía / cómo se veía:** Richard pidió poder narrar algunos videos con
+  una voz femenina. El riesgo de una segunda voz es que, si su id falta en la Mac,
+  el video salga en silencio con la otra voz y nadie se entere hasta verlo.
+- **Causa real:** antes había un solo `ELEVENLABS_VOICE_ID` y, si faltaba, la
+  Estación caía sin aviso a la voz de prueba del sistema.
+- **Qué se hizo:** el guion lleva `voz` (`richard` | `femenina`, en
+  `compartido/guion.ts`; la IA no la elige: `esquemaGuionGenerado` no la tiene).
+  El panel la muestra en «Quién narra» (crear y editar). La Estación resuelve el
+  id con `elegirIdDeVoz` (`compartido/voces.ts`) ANTES de la primera llamada a
+  ElevenLabs: si falta el id de la voz pedida, el trabajo falla con el nombre de
+  la variable, sin gastar. Sin `ELEVENLABS_API_KEY` sigue la voz de prueba del
+  sistema (masculina o femenina según el guion).
+- **Cómo se comprueba:** `pruebas/voces.test.ts` (comprobada en rojo el 26 sep
+  2026 metiendo un fallback a propósito). En vivo: crear un guion con «Voz
+  femenina», producirlo y oír la voz; y el arranque de la Estación dice
+  `Voz: ElevenLabs (mi voz: sí · femenina: sí)`.
+- **Qué NO tocar:** no volver a leer `config.ELEVENLABS_VOICE_ID` directo en
+  `voz.ts`; no meter `voz` en `esquemaGuionGenerado` (rompe el formato que se le
+  exige a Claude).

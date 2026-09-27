@@ -2,7 +2,8 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Elegir plan de ElevenLabs (Creator $22 con clon profesional, o Starter $6 con clon instantáneo) y pasar API key + voice_id.
+- 👤 Pegar el Voice ID del clon «Richard» de ElevenLabs cuando diga Ready (se mandó a entrenar el 26 sep 2026, tarda 2 a 6 h) → se pone en la Mac y los videos salen con su voz.
+- 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
 
 ## Fila (lo hace la IA)
@@ -24,6 +25,8 @@
 - [x] Ruta `/datos/estacion/guiones` para crear guiones desde fuera con el secreto (la usará el radar).
 - [x] Varias imágenes con IA por escena, una por frase narrada (~5 por minuto), con fundido — pedido por Richard el 26 sep 2026.
 - [x] Clave de fal.ai recibida (26 sep 2026): imágenes con IA activas en la Mac; biografía de Celia Cruz producida con ellas (guion #3, trabajo #7).
+- [x] Voz real: clave de ElevenLabs probada y puesta en la Mac; guion #3 producido con voz de catálogo «Brian» (trabajo #8, 26 sep 2026) mientras entrena el clon.
+- [x] Voz femenina por video (26 sep 2026): selector «Quién narra» al crear y editar el guion; `ELEVENLABS_VOICE_ID_FEMENINA` en la Mac (voz «Sarah»); candado C-VOZ-1.
 - [x] Fase 2 (parte): titulares con golpe, recortes de periódico y tarjetas de red social dibujados en la plantilla; imágenes con IA listas (falta la clave de fal.ai) — 26 sep 2026
 - [ ] Fase 2: capturas de pantalla reales del software (visual «pantalla» con `url`: grabar la página con Playwright) — pedido por Richard el 26 sep 2026
 - [ ] Fase 2: biblioteca de recursos con licencia por archivo (el pack de sonidos de Richard entra ahí; memes/música con derechos solo con su confirmación por video)
