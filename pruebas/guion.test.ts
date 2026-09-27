@@ -1,7 +1,9 @@
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { describe, expect, it } from "vitest";
 import {
   duracionEstimadaSeg,
   esquemaGuion,
+  esquemaGuionGenerado,
   insertarOpinion,
   textoNarrado,
   type Escena,
@@ -57,5 +59,27 @@ describe("guion", () => {
     const palabras = Array.from({ length: 150 }, () => "palabra").join(" ");
     expect(duracionEstimadaSeg([escena("demo", palabras)])).toBe(60);
     expect(textoNarrado([escena("gancho", "a"), escena("demo", "b")])).toBe("a\n\nb");
+  });
+
+  it("un interludio va sin voz y con sus segundos; cualquier otra parte exige narración", () => {
+    const base = { titulo: "Un título válido", gancho: "Un gancho válido" };
+    const conInterludio = esquemaGuion.parse({
+      ...base,
+      escenas: [
+        escena("gancho"),
+        { parte: "interludio", narracion: "", duracion_seg: 6, visual: { tipo: "stock", busqueda: "sea" } },
+        escena("cta"),
+      ],
+    });
+    expect(conInterludio.escenas[1]?.duracion_seg).toBe(6);
+    expect(duracionEstimadaSeg(conInterludio.escenas)).toBeGreaterThanOrEqual(6);
+    expect(() =>
+      esquemaGuion.parse({ ...base, escenas: [escena("gancho"), escena("dato", ""), escena("cta")] }),
+    ).toThrow(/vacía/);
+  });
+
+  it("el formato que se le exige a Claude sigue siendo convertible (interludios y música incluidos)", () => {
+    expect(() => zodOutputFormat(esquemaGuionGenerado)).not.toThrow();
+    expect(Object.keys(esquemaGuionGenerado.shape)).toContain("musica");
   });
 });

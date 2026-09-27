@@ -136,6 +136,7 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
         opinion={guion.opinion_richard}
         notas={guion.notas_richard}
         voz={contenido.voz}
+        musica={contenido.musica}
         producto={producto ? { nombre: producto.nombre, url: producto.url } : null}
       />
     </Marco>

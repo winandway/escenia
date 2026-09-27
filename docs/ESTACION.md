@@ -19,6 +19,9 @@ cuando el sitio exista, la IA lo renombra a `.env`.**
 - `PANEL_URL` — `https://escenia.sitios.dev`
 - `YAPANEL_DB_TOKEN` — token para consultar la base desde fuera (solo migraciones o revisiones; la Estación normal no lo usa)
 - `ESTACION_SECRETO` — el mismo que está en el panel (YaDominios Cloud → variables)
+- Música de fondo: no es una variable, es la carpeta `estacion/recursos/musica-local/`
+  con las pistas instrumentales (las hace Richard en Suno; lista y reglas en
+  [docs/MUSICA.md](MUSICA.md)). Vacía = videos sin música, y la Estación lo dice.
 - `ELEVENLABS_VOICE_ID_FEMENINA` — la voz femenina, para los guiones donde Richard
   elige «Voz femenina» (selector «Quién narra» en el panel, al crear y al editar el
   guion). Si un guion la pide y falta, el trabajo falla con aviso claro antes de

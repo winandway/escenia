@@ -18,12 +18,14 @@ const vacio: PropsVideo = {
       foto: null,
       fotos: [],
       recorte: null,
+      interludio: false,
     },
   ],
   producto: null,
   vozDePrueba: false,
   tema: "tech",
   sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null },
+  musica: null,
 };
 
 export const Root: React.FC = () => (
@@ -37,7 +39,9 @@ export const Root: React.FC = () => (
       width={1920}
       height={1080}
       durationInFrames={duracionEnFrames(vacio.duracionMs)}
-      calculateMetadata={({ props }) => ({ durationInFrames: duracionEnFrames(props.duracionMs) })}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: duracionEnFrames(props.duracionMs, Boolean(props.musica)),
+      })}
     />
     <Composition
       id="MiniDocumental"
@@ -48,7 +52,9 @@ export const Root: React.FC = () => (
       width={1920}
       height={1080}
       durationInFrames={duracionEnFrames(vacio.duracionMs)}
-      calculateMetadata={({ props }) => ({ durationInFrames: duracionEnFrames(props.duracionMs) })}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: duracionEnFrames(props.duracionMs, Boolean(props.musica)),
+      })}
     />
     <Composition
       id="TechExplainerShort"
@@ -59,7 +65,9 @@ export const Root: React.FC = () => (
       width={1080}
       height={1920}
       durationInFrames={duracionEnFrames(vacio.duracionMs)}
-      calculateMetadata={({ props }) => ({ durationInFrames: duracionEnFrames(props.duracionMs) })}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: duracionEnFrames(props.duracionMs, Boolean(props.musica)),
+      })}
     />
   </>
 );

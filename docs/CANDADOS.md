@@ -103,3 +103,25 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** no volver a leer `config.ELEVENLABS_VOICE_ID` directo en
   `voz.ts`; no meter `voz` en `esquemaGuionGenerado` (rompe el formato que se le
   exige a Claude).
+
+## C-MUSICA-1 — La música de fondo nunca tapa la voz (26 sep 2026)
+
+- **Qué se rompía / cómo se veía:** al meter música de fondo, el riesgo es que
+  una pista suene más fuerte que otra (cada canción viene con su volumen) o que
+  suba donde hay voz y no se entienda la narración.
+- **Causa real:** no había música; se construyó con el candado desde el día uno.
+- **Qué se hizo:** (1) cada pista se normaliza una sola vez a -20 LUFS
+  (`estacion/src/musica.ts`, `ffmpeg loudnorm`) y queda en `cache/musica/`;
+  (2) el volumen lo decide una sola función pura, `volumenMusica` en
+  `estacion/src/remotion/musica.ts`: 12 % mientras hay voz, 50 % solo dentro de
+  los interludios (escenas `parte: "interludio"`, sin voz) y en la cola final,
+  con rampas de 0,8 s y apagado de 1,5 s; (3) la pista se elige por palabras del
+  nombre del archivo (`compartido/musica.ts`) y, si no hay ninguna, el trabajo
+  dice «música: ninguna» en el panel en vez de fallar en silencio.
+- **Cómo se comprueba:** `pruebas/musica.test.ts` recorre todo el video y exige
+  que fuera de los interludios el volumen nunca pase de `VOLUMEN_BAJO`
+  (comprobada en rojo el 26 sep 2026 subiendo el volumen base a propósito).
+  En vivo: render local con `estacion/pruebas/guion-interludio.json`.
+- **Qué NO tocar:** no poner un `<Audio>` de música con volumen fijo en la
+  plantilla; todo pasa por `volumenMusica`. No subir `VOLUMEN_BAJO` de 0.15 sin
+  oírlo con voz real.

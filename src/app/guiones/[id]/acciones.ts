@@ -15,6 +15,7 @@ const esquemaEdicion = z.object({
   opinion: z.string().trim().max(2000).default(""),
   notas: z.string().trim().max(2000).default(""),
   voz: z.enum(VOCES).default("richard"),
+  musica: z.string().trim().max(160).default(""),
   escenas: z.string().transform((s, ctx) => {
     try {
       return z.array(esquemaEscena).min(3).max(30).parse(JSON.parse(s));
@@ -48,6 +49,7 @@ async function guardarCambios(
     gancho: d.gancho,
     escenas: d.escenas,
     voz: d.voz,
+    musica: d.musica,
   });
   await db.ejecutar(
     `UPDATE guiones SET titulo = ?, contenido = ?, opinion_richard = ?, notas_richard = ?, actualizado_en = datetime('now') WHERE id = ?`,

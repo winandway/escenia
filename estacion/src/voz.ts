@@ -28,8 +28,11 @@ export type ResultadoVoz = {
   costoUsd: number;
 };
 
+/** Una escena a narrar; sin texto y con `silencioSeg` es un interludio (solo música). */
+export type PiezaVoz = { texto: string; silencioSeg?: number };
+
 export async function generarVoz(
-  textos: string[],
+  piezas: PiezaVoz[],
   carpeta: string,
   avisar: (paso: string, progreso: number) => Promise<unknown>,
   narrador: Voz = "richard",
@@ -44,24 +47,29 @@ export async function generarVoz(
         femenina: config.ELEVENLABS_VOICE_ID_FEMENINA,
       })
     : "";
-  const piezas: string[] = [];
+  const rutasPiezas: string[] = [];
   const palabras: Palabra[] = [];
   const tramos: ResultadoVoz["tramos"] = [];
   let cursorMs = 0;
   let costoUsd = 0;
 
-  for (let i = 0; i < textos.length; i++) {
-    const texto = (textos[i] ?? "").trim();
-    await avisar(`voz: escena ${i + 1} de ${textos.length}`, Math.round(5 + (i / textos.length) * 25));
+  for (let i = 0; i < piezas.length; i++) {
+    const pieza = piezas[i] ?? { texto: "" };
+    const texto = pieza.texto.trim();
+    await avisar(`voz: escena ${i + 1} de ${piezas.length}`, Math.round(5 + (i / piezas.length) * 25));
     const rutaPieza = path.join(carpeta, `escena-${i + 1}.mp3`);
     let alineacion: Alineacion;
-    if (usaElevenLabs) {
+    if (!texto) {
+      // Interludio: silencio del largo pedido; la música lo llena en la plantilla.
+      await silencio(rutaPieza, pieza.silencioSeg ?? 6);
+      alineacion = { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] };
+    } else if (usaElevenLabs) {
       alineacion = await vozElevenLabs(texto, rutaPieza, idVoz);
       costoUsd += costoVozUsd(asegurarModeloVoz(config.ELEVENLABS_MODELO), texto.length);
     } else {
       alineacion = await vozDelSistema(texto, rutaPieza, narrador);
     }
-    const r = palabrasDesdeAlineacion(alineacion, [texto]);
+    const r = texto ? palabrasDesdeAlineacion(alineacion, [texto]) : { palabras: [] as Palabra[] };
     for (const p of r.palabras) {
       palabras.push({
         ...p,
@@ -74,11 +82,11 @@ export async function generarVoz(
     const duracionPieza = await duracionMs(rutaPieza);
     tramos.push({ indice: i, inicioMs: cursorMs, finMs: cursorMs + duracionPieza + PAUSA_ENTRE_ESCENAS_MS });
     cursorMs += duracionPieza + PAUSA_ENTRE_ESCENAS_MS;
-    piezas.push(rutaPieza);
+    rutasPiezas.push(rutaPieza);
   }
 
   const rutaMp3 = path.join(carpeta, "voz.mp3");
-  await unirConPausas(piezas, rutaMp3, PAUSA_ENTRE_ESCENAS_MS);
+  await unirConPausas(rutasPiezas, rutaMp3, PAUSA_ENTRE_ESCENAS_MS);
   const total = await duracionMs(rutaMp3);
   const ultimo = tramos[tramos.length - 1];
   if (ultimo) ultimo.finMs = total;
@@ -105,6 +113,25 @@ async function vozElevenLabs(texto: string, destino: string, idVoz: string): Pro
   const alineacion = datos.alignment ?? datos.normalized_alignment;
   if (!alineacion) throw new Error("ElevenLabs no devolvió la alineación de letras.");
   return alineacion;
+}
+
+async function silencio(destino: string, segundos: number): Promise<void> {
+  await exec("ffmpeg", [
+    "-y",
+    "-loglevel",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "anullsrc=r=44100:cl=mono",
+    "-t",
+    String(segundos),
+    "-codec:a",
+    "libmp3lame",
+    "-b:a",
+    "128k",
+    destino,
+  ]);
 }
 
 async function vozDelSistema(texto: string, destino: string, narrador: Voz): Promise<Alineacion> {

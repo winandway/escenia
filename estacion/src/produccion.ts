@@ -2,13 +2,14 @@
 import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Guion } from "@compartido/guion";
+import { DURACION_INTERLUDIO, type Guion } from "@compartido/guion";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
 import { renderizar } from "./render";
 import { buscarFoto } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
+import { prepararMusica } from "./musica";
 import { generarVoz } from "./voz";
 
 export type Avisar = (paso: string, progreso: number) => Promise<unknown>;
@@ -73,7 +74,10 @@ export async function producir(
   await mkdir(carpetaPublica, { recursive: true });
 
   const voz = await generarVoz(
-    guion.escenas.map((e) => e.narracion),
+    guion.escenas.map((e) => ({
+      texto: e.parte === "interludio" ? "" : e.narracion,
+      silencioSeg: e.parte === "interludio" ? (e.duracion_seg ?? DURACION_INTERLUDIO.porDefecto) : undefined,
+    })),
     carpetaTrabajo,
     avisar,
     guion.voz,
@@ -83,8 +87,18 @@ export async function producir(
   await writeFile(rutaSubtitulos, JSON.stringify({ palabras: voz.palabras, tramos: voz.tramos }, null, 2));
   const sfx = await prepararSfx(carpetaPublica);
 
-  await avisar("buscando clips de fondo", 35);
+  await avisar("eligiendo la música de fondo", 34);
   const creditos: string[] = [];
+  const musica = await prepararMusica(guion.musica, carpetaPublica);
+  if (musica) creditos.push(musica.credito);
+  await avisar(
+    musica
+      ? `música: ${musica.archivo}`
+      : "música: ninguna (no hay pista que encaje en estacion/recursos/musica-local)",
+    34,
+  );
+
+  await avisar("buscando clips de fondo", 35);
   const escenas: PropsVideo["escenas"] = [];
   for (const [i, e] of guion.escenas.entries()) {
     const tramo = voz.tramos[i];
@@ -172,6 +186,7 @@ export async function producir(
       foto,
       fotos,
       recorte,
+      interludio: e.parte === "interludio",
     });
     void avisar(
       `clips de fondo: escena ${i + 1} de ${guion.escenas.length}`,
@@ -189,6 +204,7 @@ export async function producir(
     vozDePrueba: voz.vozDePrueba,
     tema: plantilla === "MiniDocumental" ? "documental" : "tech",
     sfx,
+    musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg } : null,
   };
   await writeFile(path.join(carpetaTrabajo, "props.json"), JSON.stringify(props, null, 2));
 

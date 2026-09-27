@@ -2,7 +2,18 @@
 // Es la única fuente de verdad: si cambia aquí, cambia para los dos lados.
 import { z } from "zod";
 
-export const PARTES = ["gancho", "problema", "contexto", "demo", "dato", "opinion", "cierre", "cta"] as const;
+// interludio = respiro musical: sin voz, la música sube y pasan imágenes (5 a 8 s).
+export const PARTES = [
+  "gancho",
+  "problema",
+  "contexto",
+  "demo",
+  "dato",
+  "opinion",
+  "cierre",
+  "cta",
+  "interludio",
+] as const;
 // stock: clip de fondo · foto: foto real con licencia · ia: imagen generada con IA ·
 // texto: frase grande · titulo: portada · titular: titular enorme con golpe ·
 // periodico: recorte de periódico · red: tarjeta de red social · pantalla: grabación web
@@ -45,13 +56,28 @@ export const esquemaVisual = z.object({
   texto_en_pantalla: z.string().trim().max(90).optional(),
 });
 
-export const esquemaEscena = z.object({
-  parte: z.enum(PARTES),
-  narracion: z.string().trim().min(1).max(1500),
-  visual: esquemaVisual,
-  // Emoción del momento; en la Fase 2 elige memes y efectos de la biblioteca.
-  momento: z.string().trim().max(30).optional(),
-});
+export const DURACION_INTERLUDIO = { minimo: 3, maximo: 15, porDefecto: 6 } as const;
+
+export const esquemaEscena = z
+  .object({
+    parte: z.enum(PARTES),
+    // Vacía SOLO en un interludio (respiro musical sin voz).
+    narracion: z.string().trim().max(1500),
+    visual: esquemaVisual,
+    // Emoción del momento; en la Fase 2 elige memes y efectos de la biblioteca.
+    momento: z.string().trim().max(30).optional(),
+    // Segundos que dura un interludio (no lleva voz, así que no se puede deducir).
+    duracion_seg: z.number().min(DURACION_INTERLUDIO.minimo).max(DURACION_INTERLUDIO.maximo).optional(),
+  })
+  .superRefine((e, ctx) => {
+    if (e.parte !== "interludio" && e.narracion.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["narracion"],
+        message: "La narración no puede quedar vacía (solo un interludio va sin voz).",
+      });
+    }
+  });
 
 // Lo que escribe la IA (es el formato que se le exige a Claude).
 export const esquemaGuionGenerado = z.object({
@@ -63,6 +89,9 @@ export const esquemaGuionGenerado = z.object({
   hechos_a_verificar: z.array(z.string().trim().max(300)).max(20).default([]),
   descripcion_youtube: z.string().trim().max(4500).default(""),
   etiquetas: z.array(z.string().trim().max(40)).max(20).default([]),
+  // Estilo de la música instrumental de fondo, EN INGLÉS (género, época,
+  // instrumentos, ánimo). La Estación elige con esto la pista del catálogo local.
+  musica: z.string().trim().max(160).default(""),
 });
 
 // Lo que se guarda y viaja a la Estación: lo generado más lo que elige Richard.
@@ -103,5 +132,8 @@ export function textoNarrado(escenas: Escena[]): string {
 /** Estimación de duración: ~150 palabras por minuto en español narrado. */
 export function duracionEstimadaSeg(escenas: Escena[]): number {
   const palabras = textoNarrado(escenas).split(/\s+/).filter(Boolean).length;
-  return Math.round((palabras / 150) * 60);
+  const interludios = escenas
+    .filter((e) => e.parte === "interludio")
+    .reduce((s, e) => s + (e.duracion_seg ?? DURACION_INTERLUDIO.porDefecto), 0);
+  return Math.round((palabras / 150) * 60 + interludios);
 }

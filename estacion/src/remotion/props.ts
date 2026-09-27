@@ -34,6 +34,8 @@ export const esquemaEscenaVideo = z.object({
     })
     .nullable()
     .default(null),
+  // Respiro musical: no hay voz en este tramo, la música sube y pasan las imágenes.
+  interludio: z.boolean().default(false),
 });
 
 export const esquemaSfx = z.object({
@@ -55,13 +57,17 @@ export const esquemaPropsVideo = z.object({
   // "tech": explicador de tecnología. "documental": biografías, más pausado y con serif.
   tema: z.enum(["tech", "documental"]).default("tech"),
   sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null }),
+  // Música de fondo (ruta relativa al publicDir), ya normalizada de volumen. Se repite en bucle.
+  musica: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
 });
 
 export type PropsVideo = z.infer<typeof esquemaPropsVideo>;
 
 export const FPS = 30;
 export const COLA_FINAL_MS = 1500;
+// Con música, el video respira al final: la música sube unos segundos y se apaga.
+export const COLA_CON_MUSICA_MS = 4000;
 
-export function duracionEnFrames(duracionMs: number): number {
-  return Math.ceil(((duracionMs + COLA_FINAL_MS) / 1000) * FPS);
+export function duracionEnFrames(duracionMs: number, conMusica = false): number {
+  return Math.ceil(((duracionMs + (conMusica ? COLA_CON_MUSICA_MS : COLA_FINAL_MS)) / 1000) * FPS);
 }

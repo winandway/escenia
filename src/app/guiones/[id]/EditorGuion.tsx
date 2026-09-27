@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { useBorrador } from "@/componentes/useBorrador";
 import {
+  DURACION_INTERLUDIO,
   ETIQUETA_VOZ,
   OPINION_MINIMA,
   PARTES,
@@ -24,6 +25,7 @@ type Props = {
   opinion: string;
   notas: string;
   voz: Voz;
+  musica: string;
   producto: { nombre: string; url: string } | null;
 };
 
@@ -123,6 +125,21 @@ export function EditorGuion(p: Props) {
         </select>
       </div>
 
+      <div>
+        <label htmlFor="musica" className="etiqueta">
+          Música de fondo (estilo, en inglés; la Estación elige la pista que más se parezca)
+        </label>
+        <input
+          id="musica"
+          name="musica"
+          defaultValue={p.musica}
+          maxLength={160}
+          className="campo"
+          readOnly={soloLectura}
+          placeholder="1950s Cuban salsa, brass and congas, festive"
+        />
+      </div>
+
       {p.hechos.length > 0 && (
         <div className="tarjeta text-sm">
           <p className="mb-2 font-medium text-amber-300">
@@ -181,6 +198,21 @@ export function EditorGuion(p: Props) {
                     aria-label="Búsqueda del clip"
                   />
                 )}
+                {e.parte === "interludio" && (
+                  <label className="flex items-center gap-1 text-neutral-400">
+                    <input
+                      type="number"
+                      min={DURACION_INTERLUDIO.minimo}
+                      max={DURACION_INTERLUDIO.maximo}
+                      value={e.duracion_seg ?? DURACION_INTERLUDIO.porDefecto}
+                      readOnly={soloLectura}
+                      onChange={(ev) => cambiar(i, { duracion_seg: Number(ev.target.value) })}
+                      className="campo w-20 py-1"
+                      aria-label="Segundos del interludio"
+                    />
+                    s de música
+                  </label>
+                )}
                 <input
                   value={e.visual.texto_en_pantalla ?? ""}
                   readOnly={soloLectura}
@@ -230,10 +262,15 @@ export function EditorGuion(p: Props) {
                 value={e.narracion}
                 readOnly={soloLectura}
                 onChange={(ev) => cambiar(i, { narracion: ev.target.value })}
-                rows={3}
+                rows={e.parte === "interludio" ? 1 : 3}
                 maxLength={1500}
                 className="campo"
                 aria-label={`Narración de la escena ${i + 1}`}
+                placeholder={
+                  e.parte === "interludio"
+                    ? "Interludio: va sin voz. La música sube y pasan las imágenes de esta escena."
+                    : undefined
+                }
               />
             </li>
           ))}

@@ -1,4 +1,5 @@
 import { createTikTokStyleCaptions } from "@remotion/captions";
+import { volumenMusica } from "./musica";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { loadFont as loadSerif } from "@remotion/google-fonts/PlayfairDisplay";
 import { useMemo } from "react";
@@ -57,6 +58,11 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
     [p.palabras, vertical],
   );
   const pagina = pages.find((pg) => tMs >= pg.startMs && tMs < pg.startMs + pg.durationMs);
+  const interludios = useMemo(
+    () => p.escenas.filter((e) => e.interludio).map((e) => ({ inicioMs: e.inicioMs, finMs: e.finMs })),
+    [p.escenas],
+  );
+  const finVideoMs = (durationInFrames / FPS) * 1000;
   const whooshes = p.sfx.whoosh;
   const documental = p.tema === "documental";
   const acento = documental ? ORO : AMBAR;
@@ -157,6 +163,13 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       )}
 
       <Audio src={staticFile(p.audio)} />
+      {p.musica && (
+        <Audio
+          src={staticFile(p.musica.ruta)}
+          loop
+          volume={(f) => volumenMusica((f / FPS) * 1000, interludios, p.duracionMs, finVideoMs)}
+        />
+      )}
     </AbsoluteFill>
   );
 };

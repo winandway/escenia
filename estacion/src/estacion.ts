@@ -3,6 +3,7 @@
 // los subtítulos.
 import { config } from "./config";
 import { panel } from "./panel";
+import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
 
 const ESPERA_MS = 30_000;
@@ -70,6 +71,12 @@ async function principal() {
   console.log(`Estación ${config.VERSION} → ${config.PANEL_URL}`);
   console.log(
     `Voz: ${config.ELEVENLABS_API_KEY ? `ElevenLabs (mi voz: ${config.ELEVENLABS_VOICE_ID ? "sí" : "FALTA"} · femenina: ${config.ELEVENLABS_VOICE_ID_FEMENINA ? "sí" : "FALTA"})` : "de prueba (sistema)"} · Clips: ${config.PEXELS_API_KEY ? "Pexels" : "fondos de color"} · Imágenes IA: ${config.FAL_KEY ? "fal.ai" : "apagadas"}`,
+  );
+  const pistas = await catalogoMusica();
+  console.log(
+    pistas.length
+      ? `Música de fondo: ${pistas.length} pista(s) en recursos/musica-local`
+      : "Música de fondo: NINGUNA (deja las pistas en estacion/recursos/musica-local; ver docs/MUSICA.md)",
   );
   console.log("Lista. Esperando trabajos.");
   for (;;) {
