@@ -30,12 +30,19 @@
 
 Para cada fila de la tabla:
 
-1. En Suno: **Create** → modo **Custom** → activa **Instrumental**.
-2. En **Style of music** pega el texto de la columna «Prompt para Suno».
-3. En **Title** pega el nombre del archivo (sin `.mp3`), para no perderse.
-4. Genera (salen 2 versiones), escucha y descarga la mejor: **⋯ → Download →
-   MP3**.
-5. Renombra el archivo EXACTAMENTE como dice la columna «Archivo» y déjalo en
+1. En Suno (https://suno.com/create), arriba a la izquierda elige **Avanzado**
+   (antes se llamaba «Custom»; «Sencillo» es la caja de una sola frase). Modelo
+   **v6**.
+2. Activa el interruptor **Instrumental** y deja la **Letra** vacía.
+3. En la caja de **Estilo** (estilo de música) pega el texto de la columna
+   «Prompt para Suno».
+4. En **Título** pega el nombre del archivo (sin `.mp3`), para no perderse.
+5. Toca **Crear** (salen 2 versiones). En **Biblioteca**, escucha y descarga la
+   mejor: menú **⋯ → Descargar → MP3**.
+   Fuente: ayuda oficial de Suno (help.suno.com, «Make a song in Simple Mode»,
+   «Can I use my own lyrics?», «How do I download songs?», «Current Models: v6»),
+   comprobada el 27 sep 2026.
+6. Renombra el archivo EXACTAMENTE como dice la columna «Archivo» y déjalo en
    `/Users/windocellc/Motor-Escenia/estacion/recursos/musica-local/`.
 
 Duración ideal: 2 a 3 minutos (se repite sola). Sin voces, sin coros.
