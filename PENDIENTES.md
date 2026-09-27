@@ -27,7 +27,7 @@
 - [x] Varias imágenes con IA por escena, una por frase narrada (~5 por minuto), con fundido — pedido por Richard el 26 sep 2026.
 - [x] Clave de fal.ai recibida (26 sep 2026): imágenes con IA activas en la Mac; biografía de Celia Cruz producida con ellas (guion #3, trabajo #7).
 - [x] Voz pareja entre escenas, números en letras y H muda sin aspirar (27 sep 2026, C-VOZ-2 y C-VOZ-3).
-- [x] Imágenes con IA fotográficas y a partir de una foto libre de la persona (27 sep 2026, C-IMAGEN-2).
+- [x] Imágenes con IA fotográficas y a partir de una foto libre de la persona (27 sep 2026, C-IMAGEN-2); segunda vuelta: ropa y peinado distintos por cuadro y foto de referencia por época.
 - [x] Clon profesional de la voz de Richard listo y puesto en la Mac (26 sep 2026, modelo Flash v2.5): todo video con «Mi voz» sale con su voz.
 - [x] Voz real: clave de ElevenLabs probada y puesta en la Mac; guion #3 producido con voz de catálogo «Brian» (trabajo #8, 26 sep 2026) mientras entrena el clon.
 - [x] Música de fondo e interludios musicales (26 sep 2026): pista elegida por estilo desde `musica-local`, volumen normalizado, 12 % bajo la voz y 50 % en interludios y cola final; la IA escribe el estilo y mete 1 o 2 interludios; editables en el panel. Candado C-MUSICA-1. Falta que Richard genere las pistas (👤).

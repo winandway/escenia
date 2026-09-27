@@ -187,6 +187,15 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   y las imágenes de `out/t<id>/ia/`.
 - **Qué NO tocar:** no volver al estilo «painterly»; no mandar la URL de
   Wikimedia a fal (falla); la referencia se pasa por `opciones.referencia`.
+- **Segunda vuelta (27 sep 2026, Richard: «el mismo vestido en todas»):** la
+  referencia se usa SOLO para la cara: el prompt le prohíbe al modelo copiar la
+  ropa, el peinado, la pose y el fondo, y el guion describe ropa y peinado
+  distintos en cada cuadro más el año y la edad. Además hay varias fotos de
+  referencia, una por década (`buscarReferencias` en `estacion/src/fotos.ts`,
+  año del título o de la cámara), y cada cuadro usa la de la época más cercana
+  (`compartido/referencias.ts`); en la infancia no se usa ninguna (una foto
+  adulta daría una adulta). Probado: 1950 en la radio con blusa blanca y 1998
+  en Miami con peluca rubia y vestido naranja, las dos con su cara.
 - **Si no alcanza:** el generador de ChatGPT (gpt-image, calidad baja) conoce a
   los famosos; requiere clave de OpenAI de Richard (pendiente en PENDIENTES.md).
 

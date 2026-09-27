@@ -26,7 +26,7 @@ const ESTILO_BASE =
   "photorealistic documentary photograph, natural skin texture, cinematic lighting, subtle film grain, no text, no captions, no watermark, no logos";
 // Con foto de referencia: se le exige al modelo conservar la cara de la persona real.
 const CON_REFERENCIA =
-  "Keep the exact same face, skin tone, features and identity of the person in the reference image. ";
+  "Use the reference image ONLY for the face, skin tone, features and identity of the person. Do NOT copy the clothes, hairstyle, pose or background from the reference: the outfit, hairstyle, age and setting must follow this description exactly: ";
 
 /** Referencia reducida a 1280 px y en base64 (fal no puede bajar de Wikimedia directamente). */
 async function referenciaEnBase64(ruta: string): Promise<{ dataUri: string; huella: string }> {

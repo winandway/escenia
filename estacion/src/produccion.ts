@@ -3,10 +3,11 @@ import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DURACION_INTERLUDIO, type Guion } from "@compartido/guion";
+import { anioDe, elegirReferencia } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
 import { renderizar } from "./render";
-import { buscarFoto } from "./fotos";
+import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
 import { prepararMusica } from "./musica";
@@ -102,20 +103,19 @@ export async function producir(
   // Biografías: una foto real (libre) de la persona sirve de referencia para
   // que las imágenes generadas se parezcan a ella (C-IMAGEN-2).
   const personaDelTitulo = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
-  let referencia: string | undefined;
+  let referencias: FotoReferencia[] = [];
   if (plantilla === "MiniDocumental" && personaDelTitulo && imagenesActivas()) {
-    const fotoRef = await buscarFoto([personaDelTitulo], carpetaPublica);
-    if (fotoRef) {
-      referencia = path.join(carpetaPublica, fotoRef.ruta);
-      creditos.push(fotoRef.credito);
-    }
+    referencias = await buscarReferencias(personaDelTitulo);
     await avisar(
-      fotoRef
-        ? `foto de referencia de ${personaDelTitulo}: sí (las imágenes se hacen a partir de ella)`
-        : `foto de referencia de ${personaDelTitulo}: no hay en Wikimedia Commons; las imágenes van sin referencia`,
+      referencias.length
+        ? `fotos de referencia de ${personaDelTitulo}: ${referencias.length} (${referencias.map((f) => f.anio ?? "sin año").join(", ")})`
+        : `fotos de referencia de ${personaDelTitulo}: no hay en Wikimedia Commons; las imágenes van sin referencia`,
       35,
     );
   }
+  const creditosReferencia = new Set<string>();
+  // Las biografías avanzan en el tiempo: una escena sin año hereda el de la anterior.
+  let ultimoAnio: number | null = null;
   const escenas: PropsVideo["escenas"] = [];
   for (const [i, e] of guion.escenas.entries()) {
     const tramo = voz.tramos[i];
@@ -136,6 +136,9 @@ export async function producir(
     // Imágenes generadas con IA: un cuadro por frase de la narración (o una sola
     // si la IA solo dio `prompt_imagen`). Solo con FAL_KEY; si falla, va clip.
     const fotos: PropsVideo["escenas"][number]["fotos"] = [];
+    const anioEscena: number | null =
+      anioDe(`${e.visual.fecha ?? ""} ${e.visual.texto_en_pantalla ?? ""} ${e.narracion}`) ?? ultimoAnio;
+    if (anioEscena !== null) ultimoAnio = anioEscena;
     if (e.visual.tipo === "ia" && imagenesActivas()) {
       const persona = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
       const prompts = (e.visual.cuadros?.map((c) => c.prompt_imagen) ?? [])
@@ -151,12 +154,17 @@ export async function producir(
       for (let k = 0; k < conPersona.length; k += 3) {
         const lote = conPersona.slice(k, k + 3);
         const resultados = await Promise.all(
-          lote.map((pr) =>
-            generarImagen(pr, carpetaPublica, { blancoYNegro: epoca, referencia }).catch((err) => {
-              console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
-              return null;
-            }),
-          ),
+          lote.map((pr) => {
+            const ref = elegirReferencia(referencias, anioDe(pr) ?? anioEscena, pr);
+            const credito = referencias.find((f) => f.ruta === ref?.ruta)?.credito;
+            if (credito) creditosReferencia.add(credito);
+            return generarImagen(pr, carpetaPublica, { blancoYNegro: epoca, referencia: ref?.ruta }).catch(
+              (err) => {
+                console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
+                return null;
+              },
+            );
+          }),
         );
         for (const img of resultados) {
           if (!img) continue;
@@ -236,6 +244,7 @@ export async function producir(
     }
   });
 
+  creditos.push(...creditosReferencia);
   if (creditos.length)
     await writeFile(path.join(carpetaTrabajo, "creditos.txt"), [...new Set(creditos)].join("\n"));
 

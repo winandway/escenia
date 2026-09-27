@@ -9,6 +9,26 @@ import { licenciaLibre } from "@compartido/licencias";
 import { config } from "./config";
 
 export type Foto = { ruta: string; ancho: number; alto: number; credito: string };
+/** Foto real de la persona, en el caché de la Mac, con el año en que fue tomada (si se sabe). */
+export type FotoReferencia = { ruta: string; anio: number | null; credito: string; titulo: string };
+
+type Candidata = {
+  p: PaginaCommons;
+  ii: NonNullable<PaginaCommons["imageinfo"]>[number] | undefined;
+  puntaje: number;
+  conNombre: boolean;
+  anio: number | null;
+};
+
+/** Año de la foto: primero el del título («Celia Cruz, 1957.jpg»), si no el de la cámara. */
+function anioDeCandidata(p: PaginaCommons, meta: Record<string, { value: string }>): number | null {
+  const ahora = new Date().getFullYear();
+  const enTitulo = /\b(18[5-9]\d|19\d\d|20\d\d)\b/.exec(p.title)?.[1];
+  if (enTitulo && Number(enTitulo) <= ahora) return Number(enTitulo);
+  const fecha = meta.DateTimeOriginal?.value ?? "";
+  const enFecha = /\b(18[5-9]\d|19\d\d|20\d\d)\b/.exec(sinHtml(fecha))?.[1];
+  return enFecha && Number(enFecha) <= ahora ? Number(enFecha) : null;
+}
 
 const AGENTE = "Escenia/0.1 (https://windoce.com; escenia@windoce.com)";
 const usadas = new Set<string>();
@@ -61,7 +81,7 @@ export async function buscarFoto(busquedas: string[], carpetaPublica: string): P
   return null;
 }
 
-async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto | null> {
+async function candidatasCommons(busqueda: string, anchoMinimo = 900): Promise<Candidata[]> {
   const q = new URLSearchParams({
     action: "query",
     format: "json",
@@ -78,48 +98,54 @@ async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto
   });
   if (!r.ok) {
     console.warn(`Commons respondió ${r.status} para «${busqueda}».`);
-    return null;
+    return [];
   }
   const datos = (await r.json()) as { query?: { pages?: Record<string, PaginaCommons> } };
   const paginas = Object.values(datos.query?.pages ?? {});
-  const candidatas = paginas
-    .map((p) => ({ p, ii: p.imageinfo?.[0] }))
-    .filter(({ p, ii }) => {
-      if (!ii || usadas.has(p.title)) return false;
-      const meta = ii.extmetadata ?? {};
-      const licencia = meta.LicenseShortName?.value ?? "";
-      const esFoto = !/\.(svg|gif|pdf|tif|tiff)$/i.test(p.title);
-      return esFoto && ii.width >= 900 && licenciaLibre(licencia);
-    })
-    // Puntaje: el título trae el nombre de la persona (+), no parece objeto/lugar (−), y es grande (+).
-    .map((c) => {
-      // «9.7.14CeliaCruzParkByLuigiNovi.jpg» → «9 7 14 celia cruz park by luigi novi jpg»
-      const titulo = c.p.title
-        .replace(/([a-z])([A-Z])/g, "$1 $2")
-        .replace(/[_.()-]+/g, " ")
-        .toLowerCase();
-      const nombre = nombreBase(busqueda);
-      // El nombre COMPLETO tiene que estar en el título o en las categorías del archivo
-      // («Santa Cruz» no es «Celia Cruz»).
-      const categorias = (c.ii?.extmetadata?.Categories?.value ?? "")
-        .toLowerCase()
-        .split("|")
-        .map((x) => x.trim());
-      const nombreCompleto = nombre.join(" ");
-      // El nombre va como frase seguida («pedro knight»), no palabras sueltas («Pedro Ramos … Knight Foundation»).
-      const enTitulo = titulo.includes(nombreCompleto);
-      const enCategoria = categorias.some((cat) => cat === nombreCompleto);
-      const pixeles = (c.ii?.width ?? 0) * (c.ii?.height ?? 0);
-      const puntaje =
-        (enTitulo ? 4 : 0) +
-        (enCategoria ? 3 : 0) -
-        (NO_ES_RETRATO.test(titulo) ? 10 : 0) +
-        Math.min(2, pixeles / 3_000_000);
-      // Sin la categoría de la persona, un homónimo se cuela («Celia Cruz» funcionaria de la FDA).
-      // Los artistas conocidos siempre tienen su categoría en Commons.
-      return { ...c, puntaje, conNombre: enCategoria };
-    })
-    .sort((a, b) => b.puntaje - a.puntaje);
+  return (
+    paginas
+      .map((p) => ({ p, ii: p.imageinfo?.[0] }))
+      .filter(({ p, ii }) => {
+        if (!ii) return false;
+        const meta = ii.extmetadata ?? {};
+        const licencia = meta.LicenseShortName?.value ?? "";
+        const esFoto = !/\.(svg|gif|pdf|tif|tiff)$/i.test(p.title);
+        return esFoto && ii.width >= anchoMinimo && licenciaLibre(licencia);
+      })
+      // Puntaje: el título trae el nombre de la persona (+), no parece objeto/lugar (−), y es grande (+).
+      .map((c) => {
+        // «9.7.14CeliaCruzParkByLuigiNovi.jpg» → «9 7 14 celia cruz park by luigi novi jpg»
+        const titulo = c.p.title
+          .replace(/([a-z])([A-Z])/g, "$1 $2")
+          .replace(/[_.()-]+/g, " ")
+          .toLowerCase();
+        const nombre = nombreBase(busqueda);
+        // El nombre COMPLETO tiene que estar en el título o en las categorías del archivo
+        // («Santa Cruz» no es «Celia Cruz»).
+        const categorias = (c.ii?.extmetadata?.Categories?.value ?? "")
+          .toLowerCase()
+          .split("|")
+          .map((x) => x.trim());
+        const nombreCompleto = nombre.join(" ");
+        // El nombre va como frase seguida («pedro knight»), no palabras sueltas («Pedro Ramos … Knight Foundation»).
+        const enTitulo = titulo.includes(nombreCompleto);
+        const enCategoria = categorias.some((cat) => cat === nombreCompleto);
+        const pixeles = (c.ii?.width ?? 0) * (c.ii?.height ?? 0);
+        const puntaje =
+          (enTitulo ? 4 : 0) +
+          (enCategoria ? 3 : 0) -
+          (NO_ES_RETRATO.test(titulo) ? 10 : 0) +
+          Math.min(2, pixeles / 3_000_000);
+        // Sin la categoría de la persona, un homónimo se cuela («Celia Cruz» funcionaria de la FDA).
+        // Los artistas conocidos siempre tienen su categoría en Commons.
+        return { ...c, puntaje, conNombre: enCategoria, anio: anioDeCandidata(c.p, c.ii?.extmetadata ?? {}) };
+      })
+      .sort((a, b) => b.puntaje - a.puntaje)
+  );
+}
+
+async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto | null> {
+  const candidatas = (await candidatasCommons(busqueda)).filter((c) => !usadas.has(c.p.title));
   const elegida = candidatas.find(({ ii, puntaje, conNombre }) => {
     const prop = (ii?.width ?? 1) / (ii?.height ?? 1);
     return conNombre && puntaje > 0 && prop > 0.5 && prop < 2.2;
@@ -153,4 +179,55 @@ async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto
     alto: ii.height,
     credito: `Foto: ${autor} · ${licencia} · ${pagina}`,
   };
+}
+
+/**
+ * Hasta `maximo` fotos reales de la persona, de épocas distintas (una por
+ * década cuando se puede), para usarlas de referencia al generar imágenes.
+ * Quedan solo en el caché de la Mac; no cuentan como «usadas» para las escenas.
+ */
+export async function buscarReferencias(persona: string, maximo = 5): Promise<FotoReferencia[]> {
+  // Para la cara basta una foto de 500 px; las de escena completa siguen exigiendo 900.
+  const candidatas = (await candidatasCommons(persona, 500).catch(() => [] as Candidata[])).filter(
+    ({ ii, puntaje, conNombre }) => {
+      const prop = (ii?.width ?? 1) / (ii?.height ?? 1);
+      return conNombre && puntaje > 0 && prop > 0.4 && prop < 2.2;
+    },
+  );
+  // Una por década (la mejor puntuada), y las sin año al final como reserva.
+  const porDecada = new Map<string, Candidata>();
+  for (const c of candidatas) {
+    const clave = c.anio === null ? "sin-anio" : String(Math.floor(c.anio / 10) * 10);
+    if (!porDecada.has(clave)) porDecada.set(clave, c);
+  }
+  const elegidas = [...porDecada.values()]
+    .sort((a, b) => (a.anio ?? 9999) - (b.anio ?? 9999))
+    .slice(0, maximo);
+
+  const carpeta = path.join(config.CARPETA_CLIPS, "fotos");
+  await mkdir(carpeta, { recursive: true });
+  const salida: FotoReferencia[] = [];
+  for (const { p, ii, anio } of elegidas) {
+    if (!ii) continue;
+    const origen = ii.thumburl ?? ii.url;
+    const extension = /\.png$/i.test(origen) ? "png" : "jpg";
+    const nombre = `commons-${Buffer.from(p.title).toString("base64url").slice(0, 40)}.${extension}`;
+    const destino = path.join(carpeta, nombre);
+    if (!existsSync(destino)) {
+      const d = await fetch(origen, { headers: { "user-agent": AGENTE } }).catch(() => null);
+      if (!d?.ok) continue;
+      await writeFile(destino, Buffer.from(await d.arrayBuffer()));
+    }
+    const meta = ii.extmetadata ?? {};
+    const autor = sinHtml(meta.Artist?.value ?? meta.Credit?.value ?? "autor desconocido");
+    const licencia = meta.LicenseShortName?.value ?? "";
+    const pagina = `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, "_"))}`;
+    salida.push({
+      ruta: destino,
+      anio,
+      titulo: p.title,
+      credito: `Foto de referencia: ${autor} · ${licencia} · ${pagina}`,
+    });
+  }
+  return salida;
 }
