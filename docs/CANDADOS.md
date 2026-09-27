@@ -125,6 +125,11 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** no poner un `<Audio>` de música con volumen fijo en la
   plantilla; todo pasa por `volumenMusica`. No subir `VOLUMEN_BAJO` de 0.15 sin
   oírlo con voz real.
+  **Ni usar `loop` en el `<Audio>` de la música**: con `loop`, el frame que recibe
+  `volume` se reinicia en cada vuelta y los interludios después del primer bucle
+  salían bajos (visto el 27 sep 2026, trabajo 13: -31,6 dB en vez de subir). El
+  bucle se hace a mano con una `<Sequence>` por vuelta, cada una con su
+  desplazamiento.
 
 ## C-LATIDO-1 — El panel no da la Estación por apagada mientras produce (27 sep 2026)
 

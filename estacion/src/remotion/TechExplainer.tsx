@@ -165,13 +165,26 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       )}
 
       <Audio src={staticFile(p.audio)} />
-      {p.musica && (
-        <Audio
-          src={staticFile(p.musica.ruta)}
-          loop
-          volume={(f) => volumenMusica((f / FPS) * 1000, interludios, p.duracionMs, finVideoMs)}
-        />
-      )}
+      {/* Música en bucle a mano: con `loop`, el frame que recibe `volume` se
+          reinicia en cada vuelta y la curva se desfasa (los interludios después
+          del primer bucle sonaban bajos). Cada copia sabe su desplazamiento. */}
+      {p.musica &&
+        Array.from({
+          length: Math.ceil(durationInFrames / Math.max(1, Math.round(p.musica.duracionSeg * FPS))),
+        }).map((_, k) => {
+          const largo = Math.max(1, Math.round((p.musica?.duracionSeg ?? 1) * FPS));
+          const desde = k * largo;
+          return (
+            <Sequence key={`musica-${k}`} from={desde} durationInFrames={largo} name={`música ${k + 1}`}>
+              <Audio
+                src={staticFile(p.musica?.ruta ?? "")}
+                volume={(f) =>
+                  volumenMusica(((f + desde) / FPS) * 1000, interludios, p.duracionMs, finVideoMs)
+                }
+              />
+            </Sequence>
+          );
+        })}
     </AbsoluteFill>
   );
 };
