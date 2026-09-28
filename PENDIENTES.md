@@ -42,6 +42,7 @@
 - [x] Miniatura automática del largo y cierre de los Shorts con miniatura + buscador + canal (28 sep 2026, C-CIERRE-1).
 - [ ] Fase 2: biblioteca de recursos, cortes comerciales
 - [ ] Avatar parlante con la voz de Richard para Shorts de producto (investigar API económica) — pedido el 28 sep 2026
+  - Primera mirada (28 sep 2026, precios de terceros SIN verificar en la página oficial todavía): HeyGen Avatar API ≈ $3 por minuto; VEED Fabric en fal.ai ≈ $0,08 por segundo (480p); Hedra Character-3 por créditos; D-ID desde ≈ $16 al mes. Falta comparar en las páginas oficiales y probar con una foto de Richard + su voz de ElevenLabs. Se hace después de dejar redondo el flujo actual.
 - [x] Fase 3 (parte): textos de YouTube automáticos al terminar cada video: título, títulos de shorts, descripción y 30 palabras clave, con copiar (27 sep 2026, C-PUBLICACION-1).
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)
