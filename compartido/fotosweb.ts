@@ -46,6 +46,23 @@ export function candidatasDeSerper(datos: unknown): { url: string; origen: strin
 }
 
 /**
+ * Si lo que se bajó es una imagen de verdad. Muchos sitios (TikTok, Pinterest,
+ * tiendas) devuelven una página HTML en vez de la foto cuando no eres un
+ * navegador; a esas se les pide el tipo de contenido y los primeros bytes.
+ */
+export function esImagen(tipoContenido: string | null, primerosBytes: Uint8Array): boolean {
+  if (tipoContenido && /^image\//i.test(tipoContenido.trim())) return true;
+  const b = primerosBytes;
+  if (b.length < 12) return false;
+  const jpeg = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  const png = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  const webp =
+    b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45;
+  const gif = b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46;
+  return jpeg || png || webp || gif;
+}
+
+/**
  * La mejor candidata: tiene cara, buen tamaño (≥ 600 px de ancho) y la cara
  * grande manda sobre la resolución. Sin cara no sirve (sería una portada,
  * un logo o un lugar).

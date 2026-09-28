@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { candidatasDeSerper, consultaWeb, elegirCandidata } from "@compartido/fotosweb";
+import { candidatasDeSerper, consultaWeb, elegirCandidata, esImagen } from "@compartido/fotosweb";
 
 describe("fotos reales de internet (C-IMAGEN-3)", () => {
   it("arma la consulta con la persona y la época, o la infancia", () => {
@@ -23,6 +23,16 @@ describe("fotos reales de internet (C-IMAGEN-3)", () => {
     ]);
     expect(candidatasDeSerper(null)).toEqual([]);
     expect(candidatasDeSerper({ message: "Unauthorized" })).toEqual([]);
+  });
+
+  it("distingue una foto de una página HTML disfrazada de foto", () => {
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
+    const html = new TextEncoder().encode("<!DOCTYPE html><html>");
+    expect(esImagen("image/jpeg", html)).toBe(true);
+    expect(esImagen(null, jpeg)).toBe(true);
+    expect(esImagen("text/html; charset=utf-8", html)).toBe(false);
+    expect(esImagen(null, html)).toBe(false);
+    expect(esImagen("application/octet-stream", new Uint8Array(3))).toBe(false);
   });
 
   it("elige una foto con cara y grande; descarta portadas, logos y fotos chicas", () => {

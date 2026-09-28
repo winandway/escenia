@@ -8,7 +8,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { candidatasDeSerper, elegirCandidata, type CandidataWeb } from "@compartido/fotosweb";
+import { candidatasDeSerper, elegirCandidata, esImagen, type CandidataWeb } from "@compartido/fotosweb";
 import { config } from "./config";
 import { enfoquesDe } from "./enfoque";
 
@@ -66,6 +66,7 @@ export async function buscarFotoWeb(consulta: string): Promise<FotoWeb | null> {
 
   // Se bajan hasta 5 candidatas y se mira si tienen cara.
   const candidatas: (CandidataWeb & { rutaCache: string })[] = [];
+  let noEranImagenes = 0;
   for (const item of items.slice(0, 5)) {
     const nombre = `web-${createHash("sha1").update(item.url).digest("hex").slice(0, 16)}.jpg`;
     const destino = path.join(carpeta, nombre);
@@ -76,8 +77,13 @@ export async function buscarFotoWeb(consulta: string): Promise<FotoWeb | null> {
           signal: AbortSignal.timeout(15_000),
         });
         if (!d.ok) continue;
+        const cuerpo = Buffer.from(await d.arrayBuffer());
+        if (!esImagen(d.headers.get("content-type"), cuerpo.subarray(0, 12))) {
+          noEranImagenes += 1; // el sitio mandó su página, no la foto
+          continue;
+        }
         const crudo = path.join(carpeta, `${nombre}.descarga`);
-        await writeFile(crudo, Buffer.from(await d.arrayBuffer()));
+        await writeFile(crudo, cuerpo);
         // A JPEG normalizado (quita webp/png raros) y como mucho 2048 px.
         await exec("sips", ["-s", "format", "jpeg", "-Z", "2048", crudo, "--out", destino]);
         await exec("rm", ["-f", crudo]);
@@ -88,6 +94,11 @@ export async function buscarFotoWeb(consulta: string): Promise<FotoWeb | null> {
     } catch (e) {
       console.warn(`  (no se pudo bajar una foto de internet: ${e instanceof Error ? e.message : e})`);
     }
+  }
+  if (noEranImagenes > 0) {
+    console.log(
+      `  (${noEranImagenes} resultado(s) de «${consulta}» no eran fotos sino páginas; se saltaron)`,
+    );
   }
   const enfoques = await enfoquesDe(candidatas.map((c) => c.rutaCache));
   for (const c of candidatas) {

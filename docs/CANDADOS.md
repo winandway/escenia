@@ -349,7 +349,9 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   (mapa de promesas en curso); (2) `estacion/src/fotosweb.ts`: búsqueda de
   imágenes de Google vía Serper (`POST google.serper.dev/images`,
   `SERPER_API_KEY` en `estacion/.env`; `candidatasDeSerper` lee la
-  respuesta), baja hasta 5 candidatas, exige cara
+  respuesta), baja hasta 5 candidatas (y salta las que llegan como página
+  HTML en vez de foto: `esImagen` mira el tipo de contenido y los primeros
+  bytes; TikTok y Pinterest hacen eso), exige cara
   (detector de la Mac) y tamaño, elige la mejor (`compartido/fotosweb.ts`) y
   la guarda en `cache/fotos-web` con caché por consulta; (3) `buscarFoto` mira
   primero internet y después Commons; `buscarReferencias` pide una foto real
