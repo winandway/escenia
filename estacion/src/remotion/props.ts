@@ -45,6 +45,8 @@ export const esquemaEscenaVideo = z.object({
     .default(null),
   // Respiro musical: no hay voz en este tramo, la música sube y pasan las imágenes.
   interludio: z.boolean().default(false),
+  // Foto (de la persona) difuminada como fondo, en vez de clip. Biografías.
+  fondoFoto: z.string().nullable().default(null),
 });
 
 export const esquemaSfx = z.object({

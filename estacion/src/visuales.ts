@@ -35,6 +35,19 @@ export const RESERVA_POR_PARTE: Record<string, string[]> = {
   cta: ["hands smartphone closeup", "laptop desk clean"],
 };
 
+// Biografías: nada de pantallas ni oficinas; ambiente de música y de época.
+export const RESERVA_DOCUMENTAL: Record<string, string[]> = {
+  gancho: ["vintage microphone stage lights", "old film projector flicker"],
+  problema: ["rain on window night vintage", "empty street night old film"],
+  contexto: ["old city street vintage film", "vintage radio close up"],
+  demo: ["vinyl record player spinning", "piano keys close up"],
+  dato: ["vinyl record spinning", "concert crowd lights"],
+  opinion: ["empty theater seats spotlight", "stage spotlight smoke"],
+  cierre: ["stage lights sunset", "vinyl record player"],
+  cta: ["stage lights sunset", "concert crowd lights"],
+  interludio: ["concert crowd dancing lights", "vintage microphone stage lights"],
+};
+
 export async function buscarClip(
   busquedas: string[],
   vertical: boolean,

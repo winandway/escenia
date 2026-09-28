@@ -24,6 +24,13 @@ describe("referencias por época (C-IMAGEN-2)", () => {
   it("sin año usa la más antigua; en la infancia no usa ninguna", () => {
     expect(elegirReferencia(refs, null, "Celia Cruz singing")?.ruta).toBe("1957.jpg");
     expect(elegirReferencia(refs, 1935, "Celia Cruz as a young girl singing to her siblings")).toBeNull();
+    expect(
+      elegirReferencia(
+        [...refs, { ruta: "nina.jpg", anio: null, infancia: true }],
+        1935,
+        "Celia Cruz as a young girl",
+      )?.ruta,
+    ).toBe("nina.jpg");
     expect(elegirReferencia([], 1950, "Celia Cruz")).toBeNull();
   });
 });

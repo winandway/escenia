@@ -125,6 +125,9 @@ async function principal() {
   console.log(
     `Voz: ${config.ELEVENLABS_API_KEY ? `ElevenLabs (mi voz: ${config.ELEVENLABS_VOICE_ID ? "sí" : "FALTA"} · femenina: ${config.ELEVENLABS_VOICE_ID_FEMENINA ? "sí" : "FALTA"})` : "de prueba (sistema)"} · Clips: ${config.PEXELS_API_KEY ? "Pexels" : "fondos de color"} · Imágenes IA: ${config.FAL_KEY ? "fal.ai" : "apagadas"}`,
   );
+  console.log(
+    `Fotos reales de internet: ${config.GOOGLE_CSE_KEY && config.GOOGLE_CSE_CX ? "sí (Google Imágenes)" : "NO (faltan GOOGLE_CSE_KEY y GOOGLE_CSE_CX; solo Wikimedia)"}`,
+  );
   const pistas = await catalogoMusica();
   console.log(
     pistas.length

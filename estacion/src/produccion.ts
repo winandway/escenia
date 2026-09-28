@@ -3,14 +3,14 @@ import { cp, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DURACION_INTERLUDIO, limpiarRotulo, type Guion } from "@compartido/guion";
-import { anioDe, elegirReferencia } from "@compartido/referencias";
+import { anioDe, elegirReferencia, ES_INFANCIA } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
 import { empaquetar, renderizar, renderizarMiniatura } from "./render";
 import { planificarShorts, type EscenaParaShort } from "@compartido/shorts";
 import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
-import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
+import { buscarClip, RESERVA_DOCUMENTAL, RESERVA_POR_PARTE } from "./visuales";
 import { enfoquesDe } from "./enfoque";
 import { prepararMusica } from "./musica";
 import { generarVoz } from "./voz";
@@ -119,8 +119,16 @@ export async function producir(
   // que las imágenes generadas se parezcan a ella (C-IMAGEN-2).
   const personaDelTitulo = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
   let referencias: FotoReferencia[] = [];
-  if (plantilla === "MiniDocumental" && personaDelTitulo && imagenesActivas()) {
-    referencias = await buscarReferencias(personaDelTitulo);
+  const documental = plantilla === "MiniDocumental";
+  const reservas = documental ? RESERVA_DOCUMENTAL : RESERVA_POR_PARTE;
+  if (documental && personaDelTitulo && imagenesActivas()) {
+    const textos = guion.escenas.map(
+      (e) =>
+        `${e.visual.fecha ?? ""} ${e.narracion} ${(e.visual.cuadros ?? []).map((c) => c.prompt_imagen).join(" ")}`,
+    );
+    const anios = textos.map((t) => anioDe(t)).filter((a): a is number => a !== null);
+    const infancia = textos.some((t) => ES_INFANCIA.test(t));
+    referencias = await buscarReferencias(personaDelTitulo, 5, { anios, infancia });
     await avisar(
       referencias.length
         ? `fotos de referencia de ${personaDelTitulo}: ${referencias.length} (${referencias.map((f) => f.anio ?? "sin año").join(", ")})`
@@ -137,10 +145,7 @@ export async function producir(
     const tramo = voz.tramos[i];
     if (!tramo) continue;
     // Toda escena lleva clip: primero la búsqueda de la IA, luego las de reserva por parte.
-    const busquedas = [
-      e.visual.busqueda ?? "",
-      ...(RESERVA_POR_PARTE[e.parte] ?? RESERVA_POR_PARTE.contexto ?? []),
-    ];
+    const busquedas = [e.visual.busqueda ?? "", ...(reservas[e.parte] ?? reservas.contexto ?? [])];
     let foto: PropsVideo["escenas"][number]["foto"] = null;
     if (e.visual.tipo === "foto" && e.visual.busqueda) {
       const f = await buscarFoto([e.visual.busqueda, guion.titulo.split(/[:—-]/)[0] ?? ""], carpetaPublica);
@@ -204,10 +209,20 @@ export async function producir(
           cuerpo: e.visual.cuerpo ?? "",
         }
       : null;
-    // El clip de fondo va siempre (detrás de la foto o del recorte, difuminado).
-    const c = await buscarClip(foto ? busquedas.slice(1) : busquedas, false, carpetaPublica);
-    if (c) creditos.push(c.credito);
     const esFrase = e.visual.tipo === "texto" || e.visual.tipo === "titulo";
+    // Fondo: en biografías, detrás de las fotos, los titulares y los recortes va
+    // una foto de la PERSONA difuminada (nunca un clip ajeno tipo «pantallas de
+    // trading»); solo las escenas «stock» llevan clip de ambiente. C-FONDO-1.
+    const fondoDePersona = documental && (foto || esFrase || esRecorte || e.parte === "interludio");
+    let fondoFoto: string | null = null;
+    if (fondoDePersona) {
+      const propia = foto ?? fotos[0] ?? null;
+      fondoFoto = propia ? propia.ruta : await fotoDeFondo(referencias, carpetaPublica);
+    }
+    const c = fondoFoto
+      ? null
+      : await buscarClip(foto ? busquedas.slice(1) : busquedas, false, carpetaPublica);
+    if (c) creditos.push(c.credito);
     const estilo: PropsVideo["escenas"][number]["estilo"] = foto
       ? "foto"
       : recorte
@@ -228,6 +243,7 @@ export async function producir(
       fotos,
       recorte,
       interludio: e.parte === "interludio",
+      fondoFoto,
     });
     paraShorts.push({
       inicioMs: tramo.inicioMs,
@@ -343,4 +359,15 @@ export async function producir(
     costoVozUsd: voz.costoUsd,
     creditos: [...new Set(creditos)],
   };
+}
+
+/** Copia la primera foto de referencia a la carpeta pública para usarla de fondo difuminado. */
+async function fotoDeFondo(referencias: FotoReferencia[], carpetaPublica: string): Promise<string | null> {
+  const ref = referencias.find((r) => !r.infancia) ?? referencias[0];
+  if (!ref) return null;
+  const nombre = `fondo-${path.basename(ref.ruta)}`;
+  await mkdir(path.join(carpetaPublica, "fotos"), { recursive: true });
+  const destino = path.join(carpetaPublica, "fotos", nombre);
+  await cp(ref.ruta, destino).catch(() => {});
+  return `fotos/${nombre}`;
 }

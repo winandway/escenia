@@ -281,6 +281,7 @@ const EscenaVista: React.FC<{
     <AbsoluteFill style={{ opacity: opacidad }}>
       <Fondo
         clip={escena.clip}
+        fondoFoto={escena.fondoFoto}
         colores={colores}
         durFrames={durFrames}
         difuminado={esFrase || esFoto || esTitular || esRecorte}
@@ -357,13 +358,24 @@ const EscenaVista: React.FC<{
 
 const Fondo: React.FC<{
   clip: Escena["clip"];
+  fondoFoto?: string | null;
   colores: readonly [string, string];
   durFrames: number;
   difuminado: boolean;
-}> = ({ clip, colores, durFrames, difuminado }) => {
+}> = ({ clip, fondoFoto, colores, durFrames, difuminado }) => {
   const frame = useCurrentFrame();
   // Movimiento lento (Ken Burns) para que ningún plano se sienta quieto.
   const zoom = interpolate(frame, [0, Math.max(1, durFrames)], [1.02, 1.12], { extrapolateRight: "clamp" });
+  if (fondoFoto) {
+    // Foto de la persona difuminada: fondo siempre del tema del video (C-FONDO-1).
+    return (
+      <AbsoluteFill style={{ overflow: "hidden", backgroundColor: colores[0] }}>
+        <AbsoluteFill style={{ transform: `scale(${zoom * 1.08})`, filter: "blur(16px) brightness(.42)" }}>
+          <Img src={staticFile(fondoFoto)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </AbsoluteFill>
+      </AbsoluteFill>
+    );
+  }
   if (clip) {
     const clipFrames = Math.max(1, Math.floor(clip.duracionSeg * FPS) - 1);
     return (

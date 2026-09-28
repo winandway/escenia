@@ -328,3 +328,44 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   de cualquier short y el archivo `miniatura.png` en `out/t<id>/`.
 - **Qué NO tocar:** la miniatura viaja como data URI en `props.cierre` porque
   el publicDir se copia al empaquetar (C-EMPAQUE-1); no leerla con `staticFile`.
+
+## C-IMAGEN-3 — El artista es el artista: fotos reales de internet y sin carrera al reducir la referencia (28 sep 2026)
+
+- **Qué se rompía / cómo se veía:** en el video de Luis Miguel (trabajo 19) no
+  salía Luis Miguel por ningún lado. Dos causas: (1) tres imágenes se pedían a
+  la vez y las tres corrían `sips` sobre la MISMA foto de referencia: se
+  pisaban el archivo temporal y TODAS las imágenes con IA fallaban (el registro
+  decía «Imagen IA falló: Cannot to rename temporary file»); (2) Wikimedia
+  Commons no tiene fotos de niño de casi nadie, así que las escenas de
+  infancia se inventaban con un niño cualquiera.
+- **Decisión de Richard (28 sep 2026):** contar las historias con fotos reales
+  de internet (Google Imágenes); se genera con IA solo lo que no existe en foto.
+- **Qué se hizo:** (1) `referenciaEnBase64` reduce cada referencia UNA sola vez
+  (mapa de promesas en curso); (2) `estacion/src/fotosweb.ts`: búsqueda de
+  imágenes con la API de Google (Custom Search, `GOOGLE_CSE_KEY` +
+  `GOOGLE_CSE_CX` en `estacion/.env`), baja hasta 5 candidatas, exige cara
+  (detector de la Mac) y tamaño, elige la mejor (`compartido/fotosweb.ts`) y
+  la guarda en `cache/fotos-web` con caché por consulta; (3) `buscarFoto` mira
+  primero internet y después Commons; `buscarReferencias` pide una foto real
+  por década del guion («Luis Miguel 1985») y una de niño si el guion tiene
+  infancia (`ES_INFANCIA`), y `elegirReferencia` usa la de niño para esas
+  escenas; (4) el prompt pide «foto» (nombre + año) para todo lo público y «ia»
+  solo para lo íntimo. Sin las claves de Google, todo sigue con Commons y el
+  arranque de la Estación lo dice.
+- **Cómo se comprueba:** `pruebas/fotosweb.test.ts`, `pruebas/referencias.test.ts`;
+  en vivo, el paso «fotos de referencia de X: N (…)» y `creditos.txt` con
+  «Foto de internet (uso editorial): …».
+- **Qué NO tocar:** no volver a llamar `sips` en paralelo sobre el mismo
+  archivo; la clave de Google solo en `estacion/.env`.
+
+## C-FONDO-1 — Los fondos son de la persona, no clips ajenos (28 sep 2026)
+
+- **Qué se rompía:** detrás de los titulares y recortes de una biografía
+  salían clips de Pexels de «pantallas de trading» (las búsquedas de reserva
+  eran de tecnología) y se repetían de un video a otro.
+- **Qué se hizo:** en biografías, detrás de fotos, titulares, recortes e
+  interludios va una foto de la persona difuminada (`fondoFoto` en las props,
+  `Fondo` en la plantilla); solo las escenas «stock» llevan clip, y sus
+  búsquedas de reserva son de música y época (`RESERVA_DOCUMENTAL`).
+- **Cómo se comprueba:** en un documental, ningún titular tiene fondo de
+  oficina o pantallas; `creditos.txt` casi sin Pexels.

@@ -28,8 +28,25 @@ const ESTILO_BASE =
 const CON_REFERENCIA =
   "Use the reference image ONLY for the face, skin tone, features and identity of the person. Do NOT copy the clothes, hairstyle, pose or background from the reference: the outfit, hairstyle, age and setting must follow this description exactly: ";
 
+// Una sola reducción por foto aunque se pidan varias imágenes a la vez: tres
+// `sips` sobre el mismo archivo se pisaban y TODAS las imágenes fallaban
+// (trabajo 19, Luis Miguel). C-IMAGEN-3.
+const referenciasEnCurso = new Map<string, Promise<{ dataUri: string; huella: string }>>();
+
 /** Referencia reducida a 1280 px y en base64 (fal no puede bajar de Wikimedia directamente). */
-async function referenciaEnBase64(ruta: string): Promise<{ dataUri: string; huella: string }> {
+function referenciaEnBase64(ruta: string): Promise<{ dataUri: string; huella: string }> {
+  let p = referenciasEnCurso.get(ruta);
+  if (!p) {
+    p = reducirReferencia(ruta).catch((e) => {
+      referenciasEnCurso.delete(ruta);
+      throw e;
+    });
+    referenciasEnCurso.set(ruta, p);
+  }
+  return p;
+}
+
+async function reducirReferencia(ruta: string): Promise<{ dataUri: string; huella: string }> {
   const carpeta = path.join(config.CARPETA_CLIPS, "ia", "referencias");
   await mkdir(carpeta, { recursive: true });
   const huella = createHash("sha1")

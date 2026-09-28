@@ -6,11 +6,19 @@ import { existsSync } from "node:fs";
 import { copyFile, link, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { licenciaLibre } from "@compartido/licencias";
+import { consultaWeb } from "@compartido/fotosweb";
+import { buscarFotoWeb, fotosWebActivas } from "./fotosweb";
 import { config } from "./config";
 
 export type Foto = { ruta: string; ancho: number; alto: number; credito: string };
 /** Foto real de la persona, en el caché de la Mac, con el año en que fue tomada (si se sabe). */
-export type FotoReferencia = { ruta: string; anio: number | null; credito: string; titulo: string };
+export type FotoReferencia = {
+  ruta: string;
+  anio: number | null;
+  credito: string;
+  titulo: string;
+  infancia?: boolean;
+};
 
 type Candidata = {
   p: PaginaCommons;
@@ -67,6 +75,29 @@ function nombreBase(busqueda: string): string[] {
 
 export async function buscarFoto(busquedas: string[], carpetaPublica: string): Promise<Foto | null> {
   const lista = busquedas.map((x) => x.trim()).filter(Boolean);
+  // Primero internet (foto real de la persona en esa época), si Richard puso la clave de Google.
+  if (fotosWebActivas()) {
+    for (const b of lista) {
+      const web = await buscarFotoWeb(b).catch((e) => {
+        console.warn(`Internet falló con «${b}»: ${e instanceof Error ? e.message : e}`);
+        return null;
+      });
+      if (web && !usadas.has(web.url)) {
+        usadas.add(web.url);
+        const nombre = path.basename(web.rutaCache);
+        await mkdir(path.join(carpetaPublica, "fotos"), { recursive: true });
+        await link(web.rutaCache, path.join(carpetaPublica, "fotos", nombre)).catch(() =>
+          copyFile(web.rutaCache, path.join(carpetaPublica, "fotos", nombre)),
+        );
+        return {
+          ruta: `fotos/${nombre}`,
+          ancho: web.ancho,
+          alto: web.alto,
+          credito: `Foto de internet (uso editorial): ${web.origen}`,
+        };
+      }
+    }
+  }
   // Reserva: solo el nombre (sin época) por si la búsqueda con contexto no da nada.
   for (const b of [...lista]) {
     const base = nombreBase(b).join(" ");
@@ -187,7 +218,37 @@ async function buscarUna(busqueda: string, carpetaPublica: string): Promise<Foto
  * década cuando se puede), para usarlas de referencia al generar imágenes.
  * Quedan solo en el caché de la Mac; no cuentan como «usadas» para las escenas.
  */
-export async function buscarReferencias(persona: string, maximo = 5): Promise<FotoReferencia[]> {
+export async function buscarReferencias(
+  persona: string,
+  maximo = 5,
+  epocas: { anios?: number[]; infancia?: boolean } = {},
+): Promise<FotoReferencia[]> {
+  const salida: FotoReferencia[] = [];
+  // Internet primero: una foto real por década del guion, y una de niño si hace falta.
+  if (fotosWebActivas()) {
+    const decadas = [...new Set((epocas.anios ?? []).map((a) => Math.floor(a / 10) * 10 + 5))].sort();
+    const consultas: { consulta: string; anio: number | null; infancia: boolean }[] = decadas.map((a) => ({
+      consulta: consultaWeb(persona, a),
+      anio: a,
+      infancia: false,
+    }));
+    if (epocas.infancia)
+      consultas.unshift({ consulta: consultaWeb(persona, null, true), anio: null, infancia: true });
+    if (consultas.length === 0)
+      consultas.push({ consulta: consultaWeb(persona, null), anio: null, infancia: false });
+    for (const c of consultas.slice(0, maximo)) {
+      const web = await buscarFotoWeb(c.consulta).catch(() => null);
+      if (web)
+        salida.push({
+          ruta: web.rutaCache,
+          anio: c.anio,
+          titulo: c.consulta,
+          infancia: c.infancia,
+          credito: `Foto de referencia (internet, uso editorial): ${web.origen}`,
+        });
+    }
+    if (salida.length) return salida;
+  }
   // Para la cara basta una foto de 500 px; las de escena completa siguen exigiendo 900.
   const candidatas = (await candidatasCommons(persona, 500).catch(() => [] as Candidata[])).filter(
     ({ ii, puntaje, conNombre }) => {
@@ -207,7 +268,6 @@ export async function buscarReferencias(persona: string, maximo = 5): Promise<Fo
 
   const carpeta = path.join(config.CARPETA_CLIPS, "fotos");
   await mkdir(carpeta, { recursive: true });
-  const salida: FotoReferencia[] = [];
   for (const { p, ii, anio } of elegidas) {
     if (!ii) continue;
     const origen = ii.thumburl ?? ii.url;

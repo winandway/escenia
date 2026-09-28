@@ -20,6 +20,7 @@ const vacio: PropsVideo = {
       fotos: [],
       recorte: null,
       interludio: false,
+      fondoFoto: null,
     },
   ],
   producto: null,
