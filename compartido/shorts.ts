@@ -9,7 +9,16 @@ export type EscenaParaShort = {
   titular?: string;
 };
 
-export type Short = { inicioMs: number; finMs: number; titulo: string; indice: number; total: number };
+export type Short = {
+  inicioMs: number;
+  finMs: number;
+  titulo: string;
+  indice: number;
+  total: number;
+  /** Índices (en la lista de escenas dada) de la primera y la última escena del short. */
+  escenaInicio: number;
+  escenaFin: number;
+};
 
 export const SHORT_MIN_MS = 45_000;
 export const SHORT_MAX_MS = 180_000;
@@ -80,11 +89,18 @@ export function planificarShorts(escenas: EscenaParaShort[]): Short[] {
     const ultimo = grupos.pop() ?? [];
     grupos[grupos.length - 1]?.push(...ultimo);
   }
-  return grupos.map((g, k) => ({
-    inicioMs: g[0]?.inicioMs ?? 0,
-    finMs: g[g.length - 1]?.finMs ?? 0,
-    titulo: tituloDeShort(g),
-    indice: k + 1,
-    total: grupos.length,
-  }));
+  let cursor = 0;
+  return grupos.map((g, k) => {
+    const escenaInicio = cursor;
+    cursor += g.length;
+    return {
+      inicioMs: g[0]?.inicioMs ?? 0,
+      finMs: g[g.length - 1]?.finMs ?? 0,
+      titulo: tituloDeShort(g),
+      indice: k + 1,
+      total: grupos.length,
+      escenaInicio,
+      escenaFin: cursor - 1,
+    };
+  });
 }

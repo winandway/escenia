@@ -83,6 +83,25 @@ async function unaVuelta(): Promise<boolean> {
       console.log(
         `  Shorts: ${r.shorts.map((s) => `«${s.titulo}» (${Math.round(s.duracionSeg)} s)`).join(" · ")}`,
       );
+    // Textos de YouTube (título, títulos de los shorts, descripción, palabras clave): los escribe el panel.
+    await avisar("escribiendo los títulos y palabras clave para YouTube", 100).catch(() => {});
+    await panel
+      .publicacion(
+        trabajo.guion_id,
+        r.shorts.map((s) => ({
+          indice: s.indice,
+          titulo_original: s.titulo,
+          escena_inicio: s.escenaInicio,
+          escena_fin: s.escenaFin,
+          duracion_seg: s.duracionSeg,
+        })),
+      )
+      .then(() => console.log("  Textos de YouTube: listos en el panel."))
+      .catch((e) =>
+        console.warn(
+          `  (no se pudieron escribir los textos de YouTube: ${e instanceof Error ? e.message : e})`,
+        ),
+      );
     console.log(`[${hora()}] Listo: ${r.rutaMp4} (${(r.bytes / 1_048_576).toFixed(0)} MB)`);
     clearInterval(latido);
   } catch (e) {

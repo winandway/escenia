@@ -94,9 +94,46 @@ export const esquemaGuionGenerado = z.object({
   musica: z.string().trim().max(160).default(""),
 });
 
+// Textos para YouTube: los escribe la IA al terminar el video (título del
+// largo, uno por short, descripción y 30 palabras clave). Richard los copia.
+export const ETIQUETAS_MAXIMAS = 30;
+export const esquemaPublicacionGenerada = z.object({
+  titulo: z.string().trim().min(10).max(100),
+  descripcion: z.string().trim().min(40).max(4500),
+  etiquetas: z.array(z.string().trim().min(2).max(60)).min(10).max(ETIQUETAS_MAXIMAS),
+  shorts: z
+    .array(z.object({ indice: z.number().int().min(1), titulo: z.string().trim().min(8).max(100) }))
+    .max(8),
+});
+export const esquemaShortPublicado = z.object({
+  indice: z.number().int().min(1),
+  titulo_original: z.string().default(""),
+  escena_inicio: z.number().int().min(0),
+  escena_fin: z.number().int().min(0),
+  duracion_seg: z.number().min(0).default(0),
+});
+export const esquemaPublicacion = esquemaPublicacionGenerada.extend({
+  generado_en: z.string().default(""),
+  shorts_producidos: z.array(esquemaShortPublicado).default([]),
+});
+export type Publicacion = z.infer<typeof esquemaPublicacion>;
+export type ShortPublicado = z.infer<typeof esquemaShortPublicado>;
+
+/** Etiquetas en una sola línea, como las pide YouTube (tope de 500 letras). */
+export function etiquetasParaYouTube(etiquetas: string[], maximo = 500): string {
+  const salida: string[] = [];
+  for (const e of etiquetas.map((x) => x.trim()).filter(Boolean)) {
+    const candidato = [...salida, e].join(", ");
+    if (candidato.length > maximo) break;
+    salida.push(e);
+  }
+  return salida.join(", ");
+}
+
 // Lo que se guarda y viaja a la Estación: lo generado más lo que elige Richard.
 export const esquemaGuion = esquemaGuionGenerado.extend({
   voz: z.enum(VOCES).default("richard"),
+  publicacion: esquemaPublicacion.nullable().default(null),
 });
 
 export type GuionGenerado = z.infer<typeof esquemaGuionGenerado>;

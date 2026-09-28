@@ -7,6 +7,7 @@ import { exigirSesion } from "@/lib/auth";
 import { guionPorId } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
 import { esquemaEscena, esquemaGuion, insertarOpinion, OPINION_MINIMA, VOCES } from "@compartido/guion";
+import { generarPublicacion } from "@/lib/publicacion";
 
 const esquemaEdicion = z.object({
   id: z.coerce.number().int().positive(),
@@ -117,5 +118,21 @@ export async function reintentarTrabajo(datos: FormData): Promise<void> {
     [id],
   );
   await db.ejecutar("INSERT INTO trabajos (guion_id, tipo) VALUES (?, 'producir')", [id]);
+  revalidatePath(`/guiones/${id}`);
+}
+
+/** Vuelve a escribir los textos de YouTube (título, shorts, descripción, palabras clave). */
+export async function regenerarPublicacion(datos: FormData): Promise<void> {
+  await exigirSesion();
+  const id = z.coerce.number().int().positive().parse(datos.get("guion_id"));
+  const { env, db } = await contexto();
+  const guion = await guionPorId(db, id);
+  if (!guion) return;
+  const actual = esquemaGuion.parse(JSON.parse(guion.contenido));
+  try {
+    await generarPublicacion(db, env.ANTHROPIC_API_KEY, id, actual.publicacion?.shorts_producidos ?? []);
+  } catch (e) {
+    console.error("[regenerarPublicacion]", e);
+  }
   revalidatePath(`/guiones/${id}`);
 }

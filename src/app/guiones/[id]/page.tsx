@@ -11,10 +11,11 @@ import {
   videosDeGuion,
 } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
-import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ } from "@compartido/guion";
+import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ, etiquetasParaYouTube } from "@compartido/guion";
 import { buscarTematica } from "@compartido/tematicas";
+import { CopiarTexto } from "@/componentes/CopiarTexto";
 import { EditorGuion } from "./EditorGuion";
-import { reintentarTrabajo } from "./acciones";
+import { regenerarPublicacion, reintentarTrabajo } from "./acciones";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,63 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
             </ul>
           )}
         </div>
+      )}
+
+      {(contenido.publicacion || videos.length > 0) && (
+        <section className="tarjeta mb-4 text-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-lg font-semibold">Para YouTube</h2>
+            <form action={regenerarPublicacion} className="ml-auto">
+              <input type="hidden" name="guion_id" value={guion.id} />
+              <button type="submit" className="boton-suave px-3 py-1 text-xs">
+                {contenido.publicacion ? "Volver a escribir" : "Escribir títulos y palabras clave"}
+              </button>
+            </form>
+          </div>
+          {!contenido.publicacion && (
+            <p className="mt-2 text-neutral-400">
+              Se escriben solos al terminar el video. Si no aparecen, toca el botón.
+            </p>
+          )}
+          {contenido.publicacion && (
+            <div className="mt-3 space-y-4">
+              <div>
+                <div className="etiqueta flex items-center justify-between">
+                  <span>Título del video</span>
+                  <CopiarTexto texto={contenido.publicacion.titulo} />
+                </div>
+                <p className="mt-1 text-neutral-100">{contenido.publicacion.titulo}</p>
+              </div>
+              {contenido.publicacion.shorts.map((s) => (
+                <div key={s.indice}>
+                  <div className="etiqueta flex items-center justify-between">
+                    <span>Short {s.indice}</span>
+                    <CopiarTexto texto={s.titulo} />
+                  </div>
+                  <p className="mt-1 text-neutral-100">{s.titulo}</p>
+                </div>
+              ))}
+              <div>
+                <div className="etiqueta flex items-center justify-between">
+                  <span>Descripción</span>
+                  <CopiarTexto texto={contenido.publicacion.descripcion} />
+                </div>
+                <p className="mt-1 whitespace-pre-line text-neutral-300">
+                  {contenido.publicacion.descripcion}
+                </p>
+              </div>
+              <div>
+                <div className="etiqueta flex items-center justify-between">
+                  <span>Palabras clave ({contenido.publicacion.etiquetas.length})</span>
+                  <CopiarTexto texto={etiquetasParaYouTube(contenido.publicacion.etiquetas)} />
+                </div>
+                <p className="mt-1 text-neutral-300">
+                  {etiquetasParaYouTube(contenido.publicacion.etiquetas)}
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
       )}
 
       <EditorGuion

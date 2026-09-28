@@ -1,0 +1,98 @@
+// Textos para YouTube al terminar un video: título del largo, uno por short,
+// descripción y 30 palabras clave. Los escribe la IA a partir del guion y
+// quedan guardados en el guion (`contenido.publicacion`) para copiarlos.
+import Anthropic from "@anthropic-ai/sdk";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import {
+  esquemaGuion,
+  esquemaPublicacionGenerada,
+  ETIQUETAS_MAXIMAS,
+  type Guion,
+  type Publicacion,
+  type ShortPublicado,
+} from "@compartido/guion";
+import { asegurarModelo, costoTokensUsd, MODELO_POR_DEFECTO } from "@compartido/modelos";
+import { buscarTematica } from "@compartido/tematicas";
+import { guionPorId } from "./consultas";
+import type { BaseDatos } from "./db";
+import { anotarGasto, autorizarGasto } from "./presupuesto";
+
+const ESTIMADO_USD = 0.05;
+
+export function instruccionesPublicacion(): string {
+  return [
+    "Eres editor de un canal de YouTube en español neutro y sabes de posicionamiento (SEO) en YouTube.",
+    "Escribes los textos de publicación de un video ya producido. Reglas:",
+    `- \`titulo\`: máximo 70 letras, con el nombre de la persona o del tema y una promesa concreta que dé curiosidad; sin mayúsculas sostenidas, sin comillas de relleno, sin emojis.`,
+    "- \`shorts[].titulo\`: uno por cada short, máximo 60 letras, cada uno con un gancho DISTINTO sacado de lo que se cuenta en ESAS escenas (un giro, un dato, una frase); sin la palabra «parte», sin numerarlos, sin hashtags.",
+    "- \`descripcion\`: 3 párrafos cortos que cuenten de qué va el video sin destriparlo, con las palabras clave dichas de forma natural, y al final una línea con 4 o 5 hashtags.",
+    `- \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS} palabras clave, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas («biografía de…», «historia de…», «documental…»). Sin repetir, sin hashtags, en español salvo nombres propios.`,
+    "- Nada de datos que no estén en el guion. Nada de clickbait falso: la promesa del título tiene que cumplirse en el video.",
+  ].join("\n");
+}
+
+export function mensajePublicacion(guion: Guion, tematica: string, shorts: ShortPublicado[]): string {
+  const escenas = guion.escenas
+    .map((e, i) => `${i + 1}. [${e.parte}] ${e.narracion.trim() || "(sin voz: respiro musical)"}`)
+    .join("\n");
+  const lista = shorts.length
+    ? shorts
+        .map(
+          (s) =>
+            `- Short ${s.indice} (escenas ${s.escena_inicio + 1} a ${s.escena_fin + 1}, ${Math.round(s.duracion_seg)} s; título provisional: «${s.titulo_original}»)`,
+        )
+        .join("\n")
+    : "- (este video no tiene shorts)";
+  return [
+    `TEMÁTICA: ${tematica}`,
+    `TÍTULO DE TRABAJO DEL GUION: ${guion.titulo}`,
+    `GANCHO: ${guion.gancho}`,
+    `ESCENAS DEL VIDEO (lo que se narra):\n${escenas}`,
+    `SHORTS PRODUCIDOS (cada uno es un trozo del video largo):\n${lista}`,
+    "Escribe los textos de publicación siguiendo las reglas.",
+  ].join("\n\n");
+}
+
+export async function generarPublicacion(
+  db: BaseDatos,
+  apiKey: string | undefined,
+  guionId: number,
+  shorts: ShortPublicado[],
+  opciones: { fetch?: typeof fetch } = {},
+): Promise<Publicacion> {
+  if (!apiKey) throw new Error("Falta la clave de Anthropic en las variables del panel (ANTHROPIC_API_KEY).");
+  const fila = await guionPorId(db, guionId);
+  if (!fila) throw new Error("Ese guion no existe.");
+  const guion = esquemaGuion.parse(JSON.parse(fila.contenido));
+  const tematica = buscarTematica(fila.tematica_id)?.nombre ?? fila.tematica_id;
+  const modelo = asegurarModelo(MODELO_POR_DEFECTO);
+  await autorizarGasto(db, ESTIMADO_USD);
+
+  const cliente = new Anthropic({ apiKey, fetch: opciones.fetch, maxRetries: 2 });
+  const respuesta = await cliente.messages.parse({
+    model: modelo,
+    max_tokens: 4000,
+    thinking: { type: "disabled" },
+    system: instruccionesPublicacion(),
+    messages: [{ role: "user", content: mensajePublicacion(guion, tematica, shorts) }],
+    output_config: { format: zodOutputFormat(esquemaPublicacionGenerada) },
+  });
+  await anotarGasto(
+    db,
+    "claude",
+    `textos de YouTube: ${guion.titulo}`,
+    costoTokensUsd(modelo, respuesta.usage.input_tokens, respuesta.usage.output_tokens),
+  );
+  if (!respuesta.parsed_output) throw new Error("La IA devolvió los textos con formato inválido.");
+  const generada = esquemaPublicacionGenerada.parse(respuesta.parsed_output);
+  const publicacion: Publicacion = {
+    ...generada,
+    generado_en: new Date().toISOString(),
+    shorts_producidos: shorts,
+  };
+  await db.ejecutar(`UPDATE guiones SET contenido = ?, actualizado_en = datetime('now') WHERE id = ?`, [
+    JSON.stringify({ ...guion, publicacion }),
+    guionId,
+  ]);
+  return publicacion;
+}

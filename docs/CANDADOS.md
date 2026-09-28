@@ -289,3 +289,22 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   imagen y se oye la voz.
 - **Qué NO tocar:** no volver a poner una portada al inicio (el componente
   `Titulo` se eliminó).
+
+## C-PUBLICACION-1 — Al terminar un video, Escenia escribe los textos de YouTube (27 sep 2026)
+
+- **Qué pidió Richard:** el título del largo, un título por Short y las 30
+  palabras clave que YouTube pide, sin tener que inventarlos él cada vez.
+- **Qué se hizo:** al terminar la producción, la Estación llama a
+  `POST /datos/estacion/guiones/<id>/publicacion` (con el secreto) con la lista
+  de shorts (índice, título provisional, escenas que abarca, duración). El
+  panel (`src/lib/publicacion.ts`) le pide a Claude, con formato estricto
+  (`esquemaPublicacionGenerada`): título ≤ 70 letras, un título distinto por
+  short ≤ 60, descripción de 3 párrafos + hashtags y exactamente 30 palabras
+  clave. Queda en `contenido.publicacion` del guion y la página del guion lo
+  muestra en «Para YouTube» con botón de copiar por campo (las etiquetas en una
+  sola línea de máximo 500 letras, como pide YouTube) y un botón «Volver a
+  escribir». Pasa por el tope de gasto diario.
+- **Cómo se comprueba:** `pruebas/publicacion.test.ts`; en vivo, la sección
+  «Para YouTube» del guion 4.
+- **Qué NO tocar:** la ruta es la única que escribe `publicacion`; la Estación
+  no tiene clave de Anthropic (la clave vive solo en el panel).

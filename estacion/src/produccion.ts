@@ -18,7 +18,15 @@ import { generarVoz } from "./voz";
 export type Avisar = (paso: string, progreso: number) => Promise<unknown>;
 export type Gastar = (servicio: string, detalle: string, costoUsd: number) => Promise<unknown>;
 
-export type ShortProducido = { ruta: string; bytes: number; duracionSeg: number; titulo: string };
+export type ShortProducido = {
+  ruta: string;
+  bytes: number;
+  duracionSeg: number;
+  titulo: string;
+  indice: number;
+  escenaInicio: number;
+  escenaFin: number;
+};
 
 export type ResultadoProduccion = {
   rutaMp4: string;
@@ -290,7 +298,15 @@ export async function producir(
       () => {},
       serveUrl,
     );
-    shorts.push({ ruta: salida, bytes: rs.bytes, duracionSeg: rs.duracionSeg, titulo: ventana.titulo });
+    shorts.push({
+      ruta: salida,
+      bytes: rs.bytes,
+      duracionSeg: rs.duracionSeg,
+      titulo: ventana.titulo,
+      indice: ventana.indice,
+      escenaInicio: ventana.escenaInicio,
+      escenaFin: ventana.escenaFin,
+    });
   }
 
   creditos.push(...creditosReferencia);

@@ -38,5 +38,6 @@
 - [x] Shorts 9:16 automáticos por cada video largo (27 sep 2026, C-SHORTS-1): 3 a 5 trozos con título y cierre «ver video completo».
 - [x] Ritmo de lectura parejo (27 sep 2026, C-VOZ-4).
 - [ ] Fase 2: miniaturas, biblioteca de recursos, cortes comerciales
+- [x] Fase 3 (parte): textos de YouTube automáticos al terminar cada video: título, títulos de shorts, descripción y 30 palabras clave, con copiar (27 sep 2026, C-PUBLICACION-1).
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)

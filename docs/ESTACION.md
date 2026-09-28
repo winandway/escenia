@@ -173,3 +173,9 @@ panel como videos `9x16` y aparecen en la página del guion debajo del largo.
 En vertical, cada foto llena la pantalla recortada sobre la persona: la Mac
 detecta las caras con `herramientas/caras.swift` (Vision; se compila solo a
 `bin/caras`) — candado C-SHORTS-2.
+
+## Textos de YouTube
+
+Al terminar cada trabajo, la Estación pide al panel los textos de publicación
+(título, título por short, descripción y 30 palabras clave); aparecen en la
+página del guion, sección «Para YouTube», con botón de copiar (C-PUBLICACION-1).

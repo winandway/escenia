@@ -60,6 +60,8 @@ describe("plan de shorts", () => {
       const arranca = escenas.find((e) => e.inicioMs === s.inicioMs);
       expect(["interludio", "opinion"]).not.toContain(arranca?.parte);
       expect(s.total).toBe(4);
+      expect(escenas[s.escenaInicio]?.inicioMs).toBe(s.inicioMs);
+      expect(escenas[s.escenaFin]?.finMs).toBe(s.finMs);
     }
   });
 
