@@ -4,9 +4,8 @@
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
-- 👤 Clave de Serper (https://serper.dev, gratis 2.500 búsquedas, sin tarjeta; guía en docs/FOTOS-INTERNET.md) para fotos reales de internet → las biografías salen con fotos reales del artista por época; sin ella, solo Wikimedia (pocas fotos, nunca de niño). (La API oficial de Google está cerrada a cuentas nuevas.)
 - 👤 Entrenar más la voz en ElevenLabs (más muestras y volver a entrenar) → mejor dicción y ritmo.
-- 👤 Volver a producir el guion 5 cuando esté la clave de Serper (ya aprobado) (Luis Miguel: la madre desaparecida y el padre) en https://escenia.sitios.dev/guiones/5 → se produce solo (largo, Shorts, miniatura, textos).
+- [ ] (en curso, 28 sep 2026) Volver a producir el guion 5 con fotos reales de Serper (Luis Miguel: la madre desaparecida y el padre) en https://escenia.sitios.dev/guiones/5 → se produce solo (largo, Shorts, miniatura, textos).
 - 👤 Poner nombre y @ del canal de IA en Ajustes (Caprichoso TV ya está) → salen en el cierre de los Shorts.
 - 👤 Seguir generando las pistas de docs/MUSICA.md en Suno (ya hay 4 de salsa en /Users/windocellc/Motor-Escenia/music-cortinas-libre-de-copy/) → cada temática tendrá su música; sin pista que encaje, el video sale con la «neutral» o sin música.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
@@ -22,6 +21,7 @@
 - [x] Publicar: repo público https://github.com/winandway/escenia + Action verde → rama `yapanel-build` → sitio EN VIVO en https://escenia.sitios.dev (25 sep 2026, plan Galaxia). Base con las 9 fichas de producto y los ajustes por defecto, comprobada por HTTP.
 - [x] Licencia de Remotion: Windoce es 1 persona (Richard, 25 sep 2026) → licencia gratis, no hay nada que pagar.
 - [x] Variables del panel cargadas por Richard (26 sep 2026): canario en verde, Estación conectada al panel en vivo, prueba de humo ok.
+- [x] Clave de Serper recibida y puesta en la Mac (28 sep 2026): fotos reales de Google Imágenes activas (probada: 10 resultados para «Luis Miguel niño»).
 - [x] Clave de Pexels recibida y puesta en la Mac (26 sep 2026): los videos salen con clips reales.
 - [x] Los videos terminados se ven y descargan dentro del panel (26 sep 2026).
 - [x] Plantilla v2 «profesional» (26 sep 2026): clips en todas las escenas con búsquedas de reserva, fundidos con whoosh, rótulos con pop, frases grandes animadas, riser en el título, campana en el cierre; marca de voz de prueba discreta (3 s).
