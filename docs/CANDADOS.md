@@ -104,6 +104,24 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   `voz.ts`; no meter `voz` en `esquemaGuionGenerado` (rompe el formato que se le
   exige a Claude).
 
+## C-VOZ-5 — Cifras en pantalla, letras en la voz (28 sep 2026)
+
+- **Qué se rompía / cómo se veía:** en el video de Luis Miguel (trabajo 20) el
+  primer Short se tituló «Mil novecientos ochenta y seis» y los subtítulos
+  decían «ochenta y cinco ganó». El prompt pedía los números en letras en la
+  narración (por la voz), y como el conversor de la Estación (C-VOZ-2) ya
+  resuelve eso, el texto escrito quedaba feo en pantalla y en los títulos.
+- **Qué se hizo:** (1) el prompt pide cifras en todos los campos (1985, 14
+  años, 250.000, 15%, $22; rangos 1925-2003); (2) `emparejarConLetras`
+  (`compartido/numeros.ts`) empareja cada palabra escrita con las palabras que
+  la voz dice por ella, y `generarVoz` arma los subtítulos con la palabra
+  escrita y los tiempos de lo dicho. Si no cuadra, se dejan las de la voz.
+- **Cómo se comprueba:** `pruebas/numeros.test.ts` («empareja cada cifra…»);
+  en vivo, un guion con «1985» en la narración muestra «1985» en el subtítulo
+  y el título del Short no sale en letras.
+- **Qué NO tocar:** el conversor a letras sigue delante de la voz; solo cambió
+  lo que se muestra. El prompt no debe volver a pedir «números en letras».
+
 ## C-MUSICA-1 — La música de fondo nunca tapa la voz (26 sep 2026)
 
 - **Qué se rompía / cómo se veía:** al meter música de fondo, el riesgo es que

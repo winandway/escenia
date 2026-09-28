@@ -153,3 +153,33 @@ function partirCola(c: string): [string, string] {
   const fin = c.replace(/[.,]+$/, "").length;
   return [c.slice(0, fin), c.slice(fin)];
 }
+
+/**
+ * Empareja cada palabra del texto original (con cifras: «1985,») con las
+ * palabras que la voz dice por ella («mil novecientos ochenta y cinco,»), para
+ * que los subtítulos muestren la cifra con los tiempos de lo dicho. Devuelve,
+ * por cada palabra original, los índices de las palabras de la voz; null si
+ * los textos no cuadran (entonces se dejan las palabras de la voz).
+ */
+export function emparejarConLetras(originales: string[], voz: string[]): number[][] | null {
+  const igual = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+  const grupos: number[][] = [];
+  let j = 0;
+  for (let i = 0; i < originales.length; i++) {
+    const o = originales[i] ?? "";
+    if (j < voz.length && igual(o, voz[j] ?? "")) {
+      grupos.push([j]);
+      j += 1;
+      continue;
+    }
+    if (!/\d/.test(o)) return null;
+    // La siguiente palabra original sin cifra marca dónde termina lo que la voz dice por esta.
+    let k = i + 1;
+    while (k < originales.length && /\d/.test(originales[k] ?? "")) k += 1;
+    const tope = originales[k];
+    const g: number[] = [];
+    while (j < voz.length && (tope === undefined || !igual(voz[j] ?? "", tope))) g.push(j++);
+    grupos.push(g);
+  }
+  return j === voz.length ? grupos : null;
+}

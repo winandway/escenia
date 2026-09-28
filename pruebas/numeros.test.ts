@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enteroEnLetras, numerosEnLetras } from "@compartido/numeros";
+import { emparejarConLetras, enteroEnLetras, numerosEnLetras } from "@compartido/numeros";
 
 describe("números en letras (C-VOZ-2)", () => {
   it("enteros", () => {
@@ -42,5 +42,22 @@ describe("números en letras (C-VOZ-2)", () => {
 
   it("no toca lo que va pegado a letras", () => {
     expect(numerosEnLetras("Flash v2.5, un MP3 y H2O")).toBe("Flash v2.5, un MP3 y H2O");
+  });
+
+  it("empareja cada cifra del texto con las palabras que la voz dice por ella (C-VOZ-5)", () => {
+    const texto = "Nació en 1925, vendió 250.000 discos y 1 de cada 3 lo sabía.";
+    const originales = texto.split(" ");
+    const voz = numerosEnLetras(texto).split(" ");
+    const grupos = emparejarConLetras(originales, voz);
+    expect(grupos).not.toBeNull();
+    expect(grupos?.length).toBe(originales.length);
+    expect(grupos?.[2]?.map((j) => voz[j]).join(" ")).toBe("mil novecientos veinticinco,");
+    expect(grupos?.[4]?.map((j) => voz[j]).join(" ")).toBe("doscientos cincuenta mil");
+    expect(grupos?.[7]?.map((j) => voz[j]).join(" ")).toBe("uno");
+    expect(grupos?.[10]?.map((j) => voz[j]).join(" ")).toBe("tres");
+    expect(grupos?.[11]).toEqual([voz.length - 2]);
+    // Sin cifras: uno a uno. Si no cuadra (palabra cambiada sin ser cifra), null.
+    expect(emparejarConLetras(["Hola", "mundo"], ["Hola", "mundo"])).toEqual([[0], [1]]);
+    expect(emparejarConLetras(["Hola", "mundo"], ["Hola", "tierra"])).toBeNull();
   });
 });

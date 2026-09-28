@@ -91,7 +91,8 @@ async function unaVuelta(): Promise<boolean> {
         `  Shorts: ${r.shorts.map((s) => `«${s.titulo}» (${Math.round(s.duracionSeg)} s)`).join(" · ")}`,
       );
     // Textos de YouTube (título, títulos de los shorts, descripción, palabras clave): los escribe el panel.
-    await avisar("escribiendo los títulos y palabras clave para YouTube", 100).catch(() => {});
+    // El trabajo ya está «hecho» en el panel: no se avisa avance (daría 409), solo se anota.
+    console.log("  100% escribiendo los títulos y palabras clave para YouTube");
     await panel
       .publicacion(
         trabajo.guion_id,

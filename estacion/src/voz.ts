@@ -12,7 +12,7 @@ import {
   type Palabra,
 } from "@compartido/subtitulos";
 import type { Voz } from "@compartido/guion";
-import { numerosEnLetras } from "@compartido/numeros";
+import { emparejarConLetras, numerosEnLetras } from "@compartido/numeros";
 import { paraLaVoz } from "@compartido/pronunciacion";
 import { escalarAlineacion, factorDeRitmo } from "@compartido/ritmo";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
@@ -103,12 +103,30 @@ export async function generarVoz(
       await nivelar(rutaPieza);
     }
     const r = texto ? palabrasDesdeAlineacion(alineacion, [textoVoz]) : { palabras: [] as Palabra[] };
-    // Los subtítulos muestran la ortografía real: se reponen las palabras del
-    // texto original (misma cantidad de palabras, garantizado por paraLaVoz).
-    const originales = texto.split(/\s+/).filter(Boolean);
-    if (originales.length === r.palabras.length) {
+    // Los subtítulos muestran la ortografía real (C-VOZ-3) y las cifras tal
+    // como se escribieron (C-VOZ-5): «1985» en pantalla mientras la voz dice
+    // «mil novecientos ochenta y cinco», con los tiempos de esas palabras.
+    const escritas = pieza.texto.trim().split(/\s+/).filter(Boolean);
+    const enLetras = texto.split(/\s+/).filter(Boolean);
+    const grupos = enLetras.length === r.palabras.length ? emparejarConLetras(escritas, enLetras) : null;
+    if (grupos) {
+      let finPrevio = 0;
+      r.palabras = grupos.map((g, k) => {
+        const primera = g[0] === undefined ? undefined : r.palabras[g[0]];
+        const ultima = g.length === 0 ? undefined : r.palabras[g[g.length - 1] ?? 0];
+        const palabra: Palabra = {
+          text: escritas[k] ?? "",
+          startMs: primera?.startMs ?? finPrevio,
+          endMs: ultima?.endMs ?? finPrevio,
+          timestampMs: primera?.timestampMs ?? null,
+          confidence: primera?.confidence ?? null,
+        };
+        finPrevio = palabra.endMs;
+        return palabra;
+      });
+    } else if (enLetras.length === r.palabras.length) {
       r.palabras.forEach((p, k) => {
-        const o = originales[k];
+        const o = enLetras[k];
         if (o !== undefined) p.text = p.text.startsWith(" ") ? ` ${o}` : o;
       });
     }
