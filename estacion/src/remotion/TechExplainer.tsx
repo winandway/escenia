@@ -119,7 +119,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               vertical={vertical}
               fundir={!primera}
               pop={p.sfx.pop}
-              retraso={primera ? 8 : TRANSICION}
+              retraso={primera ? (v ? Math.round(FPS * 3.1) : 8) : TRANSICION}
               acento={acento}
               fuenteTitulos={fuenteTitulos}
               boom={p.sfx.boom}
