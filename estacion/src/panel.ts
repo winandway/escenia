@@ -50,7 +50,7 @@ export const panel = {
   gasto: (id: number, servicio: string, detalle: string, costo_usd: number) =>
     llamar(`/datos/estacion/trabajos/${id}`, { accion: "gasto", servicio, detalle, costo_usd }),
   publicacion: (guionId: number, shorts: unknown[]) =>
-    llamar(`/datos/estacion/guiones/${guionId}/publicacion`, { shorts }),
+    llamar(`/datos/estacion/publicacion/${guionId}`, { shorts }),
   hecho: (
     id: number,
     renders: {

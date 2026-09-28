@@ -1,6 +1,7 @@
 // La Estación pide aquí los textos de YouTube al terminar un video (título,
 // títulos de los shorts, descripción y palabras clave). También sirve para
-// regenerarlos desde fuera con el secreto.
+// regenerarlos desde fuera con el secreto. Vive en /publicacion/[id] (no bajo
+// /guiones/[id]/…): anidada bajo una ruta que ya tiene route.ts daba 404 en vivo.
 import { z } from "zod";
 import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const esquema = z.object({ shorts: z.array(esquemaShortPublicado).max(8).default([]) });
 
-export async function POST(req: Request, ctx: RouteContext<"/datos/estacion/guiones/[id]/publicacion">) {
+export async function POST(req: Request, ctx: RouteContext<"/datos/estacion/publicacion/[id]">) {
   const { env, db } = await contexto();
   if (!estacionAutorizada(req.headers.get("authorization"), env.ESTACION_SECRETO))
     return respuestaNoAutorizada();

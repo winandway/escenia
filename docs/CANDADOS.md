@@ -295,7 +295,7 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué pidió Richard:** el título del largo, un título por Short y las 30
   palabras clave que YouTube pide, sin tener que inventarlos él cada vez.
 - **Qué se hizo:** al terminar la producción, la Estación llama a
-  `POST /datos/estacion/guiones/<id>/publicacion` (con el secreto) con la lista
+  `POST /datos/estacion/publicacion/<id>` (con el secreto) con la lista
   de shorts (índice, título provisional, escenas que abarca, duración). El
   panel (`src/lib/publicacion.ts`) le pide a Claude, con formato estricto
   (`esquemaPublicacionGenerada`): título ≤ 70 letras, un título distinto por
