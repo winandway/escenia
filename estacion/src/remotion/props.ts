@@ -10,6 +10,15 @@ export const esquemaPalabra = z.object({
   confidence: z.number().nullable(),
 });
 
+// Foto o imagen generada. `enfoque`: dónde está la persona (fracciones 0-1),
+// para recortar en vertical sin cortarle la cara (C-SHORTS-2).
+export const esquemaFoto = z.object({
+  ruta: z.string(),
+  ancho: z.number(),
+  alto: z.number(),
+  enfoque: z.object({ x: z.number(), y: z.number() }).nullable().default(null),
+});
+
 export const esquemaEscenaVideo = z.object({
   parte: z.string(),
   inicioMs: z.number(),
@@ -21,10 +30,10 @@ export const esquemaEscenaVideo = z.object({
   estilo: z.enum(["clip", "frase", "foto", "titular", "recorte"]).default("clip"),
   // Ruta relativa al publicDir (staticFile) del clip de fondo, o null si no hubo ninguno.
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable(),
-  foto: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }).nullable().default(null),
+  foto: esquemaFoto.nullable().default(null),
   // Varias imágenes en la misma escena (una por frase de la narración): se
   // muestran en orden, cada una con su movimiento, repartidas en el tiempo.
-  fotos: z.array(z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() })).default([]),
+  fotos: z.array(esquemaFoto).default([]),
   recorte: z
     .object({
       tipo: z.enum(["periodico", "red", "titular"]),

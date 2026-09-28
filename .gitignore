@@ -71,3 +71,6 @@ estacion/.cuentas.local.md
 
 # Música de Richard (Suno): nunca al repo público
 music-cortinas-libre-de-copy/
+
+# Detector de caras compilado en la Mac
+estacion/bin/

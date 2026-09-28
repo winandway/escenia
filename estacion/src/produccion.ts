@@ -11,6 +11,7 @@ import { planificarShorts, type EscenaParaShort } from "@compartido/shorts";
 import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_POR_PARTE } from "./visuales";
+import { enfoquesDe } from "./enfoque";
 import { prepararMusica } from "./musica";
 import { generarVoz } from "./voz";
 
@@ -134,7 +135,7 @@ export async function producir(
     if (e.visual.tipo === "foto" && e.visual.busqueda) {
       const f = await buscarFoto([e.visual.busqueda, guion.titulo.split(/[:—-]/)[0] ?? ""], carpetaPublica);
       if (f) {
-        foto = { ruta: f.ruta, ancho: f.ancho, alto: f.alto };
+        foto = { ruta: f.ruta, ancho: f.ancho, alto: f.alto, enfoque: null };
         creditos.push(f.credito);
       }
     }
@@ -173,7 +174,7 @@ export async function producir(
         );
         for (const img of resultados) {
           if (!img) continue;
-          fotos.push({ ruta: img.ruta, ancho: img.ancho, alto: img.alto });
+          fotos.push({ ruta: img.ruta, ancho: img.ancho, alto: img.alto, enfoque: null });
           creditos.push(img.credito);
           if (img.costoUsd > 0) await gastar("fal.ai", `imagen escena ${i + 1}`, img.costoUsd);
         }
@@ -231,6 +232,14 @@ export async function producir(
       35 + Math.round((i / guion.escenas.length) * 5),
     );
   }
+
+  // Dónde está la persona en cada foto (para el recorte vertical de los shorts).
+  await avisar("buscando las caras para el recorte vertical", 38);
+  const todasLasFotos = escenas.flatMap((e) => [...(e.foto ? [e.foto] : []), ...e.fotos]);
+  const enfoques = await enfoquesDe([
+    ...new Set(todasLasFotos.map((f) => path.join(carpetaPublica, f.ruta))),
+  ]);
+  for (const f of todasLasFotos) f.enfoque = enfoques.get(path.join(carpetaPublica, f.ruta)) ?? null;
 
   const props: PropsVideo = {
     titulo: guion.titulo,

@@ -1,5 +1,6 @@
 import { createTikTokStyleCaptions } from "@remotion/captions";
 import { volumenMusica } from "./musica";
+import { posicionObjeto } from "./enfoque";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { loadFont as loadSerif } from "@remotion/google-fonts/PlayfairDisplay";
 import { useMemo } from "react";
@@ -112,6 +113,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
           <Sequence key={i} from={desde} durationInFrames={dur} name={`escena ${i + 1} · ${e.parte}`}>
             <EscenaVista
               escena={e}
+              indice={i}
               colores={colores}
               durFrames={dur}
               vertical={vertical}
@@ -243,6 +245,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
 
 const EscenaVista: React.FC<{
   escena: Escena;
+  indice: number;
   colores: readonly [string, string];
   durFrames: number;
   vertical: boolean;
@@ -255,6 +258,7 @@ const EscenaVista: React.FC<{
   whoosh: string | null;
 }> = ({
   escena,
+  indice,
   colores,
   durFrames,
   vertical,
@@ -281,7 +285,12 @@ const EscenaVista: React.FC<{
         difuminado={esFrase || esFoto || esTitular || esRecorte}
       />
       {esFoto && escena.foto && escena.fotos.length <= 1 && (
-        <FotoConMovimiento foto={escena.foto} durFrames={durFrames} vertical={vertical} />
+        <FotoConMovimiento
+          foto={escena.foto}
+          durFrames={durFrames}
+          vertical={vertical}
+          desde={indice % 2 === 0 ? "derecha" : "izquierda"}
+        />
       )}
       {esFoto && escena.fotos.length > 1 && (
         <FotosEnSecuencia fotos={escena.fotos} durFrames={durFrames} vertical={vertical} whoosh={whoosh} />
@@ -604,8 +613,15 @@ const FotosEnSecuencia: React.FC<{
         const dur = k === fotos.length - 1 ? Math.max(1, durFrames - desde) : porFoto + TRANSICION;
         return (
           <Sequence key={k} from={desde} durationInFrames={dur} name={`cuadro ${k + 1}`}>
-            <CuadroFundido foto={f} durFrames={dur} vertical={vertical} fundir={k > 0} />
-            {whoosh && k > 0 && <Audio src={staticFile(whoosh)} volume={0.25} />}
+            <CuadroFundido
+              foto={f}
+              durFrames={dur}
+              vertical={vertical}
+              fundir={k > 0}
+              desde={k % 2 === 0 ? "derecha" : "izquierda"}
+            />
+            {/* Cada foto entra con su silbido (TikTok/CapCut); en el short, más presente. */}
+            {whoosh && k > 0 && <Audio src={staticFile(whoosh)} volume={vertical ? 0.6 : 0.25} />}
           </Sequence>
         );
       })}
@@ -618,12 +634,15 @@ const CuadroFundido: React.FC<{
   durFrames: number;
   vertical: boolean;
   fundir: boolean;
-}> = ({ foto, durFrames, vertical, fundir }) => {
+  desde: "derecha" | "izquierda";
+}> = ({ foto, durFrames, vertical, fundir, desde }) => {
   const frame = useCurrentFrame();
-  const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
+  // En vertical la foto entra deslizada (no fundida); en 16:9 se funde como siempre.
+  const opacidad =
+    fundir && !vertical ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
   return (
     <AbsoluteFill style={{ opacity: opacidad }}>
-      <FotoConMovimiento foto={foto} durFrames={durFrames} vertical={vertical} />
+      <FotoConMovimiento foto={foto} durFrames={durFrames} vertical={vertical} desde={desde} />
     </AbsoluteFill>
   );
 };
@@ -633,28 +652,57 @@ const FotoConMovimiento: React.FC<{
   foto: NonNullable<Escena["foto"]>;
   durFrames: number;
   vertical: boolean;
-}> = ({ foto, durFrames, vertical }) => {
+  desde?: "derecha" | "izquierda";
+}> = ({ foto, durFrames, vertical, desde = "derecha" }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const entrada = spring({ frame, fps, config: { damping: 30, stiffness: 60 } });
+  // Entrada deslizada (vertical): la foto llega desde un lado y frena con rebote corto.
+  const deslizada = spring({ frame, fps, config: { damping: 18, stiffness: 150 } });
+  const desplazamientoX = (1 - deslizada) * (desde === "izquierda" ? -100 : 100);
   const zoom = interpolate(frame, [0, Math.max(1, durFrames)], [1.0, 1.1], { extrapolateRight: "clamp" });
   const desplazo = interpolate(frame, [0, Math.max(1, durFrames)], [-12, 12], { extrapolateRight: "clamp" });
   const horizontal = foto.ancho >= foto.alto;
   const { width: anchoVideo, height: altoVideo } = useVideoConfig();
-  // En vertical la foto va a lo ancho, completa (sin recortar caras ni letras);
-  // solo una foto muy alta se limita al 62 % de la pantalla.
-  const anchoCaja = anchoVideo - 120;
-  const altoCajaVertical = Math.min(altoVideo * 0.62, (anchoCaja * foto.alto) / foto.ancho);
+  if (vertical) {
+    // Short: la foto llena la pantalla, recortada sobre la persona (C-SHORTS-2),
+    // con un degradado abajo para que las letras se lean encima.
+    const pos = posicionObjeto(
+      { ancho: foto.ancho, alto: foto.alto },
+      { ancho: anchoVideo, alto: altoVideo },
+      foto.enfoque ?? null,
+    );
+    return (
+      <AbsoluteFill style={{ overflow: "hidden", transform: `translateX(${desplazamientoX}%)` }}>
+        <Img
+          src={staticFile(foto.ruta)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: `${pos.x}% ${pos.y}%`,
+            transform: `scale(${zoom})`,
+            transformOrigin: `${pos.x}% ${pos.y}%`,
+          }}
+        />
+        <AbsoluteFill
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 55%, rgba(0,0,0,.72) 100%)",
+          }}
+        />
+      </AbsoluteFill>
+    );
+  }
   return (
-    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: vertical ? 60 : 90 }}>
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: 90 }}>
       <div
         style={{
           opacity: entrada,
           transform: `scale(${0.96 + entrada * 0.04})`,
-          height: vertical ? altoCajaVertical : "84%",
-          width: vertical ? Math.min(anchoCaja, (altoCajaVertical * foto.ancho) / foto.alto) : undefined,
-          maxWidth: vertical ? undefined : "88%",
-          aspectRatio: vertical ? undefined : `${foto.ancho} / ${foto.alto}`,
+          height: "84%",
+          maxWidth: "88%",
+          aspectRatio: `${foto.ancho} / ${foto.alto}`,
           overflow: "hidden",
           borderRadius: 14,
           boxShadow: "0 30px 80px rgba(0,0,0,.7), 0 0 0 6px rgba(255,255,255,.08)",

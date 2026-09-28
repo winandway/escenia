@@ -248,3 +248,26 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   muestra el 16:9 y los shorts (9x16) debajo.
 - **Qué NO tocar:** `tMs` en la plantilla es SIEMPRE tiempo del video largo;
   todo lo que se posiciona pasa por `aFrame()` / `aLocalMs()`.
+
+## C-SHORTS-2 — En los Shorts la foto llena la pantalla, recortada sobre la persona (27 sep 2026)
+
+- **Qué pidió Richard:** nada de «video horizontal chiquito dentro del short»:
+  la imagen a pantalla completa en vertical, cortada donde está el artista (nos
+  mandó ocho capturas con el cuadro rojo), y las letras encima.
+- **Qué se hizo:** la Mac detecta las caras con Vision
+  (`estacion/herramientas/caras.swift`, se compila solo a `estacion/bin/caras`
+  la primera vez); `compartido/enfoque.ts` elige el punto de enfoque (la cara
+  más grande, o el medio de la pareja si están cerca) y calcula el
+  `object-position` para que al llenar el marco 9:16 la cara quede en cuadro;
+  la Estación guarda ese enfoque en cada foto de las props (con caché en
+  `cache/enfoques.json`); la plantilla, en vertical, dibuja la foto a pantalla
+  completa con ese recorte, movimiento suave y un degradado abajo para que los
+  subtítulos se lean. El 16:9 no cambia.
+- **Cómo se comprueba:** `pruebas/enfoque.test.ts`; en vivo, un short de una
+  biografía: la cara siempre dentro del cuadro. Sin compilador Swift, la
+  Estación avisa y recorta por el centro (no falla).
+- **Qué NO tocar:** el detector devuelve fracciones con origen arriba-izquierda
+  (Vision las da con origen abajo; el `.swift` ya invierte la Y).
+  **La plantilla (`estacion/src/remotion/*`) NO puede importar de `@compartido`**:
+  el empaquetador de Remotion no resuelve ese alias y el render falla con
+  «Module not found». Lo que necesite la plantilla vive en `src/remotion/`.

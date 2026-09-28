@@ -170,3 +170,6 @@ Cada trabajo produce el video 16:9 y, con el mismo audio, de 3 a 5 Shorts 9:16
 (`out/t<id>/short-N.mp4`), planificados por `compartido/shorts.ts` y dibujados
 por la misma plantilla con la prop `ventana` (candado C-SHORTS-1). Suben al
 panel como videos `9x16` y aparecen en la página del guion debajo del largo.
+En vertical, cada foto llena la pantalla recortada sobre la persona: la Mac
+detecta las caras con `herramientas/caras.swift` (Vision; se compila solo a
+`bin/caras`) — candado C-SHORTS-2.
