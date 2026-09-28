@@ -262,7 +262,9 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   la Estación guarda ese enfoque en cada foto de las props (con caché en
   `cache/enfoques.json`); la plantilla, en vertical, dibuja la foto a pantalla
   completa con ese recorte, movimiento suave y un degradado abajo para que los
-  subtítulos se lean. El 16:9 no cambia.
+  subtítulos se lean. Cada foto ENTRA deslizada (alternando derecha e izquierda, con rebote
+  corto) y con su silbido («whoosh») al 60 %, estilo TikTok/CapCut, como pidió
+  Richard. El 16:9 no cambia (fundidos).
 - **Cómo se comprueba:** `pruebas/enfoque.test.ts`; en vivo, un short de una
   biografía: la cara siempre dentro del cuadro. Sin compilador Swift, la
   Estación avisa y recorta por el centro (no falla).
