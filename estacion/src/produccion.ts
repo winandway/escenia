@@ -2,7 +2,7 @@
 import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DURACION_INTERLUDIO, type Guion } from "@compartido/guion";
+import { DURACION_INTERLUDIO, limpiarRotulo, type Guion } from "@compartido/guion";
 import { anioDe, elegirReferencia } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
@@ -189,7 +189,7 @@ export async function producir(
     const recorte: PropsVideo["escenas"][number]["recorte"] = esRecorte
       ? {
           tipo: e.visual.tipo as "periodico" | "red" | "titular",
-          titular: e.visual.titular ?? e.visual.texto_en_pantalla ?? "",
+          titular: limpiarRotulo(e.visual.titular) || limpiarRotulo(e.visual.texto_en_pantalla),
           fecha: e.visual.fecha ?? "",
           cuerpo: e.visual.cuerpo ?? "",
         }
@@ -211,7 +211,7 @@ export async function producir(
       parte: e.parte,
       inicioMs: tramo.inicioMs,
       finMs: tramo.finMs,
-      textoEnPantalla: e.visual.texto_en_pantalla ?? "",
+      textoEnPantalla: limpiarRotulo(e.visual.texto_en_pantalla),
       estilo,
       clip: c ? { ruta: c.ruta, duracionSeg: c.duracionSeg } : null,
       foto,

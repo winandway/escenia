@@ -4,6 +4,7 @@ import {
   duracionEstimadaSeg,
   esquemaGuion,
   esquemaGuionGenerado,
+  limpiarRotulo,
   insertarOpinion,
   textoNarrado,
   type Escena,
@@ -81,5 +82,13 @@ describe("guion", () => {
   it("el formato que se le exige a Claude sigue siendo convertible (interludios y música incluidos)", () => {
     expect(() => zodOutputFormat(esquemaGuionGenerado)).not.toThrow();
     expect(Object.keys(esquemaGuionGenerado.shape)).toContain("musica");
+  });
+
+  it("un marcador de la IA no sale en pantalla como rótulo (C-GUION-1)", () => {
+    expect(limpiarRotulo("URL o rótulo")).toBe("");
+    expect(limpiarRotulo("texto en pantalla")).toBe("");
+    expect(limpiarRotulo("Título")).toBe("");
+    expect(limpiarRotulo("Santos Suárez, 1925")).toBe("Santos Suárez, 1925");
+    expect(limpiarRotulo(undefined)).toBe("");
   });
 });

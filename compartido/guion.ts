@@ -124,6 +124,37 @@ export function insertarOpinion(escenas: Escena[], opinion: string): Escena[] {
   return [...sinOpinion.slice(0, indiceFinal), escenaOpinion, ...sinOpinion.slice(indiceFinal)];
 }
 
+// Marcadores que la IA a veces deja en vez de un rótulo real («URL o rótulo»,
+// «texto en pantalla»). En pantalla no sale nada de esto: se limpia (C-GUION-1).
+const MARCADORES = new Set([
+  "url",
+  "rotulo",
+  "texto",
+  "texto en pantalla",
+  "titulo",
+  "titular",
+  "placeholder",
+  "label",
+  "caption",
+  "sin texto",
+  "sin rotulo",
+  "ninguno",
+  "n/a",
+]);
+
+/** Deja vacío un rótulo que sea un marcador («URL o rótulo») y no un texto de verdad. */
+export function limpiarRotulo(texto: string | undefined): string {
+  const t = (texto ?? "").trim();
+  const plano = t
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.…]+$/u, "")
+    .trim();
+  const partes = plano.split(/\s+o\s+/u);
+  return plano.length > 0 && partes.every((x) => MARCADORES.has(x)) ? "" : t;
+}
+
 /** Texto completo que se narra, escena por escena. */
 export function textoNarrado(escenas: Escena[]): string {
   return escenas.map((e) => e.narracion.trim()).join("\n\n");
