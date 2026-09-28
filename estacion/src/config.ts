@@ -15,8 +15,7 @@ const esquema = z.object({
   ELEVENLABS_MODELO: z.string().default("eleven_multilingual_v2"),
   PEXELS_API_KEY: z.string().optional(),
   FAL_KEY: z.string().optional(),
-  GOOGLE_CSE_KEY: z.string().optional(),
-  GOOGLE_CSE_CX: z.string().optional(),
+  SERPER_API_KEY: z.string().optional(),
   CARPETA_SALIDA: z.string().default("./out"),
 });
 

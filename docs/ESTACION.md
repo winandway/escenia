@@ -19,9 +19,9 @@ cuando el sitio exista, la IA lo renombra a `.env`.**
 - `PANEL_URL` — `https://escenia.sitios.dev`
 - `YAPANEL_DB_TOKEN` — token para consultar la base desde fuera (solo migraciones o revisiones; la Estación normal no lo usa)
 - `ESTACION_SECRETO` — el mismo que está en el panel (YaDominios Cloud → variables)
-- `GOOGLE_CSE_KEY` y `GOOGLE_CSE_CX` — fotos reales del artista desde Google
-  Imágenes (C-IMAGEN-3). Sin ellas, solo Wikimedia Commons y la Estación lo
-  avisa al arrancar.
+- `SERPER_API_KEY` — fotos reales del artista desde Google Imágenes a través de
+  Serper (C-IMAGEN-3; cómo se saca la clave en [docs/FOTOS-INTERNET.md](FOTOS-INTERNET.md)).
+  Sin ella, solo Wikimedia Commons y la Estación lo avisa al arrancar.
 - Música de fondo: no es una variable, es la carpeta `estacion/recursos/musica-local/`
   con las pistas instrumentales (las hace Richard en Suno; lista y reglas en
   [docs/MUSICA.md](MUSICA.md)). Vacía = videos sin música, y la Estación lo dice.

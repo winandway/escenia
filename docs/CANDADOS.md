@@ -340,23 +340,30 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   infancia se inventaban con un niño cualquiera.
 - **Decisión de Richard (28 sep 2026):** contar las historias con fotos reales
   de internet (Google Imágenes); se genera con IA solo lo que no existe en foto.
+- **Ojo (28 sep 2026):** la API oficial de Google (Custom Search JSON) está
+  **cerrada a clientes nuevos** (lo dice su página desde el 18 feb 2026 y se
+  apaga el 1 ene 2027). Por eso se busca por **Serper** (serper.dev), que
+  devuelve los resultados de Google Imágenes: 2.500 consultas gratis, después
+  prepago ($50 por 50.000). Guía: [docs/FOTOS-INTERNET.md](FOTOS-INTERNET.md).
 - **Qué se hizo:** (1) `referenciaEnBase64` reduce cada referencia UNA sola vez
   (mapa de promesas en curso); (2) `estacion/src/fotosweb.ts`: búsqueda de
-  imágenes con la API de Google (Custom Search, `GOOGLE_CSE_KEY` +
-  `GOOGLE_CSE_CX` en `estacion/.env`), baja hasta 5 candidatas, exige cara
+  imágenes de Google vía Serper (`POST google.serper.dev/images`,
+  `SERPER_API_KEY` en `estacion/.env`; `candidatasDeSerper` lee la
+  respuesta), baja hasta 5 candidatas, exige cara
   (detector de la Mac) y tamaño, elige la mejor (`compartido/fotosweb.ts`) y
   la guarda en `cache/fotos-web` con caché por consulta; (3) `buscarFoto` mira
   primero internet y después Commons; `buscarReferencias` pide una foto real
   por década del guion («Luis Miguel 1985») y una de niño si el guion tiene
   infancia (`ES_INFANCIA`), y `elegirReferencia` usa la de niño para esas
   escenas; (4) el prompt pide «foto» (nombre + año) para todo lo público y «ia»
-  solo para lo íntimo. Sin las claves de Google, todo sigue con Commons y el
+  solo para lo íntimo. Sin la clave de Serper, todo sigue con Commons y el
   arranque de la Estación lo dice.
 - **Cómo se comprueba:** `pruebas/fotosweb.test.ts`, `pruebas/referencias.test.ts`;
   en vivo, el paso «fotos de referencia de X: N (…)» y `creditos.txt` con
   «Foto de internet (uso editorial): …».
 - **Qué NO tocar:** no volver a llamar `sips` en paralelo sobre el mismo
-  archivo; la clave de Google solo en `estacion/.env`.
+  archivo; la clave de Serper solo en `estacion/.env`; no volver a la API de
+  Google Custom Search (cerrada a cuentas nuevas).
 
 ## C-FONDO-1 — Los fondos son de la persona, no clips ajenos (28 sep 2026)
 
