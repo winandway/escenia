@@ -93,7 +93,9 @@ export function duracionEnFrames(duracionMs: number, conMusica = false): number 
   return Math.ceil(((duracionMs + (conMusica ? COLA_CON_MUSICA_MS : COLA_FINAL_MS)) / 1000) * FPS);
 }
 
-export const INTRO_SHORT_MS = 2200;
+// Sin portada: el short arranca con imagen y voz en el segundo cero; el título
+// pasa como una banda encima (C-GANCHO-1).
+export const INTRO_SHORT_MS = 0;
 export const CIERRE_SHORT_MS = 3200;
 
 export function duracionShortEnFrames(ventana: { inicioMs: number; finMs: number }): number {

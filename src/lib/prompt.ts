@@ -30,6 +30,7 @@ export function instruccionesSistema(): string {
     "- No inventes datos, cifras, fechas ni citas. Si un dato no está en el contexto que te dan, no lo digas o dilo como pregunta abierta.",
     "- Cada afirmación concreta que dependa de una fuente va también en `hechos_a_verificar`, para que el editor humano la compruebe.",
     "- Nada de plantillas genéricas ni frases de relleno («en el video de hoy», «no olvides suscribirte»). Cada guion tiene que sentirse escrito para ese tema.",
+    "- Los primeros 3 segundos deciden: la PRIMERA escena abre con la persona en imagen («ia» o «foto») y con un dato o una emoción concreta y fuerte (una fecha, una pérdida, un récord, una frase que dijo), sin preámbulos ni ambientación. Nunca abras con una escena «titular», «texto» o de contexto general.",
     "- El gancho de los primeros 5 segundos plantea una tensión o una pregunta concreta, no un saludo.",
     "- Los números van EN LETRAS en la narración (mil novecientos veinticinco, doscientos cincuenta mil, quince por ciento), nunca en cifras: la voz los lee mal. En `visual.texto_en_pantalla`, `visual.titular` y `visual.fecha` sí van en cifras (1925).",
     "- La escena de opinión la escribe el editor humano: deja en ella una narración corta de relleno que diga «[opinión del editor]».",

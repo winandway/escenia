@@ -119,7 +119,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               vertical={vertical}
               fundir={!primera}
               pop={p.sfx.pop}
-              retraso={primera ? (v ? 6 : Math.round(FPS * 3.2)) : TRANSICION}
+              retraso={primera ? 8 : TRANSICION}
               acento={acento}
               fuenteTitulos={fuenteTitulos}
               boom={p.sfx.boom}
@@ -130,15 +130,16 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         );
       })}
 
-      {/* Título de apertura (en un short, el título del short) */}
-      <Sequence from={0} durationInFrames={v ? introFrames + 8 : Math.round(FPS * 3.2)} name="título">
-        <Titulo texto={v ? v.titulo : p.titulo} vertical={vertical} acento={acento} fuente={fuenteTitulos} />
-        {p.sfx.riser && <Audio src={staticFile(p.sfx.riser)} volume={0.35} />}
-        {p.sfx.boom && (
-          <Sequence from={18} name="boom">
-            <Audio src={staticFile(p.sfx.boom)} volume={0.45} />
-          </Sequence>
-        )}
+      {/* Título como banda encima de la primera imagen: nada de portada oscura,
+          los primeros 3 segundos son imagen y voz (C-GANCHO-1). */}
+      <Sequence from={0} durationInFrames={Math.round(FPS * 3)} name="título">
+        <TituloBanda
+          texto={v ? v.titulo : p.titulo}
+          vertical={vertical}
+          acento={acento}
+          fuente={fuenteTitulos}
+        />
+        {p.sfx.riser && <Audio src={staticFile(p.sfx.riser)} volume={0.22} />}
       </Sequence>
 
       {/* Subtítulos palabra por palabra */}
@@ -818,7 +819,8 @@ const FraseGrande: React.FC<{
   );
 };
 
-const Titulo: React.FC<{ texto: string; vertical: boolean; acento: string; fuente: string }> = ({
+/** Banda de título arriba, sobre la imagen que ya se mueve: entra, se queda 3 s y se va. */
+const TituloBanda: React.FC<{ texto: string; vertical: boolean; acento: string; fuente: string }> = ({
   texto,
   vertical,
   acento,
@@ -826,39 +828,39 @@ const Titulo: React.FC<{ texto: string; vertical: boolean; acento: string; fuent
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
-  const entrada = spring({ frame, fps, config: { damping: 200 } });
-  const salida = interpolate(frame, [durationInFrames - 14, durationInFrames], [1, 0], {
+  const entrada = spring({ frame, fps, config: { damping: 14, stiffness: 150 } });
+  const salida = interpolate(frame, [durationInFrames - 10, durationInFrames], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const barra = interpolate(frame, [4, 24], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: 80, opacity: salida }}>
-      <AbsoluteFill style={{ backgroundColor: "rgba(0,0,0,.45)" }} />
+    <AbsoluteFill
+      style={{
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
+        padding: vertical ? "150px 60px" : "70px 80px",
+        opacity: salida,
+      }}
+    >
       <div
         style={{
-          transform: `scale(${0.85 + entrada * 0.15})`,
-          fontSize: vertical ? 84 : 96,
+          transform: `translateY(${(1 - entrada) * -40}px)`,
+          opacity: entrada,
+          backgroundColor: "rgba(0,0,0,.62)",
+          borderLeft: `10px solid ${acento}`,
+          padding: vertical ? "18px 26px" : "16px 28px",
+          borderRadius: 10,
+          maxWidth: vertical ? "92%" : "62%",
+          fontSize: vertical ? 46 : 42,
           fontWeight: 900,
+          lineHeight: 1.12,
           color: "#fff",
-          textAlign: "center",
-          lineHeight: 1.05,
-          textShadow: "0 6px 40px rgba(0,0,0,.9)",
-          maxWidth: vertical ? "100%" : "80%",
           fontFamily: fuente,
+          textShadow: "0 3px 16px rgba(0,0,0,.8)",
         }}
       >
         {texto}
       </div>
-      <div
-        style={{
-          marginTop: 28,
-          height: 10,
-          width: `${barra * (vertical ? 60 : 30)}%`,
-          backgroundColor: acento,
-          borderRadius: 6,
-        }}
-      />
     </AbsoluteFill>
   );
 };

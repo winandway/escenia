@@ -273,3 +273,19 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   **La plantilla (`estacion/src/remotion/*`) NO puede importar de `@compartido`**:
   el empaquetador de Remotion no resuelve ese alias y el render falla con
   «Module not found». Lo que necesite la plantilla vive en `src/remotion/`.
+
+## C-GANCHO-1 — Los primeros 3 segundos son imagen y voz, sin portada (27 sep 2026)
+
+- **Qué pidió Richard:** «el intro mata; hay tres segundos para enganchar». La
+  portada oscura con el título (3,2 s) y una primera escena de ambientación
+  hacían que la gente deslizara.
+- **Qué se hizo:** la plantilla ya no tiene portada: la primera imagen y la voz
+  arrancan en el segundo cero y el título pasa como una banda pequeña arriba
+  (`TituloBanda`, 3 s), en el 16:9 y en los shorts (`INTRO_SHORT_MS = 0`). El
+  prompt exige que la primera escena abra con la persona en imagen y un dato o
+  emoción concreta, nunca con «titular», «texto» ni contexto general. Al guion
+  4 se le quitó la escena de ambientación.
+- **Cómo se comprueba:** cualquier video nuevo: en el segundo 1 ya se ve la
+  imagen y se oye la voz.
+- **Qué NO tocar:** no volver a poner una portada al inicio (el componente
+  `Titulo` se eliminó).
