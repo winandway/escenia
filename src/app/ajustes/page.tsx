@@ -3,6 +3,7 @@ import { exigirSesion } from "@/lib/auth";
 import { ajuste } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
 import { gastadoHoy } from "@/lib/presupuesto";
+import { CANALES } from "@compartido/canales";
 import { MODELO_POR_DEFECTO, MODELOS_PERMITIDOS } from "@compartido/modelos";
 import { FormularioAjustes } from "./FormularioAjustes";
 
@@ -12,12 +13,17 @@ export const metadata = { title: "Ajustes" };
 export default async function PaginaAjustes() {
   await exigirSesion();
   const { db, env } = await contexto();
-  const [presupuesto, modelo, instrucciones, gasto] = await Promise.all([
-    ajuste(db, "presupuesto_diario_usd", "3"),
-    ajuste(db, "modelo_guion", MODELO_POR_DEFECTO),
-    ajuste(db, "instrucciones_extra"),
-    gastadoHoy(db),
-  ]);
+  const [presupuesto, modelo, instrucciones, gasto, iaNombre, iaUsuario, capNombre, capUsuario] =
+    await Promise.all([
+      ajuste(db, "presupuesto_diario_usd", "3"),
+      ajuste(db, "modelo_guion", MODELO_POR_DEFECTO),
+      ajuste(db, "instrucciones_extra"),
+      gastadoHoy(db),
+      ajuste(db, "canal_ia_nombre", CANALES["canal-ia"].porDefecto.nombre),
+      ajuste(db, "canal_ia_usuario", CANALES["canal-ia"].porDefecto.usuario),
+      ajuste(db, "canal_caprichoso_nombre", CANALES["caprichoso-tv"].porDefecto.nombre),
+      ajuste(db, "canal_caprichoso_usuario", CANALES["caprichoso-tv"].porDefecto.usuario),
+    ]);
   const gastosMes = await db.todos<{ servicio: string; total: number }>(
     "SELECT servicio, SUM(costo_usd) AS total FROM gastos WHERE fecha >= date('now','start of month') GROUP BY servicio",
   );
@@ -47,6 +53,7 @@ export default async function PaginaAjustes() {
         </div>
       </div>
       <FormularioAjustes
+        canales={{ iaNombre, iaUsuario, capNombre, capUsuario }}
         presupuesto={presupuesto}
         modelo={modelo}
         instrucciones={instrucciones}

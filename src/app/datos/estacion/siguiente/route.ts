@@ -4,8 +4,9 @@ import { z } from "zod";
 import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
 import { tocarLatido } from "@/lib/estacion-estado";
-import { guionPorId, productoPorId, type FilaTrabajo } from "@/lib/consultas";
+import { guionPorId, productoPorId, type FilaTrabajo, ajuste } from "@/lib/consultas";
 import { esquemaGuion } from "@compartido/guion";
+import { CANALES, clavesDeCanal } from "@compartido/canales";
 import { buscarTematica } from "@compartido/tematicas";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,12 @@ export async function POST(req: Request) {
   const contenido = esquemaGuion.parse(JSON.parse(guion.contenido));
   const producto = guion.producto_id ? await productoPorId(db, guion.producto_id) : null;
   const tematica = buscarTematica(guion.tematica_id);
+  const canalId = tematica?.canal ?? "canal-ia";
+  const claves = clavesDeCanal(canalId);
+  const canal = {
+    nombre: await ajuste(db, claves.nombre, CANALES[canalId].porDefecto.nombre),
+    usuario: await ajuste(db, claves.usuario, CANALES[canalId].porDefecto.usuario),
+  };
 
   return Response.json({
     trabajo: {
@@ -60,6 +67,7 @@ export async function POST(req: Request) {
       plantilla: tematica?.plantilla ?? "TechExplainer",
       contenido,
       producto: producto ? { nombre: producto.nombre, url: producto.url } : null,
+      canal,
     },
   });
 }

@@ -1,5 +1,6 @@
 import { Composition } from "remotion";
 import { duracionEnFrames, esquemaPropsVideo, FPS, framesDe, type PropsVideo } from "./props";
+import { Miniatura } from "./Miniatura";
 import { TechExplainer } from "./TechExplainer";
 
 const vacio: PropsVideo = {
@@ -27,6 +28,7 @@ const vacio: PropsVideo = {
   sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null },
   musica: null,
   ventana: null,
+  cierre: null,
 };
 
 export const Root: React.FC = () => (
@@ -52,6 +54,16 @@ export const Root: React.FC = () => (
       height={1080}
       durationInFrames={duracionEnFrames(vacio.duracionMs)}
       calculateMetadata={({ props }) => ({ durationInFrames: framesDe(props) })}
+    />
+    <Composition
+      id="Miniatura"
+      component={Miniatura}
+      schema={esquemaPropsVideo}
+      defaultProps={vacio}
+      fps={FPS}
+      width={1280}
+      height={720}
+      durationInFrames={1}
     />
     <Composition
       id="TechExplainerShort"

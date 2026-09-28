@@ -308,3 +308,23 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   «Para YouTube» del guion 4.
 - **Qué NO tocar:** la ruta es la única que escribe `publicacion`; la Estación
   no tiene clave de Anthropic (la clave vive solo en el panel).
+
+## C-CIERRE-1 — El cierre de los Shorts manda al video completo, con miniatura y canal (28 sep 2026)
+
+- **Qué pidió Richard:** el cierre de sus videos presenciales (hecho con su app
+  en Beellon): «¿Te gustó?», «VER VIDEO COMPLETO», la miniatura del largo como
+  un video con ▶ y barra, la caja de búsqueda con el título (en un Short no hay
+  enlace: la gente busca el título) y la tarjeta del canal. Y 100 % automático.
+- **Qué se hizo:** (1) la Estación renderiza la **miniatura** del largo
+  (composición `Miniatura`, 1280×720, PNG: la mejor foto con cara, nombre grande
+  y gancho del título) con el mismo empaquetado, la sube al panel como archivo
+  `miniatura` y la mete en las props del short como data URI (así no hace falta
+  re-empaquetar); (2) `CierreShort` la dibuja con ▶, barra que avanza, la caja
+  de búsqueda con el título y la tarjeta del canal; dura 5 s
+  (`CIERRE_SHORT_MS`); (3) el nombre y el @ del canal viven en Ajustes
+  (`canal_ia_*`, `canal_caprichoso_*`, `compartido/canales.ts`) y el panel los
+  manda en cada trabajo según el canal de la temática.
+- **Cómo se comprueba:** `pruebas/miniatura.test.ts`; en vivo, los últimos 5 s
+  de cualquier short y el archivo `miniatura.png` en `out/t<id>/`.
+- **Qué NO tocar:** la miniatura viaja como data URI en `props.cierre` porque
+  el publicDir se copia al empaquetar (C-EMPAQUE-1); no leerla con `staticFile`.

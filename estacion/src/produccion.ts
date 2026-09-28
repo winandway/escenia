@@ -1,12 +1,12 @@
 // Produce UN video de punta a punta: voz → subtítulos → clips → render.
-import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DURACION_INTERLUDIO, limpiarRotulo, type Guion } from "@compartido/guion";
 import { anioDe, elegirReferencia } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
-import { empaquetar, renderizar } from "./render";
+import { empaquetar, renderizar, renderizarMiniatura } from "./render";
 import { planificarShorts, type EscenaParaShort } from "@compartido/shorts";
 import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
@@ -30,6 +30,7 @@ export type ShortProducido = {
 
 export type ResultadoProduccion = {
   rutaMp4: string;
+  rutaMiniatura: string | null;
   shorts: ShortProducido[];
   bytes: number;
   duracionSeg: number;
@@ -80,6 +81,7 @@ export async function producir(
   avisar: Avisar,
   plantilla: Plantilla = "TechExplainer",
   gastar: Gastar = async () => {},
+  canal: { nombre: string; usuario: string } | null = null,
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
@@ -261,11 +263,27 @@ export async function producir(
     sfx,
     musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg } : null,
     ventana: null,
+    cierre: null,
   };
   await writeFile(path.join(carpetaTrabajo, "props.json"), JSON.stringify(props, null, 2));
 
-  await avisar("armando el video (16:9)", 40);
+  await avisar("armando la miniatura y el video (16:9)", 40);
   const serveUrl = await empaquetar(carpetaPublica);
+  // Miniatura del largo: se usa en el cierre de los shorts (y luego en YouTube).
+  let rutaMiniatura: string | null = path.join(carpetaTrabajo, "miniatura.png");
+  try {
+    await renderizarMiniatura(props, serveUrl, rutaMiniatura);
+    const png = await readFile(rutaMiniatura);
+    props.cierre = {
+      canalNombre: canal?.nombre ?? "",
+      canalUsuario: canal?.usuario ?? "",
+      miniatura: `data:image/png;base64,${png.toString("base64")}`,
+    };
+  } catch (err) {
+    console.warn(`Miniatura falló: ${err instanceof Error ? err.message : err}`);
+    rutaMiniatura = null;
+    props.cierre = { canalNombre: canal?.nombre ?? "", canalUsuario: canal?.usuario ?? "", miniatura: null };
+  }
   const rutaMp4 = path.join(carpetaTrabajo, "video-16x9.mp4");
   let ultimo = 40;
   const r = await renderizar(
@@ -315,6 +333,7 @@ export async function producir(
 
   return {
     rutaMp4,
+    rutaMiniatura,
     shorts,
     bytes: r.bytes,
     duracionSeg: r.duracionSeg,

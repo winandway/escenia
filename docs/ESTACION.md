@@ -179,3 +179,9 @@ detecta las caras con `herramientas/caras.swift` (Vision; se compila solo a
 Al terminar cada trabajo, la Estación pide al panel los textos de publicación
 (título, título por short, descripción y 30 palabras clave); aparecen en la
 página del guion, sección «Para YouTube», con botón de copiar (C-PUBLICACION-1).
+
+## Miniatura y cierre de los Shorts
+
+Cada trabajo renderiza la miniatura del largo (`out/t<id>/miniatura.png`, sube
+al panel) y los Shorts terminan con el cierre «¿Te gustó? Ver video completo»
+con esa miniatura, el título y el canal (nombre y @ en Ajustes) — C-CIERRE-1.

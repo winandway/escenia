@@ -3,7 +3,7 @@
 // copia el publicDir al empaquetar, así que un archivo escrito después de
 // empaquetar no existe para él (nos pasó con voz.mp3 → 404).
 import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition } from "@remotion/renderer";
+import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,4 +43,14 @@ export async function renderizar(
   });
   const info = await stat(salida);
   return { bytes: info.size, duracionSeg: comp.durationInFrames / comp.fps };
+}
+
+/** Renderiza la miniatura (1280×720, PNG) con el mismo empaquetado. */
+export async function renderizarMiniatura(
+  props: PropsVideo,
+  serveUrl: string,
+  salida: string,
+): Promise<void> {
+  const comp = await selectComposition({ serveUrl, id: "Miniatura", inputProps: props });
+  await renderStill({ composition: comp, serveUrl, output: salida, inputProps: props, imageFormat: "png" });
 }

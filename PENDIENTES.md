@@ -4,6 +4,8 @@
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
+- 👤 Aprobar el guion 5 (Luis Miguel: la madre desaparecida y el padre) en https://escenia.sitios.dev/guiones/5 → se produce solo (largo, Shorts, miniatura, textos).
+- 👤 Poner nombre y @ del canal de IA en Ajustes (Caprichoso TV ya está) → salen en el cierre de los Shorts.
 - 👤 Seguir generando las pistas de docs/MUSICA.md en Suno (ya hay 4 de salsa en /Users/windocellc/Motor-Escenia/music-cortinas-libre-de-copy/) → cada temática tendrá su música; sin pista que encaje, el video sale con la «neutral» o sin música.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
 
@@ -37,7 +39,9 @@
 - [ ] Fase 2: biblioteca de recursos con licencia por archivo (el pack de sonidos de Richard entra ahí; memes/música con derechos solo con su confirmación por video)
 - [x] Shorts 9:16 automáticos por cada video largo (27 sep 2026, C-SHORTS-1): 3 a 5 trozos con título y cierre «ver video completo».
 - [x] Ritmo de lectura parejo (27 sep 2026, C-VOZ-4).
-- [ ] Fase 2: miniaturas, biblioteca de recursos, cortes comerciales
+- [x] Miniatura automática del largo y cierre de los Shorts con miniatura + buscador + canal (28 sep 2026, C-CIERRE-1).
+- [ ] Fase 2: biblioteca de recursos, cortes comerciales
+- [ ] Avatar parlante con la voz de Richard para Shorts de producto (investigar API económica) — pedido el 28 sep 2026
 - [x] Fase 3 (parte): textos de YouTube automáticos al terminar cada video: título, títulos de shorts, descripción y 30 palabras clave, con copiar (27 sep 2026, C-PUBLICACION-1).
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)

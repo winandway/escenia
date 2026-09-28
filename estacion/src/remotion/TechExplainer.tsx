@@ -170,7 +170,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       {/* Cierre del short: invita a ver el video completo */}
       {v && (
         <Sequence from={Math.max(0, durationInFrames - cierreFrames)} name="cierre-short">
-          <CierreShort titulo={p.titulo} acento={acento} fuente={fuenteTitulos} />
+          <CierreShort titulo={p.titulo} acento={acento} fuente={fuenteTitulos} cierre={p.cierre} />
           {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
         </Sequence>
       )}
@@ -865,53 +865,236 @@ const TituloBanda: React.FC<{ texto: string; vertical: boolean; acento: string; 
   );
 };
 
-/** Cierre de un short: «¿Te gustó? Ver video completo» con el título del largo. */
-const CierreShort: React.FC<{ titulo: string; acento: string; fuente: string }> = ({
-  titulo,
-  acento,
-  fuente,
-}) => {
+/**
+ * Cierre de un short, al estilo de la app de Richard (Beellon): «¿Te gustó?»,
+ * el letrero «VER VIDEO COMPLETO» que rebota, la miniatura del largo como un
+ * video con ▶ y barra que avanza, la caja de búsqueda con el título (en un
+ * Short no hay enlace: la gente busca el título) y la tarjeta del canal.
+ */
+const CierreShort: React.FC<{
+  titulo: string;
+  acento: string;
+  fuente: string;
+  cierre: PropsVideo["cierre"];
+}> = ({ titulo, acento, fuente, cierre }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const entrada = spring({ frame, fps, config: { damping: 14, stiffness: 130 } });
+  const { fps, durationInFrames } = useVideoConfig();
+  const letrero = spring({ frame, fps, config: { damping: 9, stiffness: 180 } });
+  const tarjeta = spring({ frame: frame - 6, fps, config: { damping: 14, stiffness: 120 } });
+  const busqueda = spring({ frame: frame - 14, fps, config: { damping: 16, stiffness: 140 } });
+  const canal = spring({ frame: frame - 22, fps, config: { damping: 16, stiffness: 140 } });
+  const barra = interpolate(frame, [12, durationInFrames - 8], [0.08, 0.95], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const oscuro = "rgba(12,12,12,.92)";
   return (
-    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: 70 }}>
-      <AbsoluteFill style={{ backgroundColor: "rgba(0,0,0,.62)" }} />
-      <div
-        style={{
-          transform: `translateY(${(1 - entrada) * 80}px) scale(${0.9 + entrada * 0.1})`,
-          opacity: entrada,
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: 52, fontWeight: 700, color: "#fff", letterSpacing: 2 }}>¿TE GUSTÓ?</div>
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: "0 64px" }}>
+      <AbsoluteFill style={{ backgroundColor: "rgba(0,0,0,.66)" }} />
+      <div style={{ width: "100%", maxWidth: 960, textAlign: "center" }}>
+        <div style={{ fontSize: 46, fontWeight: 700, color: "#fff", letterSpacing: 3, opacity: letrero }}>
+          ¿TE GUSTÓ?
+        </div>
         <div
           style={{
             display: "inline-block",
-            marginTop: 26,
-            padding: "26px 54px",
-            borderRadius: 24,
+            marginTop: 18,
+            padding: "22px 48px",
+            borderRadius: 26,
             backgroundColor: acento,
             color: "#111",
-            fontSize: 64,
+            fontSize: 60,
             fontWeight: 900,
             letterSpacing: 1,
+            transform: `scale(${0.6 + letrero * 0.4})`,
+            opacity: letrero,
           }}
         >
           VER VIDEO COMPLETO
         </div>
+
         <div
           style={{
-            marginTop: 40,
-            fontSize: 46,
-            fontWeight: 700,
-            color: "#fff",
-            lineHeight: 1.2,
-            fontFamily: fuente,
+            marginTop: 30,
+            transform: `translateY(${(1 - tarjeta) * 60}px)`,
+            opacity: tarjeta,
+            borderRadius: 26,
+            border: `6px solid ${acento}`,
+            overflow: "hidden",
+            backgroundColor: "#111",
+            aspectRatio: "16 / 9",
+            position: "relative",
           }}
         >
-          {titulo}
+          {cierre?.miniatura ? (
+            <Img src={cierre.miniatura} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 40,
+                fontSize: 48,
+                fontWeight: 900,
+                color: "#fff",
+                fontFamily: fuente,
+              }}
+            >
+              {titulo}
+            </div>
+          )}
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: 120,
+              height: 120,
+              marginLeft: -60,
+              marginTop: -60,
+              borderRadius: 60,
+              backgroundColor: acento,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 10px 40px rgba(0,0,0,.6)",
+            }}
+          >
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                marginLeft: 12,
+                borderTop: "30px solid transparent",
+                borderBottom: "30px solid transparent",
+                borderLeft: "50px solid #111",
+              }}
+            />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 24,
+              right: 24,
+              bottom: 18,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: "rgba(255,255,255,.35)",
+            }}
+          >
+            <div
+              style={{ width: `${barra * 100}%`, height: "100%", borderRadius: 5, backgroundColor: acento }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: `calc(${barra * 100}% - 12px)`,
+                top: -7,
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: "#fff",
+              }}
+            />
+          </div>
         </div>
+
+        <div
+          style={{
+            marginTop: 26,
+            transform: `translateX(${(1 - busqueda) * -80}px)`,
+            opacity: busqueda,
+            backgroundColor: oscuro,
+            borderRadius: 24,
+            padding: "26px 34px",
+            display: "flex",
+            alignItems: "center",
+            gap: 22,
+            textAlign: "left",
+          }}
+        >
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              border: `6px solid ${acento}`,
+              flexShrink: 0,
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                right: -16,
+                bottom: -14,
+                width: 22,
+                height: 8,
+                backgroundColor: acento,
+                transform: "rotate(45deg)",
+                borderRadius: 4,
+              }}
+            />
+          </div>
+          <div style={{ fontSize: 42, fontWeight: 700, color: "#fff", lineHeight: 1.2, fontFamily: fuente }}>
+            “{titulo}”
+          </div>
+        </div>
+
+        {(cierre?.canalNombre || cierre?.canalUsuario) && (
+          <div
+            style={{
+              marginTop: 24,
+              transform: `translateY(${(1 - canal) * 60}px)`,
+              opacity: canal,
+              backgroundColor: oscuro,
+              border: `5px solid ${acento}`,
+              borderRadius: 26,
+              padding: "24px 34px",
+              display: "flex",
+              alignItems: "center",
+              gap: 26,
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                width: 110,
+                height: 110,
+                borderRadius: 26,
+                backgroundColor: acento,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  marginLeft: 8,
+                  borderTop: "26px solid transparent",
+                  borderBottom: "26px solid transparent",
+                  borderLeft: "42px solid #111",
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 60, fontWeight: 900, color: "#fff", lineHeight: 1.05 }}>
+                {cierre?.canalNombre}
+              </div>
+              {cierre?.canalUsuario && (
+                <div style={{ fontSize: 36, fontWeight: 700, color: acento, marginTop: 6 }}>
+                  {cierre.canalUsuario}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </AbsoluteFill>
   );

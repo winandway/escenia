@@ -14,6 +14,7 @@ const esquemaTrabajo = z.object({
       plantilla: z.enum(["TechExplainer", "MiniDocumental"]),
       contenido: esquemaGuion,
       producto: z.object({ nombre: z.string(), url: z.string() }).nullable(),
+      canal: z.object({ nombre: z.string(), usuario: z.string() }).nullable().default(null),
     })
     .nullable(),
 });

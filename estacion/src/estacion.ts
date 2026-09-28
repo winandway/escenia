@@ -34,6 +34,7 @@ async function unaVuelta(): Promise<boolean> {
       avisar,
       trabajo.plantilla,
       (servicio, detalle, costo) => panel.gasto(trabajo.id, servicio, detalle, costo).catch(() => {}),
+      trabajo.canal,
     );
     if (r.costoVozUsd > 0)
       await panel.gasto(trabajo.id, "elevenlabs", `voz guion ${trabajo.guion_id}`, r.costoVozUsd);
@@ -58,6 +59,12 @@ async function unaVuelta(): Promise<boolean> {
         voz_de_prueba: r.vozDePrueba,
       });
     }
+    if (r.rutaMiniatura)
+      await panel
+        .subirArchivo(trabajo.guion_id, "miniatura", "png", r.rutaMiniatura)
+        .catch((e) =>
+          console.warn(`  (no se pudo subir la miniatura: ${e instanceof Error ? e.message : e})`),
+        );
     await avisar("subiendo voz y subtítulos al panel", 99);
     await panel.subirArchivo(trabajo.guion_id, "voz", "mp3", r.rutaVoz, { voz_de_prueba: r.vozDePrueba });
     await panel.subirArchivo(trabajo.guion_id, "subtitulos", "json", r.rutaSubtitulos, {

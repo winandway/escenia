@@ -68,6 +68,16 @@ export const esquemaPropsVideo = z.object({
   sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null }),
   // Música de fondo (ruta relativa al publicDir), ya normalizada de volumen. Se repite en bucle.
   musica: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
+  // Cierre de los shorts: «ver video completo» con la miniatura del largo
+  // (data URI PNG), el título y el canal. Solo lo usan los shorts.
+  cierre: z
+    .object({
+      canalNombre: z.string(),
+      canalUsuario: z.string(),
+      miniatura: z.string().nullable(),
+    })
+    .nullable()
+    .default(null),
   // Short: trozo del video largo que se dibuja en 9:16, con su título al
   // arrancar y un cierre de «ver video completo». Todo lo demás es lo mismo.
   ventana: z
@@ -96,7 +106,7 @@ export function duracionEnFrames(duracionMs: number, conMusica = false): number 
 // Sin portada: el short arranca con imagen y voz en el segundo cero; el título
 // pasa como una banda encima (C-GANCHO-1).
 export const INTRO_SHORT_MS = 0;
-export const CIERRE_SHORT_MS = 3200;
+export const CIERRE_SHORT_MS = 5000;
 
 export function duracionShortEnFrames(ventana: { inicioMs: number; finMs: number }): number {
   return Math.ceil(((INTRO_SHORT_MS + (ventana.finMs - ventana.inicioMs) + CIERRE_SHORT_MS) / 1000) * FPS);

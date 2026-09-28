@@ -10,7 +10,17 @@ type Props = {
   modelo: string;
   instrucciones: string;
   modelos: { id: string; texto: string }[];
+  canales: { iaNombre: string; iaUsuario: string; capNombre: string; capUsuario: string };
 };
+
+const CampoCanal = ({ id, etiqueta, valor }: { id: string; etiqueta: string; valor: string }) => (
+  <div>
+    <label htmlFor={id} className="etiqueta">
+      {etiqueta}
+    </label>
+    <input id={id} name={id} defaultValue={valor} maxLength={60} className="campo" />
+  </div>
+);
 
 export function FormularioAjustes(p: Props) {
   const [estado, accion, pendiente] = useActionState<EstadoAjustes, FormData>(guardarAjustes, {
@@ -68,6 +78,25 @@ export function FormularioAjustes(p: Props) {
           placeholder="Muletillas que no quieres, cómo te gusta cerrar, palabras que sí usas…"
         />
       </div>
+      <fieldset className="tarjeta space-y-3">
+        <legend className="px-1 text-sm font-medium text-neutral-300">
+          Canales (salen en el cierre de los Shorts: «ver video completo en…»)
+        </legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <CampoCanal id="canal_ia_nombre" etiqueta="Canal de IA: nombre" valor={p.canales.iaNombre} />
+          <CampoCanal id="canal_ia_usuario" etiqueta="Canal de IA: usuario (@)" valor={p.canales.iaUsuario} />
+          <CampoCanal
+            id="canal_caprichoso_nombre"
+            etiqueta="Caprichoso TV: nombre"
+            valor={p.canales.capNombre}
+          />
+          <CampoCanal
+            id="canal_caprichoso_usuario"
+            etiqueta="Caprichoso TV: usuario (@)"
+            valor={p.canales.capUsuario}
+          />
+        </div>
+      </fieldset>
       {estado.error && (
         <p role="alert" className="text-sm text-red-300">
           {estado.error}
