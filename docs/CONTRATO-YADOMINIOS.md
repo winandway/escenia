@@ -256,3 +256,12 @@ errores del sitio.
 Los errores de publicación vienen **etiquetados**: «Esto se arregla en tu
 repositorio» (corriges y haces push a la misma rama; **no hay que reconectar
 nada**) o «Esto es nuestro, no tuyo» (no toques el código, reintenta).
+
+## Ojo: una ruta nueva tarda unos 3 minutos en aparecer (visto el 27 sep 2026)
+
+Después de que la Action termina en verde, una ruta recién creada siguió dando
+404 (la página «no encontrada» de Next) durante ~3 minutos y luego respondió
+200 sin cambiar nada. La prueba de humo de una ruta nueva hay que reintentarla
+cada 30 s hasta 5 minutos antes de asumir que está rota. Además, una ruta
+dinámica anidada bajo otra que ya tiene `route.ts` (`/guiones/[id]/x` con
+`/guiones/route.ts`) no se pudo verificar: se movió a `/publicacion/[id]`.
