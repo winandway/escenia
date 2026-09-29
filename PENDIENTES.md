@@ -5,7 +5,7 @@
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
 - 👤 Ponerle la hora a los 3 Shorts de Luis Miguel en https://escenia.sitios.dev/calendario (ya están cargados el 1 y 2 de octubre, falta la hora que tienen en YouTube Studio) → el calendario cuida esos huecos.
-- 👤 Agendar lo que está en «Por agendar» (un toque por video, o «Agendar los N») y quitar de la lista lo que ya salió.
+- 👤 Programar en YouTube el video completo de Luis Miguel para el miércoles 30 de septiembre a las 4:00 p. m. (así quedó en el calendario) o moverlo en el calendario a la fecha que prefieras.
 - 👤 Instalar Escenia en el teléfono (pasos en docs/APP.md; en Android, botón «Instalar Escenia» en Ajustes) → el panel queda como una app con su ícono.
 - 👤 Pegar el enlace de cada video ya subido en su ficha del calendario → sale su miniatura de YouTube.
 - 👤 Entrenar más la voz en ElevenLabs (más muestras y volver a entrenar) → mejor dicción y ritmo.
@@ -27,6 +27,7 @@
 - [x] Publicar: repo público https://github.com/winandway/escenia + Action verde → rama `yapanel-build` → sitio EN VIVO en https://escenia.sitios.dev (25 sep 2026, plan Galaxia). Base con las 9 fichas de producto y los ajustes por defecto, comprobada por HTTP.
 - [x] Licencia de Remotion: Windoce es 1 persona (Richard, 25 sep 2026) → licencia gratis, no hay nada que pagar.
 - [x] Variables del panel cargadas por Richard (26 sep 2026): canario en verde, Estación conectada al panel en vivo, prueba de humo ok.
+- [x] Primeras fechas cargadas en el calendario (29 sep 2026): 13 videos ya publicados con hora real, enlace y miniatura; Luis Miguel completo el 30 sep 4:00 p. m.; versiones de prueba fuera de la lista.
 - [x] App instalable en el teléfono y miniaturas en el calendario (29 sep 2026, C-APP-1).
 - [x] Calendario de publicaciones en el panel (29 sep 2026, C-CALENDARIO-1): agenda con un toque, no deja dos videos a la misma hora ni demasiado juntos, por canal y plataforma.
 - [x] Clave de Serper recibida y puesta en la Mac (28 sep 2026): fotos reales de Google Imágenes activas (probada: 10 resultados para «Luis Miguel niño»).

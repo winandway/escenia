@@ -200,7 +200,9 @@ export async function agendar(
   const delGuion = d.guion_id ? await entradasDeGuion(db, d.guion_id) : [];
   const vistas = [...cerca, ...delGuion.filter((e) => !cerca.some((c) => c.id === e.id))];
   const choque = revisarHueco(vistas, { ...pedido, fecha: d.fecha, hora: d.hora }, reglas);
-  if (choque) {
+  // Lo que ya salió es historia: se anota tal como pasó, aunque haya salido pegado a
+  // otro video o al mismo minuto. Las reglas cuidan lo que todavía no sale.
+  if (choque && !yaSalio) {
     const todas = await entradasDelCanal(db, pedido, hoy.fecha, sumarDias(hoy.fecha, 125));
     const libre = proximoHueco(
       [...todas, ...delGuion.filter((e) => !todas.some((c) => c.id === e.id))],

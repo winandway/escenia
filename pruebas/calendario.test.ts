@@ -293,6 +293,24 @@ describe("calendario: en la base", () => {
     expect((await agendar(db, short({ fecha: "2026-09-29", estado: "publicado" }), ya)).ok).toBe(true);
   });
 
+  it("lo que ya salió se anota tal como pasó; lo que falta por salir sí respeta las reglas frente a eso", async () => {
+    const salio = (p: Record<string, unknown>) => short({ fecha: "2026-09-28", estado: "publicado", ...p });
+    expect((await agendar(db, salio({ hora: "09:00", titulo: "Salió a las nueve" }), ya)).ok).toBe(true);
+    expect((await agendar(db, salio({ hora: "11:00", titulo: "Salió a las once" }), ya)).ok).toBe(true);
+    // Un largo y su Short que salieron al mismo minuto: es historia, se anota.
+    expect((await agendar(db, salio({ hora: "11:00", titulo: "Salió junto con otro" }), ya)).ok).toBe(true);
+    expect((await agendar(db, salio({ hora: "12:00", titulo: "Salió pegado" }), ya)).ok).toBe(true);
+    expect((await entradasEntre(db, "2026-09-28", "2026-09-28")).length).toBe(4);
+    // Lo nuevo no puede caer encima de algo que ya salió hoy.
+    expect(
+      (await agendar(db, short({ hora: "10:00", estado: "publicado", titulo: "Salió hoy" }), ya)).ok,
+    ).toBe(true);
+    expect(await agendar(db, short({ hora: "12:00", titulo: "Nuevo" }), ya)).toEqual({
+      ok: false,
+      error: expect.stringContaining("Queda a menos de 3 horas de «Salió hoy»") as string,
+    });
+  });
+
   it("pide los datos que faltan con palabras claras", async () => {
     expect(await agendar(db, short({ titulo: "" }), ya)).toEqual({
       ok: false,

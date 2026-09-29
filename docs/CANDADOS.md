@@ -132,13 +132,15 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   (`src/lib/calendario.ts`), que llama a `revisarHueco`
   (`compartido/calendario.ts`): misma hora, separación mínima, máximo por día,
   Short antes que su largo y fechas pasadas. Además la base tiene el índice
-  único `calendario_hueco` (canal, plataforma, fecha, hora): aunque el código
-  fallara, no entran dos a la misma hora.
+  único `calendario_hueco_2` (canal, plataforma, fecha, hora): aunque el código
+  fallara, no entran dos a la misma hora. Lo ya publicado queda fuera del
+  índice y de las reglas: es historia y se anota tal como salió (Richard ha
+  publicado un video y su Short al mismo minuto).
 - **Cómo se comprueba:** `pruebas/calendario.test.ts` (comprobada en rojo el 29
   sep 2026 rompiendo la revisión de la misma hora: fallaron 2 pruebas); el
   canario dice `calendario: ok`.
 - **Qué NO tocar:** no escribir en la tabla `calendario` sin pasar por
-  `agendar`; no quitar el índice `calendario_hueco`; las horas se guardan en el
+  `agendar`; no quitar el índice `calendario_hueco_2`; las horas se guardan en el
   reloj de Richard, no en UTC.
 
 ## C-APP-1 — El panel se instala en el teléfono y no guarda datos en él (29 sep 2026)

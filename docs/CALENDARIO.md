@@ -65,6 +65,10 @@ Dentro del mismo canal y la misma plataforma:
 
 Cuando rechaza, dice con qué video choca y cuál es el próximo hueco libre.
 
+**Lo que ya salió es historia:** una publicación marcada «Publicado» se anota
+tal como pasó, aunque haya salido pegada a otra o al mismo minuto. Las reglas
+cuidan lo que todavía no sale, y sí lo comparan contra lo ya publicado.
+
 ## Cómo está hecho
 
 - Tabla `calendario` (en `schema.sql`). `fecha` y `hora` van en el reloj de
@@ -78,6 +82,20 @@ Cuando rechaza, dice con qué video choca y cuál es el próximo hueco libre.
   `calendario_horas_largo`, `calendario_separacion_min`, `calendario_zona`.
 - El calendario **no publica nada**: es el plan. Richard programa el video en
   la plataforma con esa fecha y marca «Ya lo programé».
+
+## Cargar el calendario desde la Mac
+
+`scripts/calendario-remoto.ts` escribe en el calendario en vivo pasando por la
+misma puerta que el panel (`agendar`), con un plan en JSON:
+
+```bash
+cd /Users/windocellc/Motor-Escenia && estacion/node_modules/.bin/tsx scripts/calendario-remoto.ts < plan.json
+```
+
+El 29 sep 2026 se cargó así el arranque: 13 videos ya publicados en Caprichoso
+TV (Karol G, Celia Cruz y Bad Bunny) con la hora real y el enlace, leídos de
+la página pública del canal con `yt-dlp`, y el video completo de Luis Miguel
+en el primer hueco libre.
 
 ## Cómo se comprueba
 
