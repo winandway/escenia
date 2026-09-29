@@ -16,7 +16,7 @@
 
 ## Fila (lo hace la IA)
 
-- [ ] Aviso de seguridad moderado en una herramienta de desarrollo (undici, dentro de wrangler; visto el 29 sep 2026 con `npm audit`). No afecta al panel publicado. Subir wrangler a la versión que lo corrige y comprobar que el empaquetado sigue igual (C-EMPAQUE-1).
+- [x] Aviso de seguridad en una herramienta de desarrollo (undici, dentro de wrangler): pasó a grave el 29 sep 2026 y frenó la subida. Corregido ese día subiendo wrangler de 4.141.0 a 4.144.0; el empaquetado se volvió a probar completo (C-EMPAQUE-1).
 
 - [x] Análisis a fondo con fuentes oficiales → docs/ANALISIS.md
 - [x] Fase 1: blindaje (tipos estrictos, lint + seguridad, vitest con cobertura, gitleaks, husky, CI)
