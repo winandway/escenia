@@ -6,6 +6,7 @@
 - Auditoría de la API de YouTube: [docs/AUDITORIA-YOUTUBE.md](docs/AUDITORIA-YOUTUBE.md).
 - Contrato de YaDominios Cloud (sin red): [docs/CONTRATO-YADOMINIOS.md](docs/CONTRATO-YADOMINIOS.md).
 - Fotos reales de internet (Serper): [docs/FOTOS-INTERNET.md](docs/FOTOS-INTERNET.md).
+- Avatar parlante (plan): [docs/AVATAR.md](docs/AVATAR.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro

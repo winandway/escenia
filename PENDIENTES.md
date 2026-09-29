@@ -4,6 +4,7 @@
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
+- 👤 Foto para el avatar: guardarla como /Users/windocellc/Motor-Escenia/avatar/richard.jpg (requisitos en docs/AVATAR.md) y dar el visto bueno a la prueba de 20 s ($1.12) → sale el primer clip de Richard hablando con su voz.
 - 👤 Entrenar más la voz en ElevenLabs (más muestras y volver a entrenar) → mejor dicción y ritmo.
 - [x] Guion 5 (Luis Miguel) reproducido con fotos reales de Serper y referencias por época (trabajo 20, 28 sep 2026): 5 referencias reales (niño, 1975, 1985, 1995, 2025), imágenes con IA sin fallos, 3 Shorts, miniatura y textos de YouTube (Luis Miguel: la madre desaparecida y el padre) en https://escenia.sitios.dev/guiones/5 → se produce solo (largo, Shorts, miniatura, textos).
 - 👤 Poner nombre y @ del canal de IA en Ajustes (Caprichoso TV ya está) → salen en el cierre de los Shorts.
@@ -43,8 +44,7 @@
 - [x] Ritmo de lectura parejo (27 sep 2026, C-VOZ-4).
 - [x] Miniatura automática del largo y cierre de los Shorts con miniatura + buscador + canal (28 sep 2026, C-CIERRE-1).
 - [ ] Fase 2: biblioteca de recursos, cortes comerciales
-- [ ] Avatar parlante con la voz de Richard para Shorts de producto (investigar API económica) — pedido el 28 sep 2026
-  - Primera mirada (28 sep 2026, precios de terceros SIN verificar en la página oficial todavía): HeyGen Avatar API ≈ $3 por minuto; VEED Fabric en fal.ai ≈ $0,08 por segundo (480p); Hedra Character-3 por créditos; D-ID desde ≈ $16 al mes. Falta comparar en las páginas oficiales y probar con una foto de Richard + su voz de ElevenLabs. Se hace después de dejar redondo el flujo actual.
+- [ ] Avatar parlante de Richard (plan completo en docs/AVATAR.md, precios verificados el 29 sep 2026): Fase 1 prueba suelta de 20 s con Kling AI Avatar v2 Standard en fal.ai ($1.12); Fase 2 integración con candado de gasto; Fase 3 primer video con «Mi opinión» en cámara.
 - [x] Fase 3 (parte): textos de YouTube automáticos al terminar cada video: título, títulos de shorts, descripción y 30 palabras clave, con copiar (27 sep 2026, C-PUBLICACION-1).
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)
