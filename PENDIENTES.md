@@ -14,6 +14,8 @@
 
 ## Fila (lo hace la IA)
 
+- [ ] Aviso de seguridad moderado en una herramienta de desarrollo (undici, dentro de wrangler; visto el 29 sep 2026 con `npm audit`). No afecta al panel publicado. Subir wrangler a la versión que lo corrige y comprobar que el empaquetado sigue igual (C-EMPAQUE-1).
+
 - [x] Análisis a fondo con fuentes oficiales → docs/ANALISIS.md
 - [x] Fase 1: blindaje (tipos estrictos, lint + seguridad, vitest con cobertura, gitleaks, husky, CI)
 - [x] Fase 1: panel Next.js 16.3.6 + esquema + cola de trabajos + candados
