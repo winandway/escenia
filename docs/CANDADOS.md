@@ -154,6 +154,12 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Cómo se comprueba:** `pruebas/app-instalable.test.ts` (comprobada en rojo
   quitando las rutas de la app del proxy) y `node scripts/probar-app.mjs
 https://escenia.sitios.dev` en un navegador de teléfono real.
+- **Fallo del 29 sep 2026 (el mismo día):** instalada en el iPhone, el menú
+  quedaba debajo de la hora y de la cámara, porque la app instalada ocupa toda
+  la pantalla. Se corrigió con el margen de la franja en `body`
+  (`env(safe-area-inset-*)`). Además la app abre en el calendario
+  (`alAbrirLaApp`). Las dos cosas tienen su prueba; la del margen se comprobó
+  en rojo quitándolo.
 - **Qué NO tocar:** el servicio (`public/sw.js`) no debe guardar pantallas ni
   datos del panel; las pantallas se piden siempre a la red. Al cambiar el
   servicio se sube `VERSION`. No abrir más rutas sin sesión.

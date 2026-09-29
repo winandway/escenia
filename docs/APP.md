@@ -47,15 +47,17 @@ calendario viven en la nube y siempre se piden frescos.
 
 ## Cómo está hecho
 
-| Pieza                     | Dónde                                                                               |
-| ------------------------- | ----------------------------------------------------------------------------------- |
-| Manifiesto                | `src/app/manifest.ts`                                                               |
-| Íconos                    | `public/iconos/`, `src/app/apple-icon.png` (se arman con `node scripts/iconos.mjs`) |
-| Servicio (sin conexión)   | `public/sw.js`                                                                      |
-| Pantalla «Sin conexión»   | `src/app/sin-conexion/page.tsx`                                                     |
-| Encendido del servicio    | `src/app/_app/RegistrarApp.tsx`                                                     |
-| Botón de instalar         | `src/app/_app/InstalarApp.tsx` (en Ajustes)                                         |
-| Rutas abiertas sin sesión | `RUTAS_DE_LA_APP` en `src/proxy.ts`                                                 |
+| Pieza                            | Dónde                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| Manifiesto                       | `src/app/manifest.ts`                                                               |
+| Íconos                           | `public/iconos/`, `src/app/apple-icon.png` (se arman con `node scripts/iconos.mjs`) |
+| Servicio (sin conexión)          | `public/sw.js`                                                                      |
+| Pantalla «Sin conexión»          | `src/app/sin-conexion/page.tsx`                                                     |
+| Encendido del servicio           | `src/app/_app/RegistrarApp.tsx`                                                     |
+| Botón de instalar                | `src/app/_app/InstalarApp.tsx` (en Ajustes)                                         |
+| Rutas abiertas sin sesión        | `RUTAS_DE_LA_APP` en `src/proxy.ts`                                                 |
+| A dónde abre                     | `compartido/app.ts` (`alAbrirLaApp`)                                                |
+| Margen de la franja del teléfono | `src/app/globals.css` (`body`)                                                      |
 
 El servicio **no guarda pantallas ni datos del panel** en el teléfono. Solo
 guarda la pantalla «Sin conexión» y los archivos fijos que la visten.
