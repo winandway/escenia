@@ -1,5 +1,9 @@
 # Avatar parlante de Richard — plan
 
+> **Estado: EN PAUSA desde el 29 sep 2026.** Richard pidió guardarlo y hacer
+> otras cosas antes. No se genera ni se gasta nada hasta que él diga que se
+> retoma. Al retomarlo, volver a leer los precios en fal.ai.
+
 > Pedido por Richard el 28 y 29 sep 2026. Primer avatar: él mismo, con una foto
 > suya y su voz clonada (ya lista en ElevenLabs). Primera prueba: un clip de 20
 > a 30 segundos. Precios y límites leídos en las páginas oficiales de fal.ai el
