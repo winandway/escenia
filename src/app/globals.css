@@ -18,6 +18,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  /* La app instalada ocupa TODA la pantalla del teléfono: sin este margen el
+     menú queda debajo de la hora y de la cámara (C-APP-1). En el navegador
+     normal estos valores son cero. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 .campo {

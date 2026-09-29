@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import manifest from "@/app/manifest";
 import { proxy, RUTAS_DE_LA_APP } from "@/proxy";
+import { alAbrirLaApp } from "@compartido/app";
 
 const raiz = path.resolve(__dirname, "..");
 const pedir = (ruta: string) => proxy(new NextRequest(`https://escenia.sitios.dev${ruta}`));
@@ -13,7 +14,7 @@ describe("app instalable (C-APP-1)", () => {
     const m = manifest();
     expect(m.name).toBe("Escenia");
     expect(m.display).toBe("standalone");
-    expect(m.start_url).toBe("/");
+    expect(m.start_url).toBe("/calendario");
     const tamanos = (m.icons ?? []).map((i) => `${i.sizes}${i.purpose ? `:${i.purpose}` : ""}`);
     expect(tamanos).toEqual(expect.arrayContaining(["192x192", "512x512", "512x512:maskable"]));
     expect((m.icons ?? []).map((i) => i.src).sort()).toEqual([
@@ -64,5 +65,41 @@ describe("app instalable (C-APP-1)", () => {
     expect(config).toContain("worker-src 'self'");
     expect(config).toContain("manifest-src 'self'");
     expect(config).toContain("frame-ancestors 'none'");
+  });
+
+  it("la app instalada abre en el calendario, y después deja ir a Guiones", () => {
+    // Al abrir la app en la portada (instalaciones viejas): al calendario.
+    expect(alAbrirLaApp({ instalada: true, ruta: "/", yaLlevada: false })).toEqual({
+      ir: "/calendario",
+      marcar: true,
+    });
+    // Ya dentro, tocar «Guiones» se queda en Guiones.
+    expect(alAbrirLaApp({ instalada: true, ruta: "/", yaLlevada: true })).toEqual({
+      ir: null,
+      marcar: false,
+    });
+    // Si abrió directo en el calendario, queda marcada y no se vuelve a mover.
+    expect(alAbrirLaApp({ instalada: true, ruta: "/calendario", yaLlevada: false })).toEqual({
+      ir: null,
+      marcar: true,
+    });
+    // En la pantalla de entrar no se marca: después de la contraseña sí va al calendario.
+    expect(alAbrirLaApp({ instalada: true, ruta: "/entrar", yaLlevada: false })).toEqual({
+      ir: null,
+      marcar: false,
+    });
+    // En el navegador normal (sin instalar) nadie lo mueve de donde está.
+    expect(alAbrirLaApp({ instalada: false, ruta: "/", yaLlevada: false })).toEqual({
+      ir: null,
+      marcar: false,
+    });
+  });
+
+  it("el menú no queda debajo de la hora ni de la cámara del teléfono", () => {
+    const estilos = readFileSync(path.join(raiz, "src/app/globals.css"), "utf8");
+    for (const lado of ["top", "right", "bottom", "left"])
+      expect(estilos).toContain(`env(safe-area-inset-${lado})`);
+    const marco = readFileSync(path.join(raiz, "src/app/layout.tsx"), "utf8");
+    expect(marco).toContain('viewportFit: "cover"');
   });
 });

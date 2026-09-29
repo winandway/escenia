@@ -24,6 +24,20 @@ la barra del navegador. No pasa por la tienda de Apple ni de Google.
 Al mantener el dedo sobre el ícono (Android) salen los atajos: Calendario,
 Nuevo video y Estación.
 
+## Abre en el calendario
+
+En el teléfono lo que más se usa es el calendario, así que la app instalada
+abre ahí. Las instalaciones nuevas lo traen en el manifiesto. Las que ya
+estaban instaladas abren en la portada y la app las lleva al calendario sola,
+una vez por apertura: tocar «Guiones» después se queda en Guiones.
+
+## El menú y la franja de arriba del teléfono
+
+La app instalada ocupa toda la pantalla, también la franja de la hora y la
+cámara. El cuerpo de la página lleva el margen de esa franja
+(`env(safe-area-inset-*)` en `src/app/globals.css`). El 29 sep 2026 faltaba y
+el menú quedaba tapado por la hora en el iPhone de Richard.
+
 ## Qué hace sin internet
 
 Muestra una pantalla propia, «Sin conexión», en vez del error del navegador.

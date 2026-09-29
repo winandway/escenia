@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { INICIO_DE_LA_APP } from "@compartido/app";
 
 /** Lo que el teléfono necesita para instalar el panel como una app (C-APP-1). */
 export default function manifest(): MetadataRoute.Manifest {
@@ -8,7 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Escenia",
     description: "Motor de videos de Windoce: guiones, producción y calendario de publicaciones.",
     lang: "es",
-    start_url: "/",
+    // En el teléfono lo que más se usa es el calendario: la app abre ahí.
+    start_url: INICIO_DE_LA_APP,
     scope: "/",
     display: "standalone",
     background_color: "#0b0f19",
