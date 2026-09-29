@@ -4,7 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { CampoClave } from "@/componentes/CampoClave";
-import { claveBorrador, guardarBorrador, leerBorrador, useBorrador } from "@/componentes/useBorrador";
+import {
+  claveBorrador,
+  guardarBorrador,
+  leerBorrador,
+  rellenarFormulario,
+  useBorrador,
+} from "@/componentes/useBorrador";
 
 function Formulario() {
   const { ref, recuperado, empezarDeNuevo, descartar } = useBorrador("prueba");
@@ -78,5 +84,16 @@ describe("CampoClave", () => {
     await usuario.click(screen.getByLabelText("Ver la contraseña"));
     expect(campo.type).toBe("text");
     expect(screen.getByLabelText("Ocultar la contraseña")).toBeInTheDocument();
+  });
+
+  it("no guarda ni devuelve los campos internos del framework ($ACTION_…)", () => {
+    guardarBorrador("interno", { titulo: "Mi video", $ACTION_KEY: "k123", "$ACTION_1:0": "{}" });
+    expect(leerBorrador("interno")).toEqual({ titulo: "Mi video" });
+
+    const form = document.createElement("form");
+    form.innerHTML = '<input name="titulo" /><input type="hidden" name="$ACTION_KEY" value="nuevo" />';
+    rellenarFormulario(form, { titulo: "Recuperado", $ACTION_KEY: "viejo" });
+    expect((form.elements.namedItem("titulo") as HTMLInputElement).value).toBe("Recuperado");
+    expect((form.elements.namedItem("$ACTION_KEY") as HTMLInputElement).value).toBe("nuevo");
   });
 });

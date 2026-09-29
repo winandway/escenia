@@ -8,6 +8,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const PREFIJO = "escenia:borrador:";
 const ESPERA_MS = 500;
 const CAMPOS_SENSIBLES = /clave|password|pin|cvv|tarjeta|token|secreto/i;
+// Campos ocultos que el propio framework mete en el formulario («$ACTION_…»):
+// no son de la persona y guardarlos rompería el envío con un valor viejo.
+const CAMPOS_INTERNOS = /^\$/;
 
 export type Borrador = Record<string, string>;
 
@@ -30,7 +33,7 @@ export function leerBorrador(formulario: string): Borrador | null {
 export function guardarBorrador(formulario: string, datos: Borrador): void {
   const limpio: Borrador = {};
   for (const [k, v] of Object.entries(datos)) {
-    if (CAMPOS_SENSIBLES.test(k)) continue;
+    if (CAMPOS_SENSIBLES.test(k) || CAMPOS_INTERNOS.test(k)) continue;
     if (typeof v === "string" && v !== "") limpio[k] = v;
   }
   try {
@@ -61,6 +64,7 @@ export function datosDelFormulario(form: HTMLFormElement): Borrador {
 
 export function rellenarFormulario(form: HTMLFormElement, datos: Borrador): void {
   for (const [k, v] of Object.entries(datos)) {
+    if (CAMPOS_INTERNOS.test(k)) continue;
     const campo = form.elements.namedItem(k);
     if (!campo || campo instanceof RadioNodeList) continue;
     const el = campo as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;

@@ -22,6 +22,14 @@ export async function GET() {
     piezas.anthropic = env.ANTHROPIC_API_KEY ? "ok" : "apagado";
     piezas.turnstile = env.TURNSTILE_SECRET_KEY ? "ok" : "apagado";
     try {
+      // La tabla del calendario existe (si falta, no se aplicó la migración).
+      await db.uno("SELECT COUNT(*) AS n FROM calendario");
+      piezas.calendario = "ok";
+    } catch (e) {
+      piezas.calendario = "error";
+      detalle = detalle || (e instanceof Error ? e.message : String(e));
+    }
+    try {
       const latido = await latidoEstacion(db);
       piezas.estacion = estacionViva(latido) ? "ok" : "apagado";
     } catch {

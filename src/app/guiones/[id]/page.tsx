@@ -10,7 +10,9 @@ import {
   trabajosDeGuion,
   videosDeGuion,
 } from "@/lib/consultas";
+import { entradasDeGuion } from "@/lib/calendario";
 import { contexto } from "@/lib/entorno";
+import { cuando, NOMBRE_PLATAFORMA } from "@compartido/calendario";
 import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ, etiquetasParaYouTube } from "@compartido/guion";
 import { buscarTematica } from "@compartido/tematicas";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
@@ -38,13 +40,20 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
   if (!guion) notFound();
 
   const contenido = esquemaGuion.parse(JSON.parse(guion.contenido));
-  const [producto, trabajos, renders, archivos, videos] = await Promise.all([
+  const [producto, trabajos, renders, archivos, videos, agenda] = await Promise.all([
     guion.producto_id ? productoPorId(db, guion.producto_id) : null,
     trabajosDeGuion(db, numero),
     rendersDeGuion(db, numero),
     archivosDeGuion(db, numero),
     videosDeGuion(db, numero),
+    entradasDeGuion(db, numero).catch(() => []),
   ]);
+  const sale = (pieza: "largo" | "short", indice: number) => {
+    const fechas = agenda
+      .filter((e) => e.pieza === pieza && e.indice === indice)
+      .map((e) => `${NOMBRE_PLATAFORMA[e.plataforma]}: ${cuando(e.fecha, e.hora)}`);
+    return fechas.length ? `Sale en ${fechas.join(" · ")}` : "Sin fecha todavía";
+  };
   const tematica = buscarTematica(guion.tematica_id);
   const trabajo = trabajos[0];
   const voz = archivos.find((a) => a.tipo === "voz");
@@ -131,6 +140,9 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
         <section className="tarjeta mb-4 text-sm">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-lg font-semibold">Para YouTube</h2>
+            <Link href="/calendario" className="boton-suave px-3 py-1 text-xs">
+              Agendar en el calendario
+            </Link>
             <form action={regenerarPublicacion} className="ml-auto">
               <input type="hidden" name="guion_id" value={guion.id} />
               <button type="submit" className="boton-suave px-3 py-1 text-xs">
@@ -151,6 +163,7 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
                   <CopiarTexto texto={contenido.publicacion.titulo} />
                 </div>
                 <p className="mt-1 text-neutral-100">{contenido.publicacion.titulo}</p>
+                <p className="mt-1 text-xs text-neutral-500">{sale("largo", 0)}</p>
               </div>
               {contenido.publicacion.shorts.map((s) => (
                 <div key={s.indice}>
@@ -159,6 +172,7 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
                     <CopiarTexto texto={s.titulo} />
                   </div>
                   <p className="mt-1 text-neutral-100">{s.titulo}</p>
+                  <p className="mt-1 text-xs text-neutral-500">{sale("short", s.indice)}</p>
                 </div>
               ))}
               <div>

@@ -122,6 +122,39 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** el conversor a letras sigue delante de la voz; solo cambió
   lo que se muestra. El prompt no debe volver a pedir «números en letras».
 
+## C-CALENDARIO-1 — Dos videos no salen a la misma hora ni demasiado juntos (29 sep 2026)
+
+- **Qué pasaba:** con producción para publicar a diario, Richard programaba en
+  YouTube Studio sin ver qué había ya ese día: dos Shorts el mismo día sin
+  saber a qué hora, y riesgo de pisar un video con otro.
+- **Qué se hizo:** calendario de publicaciones en el panel (`/calendario`,
+  guía en [CALENDARIO.md](CALENDARIO.md)). Toda escritura pasa por `agendar`
+  (`src/lib/calendario.ts`), que llama a `revisarHueco`
+  (`compartido/calendario.ts`): misma hora, separación mínima, máximo por día,
+  Short antes que su largo y fechas pasadas. Además la base tiene el índice
+  único `calendario_hueco` (canal, plataforma, fecha, hora): aunque el código
+  fallara, no entran dos a la misma hora.
+- **Cómo se comprueba:** `pruebas/calendario.test.ts` (comprobada en rojo el 29
+  sep 2026 rompiendo la revisión de la misma hora: fallaron 2 pruebas); el
+  canario dice `calendario: ok`.
+- **Qué NO tocar:** no escribir en la tabla `calendario` sin pasar por
+  `agendar`; no quitar el índice `calendario_hueco`; las horas se guardan en el
+  reloj de Richard, no en UTC.
+
+## C-BORRADOR-2 — El borrador no guarda los campos internos del formulario (29 sep 2026)
+
+- **Qué se rompía:** `useBorrador` guardaba también los campos ocultos que el
+  framework mete en los formularios (`$ACTION_KEY`, `$ACTION_…`) y los
+  devolvía al volver. Con un valor viejo, el envío del formulario podía fallar
+  después de una publicación nueva. Afectaba a todos los formularios.
+- **Qué se hizo:** `guardarBorrador` y `rellenarFormulario` saltan todo campo
+  cuyo nombre empieza por `$`.
+- **Cómo se comprueba:** `pruebas/borrador.test.tsx` («no guarda ni devuelve
+  los campos internos…»), comprobada en rojo con el código anterior.
+- **Qué NO tocar:** los formularios nuevos siguen usando `useBorrador`; si el
+  servidor rechaza, lo escrito vuelve con `rellenarFormulario` (ver
+  `FormularioManual.tsx`).
+
 ## C-MUSICA-1 — La música de fondo nunca tapa la voz (26 sep 2026)
 
 - **Qué se rompía / cómo se veía:** al meter música de fondo, el riesgo es que

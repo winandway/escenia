@@ -77,3 +77,6 @@ estacion/bin/
 
 # Foto de Richard para el avatar (nunca al repositorio)
 avatar/
+
+# Videos bajados de internet para consulta (nunca al repositorio)
+descargas/

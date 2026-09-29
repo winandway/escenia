@@ -7,6 +7,8 @@
 - Contrato de YaDominios Cloud (sin red): [docs/CONTRATO-YADOMINIOS.md](docs/CONTRATO-YADOMINIOS.md).
 - Fotos reales de internet (Serper): [docs/FOTOS-INTERNET.md](docs/FOTOS-INTERNET.md).
 - Avatar parlante (plan): [docs/AVATAR.md](docs/AVATAR.md).
+- Calendario de publicaciones: [docs/CALENDARIO.md](docs/CALENDARIO.md).
+- Bajar un video de YouTube: [docs/DESCARGAR-VIDEOS.md](docs/DESCARGAR-VIDEOS.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro

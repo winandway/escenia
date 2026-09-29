@@ -7,6 +7,7 @@ const rutas = [
   { ruta: "/datos/salud", esperado: [200] },
   { ruta: "/", esperado: [307, 308], redirigeA: "/entrar" },
   { ruta: "/guiones/1", esperado: [307, 308], redirigeA: "/entrar" },
+  { ruta: "/calendario", esperado: [307, 308], redirigeA: "/entrar" },
   { ruta: "/datos/estacion/siguiente", metodo: "POST", esperado: [401] },
 ];
 
