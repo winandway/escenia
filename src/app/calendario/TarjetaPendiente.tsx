@@ -12,6 +12,7 @@ import {
 import { NOMBRE_CANAL } from "@compartido/tematicas";
 import { agendarPieza, quitarDeLaLista, type EstadoForm } from "./acciones";
 import { MenuTresPuntos } from "./MenuTresPuntos";
+import { Miniatura } from "./Miniatura";
 import { SelectorHueco } from "./SelectorHueco";
 
 type Props = {
@@ -21,9 +22,10 @@ type Props = {
   entradas: EntradaCalendario[];
   reglas: ReglasCalendario;
   hoy: Momento;
+  miniatura: string | null;
 };
 
-export function TarjetaPendiente({ pieza, plataforma, hueco, entradas, reglas, hoy }: Props) {
+export function TarjetaPendiente({ pieza, plataforma, hueco, entradas, reglas, hoy, miniatura }: Props) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(agendarPieza, {
     error: "",
     ok: "",
@@ -55,7 +57,10 @@ export function TarjetaPendiente({ pieza, plataforma, hueco, entradas, reglas, h
           />
         </div>
       </div>
-      <p className="mt-2 font-medium text-neutral-100">{pieza.titulo}</p>
+      <div className="mt-2 flex items-start gap-3">
+        <Miniatura principal={null} respaldo={miniatura} alt="" className="w-24 shrink-0" />
+        <p className="min-w-0 font-medium text-neutral-100">{pieza.titulo}</p>
+      </div>
 
       {hueco ? (
         <form action={accion} className="mt-3">

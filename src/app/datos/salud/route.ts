@@ -22,8 +22,8 @@ export async function GET() {
     piezas.anthropic = env.ANTHROPIC_API_KEY ? "ok" : "apagado";
     piezas.turnstile = env.TURNSTILE_SECRET_KEY ? "ok" : "apagado";
     try {
-      // La tabla del calendario existe (si falta, no se aplicó la migración).
-      await db.uno("SELECT COUNT(*) AS n FROM calendario");
+      // La tabla del calendario y su columna `enlace` existen (si faltan, no se aplicó la migración).
+      await db.uno("SELECT COUNT(enlace) AS n FROM calendario");
       piezas.calendario = "ok";
     } catch (e) {
       piezas.calendario = "error";

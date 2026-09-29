@@ -37,6 +37,8 @@ export type EntradaCalendario = {
   hora: string;
   estado: EstadoCalendario;
   nota: string;
+  /** Enlace del video ya subido a la plataforma; vacío = todavía no se pegó. */
+  enlace: string;
 };
 
 export const ZONAS = [
@@ -399,7 +401,86 @@ export function repartir(
         hora: hueco.hora,
         estado: "agendado",
         nota: "",
+        enlace: "",
       });
     return { ...p, hueco };
   });
+}
+
+// ---------------------------------------------------------------------------
+// El enlace del video publicado y su miniatura.
+
+const DOMINIOS: Record<Plataforma, string[]> = {
+  youtube: ["youtube.com", "youtu.be"],
+  facebook: ["facebook.com", "fb.watch", "fb.com"],
+  instagram: ["instagram.com"],
+  tiktok: ["tiktok.com"],
+};
+const ID_YOUTUBE = /^[A-Za-z0-9_-]{11}$/;
+
+function urlSegura(enlace: string): URL | null {
+  try {
+    const u = new URL(enlace.trim());
+    return u.protocol === "https:" ? u : null;
+  } catch {
+    return null;
+  }
+}
+
+const esDe = (host: string, dominio: string) => host === dominio || host.endsWith(`.${dominio}`);
+
+/** El código del video de YouTube en cualquiera de sus enlaces (ver, Shorts, corto, Studio); null si no es de YouTube. */
+export function idDeYouTube(enlace: string): string | null {
+  const u = urlSegura(enlace);
+  if (!u) return null;
+  const host = u.hostname.toLowerCase();
+  const partes = u.pathname.split("/").filter(Boolean);
+  let id: string | undefined;
+  if (esDe(host, "youtu.be")) id = partes[0];
+  else if (esDe(host, "youtube.com")) {
+    if (partes[0] === "watch") id = u.searchParams.get("v") ?? undefined;
+    else if (["shorts", "live", "embed", "v", "video"].includes(partes[0] ?? "")) id = partes[1];
+  }
+  return id && ID_YOUTUBE.test(id) ? id : null;
+}
+
+/** La miniatura que YouTube muestra para ese video (16:9, 320 px); null si el enlace no es de YouTube. */
+export function miniaturaDeEnlace(enlace: string): string | null {
+  const id = idDeYouTube(enlace);
+  return id ? `https://i.ytimg.com/vi/${id}/mqdefault.jpg` : null;
+}
+
+/**
+ * Revisa el enlace pegado: tiene que ser https y de la plataforma de esa
+ * publicación. Los de YouTube se guardan en su forma corta y limpia.
+ */
+export function revisarEnlace(
+  enlace: string,
+  plataforma: Plataforma,
+  pieza: Pieza,
+): { ok: true; enlace: string } | { ok: false; error: string } {
+  const texto = enlace.trim();
+  if (texto === "") return { ok: true, enlace: "" };
+  if (texto.length > 300) return { ok: false, error: "Ese enlace es demasiado largo." };
+  const u = urlSegura(texto);
+  if (!u) return { ok: false, error: "Pega el enlace completo, empezando por https://" };
+  const host = u.hostname.toLowerCase();
+  if (!DOMINIOS[plataforma].some((d) => esDe(host, d)))
+    return {
+      ok: false,
+      error: `Ese enlace no es de ${NOMBRE_PLATAFORMA[plataforma]}. Esta publicación sale en ${NOMBRE_PLATAFORMA[plataforma]}.`,
+    };
+  if (plataforma === "youtube") {
+    const id = idDeYouTube(texto);
+    if (!id)
+      return {
+        ok: false,
+        error: "No encuentro el video en ese enlace de YouTube. Copia el enlace del video, no el del canal.",
+      };
+    return {
+      ok: true,
+      enlace: pieza === "short" ? `https://www.youtube.com/shorts/${id}` : `https://youtu.be/${id}`,
+    };
+  }
+  return { ok: true, enlace: u.toString() };
 }

@@ -23,6 +23,23 @@ hacía falta saber a qué hora sale cada video y que dos no salgan juntos.
   ocupan su hueco igual.
 - **En la página del guion** («Para YouTube») sale cuándo sale cada pieza.
 
+## El enlace y la miniatura
+
+- En la ficha de cada publicación hay una casilla **«Enlace del video»**. Se
+  pega el enlace del video ya subido (sirve el de YouTube Studio, el de
+  compartir o el de la página del video) y el calendario muestra **la
+  miniatura que tiene en YouTube**, en la ficha y en la etiqueta del día.
+- El enlace se guarda limpio (`https://youtu.be/…` o
+  `https://www.youtube.com/shorts/…`) y queda el botón «Abrir en YouTube».
+- Al guardar un enlace, lo que estaba «Agendado» pasa a «Programado».
+- Solo se aceptan enlaces `https` de la plataforma de esa publicación.
+- Mientras no haya enlace (y en Facebook, Instagram y TikTok, que no dan la
+  miniatura por enlace) se muestra **la miniatura que armó Escenia** para ese
+  video.
+- En una base que ya existía, la columna se agregó a mano una sola vez:
+  `ALTER TABLE calendario ADD COLUMN enlace TEXT NOT NULL DEFAULT ''` (hecho
+  en vivo el 29 sep 2026). El canario la vigila.
+
 ## Las reglas (se cambian en la misma pantalla)
 
 | Regla                      | Valor de arranque        |

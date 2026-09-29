@@ -141,6 +141,21 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   `agendar`; no quitar el índice `calendario_hueco`; las horas se guardan en el
   reloj de Richard, no en UTC.
 
+## C-APP-1 — El panel se instala en el teléfono y no guarda datos en él (29 sep 2026)
+
+- **Qué se pidió:** Richard quería el panel instalado en el teléfono, y ver
+  cada publicación del calendario con su miniatura.
+- **Qué se hizo:** manifiesto, íconos, servicio mínimo y pantalla «Sin
+  conexión» (guía en [APP.md](APP.md)). El proxy deja pasar sin sesión solo
+  `RUTAS_DE_LA_APP` y `/iconos/`. La política de seguridad suma
+  `https://i.ytimg.com` (miniaturas), `worker-src` y `manifest-src`.
+- **Cómo se comprueba:** `pruebas/app-instalable.test.ts` (comprobada en rojo
+  quitando las rutas de la app del proxy) y `node scripts/probar-app.mjs
+https://escenia.sitios.dev` en un navegador de teléfono real.
+- **Qué NO tocar:** el servicio (`public/sw.js`) no debe guardar pantallas ni
+  datos del panel; las pantallas se piden siempre a la red. Al cambiar el
+  servicio se sube `VERSION`. No abrir más rutas sin sesión.
+
 ## C-BORRADOR-2 — El borrador no guarda los campos internos del formulario (29 sep 2026)
 
 - **Qué se rompía:** `useBorrador` guardaba también los campos ocultos que el
@@ -148,7 +163,8 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   devolvía al volver. Con un valor viejo, el envío del formulario podía fallar
   después de una publicación nueva. Afectaba a todos los formularios.
 - **Qué se hizo:** `guardarBorrador` y `rellenarFormulario` saltan todo campo
-  cuyo nombre empieza por `$`.
+  cuyo nombre empieza por `$`. Los campos ocultos (`type="hidden"`)
+  tampoco se guardan ni se pisan al volver: los pone el programa, no la persona.
 - **Cómo se comprueba:** `pruebas/borrador.test.tsx` («no guarda ni devuelve
   los campos internos…»), comprobada en rojo con el código anterior.
 - **Qué NO tocar:** los formularios nuevos siguen usando `useBorrador`; si el

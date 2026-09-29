@@ -7,9 +7,12 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://images.pexels.com",
+  // i.ytimg.com: las miniaturas de YouTube del calendario de publicaciones.
+  "img-src 'self' data: blob: https://images.pexels.com https://i.ytimg.com",
   "media-src 'self' blob:",
   "connect-src 'self'",
+  "worker-src 'self'",
+  "manifest-src 'self'",
   "frame-src https://challenges.cloudflare.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",

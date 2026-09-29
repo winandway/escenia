@@ -57,7 +57,11 @@ export function datosDelFormulario(form: HTMLFormElement): Borrador {
   const datos: Borrador = {};
   const fd = new FormData(form);
   fd.forEach((v, k) => {
-    if (typeof v === "string") datos[k] = v;
+    if (typeof v !== "string") return;
+    // Los campos ocultos los pone el programa, no la persona: no son borrador.
+    const campo = form.elements.namedItem(k);
+    if (campo instanceof HTMLInputElement && campo.type === "hidden") return;
+    datos[k] = v;
   });
   return datos;
 }
@@ -69,7 +73,7 @@ export function rellenarFormulario(form: HTMLFormElement, datos: Borrador): void
     if (!campo || campo instanceof RadioNodeList) continue;
     const el = campo as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
     if (!("value" in el)) continue;
-    if (el instanceof HTMLInputElement && (el.type === "password" || el.type === "file")) continue;
+    if (el instanceof HTMLInputElement && ["password", "file", "hidden"].includes(el.type)) continue;
     if (el instanceof HTMLInputElement && (el.type === "checkbox" || el.type === "radio")) {
       el.checked = v === el.value || v === "on";
       continue;

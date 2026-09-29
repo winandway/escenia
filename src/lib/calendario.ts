@@ -16,6 +16,7 @@ import {
   PLATAFORMAS,
   proximoHueco,
   REGLAS_POR_DEFECTO,
+  revisarEnlace,
   revisarHueco,
   sumarDias,
   ZONAS,
@@ -32,7 +33,7 @@ import { buscarTematica } from "@compartido/tematicas";
 import { ajuste, guardarAjuste } from "./consultas";
 import type { BaseDatos } from "./db";
 
-const COLUMNAS = "id, guion_id, pieza, indice, titulo, canal, plataforma, fecha, hora, estado, nota";
+const COLUMNAS = "id, guion_id, pieza, indice, titulo, canal, plataforma, fecha, hora, estado, nota, enlace";
 
 export async function reglasCalendario(db: BaseDatos): Promise<ReglasCalendario> {
   const [shorts, largos, separacion, zona] = await Promise.all([
@@ -140,6 +141,7 @@ export const esquemaAgendar = z.object({
     .refine((h): h is string => h !== null, "Elige la hora (por ejemplo 12:00 o 7 pm)."),
   estado: z.enum(ESTADOS_CALENDARIO).default("agendado"),
   nota: z.string().trim().max(300).default(""),
+  enlace: z.string().trim().max(300).default(""),
 });
 
 export type ResultadoAgendar =
@@ -164,6 +166,8 @@ export async function agendar(
   const parseo = esquemaAgendar.safeParse(crudo);
   if (!parseo.success) return { ok: false, error: parseo.error.issues[0]?.message ?? "Revisa los datos." };
   const d = parseo.data;
+  const enlace = revisarEnlace(d.enlace, d.plataforma, d.pieza);
+  if (!enlace.ok) return { ok: false, error: enlace.error };
   const reglas = await reglasCalendario(db);
   const hoy = hoyEn(reglas.zona, ahora);
   const yaSalio = d.estado === "publicado";
@@ -213,15 +217,27 @@ export async function agendar(
   try {
     if (previa) {
       await db.ejecutar(
-        `UPDATE calendario SET titulo = ?, canal = ?, fecha = ?, hora = ?, estado = ?, nota = ?, actualizado_en = datetime('now') WHERE id = ?`,
-        [d.titulo, d.canal, d.fecha, d.hora, d.estado, d.nota, previa.id],
+        `UPDATE calendario SET titulo = ?, canal = ?, fecha = ?, hora = ?, estado = ?, nota = ?, enlace = ?, actualizado_en = datetime('now') WHERE id = ?`,
+        [d.titulo, d.canal, d.fecha, d.hora, d.estado, d.nota, enlace.enlace || previa.enlace, previa.id],
       );
       return { ok: true, id: previa.id, fecha: d.fecha, hora: d.hora };
     }
     const r = await db.ejecutar(
-      `INSERT INTO calendario (guion_id, pieza, indice, titulo, canal, plataforma, fecha, hora, estado, nota)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [d.guion_id, d.pieza, d.indice, d.titulo, d.canal, d.plataforma, d.fecha, d.hora, d.estado, d.nota],
+      `INSERT INTO calendario (guion_id, pieza, indice, titulo, canal, plataforma, fecha, hora, estado, nota, enlace)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        d.guion_id,
+        d.pieza,
+        d.indice,
+        d.titulo,
+        d.canal,
+        d.plataforma,
+        d.fecha,
+        d.hora,
+        d.estado,
+        d.nota,
+        enlace.enlace,
+      ],
     );
     return { ok: true, id: r.ultimoId ?? 0, fecha: d.fecha, hora: d.hora };
   } catch (e) {
@@ -373,4 +389,40 @@ export async function agendarEnProximoHueco(
       error: "No hay huecos libres en los próximos cuatro meses. Agrega más horas en las reglas.",
     };
   return agendar(db, { ...pieza, ...hueco }, ahora);
+}
+
+/**
+ * Guarda el enlace del video ya subido (o lo borra si llega vacío). Con enlace,
+ * lo que estaba solo «agendado» pasa a «programado»: si hay enlace, ya está subido.
+ */
+export async function guardarEnlace(
+  db: BaseDatos,
+  id: number,
+  crudo: string,
+): Promise<{ ok: true; enlace: string; estado: EntradaCalendario["estado"] } | { ok: false; error: string }> {
+  const previa = await entradaPorId(db, id);
+  if (!previa || previa.estado === "descartado")
+    return { ok: false, error: "Esa publicación ya no está en el calendario." };
+  const r = revisarEnlace(crudo, previa.plataforma, previa.pieza);
+  if (!r.ok) return r;
+  const estado = r.enlace && previa.estado === "agendado" ? "programado" : previa.estado;
+  await db.ejecutar(
+    `UPDATE calendario SET enlace = ?, estado = ?, actualizado_en = datetime('now') WHERE id = ?`,
+    [r.enlace, estado, id],
+  );
+  return { ok: true, enlace: r.enlace, estado };
+}
+
+/** La miniatura que Escenia armó para cada guion (la más nueva), como ruta del panel. */
+export async function miniaturasDeGuiones(db: BaseDatos, ids: number[]): Promise<Map<number, string>> {
+  const unicos = [...new Set(ids)].filter((n) => Number.isInteger(n) && n > 0).slice(0, 90);
+  const mapa = new Map<number, string>();
+  if (unicos.length === 0) return mapa;
+  const filas = await db.todos<{ guion_id: number; clave: string }>(
+    `SELECT guion_id, clave FROM archivos
+     WHERE tipo = 'miniatura' AND guion_id IN (${unicos.map(() => "?").join(", ")}) ORDER BY id DESC`,
+    unicos,
+  );
+  for (const f of filas) if (!mapa.has(f.guion_id)) mapa.set(f.guion_id, `/datos/archivos/${f.clave}`);
+  return mapa;
 }

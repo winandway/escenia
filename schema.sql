@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS calendario (
   hora TEXT NOT NULL DEFAULT '',
   estado TEXT NOT NULL DEFAULT 'agendado' CHECK (estado IN ('agendado','programado','publicado','descartado')),
   nota TEXT NOT NULL DEFAULT '',
+  enlace TEXT NOT NULL DEFAULT '',     -- el video ya subido; de ahí sale la miniatura
   creado_en TEXT NOT NULL DEFAULT (datetime('now')),
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );

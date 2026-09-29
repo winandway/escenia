@@ -8,6 +8,11 @@ const rutas = [
   { ruta: "/", esperado: [307, 308], redirigeA: "/entrar" },
   { ruta: "/guiones/1", esperado: [307, 308], redirigeA: "/entrar" },
   { ruta: "/calendario", esperado: [307, 308], redirigeA: "/entrar" },
+  { ruta: "/manifest.webmanifest", esperado: [200] },
+  { ruta: "/sw.js", esperado: [200] },
+  { ruta: "/sin-conexion", esperado: [200] },
+  { ruta: "/iconos/icono-192.png", esperado: [200] },
+  { ruta: "/iconos/icono-512.png", esperado: [200] },
   { ruta: "/datos/estacion/siguiente", metodo: "POST", esperado: [401] },
 ];
 

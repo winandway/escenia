@@ -6,6 +6,7 @@ import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { CampoClave } from "@/componentes/CampoClave";
 import {
   claveBorrador,
+  datosDelFormulario,
   guardarBorrador,
   leerBorrador,
   rellenarFormulario,
@@ -95,5 +96,14 @@ describe("CampoClave", () => {
     rellenarFormulario(form, { titulo: "Recuperado", $ACTION_KEY: "viejo" });
     expect((form.elements.namedItem("titulo") as HTMLInputElement).value).toBe("Recuperado");
     expect((form.elements.namedItem("$ACTION_KEY") as HTMLInputElement).value).toBe("nuevo");
+  });
+
+  it("los campos ocultos no son borrador: ni se guardan ni se pisan al volver", () => {
+    const form = document.createElement("form");
+    form.innerHTML = '<input type="hidden" name="id" value="7" /><input name="enlace" value="escrito" />';
+    expect(datosDelFormulario(form)).toEqual({ enlace: "escrito" });
+    rellenarFormulario(form, { id: "99", enlace: "recuperado" });
+    expect((form.elements.namedItem("id") as HTMLInputElement).value).toBe("7");
+    expect((form.elements.namedItem("enlace") as HTMLInputElement).value).toBe("recuperado");
   });
 });

@@ -119,6 +119,21 @@ export function FormularioManual({ plataforma, hoy }: { plataforma: Plataforma; 
           </select>
         </div>
       </div>
+      <div>
+        <label htmlFor="manual-enlace" className="etiqueta">
+          Enlace del video (si ya está subido)
+        </label>
+        <input
+          id="manual-enlace"
+          name="enlace"
+          type="url"
+          inputMode="url"
+          maxLength={300}
+          defaultValue={v.enlace ?? ""}
+          className="campo"
+          placeholder="Enlace del video, empezando por https://"
+        />
+      </div>
       {estado.error && (
         <p role="alert" className="rounded-md border border-red-900 bg-red-950/50 p-3 text-red-200">
           {estado.error}

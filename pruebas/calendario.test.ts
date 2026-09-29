@@ -45,6 +45,7 @@ const entrada = (p: Partial<EntradaCalendario>): EntradaCalendario => ({
   hora: "12:00",
   estado: "agendado",
   nota: "",
+  enlace: "",
   ...p,
 });
 const pedido = { canal: "caprichoso-tv", plataforma: "youtube", pieza: "short" } as const;
@@ -421,5 +422,114 @@ describe("calendario: frases", () => {
     const { conPunto } = await import("@compartido/calendario");
     expect(conPunto("Agendado: jue 1 oct · 7:00 p. m.")).toBe("Agendado: jue 1 oct · 7:00 p. m.");
     expect(conPunto("Reglas guardadas")).toBe("Reglas guardadas.");
+  });
+});
+
+describe("calendario: enlace y miniatura", () => {
+  it("saca el código del video de cualquier enlace de YouTube", async () => {
+    const { idDeYouTube, miniaturaDeEnlace } = await import("@compartido/calendario");
+    const id = "abcDEF12_-3";
+    for (const enlace of [
+      `https://youtu.be/${id}?si=xyz`,
+      `https://www.youtube.com/watch?v=${id}&t=10s`,
+      `https://youtube.com/shorts/${id}`,
+      `https://m.youtube.com/live/${id}`,
+      `https://studio.youtube.com/video/${id}/edit`,
+    ])
+      expect(idDeYouTube(enlace)).toBe(id);
+    expect(idDeYouTube("https://www.youtube.com/@caprichosotv")).toBeNull();
+    expect(idDeYouTube("https://youtu.be/corto")).toBeNull();
+    expect(idDeYouTube(`http://youtu.be/${id}`)).toBeNull();
+    expect(idDeYouTube(`https://noesyoutube.com/watch?v=${id}`)).toBeNull();
+    expect(idDeYouTube("no es un enlace")).toBeNull();
+    expect(miniaturaDeEnlace(`https://youtu.be/${id}`)).toBe(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
+    expect(miniaturaDeEnlace("https://www.tiktok.com/@alguien/video/123")).toBeNull();
+  });
+
+  it("solo acepta enlaces https de la plataforma de esa publicación, y limpia los de YouTube", async () => {
+    const { revisarEnlace } = await import("@compartido/calendario");
+    const id = "abcDEF12_-3";
+    expect(revisarEnlace(`https://studio.youtube.com/video/${id}/edit`, "youtube", "short")).toEqual({
+      ok: true,
+      enlace: `https://www.youtube.com/shorts/${id}`,
+    });
+    expect(revisarEnlace(`https://www.youtube.com/watch?v=${id}&si=abc`, "youtube", "largo")).toEqual({
+      ok: true,
+      enlace: `https://youtu.be/${id}`,
+    });
+    expect(revisarEnlace("  ", "youtube", "largo")).toEqual({ ok: true, enlace: "" });
+    expect(revisarEnlace(`https://youtu.be/${id}`, "facebook", "short")).toEqual({
+      ok: false,
+      error: "Ese enlace no es de Facebook. Esta publicación sale en Facebook.",
+    });
+    expect(revisarEnlace("https://www.facebook.com/reel/1234567890", "facebook", "short")).toEqual({
+      ok: true,
+      enlace: "https://www.facebook.com/reel/1234567890",
+    });
+    expect(revisarEnlace("youtu.be/abc", "youtube", "short")).toEqual({
+      ok: false,
+      error: "Pega el enlace completo, empezando por https://",
+    });
+    expect(revisarEnlace("https://www.youtube.com/@caprichosotv", "youtube", "short").ok).toBe(false);
+    expect(revisarEnlace("javascript:alert(1)", "youtube", "short").ok).toBe(false);
+  });
+
+  it("guarda el enlace, pasa de «agendado» a «programado» y encuentra la miniatura de Escenia", async () => {
+    const { guardarEnlace, miniaturasDeGuiones } = await import("@/lib/calendario");
+    const db = baseEnMemoria();
+    const ya = new Date("2026-10-01T13:00:00Z");
+    const r = await agendar(
+      db,
+      {
+        guion_id: "",
+        pieza: "short",
+        indice: 1,
+        titulo: "Un Short de prueba",
+        canal: "caprichoso-tv",
+        plataforma: "youtube",
+        fecha: "2026-10-01",
+        hora: "12:00",
+      },
+      ya,
+    );
+    if (!r.ok) throw new Error(r.error);
+    expect(await guardarEnlace(db, r.id, "https://www.tiktok.com/@alguien/video/1")).toEqual({
+      ok: false,
+      error: "Ese enlace no es de YouTube. Esta publicación sale en YouTube.",
+    });
+    expect(await guardarEnlace(db, r.id, "https://youtu.be/abcDEF12_-3?si=x")).toEqual({
+      ok: true,
+      enlace: "https://www.youtube.com/shorts/abcDEF12_-3",
+      estado: "programado",
+    });
+    const [fila] = await entradasEntre(db, "2026-10-01", "2026-10-01");
+    expect(fila).toMatchObject({
+      enlace: "https://www.youtube.com/shorts/abcDEF12_-3",
+      estado: "programado",
+    });
+    // Mover la publicación no le borra el enlace.
+    expect((await mover(db, r.id, "2026-10-02", "12:00", ya)).ok).toBe(true);
+    const [movida] = await entradasEntre(db, "2026-10-02", "2026-10-02");
+    expect(movida?.enlace).toBe("https://www.youtube.com/shorts/abcDEF12_-3");
+    expect(await guardarEnlace(db, r.id, "")).toEqual({ ok: true, enlace: "", estado: "programado" });
+    expect(await guardarEnlace(db, 9999, "https://youtu.be/abcDEF12_-3")).toEqual({
+      ok: false,
+      error: "Esa publicación ya no está en el calendario.",
+    });
+
+    await db.ejecutar(`INSERT INTO temas (id, tematica_id, titulo) VALUES (1, 'biografias', 'Un artista')`);
+    await db.ejecutar(
+      `INSERT INTO guiones (id, tema_id, tematica_id, titulo, contenido, estado) VALUES (5, 1, 'biografias', 'Guion', '{}', 'aprobado')`,
+    );
+    await db.ejecutar(
+      `INSERT INTO archivos (guion_id, tipo, clave) VALUES (5, 'miniatura', 'guiones/5/miniatura-1.png')`,
+    );
+    await db.ejecutar(
+      `INSERT INTO archivos (guion_id, tipo, clave) VALUES (5, 'miniatura', 'guiones/5/miniatura-2.png')`,
+    );
+    expect(await miniaturasDeGuiones(db, [5, 5, 7])).toEqual(
+      new Map([[5, "/datos/archivos/guiones/5/miniatura-2.png"]]),
+    );
+    expect(await miniaturasDeGuiones(db, [])).toEqual(new Map());
   });
 });

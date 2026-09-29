@@ -8,6 +8,7 @@ import {
   agendarEnProximoHueco,
   cambiarEstado,
   descartar,
+  guardarEnlace,
   guardarReglas,
   mover,
   pendientes,
@@ -139,4 +140,20 @@ export async function guardarReglasCalendario(_previo: EstadoManual, datos: Form
   if (!r.ok) return { error: r.error, ok: "", valores: c };
   refrescar();
   return { error: "", ok: "Reglas guardadas.", valores: c };
+}
+
+export async function guardarEnlaceEntrada(_previo: EstadoManual, datos: FormData): Promise<EstadoManual> {
+  await exigirSesion();
+  const c = textos(datos);
+  const id = z.coerce.number().int().positive().safeParse(c.id);
+  if (!id.success) return { error: "Esa publicación ya no está en el calendario.", ok: "", valores: c };
+  const { db } = await contexto();
+  const r = await guardarEnlace(db, id.data, c.enlace ?? "");
+  if (!r.ok) return { error: r.error, ok: "", valores: c };
+  refrescar();
+  return {
+    error: "",
+    ok: r.enlace ? "Enlace guardado. Ya se ve su miniatura." : "Enlace quitado.",
+    valores: { enlace: r.enlace },
+  };
 }

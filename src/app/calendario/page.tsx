@@ -2,7 +2,13 @@ import Link from "next/link";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
 import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
-import { descartadas, entradasEntre, pendientes, reglasCalendario } from "@/lib/calendario";
+import {
+  descartadas,
+  entradasEntre,
+  miniaturasDeGuiones,
+  pendientes,
+  reglasCalendario,
+} from "@/lib/calendario";
 import { contexto } from "@/lib/entorno";
 import {
   CANALES_CALENDARIO,
@@ -11,6 +17,7 @@ import {
   hora12,
   hoyEn,
   lunesDe,
+  miniaturaDeEnlace,
   NOMBRE_ESTADO,
   NOMBRE_PLATAFORMA,
   PLATAFORMAS,
@@ -22,9 +29,11 @@ import {
 import { NOMBRE_CANAL } from "@compartido/tematicas";
 import { marcarEstado, quitarEntrada } from "./acciones";
 import { BotonAgendarTodas } from "./BotonAgendarTodas";
+import { FormularioEnlace } from "./FormularioEnlace";
 import { FormularioManual } from "./FormularioManual";
 import { FormularioReglas } from "./FormularioReglas";
 import { MenuTresPuntos } from "./MenuTresPuntos";
+import { Miniatura } from "./Miniatura";
 import { SelectorHueco } from "./SelectorHueco";
 import { TarjetaPendiente } from "./TarjetaPendiente";
 
@@ -75,6 +84,11 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
   const seleccion = elegida ? [...visibles, ...futuras].find((e) => e.id === elegida) : undefined;
   const sinHora = enPantalla.filter((e) => e.hora === "");
   const dias = Array.from({ length: 28 }, (_, i) => sumarDias(inicio, i));
+  const propias = await miniaturasDeGuiones(
+    db,
+    [...enPantalla, ...plan, ...(seleccion ? [seleccion] : [])].map((e) => e.guion_id ?? 0),
+  );
+  const respaldo = (guionId: number | null) => (guionId ? (propias.get(guionId) ?? null) : null);
 
   const enlace = (cambios: Record<string, string | number | null>) => {
     const q = new URLSearchParams();
@@ -149,6 +163,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                   entradas={futuras}
                   reglas={reglas}
                   hoy={hoy}
+                  miniatura={respaldo(p.guion_id)}
                 />
               ))}
             </ul>
@@ -209,6 +224,12 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                 </div>
                 <p className="mt-2 text-base font-medium text-neutral-100">{seleccion.titulo}</p>
                 <p className="mt-1 text-neutral-300">Sale: {cuando(seleccion.fecha, seleccion.hora)}</p>
+                <Miniatura
+                  principal={miniaturaDeEnlace(seleccion.enlace)}
+                  respaldo={respaldo(seleccion.guion_id)}
+                  alt={`Miniatura de «${seleccion.titulo}»`}
+                  className="mt-3 w-full max-w-xs"
+                />
               </div>
               <div className="ml-auto flex items-center gap-1">
                 <Link href={enlace({ entrada: null })} className="boton-suave px-3 py-1 text-xs">
@@ -229,6 +250,16 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <CopiarTexto texto={seleccion.titulo} etiqueta="Copiar título" />
+              {seleccion.enlace && (
+                <a
+                  href={seleccion.enlace}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="boton-suave px-3 py-1 text-xs"
+                >
+                  Abrir en {NOMBRE_PLATAFORMA[seleccion.plataforma]} ↗
+                </a>
+              )}
               {seleccion.estado !== "programado" && (
                 <form action={marcarEstado}>
                   <input type="hidden" name="id" value={seleccion.id} />
@@ -264,6 +295,14 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                   Ver el guion y sus textos →
                 </Link>
               )}
+            </div>
+            <div className="mt-4 border-t border-neutral-800 pt-3">
+              <FormularioEnlace
+                key={seleccion.id}
+                id={seleccion.id}
+                enlace={seleccion.enlace}
+                plataforma={seleccion.plataforma}
+              />
             </div>
             <div className="mt-4 border-t border-neutral-800 pt-3">
               <h3 className="mb-2 font-medium">
@@ -320,13 +359,23 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                         e.id === elegida ? "ring-2 ring-amber-400" : ""
                       }`}
                     >
-                      <span className="font-semibold">{e.hora ? hora12(e.hora) : "Falta la hora"}</span>
-                      <span className="opacity-80">
-                        {" "}
-                        · {nombrePieza(e)}
-                        {canal ? "" : ` · ${NOMBRE_CANAL[e.canal]}`}
+                      <span className="flex items-start gap-2 md:block">
+                        <Miniatura
+                          principal={miniaturaDeEnlace(e.enlace)}
+                          respaldo={respaldo(e.guion_id)}
+                          alt=""
+                          className="w-24 shrink-0 md:mb-1 md:w-full"
+                        />
+                        <span className="block min-w-0">
+                          <span className="font-semibold">{e.hora ? hora12(e.hora) : "Falta la hora"}</span>
+                          <span className="opacity-80">
+                            {" "}
+                            · {nombrePieza(e)}
+                            {canal ? "" : ` · ${NOMBRE_CANAL[e.canal]}`}
+                          </span>
+                          <span className="block truncate">{e.titulo}</span>
+                        </span>
                       </span>
-                      <span className="block truncate">{e.titulo}</span>
                     </Link>
                   ))}
                 </div>

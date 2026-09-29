@@ -5,6 +5,7 @@ import { contexto } from "@/lib/entorno";
 import { gastadoHoy } from "@/lib/presupuesto";
 import { CANALES } from "@compartido/canales";
 import { MODELO_POR_DEFECTO, MODELOS_PERMITIDOS } from "@compartido/modelos";
+import { InstalarApp } from "../_app/InstalarApp";
 import { FormularioAjustes } from "./FormularioAjustes";
 
 export const dynamic = "force-dynamic";
@@ -62,6 +63,10 @@ export default async function PaginaAjustes() {
           texto: `${id} — $${m.entrada}/$${m.salida} por millón de tokens`,
         }))}
       />
+      <section className="tarjeta mt-8 max-w-2xl">
+        <h2 className="mb-3 text-lg font-semibold">Instalar en el teléfono</h2>
+        <InstalarApp />
+      </section>
     </Marco>
   );
 }
