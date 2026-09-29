@@ -142,3 +142,29 @@ CREATE TABLE IF NOT EXISTS videos (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS videos_guion ON videos(guion_id, id);
+
+-- Calendario de publicaciones: cuándo sale cada video en cada canal y plataforma.
+-- guion_id vacío = video hecho fuera de Escenia. fecha y hora van en el reloj de
+-- Richard (zona de las reglas). hora vacía = todavía falta ponerla.
+CREATE TABLE IF NOT EXISTS calendario (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  guion_id INTEGER REFERENCES guiones(id),
+  pieza TEXT NOT NULL CHECK (pieza IN ('largo','short')),
+  indice INTEGER NOT NULL DEFAULT 0,
+  titulo TEXT NOT NULL,
+  canal TEXT NOT NULL CHECK (canal IN ('canal-ia','caprichoso-tv')),
+  plataforma TEXT NOT NULL DEFAULT 'youtube' CHECK (plataforma IN ('youtube','facebook','instagram','tiktok')),
+  fecha TEXT NOT NULL DEFAULT '',
+  hora TEXT NOT NULL DEFAULT '',
+  estado TEXT NOT NULL DEFAULT 'agendado' CHECK (estado IN ('agendado','programado','publicado','descartado')),
+  nota TEXT NOT NULL DEFAULT '',
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS calendario_fecha ON calendario(fecha, hora);
+-- Candado C-CALENDARIO-1: la base misma impide dos publicaciones a la misma hora.
+CREATE UNIQUE INDEX IF NOT EXISTS calendario_hueco ON calendario(canal, plataforma, fecha, hora)
+  WHERE hora != '' AND estado != 'descartado';
+-- Cada pieza de un guion va una sola vez por plataforma (moverla la cambia, no la duplica).
+CREATE UNIQUE INDEX IF NOT EXISTS calendario_pieza ON calendario(guion_id, pieza, indice, plataforma)
+  WHERE guion_id IS NOT NULL;
