@@ -25,3 +25,26 @@ lector de voz y los enlaces se le deletrean.
 - Milenio: https://www.milenio.com/espectaculos/famosos/angela-aguilar-indirecta-nodal-cazzu-ley-cazzu
 - Excélsior: https://www.excelsior.com.mx/espectaculos/indirecta-para-cazzu-angela-aguilar-publica-mensaje-tras-polemica-con-christian-nodal
 - El Nuevo Día: https://www.elnuevodia.com/entretenimiento/farandula/notas/revelan-detalles-de-una-alegada-crisis-matrimonial-entre-christian-nodal-y-angela-aguilar/
+
+## 30 sep 2026 — elegido: Prince Royce contra los Latin Grammy (guion 6)
+
+Richard eligió el tema dos y pidió montarlo fuerte, como crítica a las
+nominaciones. El guion se creó desde la Mac con los hechos de estas fuentes,
+escritos con palabras propias:
+
+- Complex (la carta de Royce, los números): https://www.complex.com/music/a/alex-ocho/prince-royce-latin-grammys-snub-romeo-santos
+- Infobae Colombia (los nominados de la categoría, la respuesta de la Academia, otras quejas): https://www.infobae.com/colombia/2026/09/27/el-debate-en-las-nominaciones-de-los-latin-grammy-2026-polemicas-y-preguntas-de-cara-al-futuro/
+- Wikipedia (el disco, Prince Royce, Romeo Santos): https://en.wikipedia.org/wiki/Better_Late_Than_Never_(Romeo_Santos_and_Prince_Royce_album) · https://en.wikipedia.org/wiki/Prince_Royce · https://en.wikipedia.org/wiki/Romeo_Santos
+- Fecha y lugar de la ceremonia: https://www.unotv.com/entretenimiento/latin-grammy-2026-fecha-hora-lugar-y-lista-completa-de-nominados/
+
+Correcciones hechas al guion antes de entregarlo a Richard:
+
+- Decía que la bachata «nació en los barrios dominicanos de Nueva York». Nació
+  en República Dominicana y creció en Nueva York: corregido.
+- Una tarjeta de red social mostraba una frase entre comillas como si fueran
+  palabras textuales de Royce. No tenemos el texto literal de la carta: se
+  cambió por un titular y la narración lo cuenta en estilo indirecto.
+- «La gira llenó fechas» no está en las fuentes: quedó «una gira con fechas en
+  Estados Unidos y Europa».
+- El número de nominaciones de Royce: Complex e Infobae dicen 15; Wikipedia
+  dice 8 (desactualizada). Se usa 15 y queda en «hechos a verificar».

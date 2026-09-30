@@ -4,6 +4,7 @@
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
+- 👤 Revisar el guion 6 (Prince Royce contra los Latin Grammy), escribir tu opinión (mínimo 40 letras) y Aprobar → se produce solo: video largo, Shorts, miniatura y textos de YouTube.
 - 👤 Programar en YouTube el video completo de Luis Miguel para el miércoles 30 de septiembre a las 4:00 p. m. (así quedó en el calendario) o moverlo en el calendario a la fecha que prefieras.
 - 👤 Pegar el enlace de cada video ya subido en su ficha del calendario → sale su miniatura de YouTube.
 - 👤 Entrenar más la voz en ElevenLabs (más muestras y volver a entrenar) → mejor dicción y ritmo.

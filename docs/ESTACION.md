@@ -188,3 +188,15 @@ página del guion, sección «Para YouTube», con botón de copiar (C-PUBLICACIO
 Cada trabajo renderiza la miniatura del largo (`out/t<id>/miniatura.png`, sube
 al panel) y los Shorts terminan con el cierre «¿Te gustó? Ver video completo»
 con esa miniatura, el título y el canal (nombre y @ en Ajustes) — C-CIERRE-1.
+
+## Herramientas para tocar el panel en vivo desde la Mac
+
+Pasan por la misma lógica y validación del panel; el token de la base sale de
+`estacion/.env`. Se corren desde la raíz del proyecto.
+
+- `scripts/calendario-remoto.ts` — carga publicaciones en el calendario (ver
+  [CALENDARIO.md](CALENDARIO.md)).
+- `scripts/guion-remoto.ts` — corrige un guion en borrador (título, gancho,
+  narración o visual de una escena). Valida con `esquemaGuion` antes de
+  guardar y no toca guiones aprobados.
+- `scripts/base-remota.ts` — el adaptador de la base que usan las dos.
