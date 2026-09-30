@@ -26,10 +26,17 @@ Richard en el teléfono).
 - **Sin fecha todavía:** los videos que Escenia ya produjo y no tienen día en
   YouTube. Cada tarjeta trae el próximo hueco libre en el botón. Solo aparece
   si hay alguno.
-- **Agregar un video al calendario:** formulario plegado, para cualquier
-  video y cualquier plataforma (YouTube, Facebook, Instagram, TikTok).
-- **No hay pestañas por plataforma.** La plataforma es una etiqueta de cada
-  video. Un Short en Facebook no choca con uno en YouTube.
+- **Agregar un video que no hizo Escenia:** formulario plegado, para cualquier
+  video y cualquier red (YouTube, Facebook, Instagram, TikTok).
+- **La red social se ve siempre:** cada video lleva su etiqueta de color
+  (YouTube rojo, Facebook azul, Instagram fucsia, TikTok celeste) al lado de
+  la hora, y arriba de la lista hay un filtro por red («Todas las redes» por
+  defecto). Un Short en Facebook no choca con uno en YouTube.
+- **Publicar también en otra red:** en la ficha de cualquier video de Escenia
+  (y en las tarjetas de «Sin fecha todavía») están los botones «Publicar
+  también en: Facebook · Instagram · TikTok». Se toca la red, el día y la
+  hora, y queda como una publicación más, con su propia etiqueta. Solo se
+  ofrecen las redes donde esa pieza no está todavía.
 - **En la página del guion** («Para YouTube») sale cuándo sale cada pieza.
 
 ## El enlace y la miniatura

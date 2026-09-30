@@ -151,7 +151,11 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   otra publicación (cambio del 29 sep 2026, al cargar las fechas reales de
   Richard: dos videos a 15 minutos y tres Shorts el mismo día).
 - **Qué se ve (29 sep 2026):** una sola lista con lo que falta por publicarse,
-  agrupada por día (`porDia`), sin pestañas por plataforma. `yaSalio` y
+  agrupada por día (`porDia`), con la red de cada video como etiqueta de color
+  y un filtro por red arriba. «Publicar también en» (`plataformasFaltantes`)
+  manda una pieza de Escenia a otra red como una publicación más. Lección de
+  ese día: al simplificar la pantalla se quitaron las redes de golpe y Richard
+  lo notó; la red es parte central de una publicación y no se esconde. `yaSalio` y
   `sePasoLaFecha` (`compartido/calendario.ts`) deciden qué se oculta y qué se
   avisa. Lo ya publicado sigue en la base y sigue contando para las reglas.
 - **Cómo se comprueba:** `pruebas/calendario.test.ts` (comprobada en rojo el 29

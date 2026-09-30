@@ -11,7 +11,9 @@ import {
 } from "@compartido/calendario";
 import { NOMBRE_CANAL } from "@compartido/tematicas";
 import { agendarPieza, quitarDeLaLista, type EstadoForm } from "./acciones";
+import { ChipPlataforma } from "./ChipPlataforma";
 import { MenuTresPuntos } from "./MenuTresPuntos";
+import { PublicarTambien } from "./PublicarTambien";
 import { Miniatura } from "./Miniatura";
 import { SelectorHueco } from "./SelectorHueco";
 
@@ -23,9 +25,20 @@ type Props = {
   reglas: ReglasCalendario;
   hoy: Momento;
   miniatura: string | null;
+  /** Otras redes donde esta pieza todavía no está. */
+  faltantes: Plataforma[];
 };
 
-export function TarjetaPendiente({ pieza, plataforma, hueco, entradas, reglas, hoy, miniatura }: Props) {
+export function TarjetaPendiente({
+  pieza,
+  plataforma,
+  hueco,
+  entradas,
+  reglas,
+  hoy,
+  miniatura,
+  faltantes,
+}: Props) {
   const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(agendarPieza, {
     error: "",
     ok: "",
@@ -46,6 +59,7 @@ export function TarjetaPendiente({ pieza, plataforma, hueco, entradas, reglas, h
             {pieza.pieza === "short" ? "Short" : "Video largo"}
           </span>
           <span className="chip bg-neutral-800 text-neutral-300">{NOMBRE_CANAL[pieza.canal]}</span>
+          <ChipPlataforma plataforma={plataforma} />
         </div>
         <div className="ml-auto">
           <MenuTresPuntos
@@ -98,6 +112,21 @@ export function TarjetaPendiente({ pieza, plataforma, hueco, entradas, reglas, h
           />
         </div>
       </details>
+      <div className="mt-3 border-t border-neutral-800 pt-3">
+        <PublicarTambien
+          base={{
+            guion_id: pieza.guion_id,
+            pieza: pieza.pieza,
+            indice: pieza.indice,
+            titulo: pieza.titulo,
+            canal: pieza.canal,
+          }}
+          faltantes={faltantes}
+          entradas={entradas}
+          reglas={reglas}
+          hoy={hoy}
+        />
+      </div>
     </li>
   );
 }

@@ -10,6 +10,7 @@ import {
   lunesDe,
   normalizarHora,
   piezasPorAgendar,
+  plataformasFaltantes,
   porDia,
   proximoHueco,
   REGLAS_POR_DEFECTO,
@@ -205,6 +206,42 @@ describe("calendario: la lista de lo que falta por publicarse", () => {
       "2026-10-06: 5",
     ]);
     expect(porDia([])).toEqual([]);
+  });
+});
+
+describe("calendario: publicar también en otra red", () => {
+  it("dice en qué plataformas falta cada pieza de Escenia", () => {
+    const en = (
+      plataforma: "youtube" | "facebook" | "instagram" | "tiktok",
+      estado: "agendado" | "descartado" = "agendado",
+    ) => ({
+      guion_id: 5,
+      pieza: "short" as const,
+      indice: 1,
+      plataforma,
+      estado,
+    });
+    expect(plataformasFaltantes([en("youtube")], { guion_id: 5, pieza: "short", indice: 1 })).toEqual([
+      "facebook",
+      "instagram",
+      "tiktok",
+    ]);
+    // Lo «fuera de la lista» no cuenta como publicado ahí.
+    expect(
+      plataformasFaltantes([en("youtube"), en("facebook", "descartado")], {
+        guion_id: 5,
+        pieza: "short",
+        indice: 1,
+      }),
+    ).toEqual(["facebook", "instagram", "tiktok"]);
+    expect(plataformasFaltantes([en("youtube")], { guion_id: 5, pieza: "short", indice: 2 })).toEqual([
+      "youtube",
+      "facebook",
+      "instagram",
+      "tiktok",
+    ]);
+    // Un video hecho fuera de Escenia no tiene pieza que seguir: no se ofrece.
+    expect(plataformasFaltantes([], { guion_id: null, pieza: "short", indice: 0 })).toEqual([]);
   });
 });
 

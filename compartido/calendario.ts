@@ -523,3 +523,23 @@ export function porDia<T extends Pick<EntradaCalendario, "fecha" | "hora" | "id"
   }
   return dias;
 }
+
+/** En qué plataformas NO está todavía esta pieza (para «Publicar también en…»). */
+export function plataformasFaltantes(
+  entradas: Pick<EntradaCalendario, "guion_id" | "pieza" | "indice" | "plataforma" | "estado">[],
+  pieza: { guion_id: number | null; pieza: Pieza; indice: number },
+): Plataforma[] {
+  if (!pieza.guion_id) return [];
+  const usadas = new Set(
+    entradas
+      .filter(
+        (e) =>
+          e.guion_id === pieza.guion_id &&
+          e.pieza === pieza.pieza &&
+          e.indice === pieza.indice &&
+          e.estado !== "descartado",
+      )
+      .map((e) => e.plataforma),
+  );
+  return PLATAFORMAS.filter((p) => !usadas.has(p));
+}
