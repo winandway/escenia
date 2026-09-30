@@ -10,6 +10,7 @@
 - Calendario de publicaciones: [docs/CALENDARIO.md](docs/CALENDARIO.md).
 - Bajar un video de YouTube: [docs/DESCARGAR-VIDEOS.md](docs/DESCARGAR-VIDEOS.md).
 - App instalable en el teléfono: [docs/APP.md](docs/APP.md).
+- Temas propuestos y sus fuentes: [docs/TEMAS-PROPUESTOS.md](docs/TEMAS-PROPUESTOS.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro
