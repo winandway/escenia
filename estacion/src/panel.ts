@@ -1,6 +1,7 @@
 // Cliente HTTP del panel. Todo pasa por /datos/estacion/* con el secreto.
 import { open, readFile } from "node:fs/promises";
 import { esquemaGuion, type Guion } from "@compartido/guion";
+import { conReintentos, ErrorDelPanel } from "@compartido/reintentos";
 import { z } from "zod";
 import { config } from "./config";
 
@@ -26,17 +27,34 @@ async function llamar(
   cuerpo: unknown,
   opciones: { crudo?: Buffer; contentType?: string; metodo?: "POST" | "PUT" } = {},
 ): Promise<unknown> {
-  const r = await fetch(`${config.PANEL_URL}${ruta}`, {
-    method: opciones.metodo ?? "POST",
-    headers: {
-      authorization: `Bearer ${config.ESTACION_SECRETO}`,
-      "content-type": opciones.contentType ?? "application/json",
+  // Un corte de red de unos segundos no tumba el trabajo: se reintenta con espera (C-ENTREGA-1).
+  return conReintentos(
+    async () => {
+      const r = await fetch(`${config.PANEL_URL}${ruta}`, {
+        method: opciones.metodo ?? "POST",
+        headers: {
+          authorization: `Bearer ${config.ESTACION_SECRETO}`,
+          "content-type": opciones.contentType ?? "application/json",
+        },
+        body: opciones.crudo ? new Uint8Array(opciones.crudo) : JSON.stringify(cuerpo),
+        signal: AbortSignal.timeout(180_000),
+      });
+      const texto = await r.text();
+      if (!r.ok)
+        throw new ErrorDelPanel(
+          `El panel respondió ${r.status} en ${ruta}: ${texto.slice(0, 300)}`,
+          r.status,
+        );
+      return texto ? (JSON.parse(texto) as unknown) : {};
     },
-    body: opciones.crudo ? new Uint8Array(opciones.crudo) : JSON.stringify(cuerpo),
-  });
-  const texto = await r.text();
-  if (!r.ok) throw new Error(`El panel respondió ${r.status} en ${ruta}: ${texto.slice(0, 300)}`);
-  return texto ? JSON.parse(texto) : {};
+    {
+      alReintentar: (intento, esperaMs, fallo) =>
+        console.warn(
+          `  (el panel no respondió en ${ruta.split("?")[0]}: ${fallo instanceof Error ? fallo.message : fallo}; ` +
+            `reintento ${intento} en ${Math.round(esperaMs / 1000)} s)`,
+        ),
+    },
+  );
 }
 
 export const panel = {

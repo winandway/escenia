@@ -2,6 +2,7 @@
 // en la Mac y reporta. Los MP4 se quedan aquí; al panel suben solo la voz y
 // los subtítulos.
 import { config } from "./config";
+import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEntregada } from "./entrega";
 import { panel } from "./panel";
 import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
@@ -27,17 +28,31 @@ async function unaVuelta(): Promise<boolean> {
     void panel.avance(trabajo.id, ultimo.paso, ultimo.progreso).catch(() => {});
   }, 45_000);
   try {
-    const r = await producir(
-      `t${trabajo.id}`,
-      trabajo.contenido,
-      trabajo.producto,
-      avisar,
-      trabajo.plantilla,
-      (servicio, detalle, costo) => panel.gasto(trabajo.id, servicio, detalle, costo).catch(() => {}),
-      trabajo.canal,
-    );
-    if (r.costoVozUsd > 0)
-      await panel.gasto(trabajo.id, "elevenlabs", `voz guion ${trabajo.guion_id}`, r.costoVozUsd);
+    // Si este mismo guion ya se armó completo y lo único que falló fue subirlo,
+    // se retoma la entrega: no se produce ni se gasta otra vez (C-ENTREGA-1).
+    const huella = huellaDeGuion(trabajo.contenido);
+    const previa = await buscarProduccionSinEntregar(huella);
+    let producidoEn = trabajo.id;
+    let r: Awaited<ReturnType<typeof producir>>;
+    if (previa) {
+      producidoEn = previa.numero;
+      r = previa.resultado;
+      console.log(`  Se retoma la entrega del video ya armado en el trabajo #${previa.numero}.`);
+      await avisar("retomando el video que ya estaba armado", 97);
+    } else {
+      r = await producir(
+        `t${trabajo.id}`,
+        trabajo.contenido,
+        trabajo.producto,
+        avisar,
+        trabajo.plantilla,
+        (servicio, detalle, costo) => panel.gasto(trabajo.id, servicio, detalle, costo).catch(() => {}),
+        trabajo.canal,
+      );
+      await guardarProduccion(trabajo.id, huella, r);
+      if (r.costoVozUsd > 0)
+        await panel.gasto(trabajo.id, "elevenlabs", `voz guion ${trabajo.guion_id}`, r.costoVozUsd);
+    }
     await avisar("subiendo el video al panel", 98);
     let ultimoPct = 0;
     await panel.subirVideo(
@@ -86,6 +101,7 @@ async function unaVuelta(): Promise<boolean> {
         voz_de_prueba: r.vozDePrueba,
       })),
     ]);
+    await marcarEntregada(producidoEn);
     if (r.shorts.length)
       console.log(
         `  Shorts: ${r.shorts.map((s) => `«${s.titulo}» (${Math.round(s.duracionSeg)} s)`).join(" · ")}`,

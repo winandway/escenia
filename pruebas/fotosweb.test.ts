@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { candidatasDeSerper, consultaWeb, elegirCandidata, esImagen } from "@compartido/fotosweb";
+import {
+  candidatasDeSerper,
+  consultaWeb,
+  elegirCandidata,
+  esDeAgencia,
+  esImagen,
+} from "@compartido/fotosweb";
 
 describe("fotos reales de internet (C-IMAGEN-3)", () => {
   it("arma la consulta con la persona y la época, o la infancia", () => {
@@ -45,5 +51,44 @@ describe("fotos reales de internet (C-IMAGEN-3)", () => {
     expect(mejor?.url).toBe("c");
     expect(elegirCandidata([{ url: "a", ancho: 1200, alto: 800, origen: "x", cara: null }])).toBeNull();
     expect(elegirCandidata([])).toBeNull();
+  });
+
+  it("descarta las fotos de agencias, que vienen con marca de agua encima (C-IMAGEN-4)", () => {
+    expect(esDeAgencia("https://www.gettyimages.com/photos/un-artista-2010")).toBe(true);
+    expect(esDeAgencia("https://media.istockphoto.com/id/1/photo.jpg")).toBe(true);
+    expect(esDeAgencia("https://c8.alamy.com/comp/ABC/foto.jpg")).toBe(true);
+    expect(esDeAgencia("https://www.nytimes.com/2025/12/19/arts/music/nota.html")).toBe(false);
+    const candidatas = candidatasDeSerper({
+      images: [
+        {
+          imageUrl: "https://media.gettyimages.com/id/1/photo/x.jpg",
+          imageWidth: 1024,
+          link: "https://www.gettyimages.com/photos/x",
+        },
+        {
+          imageUrl: "https://un-medio.com/foto.jpg",
+          imageWidth: 1024,
+          link: "https://www.shutterstock.com/editorial/x",
+        },
+        { imageUrl: "https://un-medio.com/buena.jpg", imageWidth: 1024, link: "https://un-medio.com/nota" },
+      ],
+    });
+    expect(candidatas).toEqual([
+      { url: "https://un-medio.com/buena.jpg", origen: "https://un-medio.com/nota" },
+    ]);
+  });
+
+  it("para la foto de un lugar no exige cara y evita a la persona en primer plano", () => {
+    const candidatas = [
+      { url: "alfombra", ancho: 1600, alto: 1000, origen: "x", cara: 0.09 },
+      { url: "arena", ancho: 1400, alto: 900, origen: "x", cara: null },
+      { url: "publico-lejos", ancho: 1200, alto: 800, origen: "x", cara: 0.005 },
+      { url: "chica", ancho: 300, alto: 200, origen: "x", cara: null },
+    ];
+    expect(elegirCandidata(candidatas, 600, false)?.url).toBe("arena");
+    // Si todas traen una cara en primer plano, igual se entrega la más grande antes que nada.
+    expect(elegirCandidata([candidatas[0]!], 600, false)?.url).toBe("alfombra");
+    // Y para una persona, lo de siempre: la cara manda.
+    expect(elegirCandidata(candidatas)?.url).toBe("alfombra");
   });
 });

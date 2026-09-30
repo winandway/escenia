@@ -18,6 +18,31 @@ export function consultaWeb(persona: string, anio: number | null, infancia = fal
   return anio ? `${base} ${anio}` : base;
 }
 
+// Agencias que venden fotos: en internet solo muestran la versión con su marca
+// de agua encima. Una foto así se ve mal en el video y no se usa (C-IMAGEN-4).
+const AGENCIAS = [
+  "gettyimages",
+  "istockphoto",
+  "shutterstock",
+  "alamy",
+  "dreamstime",
+  "depositphotos",
+  "123rf",
+  "agefotostock",
+  "imago-images",
+  "wireimage",
+  "zumapress",
+  "stock.adobe",
+  "bigstockphoto",
+  "pond5",
+];
+
+/** ¿Esa dirección es de una agencia que pone marca de agua? */
+export function esDeAgencia(direccion: string): boolean {
+  const d = direccion.toLowerCase();
+  return AGENCIAS.some((a) => d.includes(a));
+}
+
 /** Una imagen tal como la devuelve Serper en `images[]` (solo lo que usamos). */
 export type ImagenSerper = {
   imageUrl?: string;
@@ -40,6 +65,9 @@ export function candidatasDeSerper(datos: unknown): { url: string; origen: strin
       (i): i is ImagenSerper & { imageUrl: string } =>
         typeof i?.imageUrl === "string" &&
         /^https?:\/\//.test(i.imageUrl) &&
+        !esDeAgencia(i.imageUrl) &&
+        !esDeAgencia(i.link ?? "") &&
+        !esDeAgencia(i.source ?? "") &&
         (typeof i.imageWidth !== "number" || i.imageWidth >= 500),
     )
     .map((i) => ({ url: i.imageUrl, origen: i.link ?? i.source ?? i.imageUrl }));
@@ -63,12 +91,27 @@ export function esImagen(tipoContenido: string | null, primerosBytes: Uint8Array
 }
 
 /**
- * La mejor candidata: tiene cara, buen tamaño (≥ 600 px de ancho) y la cara
- * grande manda sobre la resolución. Sin cara no sirve (sería una portada,
- * un logo o un lugar).
+ * La mejor candidata.
+ * - Foto de una PERSONA: tiene cara, buen tamaño (≥ 600 px de ancho) y la cara
+ *   grande manda sobre la resolución. Sin cara no sirve (sería una portada, un
+ *   logo o un lugar).
+ * - Foto de un LUGAR, un objeto o un evento (`exigirCara = false`): se prefiere
+ *   la que NO tiene una cara en primer plano, para no meter en el video a una
+ *   persona que no tiene que ver con la historia; entre esas, la más grande.
  */
-export function elegirCandidata(candidatas: CandidataWeb[], minAncho = 600): CandidataWeb | null {
-  const validas = candidatas.filter((c) => c.cara !== null && c.cara > 0.004 && c.ancho >= minAncho);
+export function elegirCandidata(
+  candidatas: CandidataWeb[],
+  minAncho = 600,
+  exigirCara = true,
+): CandidataWeb | null {
+  const grandes = candidatas.filter((c) => c.ancho >= minAncho);
+  if (!exigirCara) {
+    const tamano = (c: CandidataWeb) => c.ancho * c.alto;
+    const sinPrimerPlano = grandes.filter((c) => c.cara === null || c.cara < 0.02);
+    const orden = (lista: CandidataWeb[]) => [...lista].sort((a, b) => tamano(b) - tamano(a))[0] ?? null;
+    return orden(sinPrimerPlano) ?? orden(grandes);
+  }
+  const validas = grandes.filter((c) => c.cara !== null && c.cara > 0.004);
   if (validas.length === 0) return null;
   const puntaje = (c: CandidataWeb) => (c.cara ?? 0) * 1000 + Math.min(2, (c.ancho * c.alto) / 1_500_000);
   return [...validas].sort((a, b) => puntaje(b) - puntaje(a))[0] ?? null;

@@ -8,7 +8,13 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { candidatasDeSerper, elegirCandidata, esImagen, type CandidataWeb } from "@compartido/fotosweb";
+import {
+  candidatasDeSerper,
+  elegirCandidata,
+  esDeAgencia,
+  esImagen,
+  type CandidataWeb,
+} from "@compartido/fotosweb";
 import { config } from "./config";
 import { enfoquesDe } from "./enfoque";
 
@@ -35,7 +41,11 @@ async function dimensiones(ruta: string): Promise<{ ancho: number; alto: number 
 }
 
 /** La mejor foto real para una consulta («Luis Miguel 1987»): con cara, grande, guardada en caché. */
-export async function buscarFotoWeb(consulta: string): Promise<FotoWeb | null> {
+export async function buscarFotoWeb(
+  consulta: string,
+  opciones: { persona?: boolean } = {},
+): Promise<FotoWeb | null> {
+  const persona = opciones.persona ?? true;
   if (!fotosWebActivas()) return null;
   const carpeta = path.resolve(config.CARPETA_CLIPS, "../fotos-web");
   await mkdir(carpeta, { recursive: true });
@@ -46,9 +56,11 @@ export async function buscarFotoWeb(consulta: string): Promise<FotoWeb | null> {
   } catch {
     cache = {};
   }
-  const clave = consulta.trim().toLowerCase();
+  const clave = `${persona ? "" : "lugar:"}${consulta.trim().toLowerCase()}`;
   const previa = cache[clave];
-  if (previa !== undefined && (previa === null || existsSync(previa.rutaCache))) return previa;
+  // Una foto guardada de una agencia (con marca de agua) ya no vale: se busca otra vez.
+  const deAgencia = previa ? esDeAgencia(previa.url) || esDeAgencia(previa.origen) : false;
+  if (previa !== undefined && !deAgencia && (previa === null || existsSync(previa.rutaCache))) return previa;
 
   const r = await fetch(URL_SERPER_IMAGENES, {
     method: "POST",
@@ -106,7 +118,7 @@ export async function buscarFotoWeb(consulta: string): Promise<FotoWeb | null> {
     // El detector da el centro de la cara; el área la aproximamos por la que guarda el caché de caras.
     c.cara = e ? await areaDeCara(c.rutaCache) : null;
   }
-  const mejor = elegirCandidata(candidatas);
+  const mejor = elegirCandidata(candidatas, 600, persona);
   const resultado = mejor
     ? {
         rutaCache: (mejor as CandidataWeb & { rutaCache: string }).rutaCache,

@@ -4,7 +4,7 @@
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
-- 👤 Revisar el guion 6 (Prince Royce contra los Latin Grammy), escribir tu opinión (mínimo 40 letras) y Aprobar → se produce solo: video largo, Shorts, miniatura y textos de YouTube.
+- 👤 Ver el video de Prince Royce (guion 6) y agendar en el calendario el largo y sus 4 Shorts (están en «Sin fecha todavía»).
 - 👤 Programar en YouTube el video completo de Luis Miguel para el miércoles 30 de septiembre a las 4:00 p. m. (así quedó en el calendario) o moverlo en el calendario a la fecha que prefieras.
 - 👤 Pegar el enlace de cada video ya subido en su ficha del calendario → sale su miniatura de YouTube.
 - 👤 Entrenar más la voz en ElevenLabs (más muestras y volver a entrenar) → mejor dicción y ritmo.
@@ -26,6 +26,8 @@
 - [x] Publicar: repo público https://github.com/winandway/escenia + Action verde → rama `yapanel-build` → sitio EN VIVO en https://escenia.sitios.dev (25 sep 2026, plan Galaxia). Base con las 9 fichas de producto y los ajustes por defecto, comprobada por HTTP.
 - [x] Licencia de Remotion: Windoce es 1 persona (Richard, 25 sep 2026) → licencia gratis, no hay nada que pagar.
 - [x] Variables del panel cargadas por Richard (26 sep 2026): canario en verde, Estación conectada al panel en vivo, prueba de humo ok.
+- [x] Guion 6 (Prince Royce contra los Latin Grammy) producido y entregado el 30 sep 2026; la subida falló por un corte de red y quedó resuelto de raíz (C-ENTREGA-1); dos fotos corregidas (C-IMAGEN-4).
+- [ ] Pista instrumental de bachata para el catálogo de música (el video de Prince Royce salió con un son cubano, lo más cercano que había).
 - [x] Estudio de temas para el público latino de Estados Unidos, con consejos y tres temas (29 sep 2026, docs/ESTRATEGIA-TEMAS.md).
 - [x] Cada publicación muestra su red con color, filtro por red, y «Publicar también en» Facebook, Instagram o TikTok (29 sep 2026).
 - [x] Calendario rehecho como una sola lista de lo que falta por publicarse, sin pestañas por plataforma (29 sep 2026).

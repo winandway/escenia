@@ -73,12 +73,16 @@ function nombreBase(busqueda: string): string[] {
     .map((w) => w.toLowerCase());
 }
 
-export async function buscarFoto(busquedas: string[], carpetaPublica: string): Promise<Foto | null> {
+export async function buscarFoto(
+  busquedas: string[],
+  carpetaPublica: string,
+  opciones: { persona?: boolean } = {},
+): Promise<Foto | null> {
   const lista = busquedas.map((x) => x.trim()).filter(Boolean);
   // Primero internet (foto real de la persona en esa época), si Richard puso la clave de Google.
   if (fotosWebActivas()) {
     for (const b of lista) {
-      const web = await buscarFotoWeb(b).catch((e) => {
+      const web = await buscarFotoWeb(b, opciones).catch((e) => {
         console.warn(`Internet falló con «${b}»: ${e instanceof Error ? e.message : e}`);
         return null;
       });

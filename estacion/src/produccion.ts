@@ -148,7 +148,13 @@ export async function producir(
     const busquedas = [e.visual.busqueda ?? "", ...(reservas[e.parte] ?? reservas.contexto ?? [])];
     let foto: PropsVideo["escenas"][number]["foto"] = null;
     if (e.visual.tipo === "foto" && e.visual.busqueda) {
-      const f = await buscarFoto([e.visual.busqueda, guion.titulo.split(/[:—-]/)[0] ?? ""], carpetaPublica);
+      // Una foto de lugar no cae de reserva en el nombre del artista ni exige una cara.
+      const deLugar = e.visual.foto_de === "lugar";
+      const f = await buscarFoto(
+        deLugar ? [e.visual.busqueda] : [e.visual.busqueda, guion.titulo.split(/[:—-]/)[0] ?? ""],
+        carpetaPublica,
+        { persona: !deLugar },
+      );
       if (f) {
         foto = { ruta: f.ruta, ancho: f.ancho, alto: f.alto, enfoque: null };
         creditos.push(f.credito);

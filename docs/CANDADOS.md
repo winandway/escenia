@@ -122,6 +122,53 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** el conversor a letras sigue delante de la voz; solo cambió
   lo que se muestra. El prompt no debe volver a pedir «números en letras».
 
+## C-ENTREGA-1 — Un corte de red no tumba una producción, y reintentar no produce dos veces (30 sep 2026)
+
+- **Qué se rompió / cómo se veía:** el guion 6 (Prince Royce) se armó completo
+  (video largo y cuatro Shorts) y al subirlo al panel se cortó la red un
+  instante. El panel mostró «Producción: Falló · subiendo el video al panel 28%
+  · fetch failed». Un solo trozo que no subió tumbó el trabajo entero, y el
+  botón «Reintentar» habría vuelto a producir todo desde cero (otra vez la
+  voz, otra media hora).
+- **Causa:** las llamadas de la Estación al panel no reintentaban, y producir y
+  entregar eran un solo paso.
+- **Qué se hizo:** (1) toda llamada al panel pasa por `conReintentos`
+  (`compartido/reintentos.ts`): ante un fallo de red o un código pasajero
+  (429, 500, 502, 503, 504) espera 2, 5, 15, 30 y 60 segundos y vuelve a
+  intentar; un rechazo del panel (400, 401, 404, 409, 422) falla de una.
+  (2) al terminar de producir, la Estación guarda `resultado.json` en la
+  carpeta del trabajo con la huella del guion; si un trabajo nuevo trae el
+  mismo guion y hay una producción completa sin entregar, **retoma la
+  entrega** y no produce (`estacion/src/entrega.ts`,
+  `elegirProduccionSinEntregar`). Al entregar se marca `entregado`.
+- **Cómo se comprueba:** `pruebas/entrega.test.ts` (en rojo al quitar «fetch
+  failed» de lo que se reintenta: fallaron 3). En vivo, el 30 sep 2026 el
+  trabajo 22 retomó la entrega del 21, la red volvió a fallar en un trozo y el
+  registro dijo «reintento 1 en 2 s»; terminó en «hecho».
+- **Qué NO tocar:** no volver a llamar al panel con `fetch` suelto; no borrar
+  `resultado.json` de un trabajo sin entregar. Para producir de nuevo un guion
+  ya entregado, «Reintentar» sí produce desde cero (la producción entregada no
+  se retoma).
+
+## C-IMAGEN-4 — Ni fotos con marca de agua ni gente que no es de la historia (30 sep 2026)
+
+- **Qué se veía:** en el video de Prince Royce salió una foto con la marca de
+  agua de una agencia de fotos encima, y la escena de «Latin Grammy Las Vegas»
+  mostró a una artista cualquiera en la alfombra roja, porque a toda foto de
+  internet se le exigía una cara.
+- **Qué se hizo:** (1) `esDeAgencia` (`compartido/fotosweb.ts`) descarta las
+  agencias de fotos (Getty, iStock, Shutterstock, Alamy y otras) al leer la
+  respuesta del buscador, y una foto de agencia guardada en el caché deja de
+  valer; (2) el guion puede marcar `visual.foto_de: "lugar"`: ahí no se exige
+  cara, se prefiere la foto sin una persona en primer plano y no se cae de
+  reserva en el nombre del artista. El prompt pide buscar el sitio concreto
+  («MGM Grand Garden Arena Las Vegas»), no el nombre de la premiación.
+- **Cómo se comprueba:** `pruebas/fotosweb.test.ts` (en rojo al apagar el
+  filtro de agencias). Las dos fotos del video de Prince Royce se cambiaron y
+  el video se volvió a armar con la misma voz.
+- **Qué NO tocar:** la lista de agencias solo crece; para una persona la cara
+  sigue siendo obligatoria.
+
 ## C-VERSION-1 — El canario dice qué versión está en vivo (29 sep 2026)
 
 - **Qué pasaba:** después de publicar no había forma de comprobar desde fuera

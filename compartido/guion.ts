@@ -54,6 +54,10 @@ export const esquemaVisual = z.object({
   cuerpo: z.string().trim().max(300).optional(),
   // Frase corta que aparece grande en pantalla.
   texto_en_pantalla: z.string().trim().max(90).optional(),
+  // Solo en tipo = foto: «lugar» cuando la foto es de un sitio, un objeto o un
+  // evento (un estadio, un trofeo, una ciudad) y no de una persona. Así no se
+  // exige una cara y no se cuela alguien que no es de la historia.
+  foto_de: z.enum(["persona", "lugar"]).optional(),
 });
 
 export const DURACION_INTERLUDIO = { minimo: 3, maximo: 15, porDefecto: 6 } as const;

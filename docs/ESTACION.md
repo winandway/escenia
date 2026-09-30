@@ -200,3 +200,11 @@ Pasan por la misma lógica y validación del panel; el token de la base sale de
   narración o visual de una escena). Valida con `esquemaGuion` antes de
   guardar y no toca guiones aprobados.
 - `scripts/base-remota.ts` — el adaptador de la base que usan las dos.
+
+## Si un trabajo falla al subir el video
+
+Desde el 30 sep 2026 la Estación reintenta sola cada llamada al panel (hasta
+casi dos minutos). Si aun así falla, el video ya armado queda en la Mac con su
+`resultado.json`. Al tocar «Reintentar» en el panel, la Estación retoma la
+entrega de ese video: no vuelve a producirlo ni a gastar en voz. Candado
+C-ENTREGA-1.
