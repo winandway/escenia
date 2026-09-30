@@ -27,7 +27,7 @@ export function instruccionesPublicacion(): string {
     "Eres editor de un canal de YouTube en español neutro y sabes de posicionamiento (SEO) en YouTube.",
     "Escribes los textos de publicación de un video ya producido. Reglas:",
     `- \`titulo\`: máximo 70 letras, con el nombre de la persona o del tema y una promesa concreta que dé curiosidad; sin mayúsculas sostenidas, sin comillas de relleno, sin emojis.`,
-    "- \`shorts[].titulo\`: uno por cada short, máximo 60 letras, cada uno con un gancho DISTINTO sacado de lo que se cuenta en ESAS escenas (un giro, un dato, una frase); sin la palabra «parte», sin numerarlos, sin hashtags.",
+    "- \`shorts[].titulo\`: uno por cada short, máximo 60 letras, cada uno con un gancho DISTINTO sacado de lo que se cuenta en ESAS escenas (un giro, un dato, una frase); sin la palabra «parte», sin numerarlos, sin hashtags. El título de un short solo puede afirmar lo que se dice en el texto de ESE short; no mezcles datos de otra parte del video.",
     "- \`descripcion\`: 3 párrafos cortos que cuenten de qué va el video sin destriparlo, con las palabras clave dichas de forma natural, y al final una línea con 4 o 5 hashtags.",
     `- En total quedan ${ETIQUETAS_MAXIMAS} palabras clave, en dos listas. \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS - ETIQUETAS_EN_INGLES}, EN ESPAÑOL, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas («biografía de…», «historia de…», «documental…»). \`etiquetas_ingles\`: exactamente ${ETIQUETAS_EN_INGLES}, EN INGLÉS, tal como buscaría un latino en Estados Unidos (ej.: «Latin Grammys snub», «bachata documentary», «Prince Royce story»). Sin repetir y sin hashtags.`,
     "- El canal quiere que lo vean los latinos de Estados Unidos: si la historia pasa por una ciudad de allá (Nueva York, El Bronx, Miami, Los Ángeles, Las Vegas), nómbrala en la descripción y en las palabras clave.",
@@ -39,11 +39,20 @@ export function mensajePublicacion(guion: Guion, tematica: string, shorts: Short
   const escenas = guion.escenas
     .map((e, i) => `${i + 1}. [${e.parte}] ${e.narracion.trim() || "(sin voz: respiro musical)"}`)
     .join("\n");
+  // Cada short lleva SU texto: así el título sale de lo que se cuenta ahí y no de otra parte del video.
+  const loQueCuenta = (s: ShortPublicado) => {
+    const texto = guion.escenas
+      .slice(s.escena_inicio, s.escena_fin + 1)
+      .map((e) => e.narracion.trim())
+      .filter(Boolean)
+      .join(" ");
+    return texto.length > 900 ? `${texto.slice(0, 900)}…` : texto;
+  };
   const lista = shorts.length
     ? shorts
         .map(
           (s) =>
-            `- Short ${s.indice} (escenas ${s.escena_inicio + 1} a ${s.escena_fin + 1}, ${Math.round(s.duracion_seg)} s; título provisional: «${s.titulo_original}»)`,
+            `- Short ${s.indice} (escenas ${s.escena_inicio + 1} a ${s.escena_fin + 1}, ${Math.round(s.duracion_seg)} s; título provisional: «${s.titulo_original}»)\n  Lo que se cuenta en ESTE short: ${loQueCuenta(s)}`,
         )
         .join("\n")
     : "- (este video no tiene shorts)";

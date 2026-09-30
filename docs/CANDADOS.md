@@ -162,6 +162,10 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   Lo que se guarda sigue validándose con el esquema de 30.
 - **Cómo se comprueba:** `pruebas/publicacion.test.ts` («si la IA manda palabras
   clave de más…»), en rojo al quitar el recorte.
+- **También ese día:** un título de Short afirmó algo de otra parte del video
+  («número 1 con Shakira», que el guion no dice). Ahora el mensaje a la IA
+  lleva debajo de cada short el texto de SUS escenas, y la regla dice que el
+  título solo puede afirmar lo que está ahí.
 - **Qué NO tocar:** no volver a validar lo que escribe la IA con el tope
   exacto; el tope se aplica al unir.
 

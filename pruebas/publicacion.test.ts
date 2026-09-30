@@ -90,4 +90,19 @@ describe("textos para YouTube (C-PUBLICACION-1)", () => {
     ]);
     expect(unirEtiquetas(["solo español"], [])).toEqual(["solo español"]);
   });
+
+  it("cada short lleva su propio texto, para que su título no tome datos de otra parte del video", () => {
+    const m = mensajePublicacion(guion, "Biografía de artista", [
+      { indice: 1, titulo_original: "El comienzo", escena_inicio: 0, escena_fin: 1, duracion_seg: 50 },
+      { indice: 2, titulo_original: "El final", escena_inicio: 2, escena_fin: 2, duracion_seg: 40 },
+    ]);
+    const [, , parteDos = ""] = m.split("- Short ");
+    const parteUno = m.split("- Short ")[1] ?? "";
+    expect(parteUno).toContain("Lo que se cuenta en ESTE short: Celia nació en 1925 en Santos Suárez.");
+    expect(parteUno).not.toContain("Murió en 2003");
+    expect(parteDos).toContain("Lo que se cuenta en ESTE short: Murió en 2003 en Nueva Jersey.");
+    expect(instruccionesPublicacion()).toContain(
+      "solo puede afirmar lo que se dice en el texto de ESE short",
+    );
+  });
 });
