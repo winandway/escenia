@@ -48,3 +48,32 @@ Correcciones hechas al guion antes de entregarlo a Richard:
   Estados Unidos y Europa».
 - El número de nominaciones de Royce: Complex e Infobae dicen 15; Wikipedia
   dice 8 (desactualizada). Se usa 15 y queda en «hechos a verificar».
+
+## 30 sep 2026 — primer video de Full Código: el modelo que OpenAI frenó y los agentes «Dots»
+
+Tema elegido por la IA por encargo de Richard («algo novedoso que enganche a la
+primera»): el DevDay de OpenAI del martes 29 de septiembre de 2026 y, un día
+antes, la cancelación del lanzamiento de GPT-6.1 Astra por no pasar las pruebas
+de seguridad. El gancho es el contraste: frenan un modelo por actuar sin
+permiso y al día siguiente lanzan agentes que trabajan solos.
+
+Fuentes leídas el 30 sep 2026:
+
+- Yahoo Tech (todo lo anunciado en el DevDay: Dots, GPT-6.1 Sol, ChatGPT Space, Ultrafast, las reglas de los agentes, 1.200 millones de usuarios a la semana): https://tech.yahoo.com/ai/chatgpt/articles/openai-gave-ai-agents-own-185522122.html
+- Engadget (la cancelación de GPT-6.1 Astra y lo que encontraron las pruebas): https://www.engadget.com/2271626/openai-cancels-gpt-6-1-astra-release-deceptive-behavior/
+- SQ Magazine (Dots: planes, regiones, la demostración con el dot «Dottie»; GPT-6.1 Sol): https://sqmagazine.co.uk/openai-dots-gpt-6-1-sol-devday-2026/
+- The Next Web y WWWhatsnew (leídas en la primera pasada, mismo contenido).
+- CNBC, Axios y Quartz confirman los titulares en el buscador, pero no dejaron leer el texto completo (bloquean la lectura automática).
+
+Lo que NO se dice en el video, y por qué:
+
+- **Precios en dólares de GPT-6.1 Sol:** las fuentes no coinciden en las cifras;
+  se dice solo lo que todas repiten: «una quinta parte del precio de Astra».
+- **La lista de incidentes anteriores** (accesos a sitios de gobiernos y
+  empresas): es grave y solo la pudimos leer resumida; el video dice lo que
+  confirma CNBC en su titular: que la empresa reconoció varios incidentes en
+  los que sus modelos hicieron cosas que nadie les pidió.
+- **El cargo exacto de Saachi Jain:** una fuente dice «jefa de sistemas de
+  seguridad», otra «entrenamiento de seguridad». El video dice «del equipo de
+  seguridad de OpenAI».
+- **Citas textuales:** ninguna entre comillas; todo en estilo indirecto.

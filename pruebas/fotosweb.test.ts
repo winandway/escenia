@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  busquedasDeFoto,
   candidatasDeSerper,
   consultaWeb,
   elegirCandidata,
@@ -90,5 +91,34 @@ describe("fotos reales de internet (C-IMAGEN-3)", () => {
     expect(elegirCandidata([candidatas[0]!], 600, false)?.url).toBe("alfombra");
     // Y para una persona, lo de siempre: la cara manda.
     expect(elegirCandidata(candidatas)?.url).toBe("alfombra");
+  });
+});
+
+describe("la reserva de una foto es el nombre del título solo en biografías (C-IMAGEN-5)", () => {
+  it("en una biografía, si la búsqueda del guion no da nada, se busca a la persona del título", () => {
+    expect(
+      busquedasDeFoto("Celia Cruz 1990s", "Celia Cruz: la niña que gritaba azúcar", {
+        documental: true,
+        deLugar: false,
+      }),
+    ).toEqual(["Celia Cruz 1990s", "Celia Cruz"]);
+  });
+
+  it("en un video de tecnología no hay reserva: «GPT» no es una persona", () => {
+    expect(
+      busquedasDeFoto("Sam Altman OpenAI", "GPT-6.1 Astra: el modelo que OpenAI frenó", {
+        documental: false,
+        deLugar: false,
+      }),
+    ).toEqual(["Sam Altman OpenAI"]);
+  });
+
+  it("una foto de lugar nunca cae en el nombre de la persona", () => {
+    expect(
+      busquedasDeFoto("MGM Grand Garden Arena Las Vegas", "Prince Royce: la carta", {
+        documental: true,
+        deLugar: true,
+      }),
+    ).toEqual(["MGM Grand Garden Arena Las Vegas"]);
   });
 });

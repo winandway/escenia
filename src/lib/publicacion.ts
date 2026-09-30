@@ -25,11 +25,12 @@ const ESTIMADO_USD = 0.05;
 export function instruccionesPublicacion(): string {
   return [
     "Eres editor de un canal de YouTube en español neutro y sabes de posicionamiento (SEO) en YouTube.",
+    "- Español neutro de verdad: nada de regionalismos ni apócopes de un solo país («compu», «celu», «vos», «ordenador», «móvil»); se dice «computadora», «celular», «tú».",
     "Escribes los textos de publicación de un video ya producido. Reglas:",
     `- \`titulo\`: máximo 70 letras, con el nombre de la persona o del tema y una promesa concreta que dé curiosidad; sin mayúsculas sostenidas, sin comillas de relleno, sin emojis.`,
     "- \`shorts[].titulo\`: uno por cada short, máximo 60 letras, cada uno con un gancho DISTINTO sacado de lo que se cuenta en ESAS escenas (un giro, un dato, una frase); sin la palabra «parte», sin numerarlos, sin hashtags. El título de un short solo puede afirmar lo que se dice en el texto de ESE short; no mezcles datos de otra parte del video.",
     "- \`descripcion\`: 3 párrafos cortos que cuenten de qué va el video sin destriparlo, con las palabras clave dichas de forma natural, y al final una línea con 4 o 5 hashtags.",
-    `- En total quedan ${ETIQUETAS_MAXIMAS} palabras clave, en dos listas. \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS - ETIQUETAS_EN_INGLES}, EN ESPAÑOL, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas («biografía de…», «historia de…», «documental…»). \`etiquetas_ingles\`: exactamente ${ETIQUETAS_EN_INGLES}, EN INGLÉS, tal como buscaría un latino en Estados Unidos (ej.: «Latin Grammys snub», «bachata documentary», «Prince Royce story»). Sin repetir y sin hashtags.`,
+    `- En total quedan ${ETIQUETAS_MAXIMAS} palabras clave, en dos listas. \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS - ETIQUETAS_EN_INGLES}, EN ESPAÑOL, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas DEL TIPO DE VIDEO (biografías: «biografía de…», «historia de…», «documental…»; tecnología: «qué es…», «cómo funciona…», «novedades de…», «vale la pena…»). \`etiquetas_ingles\`: exactamente ${ETIQUETAS_EN_INGLES}, EN INGLÉS, tal como buscaría un latino en Estados Unidos (biografías: «Latin Grammys snub», «bachata documentary»; tecnología: «OpenAI DevDay recap», «AI agents explained»). Sin repetir y sin hashtags.`,
     "- El canal quiere que lo vean los latinos de Estados Unidos: si la historia pasa por una ciudad de allá (Nueva York, El Bronx, Miami, Los Ángeles, Las Vegas), nómbrala en la descripción y en las palabras clave.",
     "- Nada de datos que no estén en el guion. Nada de clickbait falso: la promesa del título tiene que cumplirse en el video.",
   ].join("\n");

@@ -30,10 +30,13 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
   const acento = marca ? marca.acento : documental ? "#e8b04b" : "#f59e0b";
   const fuenteTitulo = marca ? mono : documental ? serif : fontFamily;
   const { nombre, gancho } = textosMiniatura(p.titulo);
+  // Con marca, la foto ocupa la derecha y el texto va sobre el fondo del canal:
+  // así las letras nunca tapan la cara (en una foto vertical quedaban encima).
+  const PARTE_FOTO = marca ? 0.6 : 1;
   const pos = foto
     ? posicionObjeto(
         { ancho: foto.ancho, alto: foto.alto },
-        { ancho: width, alto: height },
+        { ancho: width * PARTE_FOTO, alto: height },
         foto.enfoque ?? null,
       )
     : { x: 50, y: 50 };
@@ -51,17 +54,44 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
       }}
     >
       {foto && (
-        <Img
-          src={staticFile(foto.ruta)}
-          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${pos.x}% ${pos.y}%` }}
-        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: `${PARTE_FOTO * 100}%`,
+            overflow: "hidden",
+          }}
+        >
+          <Img
+            src={staticFile(foto.ruta)}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: `${pos.x}% ${pos.y}%`,
+            }}
+          />
+        </div>
       )}
       <AbsoluteFill
         style={{
-          background: "linear-gradient(90deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.45) 45%, rgba(0,0,0,0) 75%)",
+          background: marca
+            ? `linear-gradient(90deg, ${FONDO_MARCA} 0%, ${FONDO_MARCA} 40%, rgba(3,6,11,.55) 52%, rgba(3,6,11,0) 70%)`
+            : "linear-gradient(90deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.45) 45%, rgba(0,0,0,0) 75%)",
         }}
       />
-      <AbsoluteFill style={{ justifyContent: "center", padding: "60px 70px", width: "62%" }}>
+      {marca && foto && (
+        <AbsoluteFill
+          style={{
+            width: "46%",
+            backgroundImage: `radial-gradient(circle at 20% 20%, ${marca.secundario}55 0%, transparent 60%), linear-gradient(${marca.acento}12 1px, transparent 1px), linear-gradient(90deg, ${marca.acento}12 1px, transparent 1px)`,
+            backgroundSize: "100% 100%, 64px 64px, 64px 64px",
+          }}
+        />
+      )}
+      <AbsoluteFill style={{ justifyContent: "center", padding: "60px 70px", width: marca ? "58%" : "62%" }}>
         <div style={{ width: 120, height: 12, backgroundColor: acento, borderRadius: 6, marginBottom: 22 }} />
         <div
           style={{
@@ -94,8 +124,9 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
         <div
           style={{
             position: "absolute",
-            right: 36,
-            bottom: 32,
+            // Abajo a la izquierda, debajo del texto: así no tapa la foto.
+            left: 60,
+            bottom: 36,
             display: "flex",
             alignItems: "center",
             gap: 16,

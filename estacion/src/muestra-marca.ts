@@ -2,15 +2,18 @@
 // sin producir nada ni gastar: sirve para revisar el aspecto antes de tocar un
 // video de verdad. Uso (desde estacion/):  npx tsx src/muestra-marca.ts
 // Los cuadros quedan en out/muestra-marca/.
+import { execFile } from "node:child_process";
 import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { renderStill, selectComposition } from "@remotion/renderer";
 import { MARCAS } from "@compartido/marcas";
 import { config } from "./config";
 import { FPS, type PropsVideo } from "./remotion/props";
 import { empaquetar, renderizarMiniatura } from "./render";
 
+const exec = promisify(execFile);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const marca = MARCAS["full-codigo"];
 const publica = path.join(config.CARPETA_PUBLICA, "muestra-marca");
@@ -54,7 +57,15 @@ async function principal() {
     fondoFoto: null,
     ...extra,
   });
-  const datosFoto = foto ? { ruta: "foto.jpg", ancho: 1600, alto: 1067, enfoque: { x: 0.5, y: 0.35 } } : null;
+  // Medidas reales de la foto (con `sips`, que trae la Mac), para que el recorte sea el de verdad.
+  let medidas = { ancho: 1600, alto: 1067 };
+  if (foto) {
+    const { stdout } = await exec("sips", ["-g", "pixelWidth", "-g", "pixelHeight", foto]);
+    const ancho = Number(/pixelWidth: (\d+)/.exec(stdout)?.[1]);
+    const alto = Number(/pixelHeight: (\d+)/.exec(stdout)?.[1]);
+    if (ancho > 0 && alto > 0) medidas = { ancho, alto };
+  }
+  const datosFoto = foto ? { ruta: "foto.jpg", ...medidas, enfoque: { x: 0.5, y: 0.35 } } : null;
   const escenas: PropsVideo["escenas"] = [
     escena(0, "gancho", datosFoto ? "foto" : "clip", {
       foto: datosFoto,

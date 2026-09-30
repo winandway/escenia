@@ -116,3 +116,21 @@ export function elegirCandidata(
   const puntaje = (c: CandidataWeb) => (c.cara ?? 0) * 1000 + Math.min(2, (c.ancho * c.alto) / 1_500_000);
   return [...validas].sort((a, b) => puntaje(b) - puntaje(a))[0] ?? null;
 }
+
+/**
+ * Con qué se busca la foto de una escena: lo que pide el guion y, SOLO en una
+ * biografía de persona, el nombre que abre el título como reserva («Celia
+ * Cruz: …»). En un video de tecnología el título no empieza por una persona
+ * («GPT-6.1 Astra: …» daría «GPT»): sin reserva, y si no hay foto la escena
+ * cae en un clip en vez de mostrar a cualquiera (C-IMAGEN-5).
+ */
+export function busquedasDeFoto(
+  busqueda: string,
+  titulo: string,
+  opciones: { documental: boolean; deLugar: boolean },
+): string[] {
+  const propia = busqueda.trim();
+  const nombre = (titulo.split(/[:—-]/)[0] ?? "").trim();
+  const reserva = opciones.documental && !opciones.deLugar && nombre ? [nombre] : [];
+  return [propia, ...reserva].filter(Boolean);
+}

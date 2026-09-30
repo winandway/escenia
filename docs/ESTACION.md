@@ -208,3 +208,40 @@ casi dos minutos). Si aun así falla, el video ya armado queda en la Mac con su
 `resultado.json`. Al tocar «Reintentar» en el panel, la Estación retoma la
 entrega de ese video: no vuelve a producirlo ni a gastar en voz. Candado
 C-ENTREGA-1.
+
+## Corregir un video ya producido, sin gastar otra vez
+
+Al revisar los cuadros de un video terminado puede aparecer algo que no debía
+salir (una foto con el letrero de otra empresa, un clip que no pega). No hace
+falta producirlo de nuevo: la voz, los clips y las fotos ya están en la Mac.
+
+1. Editar `estacion/out/t<número>/props.json`: cambiar esa escena (por ejemplo,
+   quitarle la `foto` y dejarla en `estilo: "clip"`).
+2. Volver a armar con la misma voz (largo, miniatura y Shorts; las versiones
+   anteriores quedan al lado como `.anterior.mp4`):
+
+   ```bash
+   cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/rearmar.ts 24
+   ```
+
+3. Subir la versión nueva al panel. Es lo mismo que tocar «Reintentar» en la
+   página del guion; la Estación ve que el video ya está armado y solo lo sube:
+
+   ```bash
+   cd /Users/windocellc/Motor-Escenia && estacion/node_modules/.bin/tsx scripts/reintentar-remoto.ts 7
+   ```
+
+`rearmar.ts` recibe el número del **trabajo** (la carpeta `t24`);
+`reintentar-remoto.ts`, el número del **guion**.
+
+## Aprobar un guion desde la Mac
+
+`scripts/aprobar-remoto.ts` hace lo mismo que el botón «Aprobar» del panel,
+con el mismo candado: sin opinión escrita (40 letras o más) no aprueba. Deja
+anotado en las notas del guion que fue por encargo. **Solo se usa cuando
+Richard lo ordena de forma explícita** («hazlo todo, no me esperes»); lo normal
+sigue siendo que él apruebe en el panel.
+
+```bash
+cd /Users/windocellc/Motor-Escenia && estacion/node_modules/.bin/tsx scripts/aprobar-remoto.ts < aprobar.json
+```

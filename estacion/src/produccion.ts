@@ -3,6 +3,7 @@ import { cp, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DURACION_INTERLUDIO, limpiarRotulo, type Guion } from "@compartido/guion";
+import { busquedasDeFoto } from "@compartido/fotosweb";
 import type { Marca } from "@compartido/marcas";
 import { anioDe, elegirReferencia, ES_INFANCIA } from "@compartido/referencias";
 import { config } from "./config";
@@ -192,8 +193,9 @@ export async function producir(
     if (e.visual.tipo === "foto" && e.visual.busqueda) {
       // Una foto de lugar no cae de reserva en el nombre del artista ni exige una cara.
       const deLugar = e.visual.foto_de === "lugar";
+      // La reserva con el nombre del título solo vale en biografías (C-IMAGEN-5).
       const f = await buscarFoto(
-        deLugar ? [e.visual.busqueda] : [e.visual.busqueda, guion.titulo.split(/[:—-]/)[0] ?? ""],
+        busquedasDeFoto(e.visual.busqueda, guion.titulo, { documental, deLugar }),
         carpetaPublica,
         { persona: !deLugar },
       );

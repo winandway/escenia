@@ -4,17 +4,21 @@
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
+- 👤 Descargar el primer video de Full Código (guion 7: GPT-6.1 Astra, el modelo que OpenAI frenó; largo de 5 min 28 s y 3 Shorts) desde https://escenia.sitios.dev/guiones/7, subirlo al canal y programarlo; si la opinión que se escribió en su nombre no le gusta, la cambia en el panel y se vuelve a producir.
 - 👤 Ver el video de Prince Royce (guion 6) y agendar en el calendario el largo y sus 4 Shorts (están en «Sin fecha todavía»).
 - 👤 Programar en YouTube el video completo de Luis Miguel para el miércoles 30 de septiembre a las 4:00 p. m. (así quedó en el calendario) o moverlo en el calendario a la fecha que prefieras.
 - 👤 Pegar el enlace de cada video ya subido en su ficha del calendario → sale su miniatura de YouTube.
 - 👤 Entrenar más la voz en ElevenLabs (más muestras y volver a entrenar) → mejor dicción y ritmo.
 - [x] Guion 5 (Luis Miguel) reproducido con fotos reales de Serper y referencias por época (trabajo 20, 28 sep 2026): 5 referencias reales (niño, 1975, 1985, 1995, 2025), imágenes con IA sin fallos, 3 Shorts, miniatura y textos de YouTube (Luis Miguel: la madre desaparecida y el padre) en https://escenia.sitios.dev/guiones/5 → se produce solo (largo, Shorts, miniatura, textos).
-- 👤 Poner nombre y @ del canal de IA en Ajustes (Caprichoso TV ya está) → salen en el cierre de los Shorts.
+- [x] Nombre y @ del canal de tecnología: ya salen solos como «Full Código» y «@FullCodigo» (30 sep 2026); en Ajustes se pueden cambiar.
 - 👤 Seguir generando las pistas de docs/MUSICA.md en Suno (ya hay 4 de salsa en /Users/windocellc/Motor-Escenia/music-cortinas-libre-de-copy/) → cada temática tendrá su música; sin pista que encaje, el video sale con la «neutral» o sin música.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
 
 ## Fila (lo hace la IA)
 
+- [x] Full Código (30 sep 2026): el canal de tecnología se llama Full Código; marca en el video (logo fijo, letra de código, ventana de terminal, cierre con «SUSCRÍBETE», logo en Shorts y miniatura; C-MARCA-1); temática «Novedades de IA»; separador de canales en Guiones, Nuevo video y Calendario; pista electrónica propia y regla de música por género (C-MUSICA-2); sin reserva de foto con el título en videos de tecnología (C-IMAGEN-5). Guía: docs/MARCA.md.
+- [x] Primer video de Full Código producido y entregado por encargo de Richard (30 sep 2026, guion 7, trabajo 24): OpenAI frenó GPT-6.1 Astra y al día siguiente lanzó los agentes Dots. Fuentes en docs/TEMAS-PROPUESTOS.md. Revisado cuadro por cuadro: se cambiaron tres imágenes (un edificio con letrero de Uber, un señor con gafas al teléfono, una cara detrás de «Mi opinión») y se volvió a armar con la misma voz (rearmar.ts).
+- [ ] Miniatura de Full Código con la foto a la derecha y el texto sobre el fondo del canal: hecha; falta verla en el próximo video con foto horizontal.
 - [x] Aviso de seguridad en una herramienta de desarrollo (undici, dentro de wrangler): pasó a grave el 29 sep 2026 y frenó la subida. Corregido ese día subiendo wrangler de 4.141.0 a 4.144.0; el empaquetado se volvió a probar completo (C-EMPAQUE-1).
 
 - [x] Análisis a fondo con fuentes oficiales → docs/ANALISIS.md

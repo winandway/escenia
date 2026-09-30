@@ -149,6 +149,19 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   quitar ese aviso. El cierre del canal dura `COLA_CON_MARCA_MS`; si se acorta,
   el botón de suscribirse no llega a leerse.
 
+## C-IMAGEN-5 — En un video de tecnología no se busca la foto de «GPT» (30 sep 2026)
+
+- **Qué se iba a romper:** cuando la foto que pide el guion no aparece, la
+  Estación buscaba de reserva el nombre que abre el título. En una biografía
+  eso es la persona («Celia Cruz: …»). En el primer video de Full Código el
+  título es «GPT-6.1 Astra: …» y la reserva habría sido «GPT», exigiendo una
+  cara: salía la foto de cualquiera.
+- **Qué se hizo:** `busquedasDeFoto` (`compartido/fotosweb.ts`) solo agrega esa
+  reserva en biografías de persona. En los demás videos, sin foto la escena cae
+  en un clip con su rótulo.
+- **Cómo se comprueba:** `pruebas/fotosweb.test.ts`, bloque C-IMAGEN-5 (en rojo:
+  con la reserva siempre puesta, falla).
+
 ## C-MUSICA-2 — La música es del mundo del video, no solo del mismo ánimo (30 sep 2026)
 
 - **Qué se rompía:** la pista se elegía por palabras en común con el estilo del
