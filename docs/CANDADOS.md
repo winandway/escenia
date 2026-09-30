@@ -166,6 +166,11 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Cómo se comprueba:** `pruebas/fotosweb.test.ts` (en rojo al apagar el
   filtro de agencias). Las dos fotos del video de Prince Royce se cambiaron y
   el video se volvió a armar con la misma voz.
+- **También ese día:** una escena de relleno («award trophy backstage») salió
+  con un trofeo de fútbol americano. El prompt ahora pide que, en historias de
+  música, los clips de relleno se busquen en el mundo de la música y evita las
+  palabras que traen deportes. Y el fondo difuminado de una escena de foto es
+  su propia foto: al cambiar una foto a mano hay que cambiar también su fondo.
 - **Qué NO tocar:** la lista de agencias solo crece; para una persona la cara
   sigue siendo obligatoria.
 
