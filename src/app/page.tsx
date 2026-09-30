@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { ChipCanal } from "@/componentes/ChipCanal";
+import { FiltroCanal } from "@/componentes/FiltroCanal";
 import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
 import { listarGuiones, latidoEstacion } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
 import { estacionViva } from "@/lib/estacion-estado";
 import { gastadoHoy, topeDiario } from "@/lib/presupuesto";
-import { buscarTematica } from "@compartido/tematicas";
+import { canalDesde } from "@compartido/canales";
+import { buscarTematica, type Canal } from "@compartido/tematicas";
 
 export const dynamic = "force-dynamic";
 
@@ -23,16 +26,22 @@ const TEXTO_TRABAJO: Record<string, string> = {
   cancelado: "Cancelado",
 };
 
-export default async function PaginaInicio() {
+const uno = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+// Un guion de una temática que ya no existe se cuenta en el canal de tecnología, como hace la Estación.
+const canalDe = (tematicaId: string): Canal => buscarTematica(tematicaId)?.canal ?? "canal-ia";
+
+export default async function PaginaInicio(props: PageProps<"/">) {
   await exigirSesion();
+  const canal = canalDesde(uno((await props.searchParams).canal));
   const { db } = await contexto();
-  const [guiones, gasto, tope, latido] = await Promise.all([
+  const [todos, gasto, tope, latido] = await Promise.all([
     listarGuiones(db),
     gastadoHoy(db),
     topeDiario(db),
     latidoEstacion(db),
   ]);
   const viva = estacionViva(latido);
+  const guiones = canal ? todos.filter((g) => canalDe(g.tematica_id) === canal) : todos;
 
   return (
     <Marco titulo="Guiones">
@@ -48,15 +57,23 @@ export default async function PaginaInicio() {
             {viva ? "conectada" : "apagada"}
           </strong>
         </span>
-        <Link href="/nuevo" className="boton ml-auto">
+        <Link href={canal ? `/nuevo?canal=${canal}` : "/nuevo"} className="boton ml-auto">
           Nuevo video
         </Link>
       </div>
 
+      <div className="mb-5">
+        <FiltroCanal
+          elegido={canal}
+          enlace={(c) => (c ? `/?canal=${c}` : "/")}
+          cuenta={(c) => (c ? todos.filter((g) => canalDe(g.tematica_id) === c).length : todos.length)}
+        />
+      </div>
+
       {guiones.length === 0 ? (
         <div className="tarjeta text-sm text-neutral-300">
-          Todavía no hay guiones. Toca <strong>Nuevo video</strong>, escribe un tema y el motor te propone el
-          guion.
+          {canal ? "Todavía no hay guiones de este canal." : "Todavía no hay guiones."} Toca{" "}
+          <strong>Nuevo video</strong>, escribe un tema y el motor te propone el guion.
         </div>
       ) : (
         <ul className="space-y-2">
@@ -68,6 +85,7 @@ export default async function PaginaInicio() {
               >
                 <span className="text-xs text-neutral-500">#{g.id}</span>
                 <span className="basis-full font-medium sm:basis-auto sm:flex-1">{g.titulo}</span>
+                <ChipCanal canal={canalDe(g.tematica_id)} />
                 <span className="text-xs text-neutral-400">
                   {buscarTematica(g.tematica_id)?.nombre ?? g.tematica_id}
                 </span>

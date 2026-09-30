@@ -122,6 +122,51 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** el conversor a letras sigue delante de la voz; solo cambió
   lo que se muestra. El prompt no debe volver a pedir «números en letras».
 
+## C-MARCA-1 — Un video de Full Código sale con la marca de Full Código (30 sep 2026)
+
+- **Qué faltaba / cómo se veía:** el canal de tecnología se llamaba «Canal de
+  IA», sin nombre ni @ (el cierre de los Shorts salía sin tarjeta de canal), y
+  sus videos se veían igual que una biografía de Caprichoso TV: ámbar, sin logo.
+  En el panel no había forma de separar los guiones de un canal de los del otro.
+- **Qué se hizo:** (1) el canal es **Full Código** (@FullCodigo) por defecto
+  (`compartido/canales.ts`, `NOMBRE_CANAL`); (2) `compartido/marcas.ts` dice qué
+  canal tiene marca; la Estación la resuelve por la temática del trabajo y
+  `produccion.ts` copia el logo y la pasa en las props (`marca`); (3) la
+  plantilla dibuja la marca con las piezas de `estacion/src/remotion/Marca.tsx`:
+  logo fijo, letra de código, título de terminal, rótulos `// …`, ventana de
+  noticias, cierre con «SUSCRÍBETE», logo en el cierre de los Shorts y en la
+  miniatura; (4) temática nueva `novedades-ia`; (5) separador de canales en
+  Guiones, Nuevo video y Calendario (`FiltroCanal`, `ChipCanal`). Todo el
+  detalle en [MARCA.md](MARCA.md).
+- **Cómo se comprueba:** `pruebas/marca.test.ts` y `pruebas/filtro-canal.test.tsx`
+  (comprobadas en rojo: sin marca para el canal, y sin pasar la marca a la
+  plantilla, fallan). A la vista: `npx tsx src/muestra-marca.ts` desde
+  `estacion/` deja 15 cuadros en `out/muestra-marca/`.
+- **Qué NO tocar:** `Marca.tsx` y `props.ts` no pueden importar de
+  `@compartido` (el empaquetador de Remotion no resuelve ese alias): por eso los
+  colores viajan dentro de `marca` en las props. Si falta el logo, el video sale
+  SIN marca y la Estación lo dice en el registro («MARCA: falta el logo…»); no
+  quitar ese aviso. El cierre del canal dura `COLA_CON_MARCA_MS`; si se acorta,
+  el botón de suscribirse no llega a leerse.
+
+## C-MUSICA-2 — La música es del mundo del video, no solo del mismo ánimo (30 sep 2026)
+
+- **Qué se rompía:** la pista se elegía por palabras en común con el estilo del
+  guion, y el ánimo contaba igual que el género. Un video de tecnología que
+  pedía algo «upbeat» se habría quedado con una salsa, porque la salsa también
+  es «upbeat» y el catálogo solo tenía música latina.
+- **Qué se hizo:** `elegirPista` (`compartido/musica.ts`) exige coincidir en algo
+  de fondo (género, época, instrumento, origen); las palabras de ánimo
+  (`ANIMOS`) solo desempatan. Y el motor trae su propia pista electrónica,
+  `estacion/recursos/musica/electronic-tech-synth-minimal-curious-pulse.mp3`,
+  escrita nota por nota por `scripts/musica-tech.mjs` (propia, sin derechos de
+  terceros; por eso sí va en el repositorio).
+- **Cómo se comprueba:** `pruebas/musica.test.ts`, bloque C-MUSICA-2 (en rojo:
+  sin la regla, el video de tecnología se queda con la salsa). En la Estación,
+  el paso «música: electronic-tech-…» al producir un video de Full Código.
+- **Qué NO tocar:** el nombre del archivo ES su ficha (con esas palabras se
+  elige). Si se regenera la pista, conservar el nombre.
+
 ## C-ENTREGA-1 — Un corte de red no tumba una producción, y reintentar no produce dos veces (30 sep 2026)
 
 - **Qué se rompió / cómo se veía:** el guion 6 (Prince Royce) se armó completo

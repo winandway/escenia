@@ -1,19 +1,50 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { useBorrador } from "@/componentes/useBorrador";
 import { ETIQUETA_VOZ, VOCES } from "@compartido/guion";
+import type { Canal } from "@compartido/tematicas";
 import { crearGuion, type EstadoNuevo } from "./acciones";
 
 type Props = {
-  tematicas: { id: string; nombre: string; ctaProductos: string[] }[];
+  canales: { id: Canal; nombre: string }[];
+  canalInicial: Canal;
+  tematicas: { id: string; nombre: string; canal: Canal }[];
   productos: { id: string; nombre: string }[];
 };
 
-export function FormularioNuevo({ tematicas, productos }: Props) {
+const COLOR_CANAL: Record<Canal, string> = {
+  "canal-ia": "border-emerald-400 bg-emerald-400 text-neutral-950",
+  "caprichoso-tv": "border-amber-500 bg-amber-500 text-neutral-950",
+};
+
+export function FormularioNuevo({ canales, canalInicial, tematicas, productos }: Props) {
   const [estado, accion, pendiente] = useActionState<EstadoNuevo, FormData>(crearGuion, { error: "" });
   const { ref, recuperado, empezarDeNuevo, descartar } = useBorrador("nuevo-video");
+  const [canal, setCanal] = useState<Canal>(canalInicial);
+  const primeraDe = (c: Canal) => tematicas.find((t) => t.canal === c)?.id ?? "";
+
+  // Si el borrador recuperado trae una temática de otro canal, el separador se pone en ese canal.
+  useEffect(() => {
+    const aviso = setTimeout(() => {
+      const campo = ref.current?.elements.namedItem("tematica_id");
+      if (!(campo instanceof HTMLSelectElement)) return;
+      const guardada = tematicas.find((t) => t.id === campo.value);
+      if (guardada) setCanal(guardada.canal);
+    }, 0);
+    return () => clearTimeout(aviso);
+  }, [ref, tematicas]);
+
+  function elegirCanal(c: Canal) {
+    setCanal(c);
+    const campo = ref.current?.elements.namedItem("tematica_id");
+    if (campo instanceof HTMLSelectElement) {
+      campo.value = primeraDe(c);
+      // Para que el borrador guarde la temática nueva.
+      campo.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
 
   return (
     <form
@@ -25,7 +56,36 @@ export function FormularioNuevo({ tematicas, productos }: Props) {
       }}
       className="max-w-2xl space-y-5"
     >
-      <AvisoBorrador visible={recuperado} alEmpezarDeNuevo={empezarDeNuevo} />
+      <AvisoBorrador
+        visible={recuperado}
+        alEmpezarDeNuevo={() => {
+          empezarDeNuevo();
+          setCanal(canalInicial);
+        }}
+      />
+
+      <div>
+        <span className="etiqueta" id="etiqueta-canal">
+          Canal
+        </span>
+        <div className="flex flex-wrap gap-2" role="group" aria-labelledby="etiqueta-canal">
+          {canales.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              aria-pressed={canal === c.id}
+              onClick={() => elegirCanal(c.id)}
+              className={`rounded-full border px-4 py-2 text-sm font-medium ${
+                canal === c.id
+                  ? COLOR_CANAL[c.id]
+                  : "border-neutral-700 text-neutral-200 hover:bg-neutral-800"
+              }`}
+            >
+              {c.nombre}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div>
         <label htmlFor="titulo" className="etiqueta">
@@ -46,9 +106,17 @@ export function FormularioNuevo({ tematicas, productos }: Props) {
         <label htmlFor="tematica_id" className="etiqueta">
           Temática
         </label>
-        <select id="tematica_id" name="tematica_id" required className="campo">
+        {/* Todas las temáticas están en la lista (así el borrador puede devolver cualquiera);
+            las de otro canal quedan escondidas hasta que se elige ese canal. */}
+        <select
+          id="tematica_id"
+          name="tematica_id"
+          required
+          className="campo"
+          defaultValue={primeraDe(canalInicial)}
+        >
           {tematicas.map((t) => (
-            <option key={t.id} value={t.id}>
+            <option key={t.id} value={t.id} hidden={t.canal !== canal} disabled={t.canal !== canal}>
               {t.nombre}
             </option>
           ))}

@@ -6,6 +6,8 @@ import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEn
 import { panel } from "./panel";
 import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
+import { marcaDeCanal } from "@compartido/marcas";
+import { buscarTematica } from "@compartido/tematicas";
 
 const ESPERA_MS = 30_000;
 const ESPERA_ERROR_MS = 60_000;
@@ -48,6 +50,8 @@ async function unaVuelta(): Promise<boolean> {
         trabajo.plantilla,
         (servicio, detalle, costo) => panel.gasto(trabajo.id, servicio, detalle, costo).catch(() => {}),
         trabajo.canal,
+        // El canal de la temática decide la marca del video (logo, colores, cierre).
+        marcaDeCanal(buscarTematica(trabajo.tematica_id)?.canal),
       );
       await guardarProduccion(trabajo.id, huella, r);
       if (r.costoVozUsd > 0)

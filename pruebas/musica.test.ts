@@ -41,6 +41,40 @@ describe("elegir la pista de fondo", () => {
   });
 });
 
+describe("la música tiene que ser del mundo del video (C-MUSICA-2)", () => {
+  const soloLatino = [
+    "salsa-1950s-cuban-brass-congas-upbeat.mp3",
+    "bolero-1950s-guitar-trio-romantic-melancholic.mp3",
+    "son-cubano-1940s-tres-guitar-warm.mp3",
+  ];
+
+  it("un video de tecnología no se queda con una salsa solo por compartir el ánimo", () => {
+    expect(elegirPista("upbeat electronic, energetic synths, festive", soloLatino)).toBeNull();
+    expect(elegirPista("soft minimal electronic, warm, romantic", soloLatino)).toBeNull();
+  });
+
+  it("con una pista electrónica en el catálogo, esa es la que gana", () => {
+    const conTech = [...soloLatino, "electronic-tech-synth-minimal-curious-pulse.mp3"];
+    expect(elegirPista("minimal electronic, soft synths, tech, curious", conTech)?.archivo).toBe(
+      "electronic-tech-synth-minimal-curious-pulse.mp3",
+    );
+    expect(elegirPista("upbeat futuristic digital beat", conTech)?.archivo).toBe(
+      "electronic-tech-synth-minimal-curious-pulse.mp3",
+    );
+  });
+
+  it("el ánimo sigue desempatando entre pistas del mismo género", () => {
+    const salsas = ["salsa-1950s-cuban-brass-soft.mp3", "salsa-1950s-cuban-brass-upbeat.mp3"];
+    expect(elegirPista("1950s Cuban salsa, festive", salsas)?.archivo).toBe(
+      "salsa-1950s-cuban-brass-upbeat.mp3",
+    );
+  });
+
+  it("una bachata sin pista propia todavía puede caer en otra pista de guitarra", () => {
+    expect(elegirPista("Dominican bachata, romantic guitar, bongos", soloLatino)?.archivo).toMatch(/guitar/);
+  });
+});
+
 describe("volumen de la música (C-MUSICA-1)", () => {
   const interludios = [{ inicioMs: 60_000, finMs: 66_000 }];
   const finVoz = 120_000;

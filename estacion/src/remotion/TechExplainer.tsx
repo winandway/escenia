@@ -17,6 +17,19 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import {
+  CierreMarca,
+  Cursor,
+  LogoRedondo,
+  MarcaFija,
+  MarcoCodigo,
+  mono,
+  PALETA_MARCA,
+  RotuloCodigo,
+  TarjetaNoticia,
+  TituloTerminal,
+  type MarcaVideo,
+} from "./Marca";
 import { CIERRE_SHORT_MS, FPS, INTRO_SHORT_MS, type PropsVideo } from "./props";
 
 const { fontFamily } = loadFont("normal", {
@@ -93,8 +106,14 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
   const enInterludio = interludios.some((tr) => tMs >= tr.inicioMs && tMs < tr.finMs);
   const whooshes = p.sfx.whoosh;
   const documental = p.tema === "documental";
-  const acento = documental ? ORO : AMBAR;
-  const fuenteTitulos = documental ? serif : fontFamily;
+  // Con marca, el video toma los colores y la letra de código del canal.
+  const marca = p.marca;
+  const acento = marca ? marca.acento : documental ? ORO : AMBAR;
+  const fuenteTitulos = marca ? mono : documental ? serif : fontFamily;
+  const paleta = marca ? PALETA_MARCA : PALETA;
+  // Donde termina la voz del video largo empieza el cierre del canal.
+  const inicioCierreMarca = aFrame(p.duracionMs) + 8;
+  const finMarcaFija = v ? durationInFrames - cierreFrames : inicioCierreMarca;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", fontFamily }}>
@@ -107,7 +126,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
           1,
           aFrame(Math.min(e.finMs, finVentanaMs)) - desde + (ultima ? cierreFrames : TRANSICION),
         );
-        const colores = PALETA[i % PALETA.length] ?? PALETA[0];
+        const colores = paleta[i % paleta.length] ?? PALETA[0];
         const whoosh = whooshes.length ? (whooshes[i % whooshes.length] ?? null) : null;
         return (
           <Sequence key={i} from={desde} durationInFrames={dur} name={`escena ${i + 1} · ${e.parte}`}>
@@ -124,6 +143,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               fuenteTitulos={fuenteTitulos}
               boom={p.sfx.boom}
               whoosh={whoosh}
+              marca={marca}
             />
             {whoosh && !primera && <Audio src={staticFile(whoosh)} volume={0.4} />}
           </Sequence>
@@ -133,14 +153,26 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       {/* Título como banda encima de la primera imagen: nada de portada oscura,
           los primeros 3 segundos son imagen y voz (C-GANCHO-1). */}
       <Sequence from={0} durationInFrames={Math.round(FPS * 3)} name="título">
-        <TituloBanda
-          texto={v ? v.titulo : p.titulo}
-          vertical={vertical}
-          acento={acento}
-          fuente={fuenteTitulos}
-        />
+        {marca ? (
+          <TituloTerminal texto={v ? v.titulo : p.titulo} vertical={vertical} marca={marca} />
+        ) : (
+          <TituloBanda
+            texto={v ? v.titulo : p.titulo}
+            vertical={vertical}
+            acento={acento}
+            fuente={fuenteTitulos}
+          />
+        )}
         {p.sfx.riser && <Audio src={staticFile(p.sfx.riser)} volume={0.22} />}
       </Sequence>
+
+      {/* Marca del canal: tinte, esquinas de visor y el logo fijo (se quita en el cierre) */}
+      {marca && <MarcoCodigo marca={marca} vertical={vertical} />}
+      {marca && finMarcaFija > 0 && (
+        <Sequence from={0} durationInFrames={finMarcaFija} name="logo del canal">
+          <MarcaFija marca={marca} vertical={vertical} />
+        </Sequence>
+      )}
 
       {/* Subtítulos palabra por palabra */}
       {pagina && !enInterludio && (
@@ -170,13 +202,27 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       {/* Cierre del short: invita a ver el video completo */}
       {v && (
         <Sequence from={Math.max(0, durationInFrames - cierreFrames)} name="cierre-short">
-          <CierreShort titulo={p.titulo} acento={acento} fuente={fuenteTitulos} cierre={p.cierre} />
+          <CierreShort
+            titulo={p.titulo}
+            acento={acento}
+            fuente={fuenteTitulos}
+            cierre={p.cierre}
+            marca={marca}
+          />
           {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
         </Sequence>
       )}
 
-      {/* Cierre con producto (solo en el video largo) */}
-      {!v && p.producto && (
+      {/* Cierre del canal (solo en el video largo): logo, «suscríbete» y el @ */}
+      {!v && marca && (
+        <Sequence from={inicioCierreMarca} name="cierre del canal">
+          <CierreMarca marca={marca} vertical={vertical} producto={p.producto} />
+          {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
+        </Sequence>
+      )}
+
+      {/* Cierre con producto (solo en el video largo y sin marca) */}
+      {!v && !marca && p.producto && (
         <Sequence from={Math.max(0, durationInFrames - FPS * 6)} name="cta">
           <Cierre nombre={p.producto.nombre} url={p.producto.url} vertical={vertical} acento={acento} />
           {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
@@ -185,7 +231,13 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
 
       {/* Barra de progreso */}
       <AbsoluteFill style={{ justifyContent: "flex-end" }}>
-        <div style={{ height: 8, width: `${(frame / durationInFrames) * 100}%`, backgroundColor: acento }} />
+        <div
+          style={{
+            height: 8,
+            width: `${(frame / durationInFrames) * 100}%`,
+            background: marca ? `linear-gradient(90deg, ${marca.acento}, ${marca.secundario})` : acento,
+          }}
+        />
       </AbsoluteFill>
 
       {/* Marca discreta de voz de prueba: solo los primeros 3 segundos, abajo a la derecha */}
@@ -257,6 +309,7 @@ const EscenaVista: React.FC<{
   fuenteTitulos: string;
   boom: string | null;
   whoosh: string | null;
+  marca: MarcaVideo | null;
 }> = ({
   escena,
   indice,
@@ -270,6 +323,7 @@ const EscenaVista: React.FC<{
   fuenteTitulos,
   boom,
   whoosh,
+  marca,
 }) => {
   const frame = useCurrentFrame();
   const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
@@ -285,6 +339,7 @@ const EscenaVista: React.FC<{
         colores={colores}
         durFrames={durFrames}
         difuminado={esFrase || esFoto || esTitular || esRecorte}
+        cuadricula={marca?.acento ?? null}
       />
       {esFoto && escena.foto && escena.fotos.length <= 1 && (
         <FotoConMovimiento
@@ -306,9 +361,19 @@ const EscenaVista: React.FC<{
           fuente={fuenteTitulos}
           vertical={vertical}
           boom={boom}
+          codigo={marca !== null}
         />
       )}
-      {esRecorte && escena.recorte && escena.recorte.tipo === "periodico" && (
+      {esRecorte && escena.recorte && escena.recorte.tipo === "periodico" && marca && (
+        <TarjetaNoticia
+          recorte={escena.recorte}
+          retraso={retraso}
+          marca={marca}
+          vertical={vertical}
+          whoosh={whoosh}
+        />
+      )}
+      {esRecorte && escena.recorte && escena.recorte.tipo === "periodico" && !marca && (
         <Periodico
           recorte={escena.recorte}
           retraso={retraso}
@@ -336,6 +401,15 @@ const EscenaVista: React.FC<{
             retraso={retraso}
             acento={acento}
             fuente={fuenteTitulos}
+            codigo={marca !== null}
+          />
+        ) : marca ? (
+          <RotuloCodigo
+            texto={escena.textoEnPantalla}
+            vertical={vertical}
+            retraso={retraso}
+            marca={marca}
+            abajo={esFoto}
           />
         ) : (
           <Rotulo
@@ -362,7 +436,9 @@ const Fondo: React.FC<{
   colores: readonly [string, string];
   durFrames: number;
   difuminado: boolean;
-}> = ({ clip, fondoFoto, colores, durFrames, difuminado }) => {
+  /** Color de la cuadrícula del fondo de reserva (canales con marca), o null. */
+  cuadricula?: string | null;
+}> = ({ clip, fondoFoto, colores, durFrames, difuminado, cuadricula = null }) => {
   const frame = useCurrentFrame();
   // Movimiento lento (Ken Burns) para que ningún plano se sienta quieto.
   const zoom = interpolate(frame, [0, Math.max(1, durFrames)], [1.02, 1.12], { extrapolateRight: "clamp" });
@@ -408,7 +484,16 @@ const Fondo: React.FC<{
         background: `radial-gradient(circle at 30% 30%, ${colores[1]} 0%, ${colores[0]} 70%)`,
         transform: `scale(${zoom})`,
       }}
-    />
+    >
+      {cuadricula && (
+        <AbsoluteFill
+          style={{
+            backgroundImage: `linear-gradient(${cuadricula}12 1px, transparent 1px), linear-gradient(90deg, ${cuadricula}12 1px, transparent 1px)`,
+            backgroundSize: "64px 64px",
+          }}
+        />
+      )}
+    </AbsoluteFill>
   );
 };
 
@@ -421,7 +506,9 @@ const TitularGolpe: React.FC<{
   fuente: string;
   vertical: boolean;
   boom: string | null;
-}> = ({ titular, fecha, retraso, acento, fuente, vertical, boom }) => {
+  /** Letra de código (más ancha): el titular va un poco más chico para que quepa. */
+  codigo?: boolean;
+}> = ({ titular, fecha, retraso, acento, fuente, vertical, boom, codigo = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const golpe = spring({ frame: frame - retraso, fps, config: { damping: 9, stiffness: 260, mass: 0.9 } });
@@ -439,9 +526,9 @@ const TitularGolpe: React.FC<{
           transform: `scale(${0.6 + golpe * 0.4}) translate(${sacudida}px, ${-sacudida}px)`,
           opacity: Math.min(1, golpe * 1.4),
           fontFamily: fuente,
-          fontSize: vertical ? 120 : 150,
+          fontSize: codigo ? (vertical ? 96 : 128) : vertical ? 120 : 150,
           fontWeight: 900,
-          lineHeight: 0.95,
+          lineHeight: codigo ? 1.02 : 0.95,
           textAlign: "center",
           color: "#fff",
           textTransform: "uppercase",
@@ -461,7 +548,8 @@ const TitularGolpe: React.FC<{
             fontSize: vertical ? 56 : 64,
             fontWeight: 700,
             color: acento,
-            letterSpacing: 6,
+            fontFamily: codigo ? fuente : undefined,
+            letterSpacing: codigo ? 2 : 6,
             backgroundColor: "rgba(0,0,0,.55)",
             padding: "6px 28px",
             borderRadius: 8,
@@ -787,7 +875,9 @@ const FraseGrande: React.FC<{
   retraso: number;
   acento: string;
   fuente: string;
-}> = ({ texto, vertical, retraso, acento, fuente }) => {
+  /** Letra de código: más ancha (va más chica) y con el cursor al final. */
+  codigo?: boolean;
+}> = ({ texto, vertical, retraso, acento, fuente, codigo = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const palabras = texto.split(/\s+/).filter(Boolean);
@@ -796,9 +886,9 @@ const FraseGrande: React.FC<{
       <div
         style={{
           textAlign: "center",
-          fontSize: vertical ? 96 : 104,
+          fontSize: codigo ? (vertical ? 80 : 90) : vertical ? 96 : 104,
           fontWeight: 900,
-          lineHeight: 1.05,
+          lineHeight: codigo ? 1.12 : 1.05,
           color: "#fff",
           textShadow: "0 8px 40px rgba(0,0,0,.9)",
           maxWidth: "100%",
@@ -826,6 +916,7 @@ const FraseGrande: React.FC<{
             </span>
           );
         })}
+        {codigo && frame > retraso + palabras.length * 3 + 6 && <Cursor color={acento} alto="0.8em" />}
       </div>
     </AbsoluteFill>
   );
@@ -888,7 +979,8 @@ const CierreShort: React.FC<{
   acento: string;
   fuente: string;
   cierre: PropsVideo["cierre"];
-}> = ({ titulo, acento, fuente, cierre }) => {
+  marca?: MarcaVideo | null;
+}> = ({ titulo, acento, fuente, cierre, marca = null }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const letrero = spring({ frame, fps, config: { damping: 9, stiffness: 180 } });
@@ -903,7 +995,9 @@ const CierreShort: React.FC<{
   return (
     <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", padding: "0 64px" }}>
       <AbsoluteFill style={{ backgroundColor: "rgba(0,0,0,.66)" }} />
-      <div style={{ width: "100%", maxWidth: 960, textAlign: "center" }}>
+      <div
+        style={{ width: "100%", maxWidth: 960, textAlign: "center", fontFamily: marca ? fuente : undefined }}
+      >
         <div style={{ fontSize: 46, fontWeight: 700, color: "#fff", letterSpacing: 3, opacity: letrero }}>
           ¿TE GUSTÓ?
         </div>
@@ -915,7 +1009,7 @@ const CierreShort: React.FC<{
             borderRadius: 26,
             backgroundColor: acento,
             color: "#111",
-            fontSize: 60,
+            fontSize: marca ? 54 : 60,
             fontWeight: 900,
             letterSpacing: 1,
             transform: `scale(${0.6 + letrero * 0.4})`,
@@ -1072,31 +1166,35 @@ const CierreShort: React.FC<{
               textAlign: "left",
             }}
           >
-            <div
-              style={{
-                width: 110,
-                height: 110,
-                borderRadius: 26,
-                backgroundColor: acento,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
+            {marca ? (
+              <LogoRedondo logo={marca.logo} lado={118} color={acento} />
+            ) : (
               <div
                 style={{
-                  width: 0,
-                  height: 0,
-                  marginLeft: 8,
-                  borderTop: "26px solid transparent",
-                  borderBottom: "26px solid transparent",
-                  borderLeft: "42px solid #111",
+                  width: 110,
+                  height: 110,
+                  borderRadius: 26,
+                  backgroundColor: acento,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
                 }}
-              />
-            </div>
-            <div>
-              <div style={{ fontSize: 60, fontWeight: 900, color: "#fff", lineHeight: 1.05 }}>
+              >
+                <div
+                  style={{
+                    width: 0,
+                    height: 0,
+                    marginLeft: 8,
+                    borderTop: "26px solid transparent",
+                    borderBottom: "26px solid transparent",
+                    borderLeft: "42px solid #111",
+                  }}
+                />
+              </div>
+            )}
+            <div style={{ fontFamily: marca ? fuente : undefined }}>
+              <div style={{ fontSize: marca ? 54 : 60, fontWeight: 900, color: "#fff", lineHeight: 1.05 }}>
                 {cierre?.canalNombre}
               </div>
               {cierre?.canalUsuario && (

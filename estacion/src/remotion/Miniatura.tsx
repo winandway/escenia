@@ -5,6 +5,7 @@ import { AbsoluteFill, Img, staticFile, useVideoConfig } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { loadFont as loadSerif } from "@remotion/google-fonts/PlayfairDisplay";
 import { posicionObjeto } from "./enfoque";
+import { FONDO_MARCA, LogoRedondo, mono } from "./Marca";
 import type { PropsVideo } from "./props";
 
 const { fontFamily } = loadFont("normal", { weights: ["700", "900"], subsets: ["latin", "latin-ext"] });
@@ -25,7 +26,9 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
   const fotos = p.escenas.flatMap((e) => [...(e.foto ? [e.foto] : []), ...e.fotos]);
   const foto = fotos.find((f) => f.enfoque) ?? fotos[0] ?? null;
   const documental = p.tema === "documental";
-  const acento = documental ? "#e8b04b" : "#f59e0b";
+  const marca = p.marca;
+  const acento = marca ? marca.acento : documental ? "#e8b04b" : "#f59e0b";
+  const fuenteTitulo = marca ? mono : documental ? serif : fontFamily;
   const { nombre, gancho } = textosMiniatura(p.titulo);
   const pos = foto
     ? posicionObjeto(
@@ -35,7 +38,18 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
       )
     : { x: 50, y: 50 };
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0b0b0b", fontFamily }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor: marca ? FONDO_MARCA : "#0b0b0b",
+        fontFamily,
+        // Sin foto, un canal con marca no deja la portada negra: cuadrícula con sus colores.
+        backgroundImage:
+          marca && !foto
+            ? `radial-gradient(circle at 78% 40%, ${marca.secundario}66 0%, transparent 55%), linear-gradient(${marca.acento}14 1px, transparent 1px), linear-gradient(90deg, ${marca.acento}14 1px, transparent 1px)`
+            : undefined,
+        backgroundSize: marca && !foto ? "100% 100%, 64px 64px, 64px 64px" : undefined,
+      }}
+    >
       {foto && (
         <Img
           src={staticFile(foto.ruta)}
@@ -51,11 +65,11 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
         <div style={{ width: 120, height: 12, backgroundColor: acento, borderRadius: 6, marginBottom: 22 }} />
         <div
           style={{
-            fontSize: nombre.length > 16 ? 84 : 104,
+            fontSize: marca ? (nombre.length > 14 ? 70 : 92) : nombre.length > 16 ? 84 : 104,
             fontWeight: 900,
-            lineHeight: 0.98,
+            lineHeight: marca ? 1.04 : 0.98,
             color: "#fff",
-            fontFamily: documental ? serif : fontFamily,
+            fontFamily: fuenteTitulo,
             textShadow: "0 6px 30px rgba(0,0,0,.9)",
           }}
         >
@@ -76,6 +90,34 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
           </div>
         )}
       </AbsoluteFill>
+      {marca && (
+        <div
+          style={{
+            position: "absolute",
+            right: 36,
+            bottom: 32,
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            padding: "10px 26px 10px 10px",
+            borderRadius: 999,
+            backgroundColor: "rgba(3,6,11,.82)",
+          }}
+        >
+          <LogoRedondo logo={marca.logo} lado={84} color={marca.acento} />
+          <div
+            style={{
+              fontFamily: mono,
+              fontWeight: 800,
+              fontSize: 34,
+              color: marca.acento,
+              textTransform: "uppercase",
+            }}
+          >
+            {marca.nombre}_
+          </div>
+        </div>
+      )}
     </AbsoluteFill>
   );
 };

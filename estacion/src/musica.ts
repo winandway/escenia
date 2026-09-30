@@ -84,6 +84,9 @@ export async function prepararMusica(estilo: string, carpetaPublica: string): Pr
     ruta: "musica.mp3",
     duracionSeg: Number(stdout.trim()) || 0,
     archivo: elegida.archivo,
-    credito: `Música de fondo: «${nombre}» (instrumental generada con IA)`,
+    // La pista del repositorio la escribe el propio motor (scripts/musica-tech.mjs); las demás salen de Suno.
+    credito: origen.startsWith(CARPETAS_MUSICA[0] ?? "\0")
+      ? `Música de fondo: «${nombre}» (instrumental propia, sintetizada por el motor)`
+      : `Música de fondo: «${nombre}» (instrumental generada con IA)`,
   };
 }

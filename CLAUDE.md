@@ -10,6 +10,7 @@
 - Calendario de publicaciones: [docs/CALENDARIO.md](docs/CALENDARIO.md).
 - Bajar un video de YouTube: [docs/DESCARGAR-VIDEOS.md](docs/DESCARGAR-VIDEOS.md).
 - App instalable en el teléfono: [docs/APP.md](docs/APP.md).
+- La marca de cada canal en el video (Full Código) y el separador de canales: [docs/MARCA.md](docs/MARCA.md).
 - Temas propuestos y sus fuentes: [docs/TEMAS-PROPUESTOS.md](docs/TEMAS-PROPUESTOS.md).
 - Estrategia de temas (dónde el clic es más caro): [docs/ESTRATEGIA-TEMAS.md](docs/ESTRATEGIA-TEMAS.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
@@ -28,7 +29,8 @@
 - Windoce es una sola persona (Richard). Remotion se usa con la licencia gratis (≤3 personas); no volver a preguntarlo.
 
 - Nada se publica sin aprobación de Richard; «Aprobar» exige su opinión escrita (≥ 40 letras).
-- Piloto solo en el canal de IA; Caprichoso TV entra después (temáticas `activa: false`).
+- Dos canales: **Full Código** (@FullCodigo, tecnología e IA; id interno `canal-ia`, con marca propia en el video) y **Caprichoso TV** (biografías). Richard sube y programa los videos él mismo.
+- `scripts/aprobar-remoto.ts` aprueba un guion desde la Mac (con opinión escrita, igual que el panel): solo cuando Richard lo ordena de forma explícita.
 - Temas, prompts finos y spots viven en la base, no en el código (el repo es público).
 - Rutas de backend en `/datos/*`, nunca `/api/*`.
 - Tope de gasto diario en la base; modelos caros bloqueados en `compartido/modelos.ts`.

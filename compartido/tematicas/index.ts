@@ -27,6 +27,33 @@ const PRODUCTOS_SOFTWARE = ["blisor", "beellon", "qrbott", "tintora", "yadominio
 
 export const TEMATICAS: Tematica[] = [
   {
+    id: "novedades-ia",
+    nombre: "Novedades de IA: lanzamientos y qué cambia",
+    canal: "canal-ia",
+    activa: true,
+    tono: "directo y sin rodeos, de alguien que construye software con IA todos los días; claro para quien no programa, con opinión propia y sin exagerar",
+    duracionObjetivo: { largo: 300, short: 50 },
+    plantilla: "TechExplainer",
+    ctaProductos: [],
+    estructuras: [
+      ["gancho", "contexto", "dato", "problema", "dato", "opinion", "cierre"],
+      ["gancho", "dato", "contexto", "dato", "problema", "opinion", "cierre"],
+      ["gancho", "problema", "contexto", "dato", "dato", "opinion", "cierre"],
+    ],
+    bibliotecaEtiquetas: ["sorpresa", "tension", "exito", "error"],
+    densidadRecursos: "media",
+    cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
+    reglas: [
+      "Abre con el dato más sorprendente de la noticia en la primera frase, sin presentar el tema ni saludar.",
+      "Toda cifra, fecha, nombre de producto y cita sale del contexto pegado. Un precio o un número que no esté ahí no se dice.",
+      "Después de cada novedad, di en una frase qué cambia para una persona o un negocio que usa estas herramientas.",
+      "Aquí no hay un personaje único: la primera escena es una «foto» real de quien protagoniza la noticia (la persona, el producto o el lugar; si no es una persona, con `visual.foto_de`: «lugar»). No uses «ia». El «periodico» aquí se ve como una ventana de noticias: úsalo para el hecho central, con su fecha real.",
+      "Cada escena «dato» o «problema» arranca con una frase que se entienda sola, porque de ahí salen los Shorts.",
+      "Para los clips «stock» busca imágenes de tecnología concretas («server room lights», «programmer typing code», «robot arm factory»), nunca gente genérica de oficina sonriendo.",
+      "`musica`: siempre electrónica instrumental («minimal electronic, soft synths, tech, curious»).",
+    ],
+  },
+  {
     id: "ia-apps",
     nombre: "IA y apps: construí esto con IA",
     canal: "canal-ia",
@@ -145,6 +172,6 @@ export const PUBLICACION_PERMITIDA: Record<Canal, boolean> = {
 };
 
 export const NOMBRE_CANAL: Record<Canal, string> = {
-  "canal-ia": "Canal de IA",
+  "canal-ia": "Full Código",
   "caprichoso-tv": "Caprichoso TV",
 };

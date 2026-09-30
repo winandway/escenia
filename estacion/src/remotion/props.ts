@@ -80,6 +80,20 @@ export const esquemaPropsVideo = z.object({
     })
     .nullable()
     .default(null),
+  // Marca del canal (logo, nombre, @ y lema): con marca, el video sale con el
+  // aspecto del canal (letra de código, colores del logo, logo fijo y cierre propio).
+  marca: z
+    .object({
+      id: z.string(),
+      logo: z.string(), // ruta relativa al publicDir
+      nombre: z.string(),
+      usuario: z.string(),
+      lema: z.string().default(""),
+      acento: z.string(),
+      secundario: z.string(),
+    })
+    .nullable()
+    .default(null),
   // Short: trozo del video largo que se dibuja en 9:16, con su título al
   // arrancar y un cierre de «ver video completo». Todo lo demás es lo mismo.
   ventana: z
@@ -101,8 +115,15 @@ export const COLA_FINAL_MS = 1500;
 // Con música, el video respira al final: la música sube unos segundos y se apaga.
 export const COLA_CON_MUSICA_MS = 4000;
 
-export function duracionEnFrames(duracionMs: number, conMusica = false): number {
-  return Math.ceil(((duracionMs + (conMusica ? COLA_CON_MUSICA_MS : COLA_FINAL_MS)) / 1000) * FPS);
+// Con marca, el video largo termina con el cierre del canal (logo y «suscríbete»).
+export const COLA_CON_MARCA_MS = 5500;
+
+export function colaFinalMs(conMusica: boolean, conMarca: boolean): number {
+  return conMarca ? COLA_CON_MARCA_MS : conMusica ? COLA_CON_MUSICA_MS : COLA_FINAL_MS;
+}
+
+export function duracionEnFrames(duracionMs: number, conMusica = false, conMarca = false): number {
+  return Math.ceil(((duracionMs + colaFinalMs(conMusica, conMarca)) / 1000) * FPS);
 }
 
 // Sin portada: el short arranca con imagen y voz en el segundo cero; el título
@@ -118,9 +139,10 @@ export function duracionShortEnFrames(ventana: { inicioMs: number; finMs: number
 export function framesDe(props: {
   duracionMs: number;
   musica?: unknown;
+  marca?: unknown;
   ventana?: { inicioMs: number; finMs: number } | null;
 }): number {
   return props.ventana
     ? duracionShortEnFrames(props.ventana)
-    : duracionEnFrames(props.duracionMs, Boolean(props.musica));
+    : duracionEnFrames(props.duracionMs, Boolean(props.musica), Boolean(props.marca));
 }

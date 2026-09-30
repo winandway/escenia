@@ -83,8 +83,8 @@ export function FormularioAjustes(p: Props) {
           Canales (salen en el cierre de los Shorts: «ver video completo en…»)
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
-          <CampoCanal id="canal_ia_nombre" etiqueta="Canal de IA: nombre" valor={p.canales.iaNombre} />
-          <CampoCanal id="canal_ia_usuario" etiqueta="Canal de IA: usuario (@)" valor={p.canales.iaUsuario} />
+          <CampoCanal id="canal_ia_nombre" etiqueta="Full Código: nombre" valor={p.canales.iaNombre} />
+          <CampoCanal id="canal_ia_usuario" etiqueta="Full Código: usuario (@)" valor={p.canales.iaUsuario} />
           <CampoCanal
             id="canal_caprichoso_nombre"
             etiqueta="Caprichoso TV: nombre"

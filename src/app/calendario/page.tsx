@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ChipCanal } from "@/componentes/ChipCanal";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
+import { FiltroCanal } from "@/componentes/FiltroCanal";
 import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
 import {
@@ -33,7 +35,8 @@ import {
   type EstadoCalendario,
   type Plataforma,
 } from "@compartido/calendario";
-import { NOMBRE_CANAL } from "@compartido/tematicas";
+import { canalDesde } from "@compartido/canales";
+import type { Canal } from "@compartido/tematicas";
 import { marcarEstado, quitarEntrada } from "./acciones";
 import { BotonAgendarTodas } from "./BotonAgendarTodas";
 import { ChipPlataforma } from "./ChipPlataforma";
@@ -76,6 +79,8 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
   const elegida = Math.trunc(Number(uno(sp.entrada)) || 0);
   // Filtro opcional por red social; sin filtro se ve todo junto.
   const filtro: Plataforma | null = PLATAFORMAS.find((p) => p === uno(sp.plataforma)) ?? null;
+  // Separador de canales: sin elegir ninguno se ven los dos juntos.
+  const canal = canalDesde(uno(sp.canal));
 
   const { db } = await contexto();
   const reglas = await reglasCalendario(db);
@@ -92,18 +97,37 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
   ]);
 
   // Una sola lista: TODO lo que falta por publicarse, de todos los canales y plataformas.
-  const deLaRed = (e: EntradaCalendario) => !filtro || e.plataforma === filtro;
+  const deLaRed = (e: EntradaCalendario) =>
+    (!filtro || e.plataforma === filtro) && (!canal || e.canal === canal);
   const porSalir = futuras.filter((e) => deLaRed(e) && !yaSalio(e, hoy) && !sePasoLaFecha(e, hoy));
   const dias = porDia(porSalir);
   const publicados = anteriores.filter((e) => deLaRed(e) && yaSalio(e, hoy));
   const vencidos = anteriores.filter((e) => deLaRed(e) && sePasoLaFecha(e, hoy));
   const sinHora = porSalir.filter((e) => e.hora === "");
-  const plan = repartir(futuras, lista, PLATAFORMA_PRINCIPAL, reglas, hoy);
+  const plan = repartir(futuras, lista, PLATAFORMA_PRINCIPAL, reglas, hoy).filter(
+    (p) => !canal || p.canal === canal,
+  );
   const seleccion = elegidaEnBase && elegidaEnBase.estado !== "descartado" ? elegidaEnBase : undefined;
   const delGuionElegido = seleccion?.guion_id ? await entradasDeGuion(db, seleccion.guion_id) : [];
   const faltantesDe = (p: { guion_id: number | null; pieza: "largo" | "short"; indice: number }) =>
     plataformasFaltantes(enPlataformas, p);
-  const enlaceFiltro = (p: Plataforma | null) => (p ? `/calendario?plataforma=${p}` : "/calendario");
+  // Los dos filtros se combinan: cambiar de red no suelta el canal, ni al revés.
+  const enlaceCon = (p: Plataforma | null, c: Canal | null) => {
+    const q = new URLSearchParams();
+    if (c) q.set("canal", c);
+    if (p) q.set("plataforma", p);
+    const texto = q.toString();
+    return texto ? `/calendario?${texto}` : "/calendario";
+  };
+  const enlaceFiltro = (p: Plataforma | null) => enlaceCon(p, canal);
+  const cuantasDe = (c: Canal | null) =>
+    futuras.filter(
+      (e) =>
+        (!filtro || e.plataforma === filtro) &&
+        (!c || e.canal === c) &&
+        !yaSalio(e, hoy) &&
+        !sePasoLaFecha(e, hoy),
+    ).length;
   const propias = await miniaturasDeGuiones(
     db,
     [...porSalir, ...plan, ...publicados, ...vencidos, ...(seleccion ? [seleccion] : [])].map(
@@ -120,7 +144,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
             <div className="min-w-0">
               <div className="flex flex-wrap gap-1.5">
                 <span className="chip bg-amber-500/15 text-amber-300">{nombrePieza(seleccion)}</span>
-                <span className="chip bg-neutral-800 text-neutral-300">{NOMBRE_CANAL[seleccion.canal]}</span>
+                <ChipCanal canal={seleccion.canal} />
                 <ChipPlataforma plataforma={seleccion.plataforma} />
                 <span className={`chip border ${COLOR[seleccion.estado]}`}>
                   {yaSalio(seleccion, hoy) ? NOMBRE_ESTADO.publicado : COMO_VA[seleccion.estado]}
@@ -259,6 +283,9 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
         <p className="mb-3 text-sm text-neutral-400">
           Todo lo que viene, en orden. Lo que ya salió no aparece aquí. Toca un video para ver su ficha.
         </p>
+        <div className="mb-3">
+          <FiltroCanal elegido={canal} enlace={(c) => enlaceCon(filtro, c)} cuenta={cuantasDe} />
+        </div>
         <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Red social">
           <Link
             href={enlaceFiltro(null)}
@@ -316,8 +343,8 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
 
         {dias.length === 0 ? (
           <p className="tarjeta text-sm text-neutral-300">
-            {filtro
-              ? `No hay nada pendiente por publicarse en ${NOMBRE_PLATAFORMA[filtro]}.`
+            {filtro || canal
+              ? "No hay nada pendiente por publicarse con ese filtro."
               : "No hay nada pendiente por publicarse. Cuando programes un video, aparece aquí con su día y su hora."}
           </p>
         ) : (
@@ -357,10 +384,11 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                               {e.hora ? hora12(e.hora) : "Falta la hora"}
                             </span>
                             <ChipPlataforma plataforma={e.plataforma} />
+                            <ChipCanal canal={e.canal} />
                           </span>
                           <span className="mt-0.5 block text-neutral-100">{e.titulo}</span>
                           <span className="mt-1 block text-xs opacity-80">
-                            {nombrePieza(e)} · {NOMBRE_CANAL[e.canal]} · {COMO_VA[e.estado]}
+                            {nombrePieza(e)} · {COMO_VA[e.estado]}
                           </span>
                         </span>
                       </Link>
@@ -440,7 +468,8 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
                       <ChipPlataforma plataforma={e.plataforma} />
-                      {cuando(e.fecha, e.hora)} · {nombrePieza(e)} · {NOMBRE_CANAL[e.canal]}
+                      <ChipCanal canal={e.canal} />
+                      {cuando(e.fecha, e.hora)} · {nombrePieza(e)}
                     </span>
                     <span className="block text-neutral-200">{e.titulo}</span>
                   </span>

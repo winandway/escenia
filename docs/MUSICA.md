@@ -5,6 +5,15 @@
 > debajo de la voz; y en alguna parte que el locutor deje de hablar, la música
 > suba y pasen imágenes».
 
+## La pista propia del motor (30 sep 2026)
+
+Para los videos de tecnología (Full Código) el motor trae su propia pista
+electrónica, `estacion/recursos/musica/electronic-tech-synth-minimal-curious-pulse.mp3`.
+La escribe nota por nota `scripts/musica-tech.mjs`: es nuestra, sin derechos de
+terceros, y por eso sí va en el repositorio. Las pistas de Suno de esta lista
+siguen yendo en la Mac. Una pista se elige por género, época o instrumento; el
+ánimo solo desempata (C-MUSICA-2): un video de tecnología no sale con salsa.
+
 ## Qué hace el motor (ya construido)
 
 1. **Cada guion trae un estilo de música** (`musica`, en inglés, lo escribe la

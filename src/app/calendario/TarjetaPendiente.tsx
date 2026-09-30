@@ -9,7 +9,7 @@ import {
   type Plataforma,
   type ReglasCalendario,
 } from "@compartido/calendario";
-import { NOMBRE_CANAL } from "@compartido/tematicas";
+import { ChipCanal } from "@/componentes/ChipCanal";
 import { agendarPieza, quitarDeLaLista, type EstadoForm } from "./acciones";
 import { ChipPlataforma } from "./ChipPlataforma";
 import { MenuTresPuntos } from "./MenuTresPuntos";
@@ -58,7 +58,7 @@ export function TarjetaPendiente({
           <span className="chip bg-amber-500/15 text-amber-300">
             {pieza.pieza === "short" ? "Short" : "Video largo"}
           </span>
-          <span className="chip bg-neutral-800 text-neutral-300">{NOMBRE_CANAL[pieza.canal]}</span>
+          <ChipCanal canal={pieza.canal} />
           <ChipPlataforma plataforma={plataforma} />
         </div>
         <div className="ml-auto">

@@ -3,6 +3,7 @@ import { cp, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DURACION_INTERLUDIO, limpiarRotulo, type Guion } from "@compartido/guion";
+import type { Marca } from "@compartido/marcas";
 import { anioDe, elegirReferencia, ES_INFANCIA } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
@@ -74,6 +75,40 @@ async function prepararSfx(carpetaPublica: string): Promise<PropsVideo["sfx"]> {
 
 export type Plantilla = "TechExplainer" | "MiniDocumental";
 
+const CARPETA_MARCAS = path.resolve(aqui, "../recursos/marcas");
+
+/**
+ * Copia el logo del canal a la carpeta pública del trabajo y arma la marca del
+ * video. Si el logo no está, el video sale sin marca y se avisa: un canal con
+ * marca nunca sale con un hueco donde iba el logo.
+ */
+async function prepararMarca(
+  marca: Marca | null,
+  canal: { nombre: string; usuario: string } | null,
+  carpetaPublica: string,
+): Promise<PropsVideo["marca"]> {
+  if (!marca) return null;
+  const origen = path.join(CARPETA_MARCAS, marca.carpeta, "logo.png");
+  try {
+    await mkdir(path.join(carpetaPublica, "marca"), { recursive: true });
+    await cp(origen, path.join(carpetaPublica, "marca", "logo.png"));
+  } catch (err) {
+    console.error(
+      `MARCA: falta el logo de «${marca.id}» en ${origen}; el video sale sin marca. ${err instanceof Error ? err.message : err}`,
+    );
+    return null;
+  }
+  return {
+    id: marca.id,
+    logo: "marca/logo.png",
+    nombre: canal?.nombre ?? "",
+    usuario: canal?.usuario ?? "",
+    lema: marca.lema,
+    acento: marca.acento,
+    secundario: marca.secundario,
+  };
+}
+
 export async function producir(
   clave: string,
   guion: Guion,
@@ -82,6 +117,7 @@ export async function producir(
   plantilla: Plantilla = "TechExplainer",
   gastar: Gastar = async () => {},
   canal: { nombre: string; usuario: string } | null = null,
+  marca: Marca | null = null,
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
@@ -102,6 +138,12 @@ export async function producir(
   const rutaSubtitulos = path.join(carpetaTrabajo, "subtitulos.json");
   await writeFile(rutaSubtitulos, JSON.stringify({ palabras: voz.palabras, tramos: voz.tramos }, null, 2));
   const sfx = await prepararSfx(carpetaPublica);
+  const marcaVideo = await prepararMarca(marca, canal, carpetaPublica);
+  if (marca)
+    await avisar(
+      marcaVideo ? `marca del canal: ${marcaVideo.nombre || marca.id}` : "marca del canal: FALTA EL LOGO",
+      33,
+    );
 
   await avisar("eligiendo la música de fondo", 34);
   const creditos: string[] = [];
@@ -284,6 +326,7 @@ export async function producir(
     tema: plantilla === "MiniDocumental" ? "documental" : "tech",
     sfx,
     musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg } : null,
+    marca: marcaVideo,
     ventana: null,
     cierre: null,
   };

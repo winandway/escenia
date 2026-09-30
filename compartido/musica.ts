@@ -1,8 +1,9 @@
 // Elige la pista de música de fondo del catálogo local según el estilo que
 // pide el guion (`musica`, en inglés). Las pistas se nombran con sus palabras
 // clave (ver docs/MUSICA.md): «salsa-1950s-cuban-brass-congas-upbeat.mp3».
-// Gana la que comparte más palabras; sin coincidencias, la pista «neutral»;
-// sin catálogo, no hay música (y la Estación lo dice).
+// Gana la que comparte más palabras, siempre que coincida en algo más que el
+// ánimo (C-MUSICA-2); sin coincidencias, la pista «neutral»; sin catálogo, no
+// hay música (y la Estación lo dice).
 const SINONIMOS: Record<string, string> = {
   "50s": "1950s",
   fifties: "1950s",
@@ -107,6 +108,28 @@ export function palabrasClave(texto: string): string[] {
   return [...vistas];
 }
 
+// Palabras de ÁNIMO: sirven para desempatar entre pistas del mismo género, pero
+// solas no alcanzan. Un video de tecnología que pide algo «upbeat» no puede
+// terminar con una salsa debajo solo porque la salsa también es «upbeat».
+const ANIMOS = new Set([
+  "upbeat",
+  "soft",
+  "melancholic",
+  "tense",
+  "triumphant",
+  "romantic",
+  "warm",
+  "playful",
+  "driving",
+  "curious",
+  "minimal",
+  "reflective",
+  "hopeful",
+  "serious",
+  "modern",
+  "latin",
+]);
+
 export type PistaElegida = { archivo: string; puntos: number };
 
 const ES_AUDIO = /\.(mp3|m4a|wav|aac|ogg)$/i;
@@ -118,7 +141,9 @@ export function elegirPista(estilo: string, archivos: string[]): PistaElegida | 
   let mejor: PistaElegida | null = null;
   for (const archivo of pistas) {
     const propias = new Set(palabrasClave(archivo.replace(ES_AUDIO, "")));
-    const puntos = claves.filter((c) => propias.has(c)).length;
+    const comunes = claves.filter((c) => propias.has(c));
+    // Tiene que coincidir en algo de fondo (género, época, instrumento, origen), no solo en el ánimo.
+    const puntos = comunes.some((c) => !ANIMOS.has(c)) ? comunes.length : 0;
     if (!mejor || puntos > mejor.puntos) mejor = { archivo, puntos };
   }
   if (mejor && mejor.puntos > 0) return mejor;

@@ -28,6 +28,7 @@ const vacio: PropsVideo = {
   tema: "tech",
   sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null },
   musica: null,
+  marca: null,
   ventana: null,
   cierre: null,
 };
