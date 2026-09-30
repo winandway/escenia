@@ -5,8 +5,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import {
   esquemaGuion,
+  esquemaPublicacionDeLaIA,
   esquemaPublicacionGenerada,
+  ETIQUETAS_EN_INGLES,
   ETIQUETAS_MAXIMAS,
+  unirEtiquetas,
   type Guion,
   type Publicacion,
   type ShortPublicado,
@@ -26,7 +29,7 @@ export function instruccionesPublicacion(): string {
     `- \`titulo\`: máximo 70 letras, con el nombre de la persona o del tema y una promesa concreta que dé curiosidad; sin mayúsculas sostenidas, sin comillas de relleno, sin emojis.`,
     "- \`shorts[].titulo\`: uno por cada short, máximo 60 letras, cada uno con un gancho DISTINTO sacado de lo que se cuenta en ESAS escenas (un giro, un dato, una frase); sin la palabra «parte», sin numerarlos, sin hashtags.",
     "- \`descripcion\`: 3 párrafos cortos que cuenten de qué va el video sin destriparlo, con las palabras clave dichas de forma natural, y al final una línea con 4 o 5 hashtags.",
-    `- \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS} palabras clave, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas («biografía de…», «historia de…», «documental…»). Sin repetir y sin hashtags. De las ${ETIQUETAS_MAXIMAS}, entre 6 y 8 van EN INGLÉS, tal como buscaría un latino en Estados Unidos (ej.: «Latin Grammys snub», «bachata documentary», «Prince Royce story»); el resto en español.`,
+    `- En total quedan ${ETIQUETAS_MAXIMAS} palabras clave, en dos listas. \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS - ETIQUETAS_EN_INGLES}, EN ESPAÑOL, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas («biografía de…», «historia de…», «documental…»). \`etiquetas_ingles\`: exactamente ${ETIQUETAS_EN_INGLES}, EN INGLÉS, tal como buscaría un latino en Estados Unidos (ej.: «Latin Grammys snub», «bachata documentary», «Prince Royce story»). Sin repetir y sin hashtags.`,
     "- El canal quiere que lo vean los latinos de Estados Unidos: si la historia pasa por una ciudad de allá (Nueva York, El Bronx, Miami, Los Ángeles, Las Vegas), nómbrala en la descripción y en las palabras clave.",
     "- Nada de datos que no estén en el guion. Nada de clickbait falso: la promesa del título tiene que cumplirse en el video.",
   ].join("\n");
@@ -76,7 +79,7 @@ export async function generarPublicacion(
     thinking: { type: "disabled" },
     system: instruccionesPublicacion(),
     messages: [{ role: "user", content: mensajePublicacion(guion, tematica, shorts) }],
-    output_config: { format: zodOutputFormat(esquemaPublicacionGenerada) },
+    output_config: { format: zodOutputFormat(esquemaPublicacionDeLaIA) },
   });
   await anotarGasto(
     db,
@@ -85,7 +88,14 @@ export async function generarPublicacion(
     costoTokensUsd(modelo, respuesta.usage.input_tokens, respuesta.usage.output_tokens),
   );
   if (!respuesta.parsed_output) throw new Error("La IA devolvió los textos con formato inválido.");
-  const generada = esquemaPublicacionGenerada.parse(respuesta.parsed_output);
+  // La IA puede mandar palabras clave de más: se dejan las que caben, no se rechaza el trabajo.
+  const cruda = esquemaPublicacionDeLaIA.parse(respuesta.parsed_output);
+  const generada = esquemaPublicacionGenerada.parse({
+    titulo: cruda.titulo,
+    descripcion: cruda.descripcion,
+    shorts: cruda.shorts,
+    etiquetas: unirEtiquetas(cruda.etiquetas, cruda.etiquetas_ingles),
+  });
   const publicacion: Publicacion = {
     ...generada,
     generado_en: new Date().toISOString(),

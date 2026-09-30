@@ -109,6 +109,41 @@ export const esquemaPublicacionGenerada = z.object({
     .array(z.object({ indice: z.number().int().min(1), titulo: z.string().trim().min(8).max(100) }))
     .max(8),
 });
+/** Cuántas de las palabras clave van en inglés (público latino de Estados Unidos). */
+export const ETIQUETAS_EN_INGLES = 8;
+
+/**
+ * Lo que se le pide a la IA: las palabras clave en dos listas, español e
+ * inglés, con holgura. Si manda de más no se rechaza el trabajo: `unirEtiquetas`
+ * deja exactamente las que caben (C-PUBLICACION-2).
+ */
+export const esquemaPublicacionDeLaIA = z.object({
+  titulo: z.string().trim().min(10).max(100),
+  descripcion: z.string().trim().min(40).max(4500),
+  etiquetas: z.array(z.string().trim().min(2).max(60)).min(10).max(60),
+  etiquetas_ingles: z.array(z.string().trim().min(2).max(60)).max(30).default([]),
+  shorts: z
+    .array(z.object({ indice: z.number().int().min(1), titulo: z.string().trim().min(8).max(100) }))
+    .max(8),
+});
+
+/** Une las dos listas sin repetir y sin pasar del máximo: primero el español, al final el inglés. */
+export function unirEtiquetas(espanol: string[], ingles: string[]): string[] {
+  const vistas = new Set<string>();
+  const unicas = (lista: string[]) =>
+    lista
+      .map((e) => e.trim())
+      .filter((e) => {
+        const clave = e.toLowerCase();
+        if (e.length < 2 || vistas.has(clave)) return false;
+        vistas.add(clave);
+        return true;
+      });
+  const en = unicas(ingles).slice(0, ETIQUETAS_EN_INGLES);
+  const es = unicas(espanol).slice(0, ETIQUETAS_MAXIMAS - en.length);
+  return [...es, ...en];
+}
+
 export const esquemaShortPublicado = z.object({
   indice: z.number().int().min(1),
   titulo_original: z.string().default(""),

@@ -150,6 +150,21 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   ya entregado, «Reintentar» sí produce desde cero (la producción entregada no
   se retoma).
 
+## C-PUBLICACION-2 — Palabras clave de más no tumban los textos de YouTube (30 sep 2026)
+
+- **Qué se rompió:** al pedir que parte de las 30 palabras clave fueran en
+  inglés, la IA devolvió 30 en español más las de inglés y el panel rechazó
+  todo con «expected array to have <=30 items». Los textos anteriores quedaron
+  intactos, pero no se podían volver a escribir.
+- **Qué se hizo:** a la IA se le piden dos listas (`etiquetas` en español y
+  `etiquetas_ingles`) con holgura (`esquemaPublicacionDeLaIA`), y `unirEtiquetas`
+  deja exactamente 30: hasta 8 en inglés y el resto en español, sin repetir.
+  Lo que se guarda sigue validándose con el esquema de 30.
+- **Cómo se comprueba:** `pruebas/publicacion.test.ts` («si la IA manda palabras
+  clave de más…»), en rojo al quitar el recorte.
+- **Qué NO tocar:** no volver a validar lo que escribe la IA con el tope
+  exacto; el tope se aplica al unir.
+
 ## C-VERSIONES-1 — En el panel se ve la última entrega, no todas mezcladas (30 sep 2026)
 
 - **Qué pasaba:** al corregir dos fotos del video de Prince Royce y entregarlo
