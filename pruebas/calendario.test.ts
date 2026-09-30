@@ -311,6 +311,36 @@ describe("calendario: en la base", () => {
     });
   });
 
+  it("lo ya programado en la plataforma se anota tal como está y avisa si quedó pegado a otro", async () => {
+    const programado = (p: Record<string, unknown>) =>
+      short({ fecha: "2026-10-02", estado: "programado", ...p });
+    expect(await agendar(db, programado({ hora: "11:00", titulo: "El de las once" }), ya)).toMatchObject({
+      ok: true,
+      aviso: "",
+    });
+    // A 15 minutos de otro: es un hecho, se guarda, y se avisa.
+    expect(
+      await agendar(db, programado({ hora: "11:15", titulo: "El de las once y cuarto" }), ya),
+    ).toMatchObject({
+      ok: true,
+      aviso: expect.stringContaining("Queda a menos de 3 horas de «El de las once»") as string,
+    });
+    // Un PLAN nuevo (agendado) sí se frena frente a esos hechos.
+    expect(
+      await agendar(db, short({ fecha: "2026-10-02", hora: "12:00", titulo: "Plan nuevo" }), ya),
+    ).toEqual({
+      ok: false,
+      error: expect.stringContaining("Queda a menos de 3 horas") as string,
+    });
+    // Y dos planes nunca comparten hora, ni siquiera escribiendo directo en la base.
+    expect((await agendar(db, short({ fecha: "2026-10-05", hora: "12:00" }), ya)).ok).toBe(true);
+    await expect(
+      db.ejecutar(
+        `INSERT INTO calendario (pieza, titulo, canal, plataforma, fecha, hora) VALUES ('short', 'Colado', 'caprichoso-tv', 'youtube', '2026-10-05', '12:00')`,
+      ),
+    ).rejects.toThrow(/UNIQUE/i);
+  });
+
   it("pide los datos que faltan con palabras claras", async () => {
     expect(await agendar(db, short({ titulo: "" }), ya)).toEqual({
       ok: false,

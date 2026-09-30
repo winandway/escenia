@@ -145,7 +145,8 @@ export const esquemaAgendar = z.object({
 });
 
 export type ResultadoAgendar =
-  { ok: true; id: number; fecha: string; hora: string } | { ok: false; error: string };
+  /** `aviso`: se guardó, pero quedó pegado a otra publicación (solo pasa con lo ya programado). */
+  { ok: true; id: number; fecha: string; hora: string; aviso: string } | { ok: false; error: string };
 
 async function entradasDelCanal(db: BaseDatos, pedido: Pedido, desde: string, hasta: string) {
   return db.todos<EntradaCalendario>(
@@ -200,9 +201,11 @@ export async function agendar(
   const delGuion = d.guion_id ? await entradasDeGuion(db, d.guion_id) : [];
   const vistas = [...cerca, ...delGuion.filter((e) => !cerca.some((c) => c.id === e.id))];
   const choque = revisarHueco(vistas, { ...pedido, fecha: d.fecha, hora: d.hora }, reglas);
-  // Lo que ya salió es historia: se anota tal como pasó, aunque haya salido pegado a
-  // otro video o al mismo minuto. Las reglas cuidan lo que todavía no sale.
-  if (choque && !yaSalio) {
+  // Lo que ya está programado en la plataforma, o ya salió, es un HECHO: se anota tal
+  // como está y se avisa si quedó pegado a otro. Las reglas frenan lo que todavía es
+  // un plan («agendado»), que es donde se puede elegir otra hora.
+  const esUnHecho = d.estado === "programado" || d.estado === "publicado";
+  if (choque && !esUnHecho) {
     const todas = await entradasDelCanal(db, pedido, hoy.fecha, sumarDias(hoy.fecha, 125));
     const libre = proximoHueco(
       [...todas, ...delGuion.filter((e) => !todas.some((c) => c.id === e.id))],
@@ -215,6 +218,7 @@ export async function agendar(
       error: `${choque.mensaje}${libre ? ` ${conPunto(`El próximo hueco libre es ${cuando(libre.fecha, libre.hora)}`)}` : ""}`,
     };
   }
+  const aviso = choque && d.estado === "programado" ? choque.mensaje : "";
 
   try {
     if (previa) {
@@ -222,7 +226,7 @@ export async function agendar(
         `UPDATE calendario SET titulo = ?, canal = ?, fecha = ?, hora = ?, estado = ?, nota = ?, enlace = ?, actualizado_en = datetime('now') WHERE id = ?`,
         [d.titulo, d.canal, d.fecha, d.hora, d.estado, d.nota, enlace.enlace || previa.enlace, previa.id],
       );
-      return { ok: true, id: previa.id, fecha: d.fecha, hora: d.hora };
+      return { ok: true, id: previa.id, fecha: d.fecha, hora: d.hora, aviso };
     }
     const r = await db.ejecutar(
       `INSERT INTO calendario (guion_id, pieza, indice, titulo, canal, plataforma, fecha, hora, estado, nota, enlace)
@@ -241,7 +245,7 @@ export async function agendar(
         enlace.enlace,
       ],
     );
-    return { ok: true, id: r.ultimoId ?? 0, fecha: d.fecha, hora: d.hora };
+    return { ok: true, id: r.ultimoId ?? 0, fecha: d.fecha, hora: d.hora, aviso };
   } catch (e) {
     // El índice único de la base es la última barrera (dos guardados a la vez).
     if (/UNIQUE|constraint/i.test(e instanceof Error ? e.message : String(e)))

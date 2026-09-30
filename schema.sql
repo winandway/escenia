@@ -163,11 +163,12 @@ CREATE TABLE IF NOT EXISTS calendario (
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS calendario_fecha ON calendario(fecha, hora);
--- Candado C-CALENDARIO-1: la base misma impide dos publicaciones a la misma hora.
--- Lo ya publicado queda fuera: es historia y se anota tal como salió.
+-- Candado C-CALENDARIO-1: la base misma impide dos PLANES a la misma hora.
+-- Lo ya programado en la plataforma y lo ya publicado son hechos: se anotan tal como están.
 DROP INDEX IF EXISTS calendario_hueco;
-CREATE UNIQUE INDEX IF NOT EXISTS calendario_hueco_2 ON calendario(canal, plataforma, fecha, hora)
-  WHERE hora != '' AND estado NOT IN ('descartado', 'publicado');
+DROP INDEX IF EXISTS calendario_hueco_2;
+CREATE UNIQUE INDEX IF NOT EXISTS calendario_hueco_3 ON calendario(canal, plataforma, fecha, hora)
+  WHERE hora != '' AND estado = 'agendado';
 -- Cada pieza de un guion va una sola vez por plataforma (moverla la cambia, no la duplica).
 CREATE UNIQUE INDEX IF NOT EXISTS calendario_pieza ON calendario(guion_id, pieza, indice, plataforma)
   WHERE guion_id IS NOT NULL;

@@ -34,6 +34,10 @@ const textos = (datos: FormData): Record<string, string> => {
   return r;
 };
 
+/** «Guardado», y si quedó pegado a otra publicación, el aviso. */
+const conAviso = (texto: string, aviso: string) =>
+  aviso ? `${conPunto(texto)} Ojo: ${aviso}` : conPunto(texto);
+
 /** La hora llega del chip tocado o, si se escribió otra, del campo «Otra hora». */
 const horaDe = (c: Record<string, string>) => c.hora || c.hora_libre || "";
 
@@ -44,7 +48,7 @@ export async function agendarPieza(_previo: EstadoForm, datos: FormData): Promis
   const r = await agendar(db, { ...c, hora: horaDe(c) }, new Date());
   if (!r.ok) return { error: r.error, ok: "" };
   refrescar();
-  return { error: "", ok: conPunto(`Agendado: ${cuando(r.fecha, r.hora)}`) };
+  return { error: "", ok: conAviso(`Agendado: ${cuando(r.fecha, r.hora)}`, r.aviso) };
 }
 
 export async function agregarManual(_previo: EstadoManual, datos: FormData): Promise<EstadoManual> {
@@ -54,7 +58,7 @@ export async function agregarManual(_previo: EstadoManual, datos: FormData): Pro
   const r = await agendar(db, { ...c, guion_id: "", indice: 0 }, new Date());
   if (!r.ok) return { error: r.error, ok: "", valores: c };
   refrescar();
-  return { error: "", ok: conPunto(`Agregado: ${cuando(r.fecha, r.hora)}`), valores: {} };
+  return { error: "", ok: conAviso(`Agregado: ${cuando(r.fecha, r.hora)}`, r.aviso), valores: {} };
 }
 
 export async function moverEntrada(_previo: EstadoForm, datos: FormData): Promise<EstadoForm> {
@@ -66,7 +70,7 @@ export async function moverEntrada(_previo: EstadoForm, datos: FormData): Promis
   const r = await mover(db, id.data, c.fecha ?? "", horaDe(c), new Date());
   if (!r.ok) return { error: r.error, ok: "" };
   refrescar();
-  return { error: "", ok: conPunto(`Ahora sale: ${cuando(r.fecha, r.hora)}`) };
+  return { error: "", ok: conAviso(`Ahora sale: ${cuando(r.fecha, r.hora)}`, r.aviso) };
 }
 
 const esquemaFiltro = z.object({

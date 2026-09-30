@@ -65,9 +65,12 @@ Dentro del mismo canal y la misma plataforma:
 
 Cuando rechaza, dice con qué video choca y cuál es el próximo hueco libre.
 
-**Lo que ya salió es historia:** una publicación marcada «Publicado» se anota
-tal como pasó, aunque haya salido pegada a otra o al mismo minuto. Las reglas
-cuidan lo que todavía no sale, y sí lo comparan contra lo ya publicado.
+**Un plan se frena; un hecho se anota.** Las reglas frenan lo que todavía es un
+plan («Agendado»), que es donde se puede elegir otra hora. Lo que ya está
+«Programado» en la plataforma o ya «Publicado» es un hecho: se anota tal como
+está y, si quedó pegado a otra publicación, el calendario lo avisa («Ojo: queda
+a menos de 3 horas de…»). Richard programa a veces dos videos a 15 minutos o
+tres Shorts el mismo día; el calendario tiene que mostrar la verdad.
 
 ## Cómo está hecho
 
