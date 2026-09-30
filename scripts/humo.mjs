@@ -35,4 +35,7 @@ if (fallos) {
   console.error(`\n${fallos} ruta(s) fallaron en ${base}. Esto es una EMERGENCIA si es producción.`);
   process.exit(1);
 }
-console.log(`\nTodo bien en ${base}.`);
+const salud = await fetch(base + "/datos/salud")
+  .then((r) => r.json())
+  .catch(() => null);
+console.log(`\nTodo bien en ${base}. Versión en vivo: ${salud?.version ?? "no la dice"}.`);

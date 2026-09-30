@@ -122,6 +122,18 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** el conversor a letras sigue delante de la voz; solo cambió
   lo que se muestra. El prompt no debe volver a pedir «números en letras».
 
+## C-VERSION-1 — El canario dice qué versión está en vivo (29 sep 2026)
+
+- **Qué pasaba:** después de publicar no había forma de comprobar desde fuera
+  que la versión nueva ya se estaba sirviendo; lo nuevo vivía en pantallas con
+  contraseña. Richard abrió la app y no supo si ya tenía el cambio.
+- **Qué se hizo:** la publicación compila con `NEXT_PUBLIC_VERSION` (el commit)
+  y `/datos/salud` lo devuelve en `version`. `scripts/humo.mjs` lo imprime.
+- **Cómo se comprueba:** `curl -s https://escenia.sitios.dev/datos/salud` tiene
+  que decir los 7 primeros caracteres del último commit de `main`.
+- **Qué NO tocar:** no afirmar «publicado y comprobado en vivo» sin ver esa
+  versión en el canario.
+
 ## C-CALENDARIO-1 — Dos videos no salen a la misma hora ni demasiado juntos (29 sep 2026)
 
 - **Qué pasaba:** con producción para publicar a diario, Richard programaba en

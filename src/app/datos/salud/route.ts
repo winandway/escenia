@@ -41,7 +41,14 @@ export async function GET() {
   }
   const todoBien = Object.values(piezas).every((v) => v !== "error");
   return Response.json(
-    { estado: todoBien ? "ok" : "error", piezas, detalle, hora: new Date().toISOString() },
+    {
+      estado: todoBien ? "ok" : "error",
+      piezas,
+      detalle,
+      // Qué versión del panel está en vivo: así se comprueba que una publicación ya llegó.
+      version: (process.env.NEXT_PUBLIC_VERSION ?? "local").slice(0, 7),
+      hora: new Date().toISOString(),
+    },
     { status: todoBien ? 200 : 503, headers: { "cache-control": "no-store" } },
   );
 }
