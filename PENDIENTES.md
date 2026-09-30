@@ -25,6 +25,7 @@
 - [x] Publicar: repo público https://github.com/winandway/escenia + Action verde → rama `yapanel-build` → sitio EN VIVO en https://escenia.sitios.dev (25 sep 2026, plan Galaxia). Base con las 9 fichas de producto y los ajustes por defecto, comprobada por HTTP.
 - [x] Licencia de Remotion: Windoce es 1 persona (Richard, 25 sep 2026) → licencia gratis, no hay nada que pagar.
 - [x] Variables del panel cargadas por Richard (26 sep 2026): canario en verde, Estación conectada al panel en vivo, prueba de humo ok.
+- [x] Estudio de temas para el público latino de Estados Unidos, con consejos y tres temas (29 sep 2026, docs/ESTRATEGIA-TEMAS.md).
 - [x] Cada publicación muestra su red con color, filtro por red, y «Publicar también en» Facebook, Instagram o TikTok (29 sep 2026).
 - [x] Calendario rehecho como una sola lista de lo que falta por publicarse, sin pestañas por plataforma (29 sep 2026).
 - [x] El calendario muestra solo lo que falta por publicarse; lo ya publicado queda plegado al final (29 sep 2026).

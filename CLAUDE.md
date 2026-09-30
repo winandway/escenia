@@ -11,6 +11,7 @@
 - Bajar un video de YouTube: [docs/DESCARGAR-VIDEOS.md](docs/DESCARGAR-VIDEOS.md).
 - App instalable en el teléfono: [docs/APP.md](docs/APP.md).
 - Temas propuestos y sus fuentes: [docs/TEMAS-PROPUESTOS.md](docs/TEMAS-PROPUESTOS.md).
+- Estrategia de temas (dónde el clic es más caro): [docs/ESTRATEGIA-TEMAS.md](docs/ESTRATEGIA-TEMAS.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro
