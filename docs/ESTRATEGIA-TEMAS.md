@@ -72,6 +72,10 @@ grande y más caro que tenemos a mano.
 7. **Mirar el RPM por video**, no solo las vistas: dos videos con las mismas
    vistas pueden pagar cinco veces distinto según de dónde vino la gente.
 
+**Ya aplicado en el motor (30 sep 2026):** los textos de YouTube que escribe
+Escenia llevan entre 6 y 8 palabras clave en inglés y nombran las ciudades de
+Estados Unidos por donde pasa la historia (`src/lib/publicacion.ts`).
+
 ## 6. Temas propuestos hoy con esa lógica (29 sep 2026)
 
 1. **Bad Bunny: el artista más grande del mundo que no quiere cantar en

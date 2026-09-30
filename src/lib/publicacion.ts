@@ -26,7 +26,8 @@ export function instruccionesPublicacion(): string {
     `- \`titulo\`: máximo 70 letras, con el nombre de la persona o del tema y una promesa concreta que dé curiosidad; sin mayúsculas sostenidas, sin comillas de relleno, sin emojis.`,
     "- \`shorts[].titulo\`: uno por cada short, máximo 60 letras, cada uno con un gancho DISTINTO sacado de lo que se cuenta en ESAS escenas (un giro, un dato, una frase); sin la palabra «parte», sin numerarlos, sin hashtags.",
     "- \`descripcion\`: 3 párrafos cortos que cuenten de qué va el video sin destriparlo, con las palabras clave dichas de forma natural, y al final una línea con 4 o 5 hashtags.",
-    `- \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS} palabras clave, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas («biografía de…», «historia de…», «documental…»). Sin repetir, sin hashtags, en español salvo nombres propios.`,
+    `- \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS} palabras clave, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas («biografía de…», «historia de…», «documental…»). Sin repetir y sin hashtags. De las ${ETIQUETAS_MAXIMAS}, entre 6 y 8 van EN INGLÉS, tal como buscaría un latino en Estados Unidos (ej.: «Latin Grammys snub», «bachata documentary», «Prince Royce story»); el resto en español.`,
+    "- El canal quiere que lo vean los latinos de Estados Unidos: si la historia pasa por una ciudad de allá (Nueva York, El Bronx, Miami, Los Ángeles, Las Vegas), nómbrala en la descripción y en las palabras clave.",
     "- Nada de datos que no estén en el guion. Nada de clickbait falso: la promesa del título tiene que cumplirse en el video.",
   ].join("\n");
 }

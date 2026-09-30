@@ -15,6 +15,7 @@ import { contexto } from "@/lib/entorno";
 import { cuando, hoyEn, NOMBRE_PLATAFORMA, yaSalio } from "@compartido/calendario";
 import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ, etiquetasParaYouTube } from "@compartido/guion";
 import { buscarTematica } from "@compartido/tematicas";
+import { separarEntregas } from "@compartido/videos";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
 import { EditorGuion } from "./EditorGuion";
 import { regenerarPublicacion, reintentarTrabajo } from "./acciones";
@@ -58,6 +59,8 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
       );
     return fechas.length ? fechas.join(" · ") : "Sin fecha todavía";
   };
+  // A la vista solo la última entrega; las anteriores quedan plegadas.
+  const { vigentes, anteriores } = separarEntregas(videos);
   const tematica = buscarTematica(guion.tematica_id);
   const trabajo = trabajos[0];
   const voz = archivos.find((a) => a.tipo === "voz");
@@ -98,7 +101,7 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
             )}
           </div>
           {trabajo.error && <p className="mt-2 text-red-300">{trabajo.error}</p>}
-          {videos.map((v) => (
+          {vigentes.map((v) => (
             <div key={v.id} className="mt-3 space-y-2">
               <video
                 controls
@@ -121,6 +124,40 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
               </div>
             </div>
           ))}
+          {anteriores.length > 0 && (
+            <details className="mt-4">
+              <summary className="cursor-pointer text-sm text-neutral-400 hover:text-white">
+                Versiones anteriores ({anteriores.length}). La de arriba es la que vale.
+              </summary>
+              {anteriores.map((v) => (
+                <div key={v.id} className="mt-3 space-y-2">
+                  <video
+                    controls
+                    preload="metadata"
+                    playsInline
+                    src={`/datos/archivos/${v.clave}`}
+                    className="w-full rounded-md bg-black"
+                    style={{ aspectRatio: v.formato === "9x16" ? "9 / 16" : "16 / 9", maxHeight: 520 }}
+                  >
+                    Tu navegador no puede reproducir el video.
+                  </video>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
+                    <span>
+                      Video {v.formato} · {Math.round(v.duracion_seg)} s · {(v.bytes / 1_048_576).toFixed(0)}{" "}
+                      MB
+                      {v.voz_de_prueba ? " · voz de prueba del sistema" : ""}
+                    </span>
+                    <a
+                      href={`/datos/archivos/${v.clave}?descargar=1`}
+                      className="boton-suave ml-auto px-3 py-1"
+                    >
+                      Descargar
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </details>
+          )}
           {voz && videos.length === 0 && (
             <audio controls preload="none" src={`/datos/archivos/${voz.clave}`} className="mt-3 w-full">
               Tu navegador no puede reproducir el audio.

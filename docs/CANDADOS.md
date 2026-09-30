@@ -150,6 +150,17 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   ya entregado, «Reintentar» sí produce desde cero (la producción entregada no
   se retoma).
 
+## C-VERSIONES-1 — En el panel se ve la última entrega, no todas mezcladas (30 sep 2026)
+
+- **Qué pasaba:** al corregir dos fotos del video de Prince Royce y entregarlo
+  otra vez, la página del guion listaba los dos videos largos y los ocho
+  Shorts juntos. Richard podía descargar la versión vieja sin darse cuenta.
+- **Qué se hizo:** `separarEntregas` (`compartido/videos.ts`) deja a la vista el
+  video largo más nuevo y los Shorts que subieron después; lo anterior queda
+  plegado en «Versiones anteriores».
+- **Cómo se comprueba:** `pruebas/videos.test.ts` (en rojo al mostrar todo).
+- **Qué NO tocar:** los videos viejos no se borran del almacén desde aquí.
+
 ## C-IMAGEN-4 — Ni fotos con marca de agua ni gente que no es de la historia (30 sep 2026)
 
 - **Qué se veía:** en el video de Prince Royce salió una foto con la marca de
