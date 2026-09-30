@@ -186,6 +186,28 @@ export function hoyEn(zona: string, ahora: Date): { fecha: string; hora: string 
   return { fecha: `${p("year")}-${p("month")}-${p("day")}`, hora: `${p("hour")}:${p("minute")}` };
 }
 
+/**
+ * ¿Esta publicación ya salió? Sí, si está marcada «Publicado», o si estaba
+ * «Programado» en la plataforma y su hora ya pasó (la plataforma la publica sola).
+ * Un plan («Agendado») con la fecha pasada NO salió: se le pasó la fecha.
+ */
+export function yaSalio(e: Pick<EntradaCalendario, "estado" | "fecha" | "hora">, ahora: Momento): boolean {
+  if (e.estado === "publicado") return true;
+  if (e.estado !== "programado") return false;
+  if (e.fecha !== ahora.fecha) return e.fecha < ahora.fecha;
+  return e.hora !== "" && minutosDe(e.hora) <= minutosDe(ahora.hora);
+}
+
+/** Un plan al que se le pasó la fecha sin que nadie lo programara. */
+export function sePasoLaFecha(
+  e: Pick<EntradaCalendario, "estado" | "fecha" | "hora">,
+  ahora: Momento,
+): boolean {
+  if (e.estado !== "agendado") return false;
+  if (e.fecha !== ahora.fecha) return e.fecha < ahora.fecha;
+  return e.hora !== "" && minutosDe(e.hora) <= minutosDe(ahora.hora);
+}
+
 export const horasDe = (pieza: Pieza, reglas: ReglasCalendario): string[] =>
   pieza === "short" ? reglas.horasShort : reglas.horasLargo;
 

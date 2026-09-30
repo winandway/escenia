@@ -4,7 +4,9 @@ import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
 import {
   descartadas,
+  entradaPorId,
   entradasEntre,
+  entradasHasta,
   miniaturasDeGuiones,
   pendientes,
   reglasCalendario,
@@ -22,7 +24,9 @@ import {
   NOMBRE_PLATAFORMA,
   PLATAFORMAS,
   repartir,
+  sePasoLaFecha,
   sumarDias,
+  yaSalio,
   type EntradaCalendario,
   type EstadoCalendario,
 } from "@compartido/calendario";
@@ -57,7 +61,8 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
   const sp = await props.searchParams;
   const plataforma = PLATAFORMAS.find((p) => p === uno(sp.plataforma)) ?? "youtube";
   const canal = CANALES_CALENDARIO.find((c) => c === uno(sp.canal)) ?? null;
-  const semanas = Math.max(-26, Math.min(26, Math.trunc(Number(uno(sp.semana)) || 0)));
+  // El calendario mira hacia adelante: lo que ya salió no se muestra.
+  const semanas = Math.max(0, Math.min(26, Math.trunc(Number(uno(sp.semana)) || 0)));
   const elegida = Math.trunc(Number(uno(sp.entrada)) || 0);
 
   const { db } = await contexto();
@@ -65,15 +70,20 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
   const hoy = hoyEn(reglas.zona, new Date());
   const inicio = sumarDias(lunesDe(hoy.fecha), semanas * 7);
   const fin = sumarDias(inicio, 27);
-  const [visibles, futuras, lista, fuera] = await Promise.all([
+  const [visibles, futuras, lista, fuera, anteriores, elegidaEnBase] = await Promise.all([
     entradasEntre(db, inicio, fin),
     entradasEntre(db, sumarDias(hoy.fecha, -1), sumarDias(hoy.fecha, 125)),
     pendientes(db, plataforma),
     descartadas(db),
+    entradasHasta(db, hoy.fecha),
+    elegida ? entradaPorId(db, elegida) : null,
   ]);
 
   const filtrar = (e: EntradaCalendario) => e.plataforma === plataforma && (!canal || e.canal === canal);
-  const enPantalla = visibles.filter(filtrar);
+  // Solo lo que falta por publicarse. Lo que ya salió queda plegado al final.
+  const enPantalla = visibles.filter((e) => filtrar(e) && !yaSalio(e, hoy) && !sePasoLaFecha(e, hoy));
+  const publicados = anteriores.filter((e) => filtrar(e) && yaSalio(e, hoy));
+  const vencidos = anteriores.filter((e) => filtrar(e) && sePasoLaFecha(e, hoy));
   const plan = repartir(
     futuras,
     lista.filter((p) => !canal || p.canal === canal),
@@ -81,12 +91,14 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
     reglas,
     hoy,
   );
-  const seleccion = elegida ? [...visibles, ...futuras].find((e) => e.id === elegida) : undefined;
+  const seleccion = elegidaEnBase && elegidaEnBase.estado !== "descartado" ? elegidaEnBase : undefined;
   const sinHora = enPantalla.filter((e) => e.hora === "");
   const dias = Array.from({ length: 28 }, (_, i) => sumarDias(inicio, i));
   const propias = await miniaturasDeGuiones(
     db,
-    [...enPantalla, ...plan, ...(seleccion ? [seleccion] : [])].map((e) => e.guion_id ?? 0),
+    [...enPantalla, ...plan, ...publicados, ...vencidos, ...(seleccion ? [seleccion] : [])].map(
+      (e) => e.guion_id ?? 0,
+    ),
   );
   const respaldo = (guionId: number | null) => (guionId ? (propias.get(guionId) ?? null) : null);
 
@@ -174,12 +186,14 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
       <section className="mb-8" aria-labelledby="calendario">
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <h2 id="calendario" className="text-lg font-semibold">
-            {diaCorto(inicio)} al {diaCorto(fin)}
+            {semanas === 0 ? `Hoy, ${diaCorto(hoy.fecha)}` : diaCorto(inicio)} al {diaCorto(fin)}
           </h2>
           <div className="ml-auto flex gap-2 text-xs">
-            <Link href={enlace({ semana: semanas - 4, entrada: null })} className="boton-suave px-3 py-1.5">
-              ← Antes
-            </Link>
+            {semanas > 0 && (
+              <Link href={enlace({ semana: semanas - 4, entrada: null })} className="boton-suave px-3 py-1.5">
+                ← Antes
+              </Link>
+            )}
             {semanas !== 0 && (
               <Link href={enlace({ semana: null, entrada: null })} className="boton-suave px-3 py-1.5">
                 Hoy
@@ -191,12 +205,32 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
           </div>
         </div>
         <div className="mb-3 flex flex-wrap gap-2 text-xs">
-          {(["agendado", "programado", "publicado"] as const).map((e) => (
+          {(["agendado", "programado"] as const).map((e) => (
             <span key={e} className={`rounded-md border px-2 py-0.5 ${COLOR[e]}`}>
               {NOMBRE_ESTADO[e]}
             </span>
           ))}
         </div>
+
+        {vencidos.length > 0 && (
+          <div className="mb-3 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-200">
+            <p>
+              {vencidos.length === 1
+                ? "A 1 video se le pasó la fecha sin programarlo."
+                : `A ${vencidos.length} videos se les pasó la fecha sin programarlos.`}{" "}
+              Tócalo para ponerle otra fecha o marcar que ya salió.
+            </p>
+            <ul className="mt-2 space-y-1">
+              {vencidos.map((e) => (
+                <li key={e.id}>
+                  <Link href={`${enlace({ entrada: e.id })}#entrada`} className="underline hover:text-white">
+                    {cuando(e.fecha, e.hora)} · {e.titulo}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {sinHora.length > 0 && (
           <p className="mb-3 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-200">
@@ -223,7 +257,9 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                   </span>
                 </div>
                 <p className="mt-2 text-base font-medium text-neutral-100">{seleccion.titulo}</p>
-                <p className="mt-1 text-neutral-300">Sale: {cuando(seleccion.fecha, seleccion.hora)}</p>
+                <p className="mt-1 text-neutral-300">
+                  {yaSalio(seleccion, hoy) ? "Salió" : "Sale"}: {cuando(seleccion.fecha, seleccion.hora)}
+                </p>
                 <Miniatura
                   principal={miniaturaDeEnlace(seleccion.enlace)}
                   respaldo={respaldo(seleccion.guion_id)}
@@ -337,6 +373,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
           {dias.map((d) => {
             const delDia = enPantalla.filter((e) => e.fecha === d);
             const pasado = d < hoy.fecha;
+            if (pasado) return <li key={d} aria-hidden="true" className="hidden md:block" />;
             return (
               <li
                 key={d}
@@ -401,6 +438,37 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
           <FormularioReglas reglas={reglas} />
         </div>
       </details>
+
+      {publicados.length > 0 && (
+        <details className="tarjeta mb-4 text-sm">
+          <summary className="cursor-pointer font-medium text-neutral-400">
+            Ya publicados ({publicados.length})
+          </summary>
+          <ul className="mt-3 space-y-2">
+            {publicados.map((e) => (
+              <li key={e.id}>
+                <Link
+                  href={`${enlace({ entrada: e.id })}#entrada`}
+                  className="flex items-start gap-3 rounded-md p-1 hover:bg-neutral-800"
+                >
+                  <Miniatura
+                    principal={miniaturaDeEnlace(e.enlace)}
+                    respaldo={respaldo(e.guion_id)}
+                    alt=""
+                    className="w-24 shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-xs text-neutral-400">
+                      {cuando(e.fecha, e.hora)} · {nombrePieza(e)} · {NOMBRE_CANAL[e.canal]}
+                    </span>
+                    <span className="block text-neutral-200">{e.titulo}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {fuera.length > 0 && (
         <details className="tarjeta mb-4 text-sm">

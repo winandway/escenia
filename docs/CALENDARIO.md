@@ -12,9 +12,15 @@ hacía falta saber a qué hora sale cada video y que dos no salgan juntos.
   reparte todo de una vez.
 - **Elegir otro día u hora:** dos toques, el día y la hora. Las horas ocupadas
   salen tachadas y dicen por qué. «Otra hora» deja escribir una hora distinta.
+- **Solo lo que falta por publicarse** (pedido por Richard el 29 sep 2026: ver
+  lo ya publicado lo confundía). El calendario empieza hoy y mira hacia
+  adelante. Lo que ya salió queda oculto, plegado al final en «Ya publicados».
+  Cuenta como «ya salió» lo marcado «Publicado» y lo «Programado» cuya hora ya
+  pasó, porque la plataforma lo publica sola. Un plan al que se le pasó la
+  fecha no salió: sale arriba en un aviso para ponerle otra fecha.
 - **Calendario:** cuatro semanas. Cada publicación es una etiqueta con su hora,
   su tipo y su color: ámbar = agendado aquí, azul = ya programado en la
-  plataforma, verde = ya salió. Al tocarla se abre su ficha: copiar el título,
+  plataforma. Al tocarla se abre su ficha: copiar el título,
   cambiar el estado, moverla, o quitarla (dentro de los tres puntos).
 - **Plataformas y canales:** YouTube, Facebook, Instagram y TikTok; Caprichoso
   TV y Canal de IA. Cada combinación lleva su propio calendario: un Short en

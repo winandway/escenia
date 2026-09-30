@@ -116,6 +116,14 @@ export const entradasDeGuion = (db: BaseDatos, guionId: number) =>
     [guionId],
   );
 
+/** Lo que pudo haber salido ya (para la lista plegada «Ya publicados») y los planes vencidos. */
+export const entradasHasta = (db: BaseDatos, hasta: string) =>
+  db.todos<EntradaCalendario>(
+    `SELECT ${COLUMNAS} FROM calendario
+     WHERE estado != 'descartado' AND fecha != '' AND fecha <= ? ORDER BY fecha DESC, hora DESC, id DESC LIMIT 60`,
+    [hasta],
+  );
+
 export const descartadas = (db: BaseDatos) =>
   db.todos<EntradaCalendario>(
     `SELECT ${COLUMNAS} FROM calendario WHERE estado = 'descartado' ORDER BY id DESC LIMIT 100`,

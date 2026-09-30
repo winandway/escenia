@@ -10,9 +10,9 @@ import {
   trabajosDeGuion,
   videosDeGuion,
 } from "@/lib/consultas";
-import { entradasDeGuion } from "@/lib/calendario";
+import { entradasDeGuion, reglasCalendario } from "@/lib/calendario";
 import { contexto } from "@/lib/entorno";
-import { cuando, NOMBRE_PLATAFORMA } from "@compartido/calendario";
+import { cuando, hoyEn, NOMBRE_PLATAFORMA, yaSalio } from "@compartido/calendario";
 import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ, etiquetasParaYouTube } from "@compartido/guion";
 import { buscarTematica } from "@compartido/tematicas";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
@@ -48,11 +48,15 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
     videosDeGuion(db, numero),
     entradasDeGuion(db, numero).catch(() => []),
   ]);
+  const hoy = hoyEn((await reglasCalendario(db).catch(() => null))?.zona ?? "America/New_York", new Date());
   const sale = (pieza: "largo" | "short", indice: number) => {
     const fechas = agenda
       .filter((e) => e.pieza === pieza && e.indice === indice)
-      .map((e) => `${NOMBRE_PLATAFORMA[e.plataforma]}: ${cuando(e.fecha, e.hora)}`);
-    return fechas.length ? `Sale en ${fechas.join(" · ")}` : "Sin fecha todavía";
+      .map(
+        (e) =>
+          `${yaSalio(e, hoy) ? "Salió" : "Sale"} en ${NOMBRE_PLATAFORMA[e.plataforma]}: ${cuando(e.fecha, e.hora)}`,
+      );
+    return fechas.length ? fechas.join(" · ") : "Sin fecha todavía";
   };
   const tematica = buscarTematica(guion.tematica_id);
   const trabajo = trabajos[0];

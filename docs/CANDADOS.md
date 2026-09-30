@@ -138,6 +138,9 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   anotan tal como están y `agendar` devuelve un `aviso` si quedaron pegados a
   otra publicación (cambio del 29 sep 2026, al cargar las fechas reales de
   Richard: dos videos a 15 minutos y tres Shorts el mismo día).
+- **Qué se ve (29 sep 2026):** solo lo que falta por publicarse. `yaSalio` y
+  `sePasoLaFecha` (`compartido/calendario.ts`) deciden qué se oculta y qué se
+  avisa. Lo ya publicado sigue en la base y sigue contando para las reglas.
 - **Cómo se comprueba:** `pruebas/calendario.test.ts` (comprobada en rojo el 29
   sep 2026 rompiendo la revisión de la misma hora: fallaron 2 pruebas); el
   canario dice `calendario: ok`.

@@ -14,7 +14,9 @@ import {
   REGLAS_POR_DEFECTO,
   repartir,
   revisarHueco,
+  sePasoLaFecha,
   sumarDias,
+  yaSalio,
   type EntradaCalendario,
 } from "@compartido/calendario";
 import {
@@ -156,6 +158,34 @@ describe("calendario: choques (C-CALENDARIO-1)", () => {
     expect(
       revisarHueco([largo], { ...pedido, guion_id: 9, fecha: "2026-10-01", hora: "12:00" }, reglas),
     ).toBeNull();
+  });
+});
+
+describe("calendario: solo se muestra lo que falta por publicarse", () => {
+  const ahoraMismo = { fecha: "2026-10-01", hora: "12:30" };
+  it("lo publicado y lo programado cuya hora ya pasó cuentan como «ya salió»", () => {
+    expect(yaSalio({ estado: "publicado", fecha: "2026-10-05", hora: "09:00" }, ahoraMismo)).toBe(true);
+    expect(yaSalio({ estado: "programado", fecha: "2026-09-30", hora: "10:00" }, ahoraMismo)).toBe(true);
+    expect(yaSalio({ estado: "programado", fecha: "2026-10-01", hora: "12:00" }, ahoraMismo)).toBe(true);
+    expect(yaSalio({ estado: "programado", fecha: "2026-10-01", hora: "12:30" }, ahoraMismo)).toBe(true);
+  });
+
+  it("lo que falta por salir sigue a la vista", () => {
+    expect(yaSalio({ estado: "programado", fecha: "2026-10-01", hora: "16:00" }, ahoraMismo)).toBe(false);
+    expect(yaSalio({ estado: "programado", fecha: "2026-10-02", hora: "11:00" }, ahoraMismo)).toBe(false);
+    // Programado para hoy pero sin hora: no se sabe si ya salió, se queda a la vista.
+    expect(yaSalio({ estado: "programado", fecha: "2026-10-01", hora: "" }, ahoraMismo)).toBe(false);
+    expect(yaSalio({ estado: "agendado", fecha: "2026-10-03", hora: "12:00" }, ahoraMismo)).toBe(false);
+  });
+
+  it("un plan con la fecha pasada no «salió»: se le pasó la fecha y se avisa", () => {
+    const plan = { estado: "agendado" as const, fecha: "2026-09-30", hora: "16:00" };
+    expect(yaSalio(plan, ahoraMismo)).toBe(false);
+    expect(sePasoLaFecha(plan, ahoraMismo)).toBe(true);
+    expect(sePasoLaFecha({ estado: "agendado", fecha: "2026-10-01", hora: "16:00" }, ahoraMismo)).toBe(false);
+    expect(sePasoLaFecha({ estado: "programado", fecha: "2026-09-30", hora: "10:00" }, ahoraMismo)).toBe(
+      false,
+    );
   });
 });
 
