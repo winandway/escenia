@@ -6,27 +6,30 @@ hacía falta saber a qué hora sale cada video y que dos no salgan juntos.
 
 ## Qué hace
 
-- **Por agendar:** todo lo que la Estación ya produjo y no tiene fecha (el
-  video largo y sus Shorts, con el título de YouTube). Cada tarjeta trae el
-  próximo hueco libre en el botón: un toque y queda agendado. «Agendar los N»
-  reparte todo de una vez.
-- **Elegir otro día u hora:** dos toques, el día y la hora. Las horas ocupadas
-  salen tachadas y dicen por qué. «Otra hora» deja escribir una hora distinta.
-- **Solo lo que falta por publicarse** (pedido por Richard el 29 sep 2026: ver
-  lo ya publicado lo confundía). El calendario empieza hoy y mira hacia
-  adelante. Lo que ya salió queda oculto, plegado al final en «Ya publicados».
-  Cuenta como «ya salió» lo marcado «Publicado» y lo «Programado» cuya hora ya
-  pasó, porque la plataforma lo publica sola. Un plan al que se le pasó la
-  fecha no salió: sale arriba en un aviso para ponerle otra fecha.
-- **Calendario:** cuatro semanas. Cada publicación es una etiqueta con su hora,
-  su tipo y su color: ámbar = agendado aquí, azul = ya programado en la
-  plataforma. Al tocarla se abre su ficha: copiar el título,
-  cambiar el estado, moverla, o quitarla (dentro de los tres puntos).
-- **Plataformas y canales:** YouTube, Facebook, Instagram y TikTok; Caprichoso
-  TV y Canal de IA. Cada combinación lleva su propio calendario: un Short en
-  Facebook no choca con uno en YouTube.
-- **Videos hechos fuera de Escenia:** se agregan con el formulario de abajo y
-  ocupan su hueco igual.
+La pantalla es **una sola lista** (rehecha el 29 sep 2026: la primera versión,
+con pestañas por plataforma y cuadrícula de cuatro semanas, confundía a
+Richard en el teléfono).
+
+- **Falta por publicarse:** todo lo que viene, en orden y agrupado por día,
+  de todos los canales y plataformas juntos. Solo salen los días que tienen
+  algo. Cada video muestra su hora en grande, el título, y debajo el tipo, el
+  canal, la plataforma y cómo va («Ya programado» o «Falta programarlo»).
+  Se ve al abrir, sin tocar ningún botón.
+- **Lo que ya salió no aparece.** Cuenta como «ya salió» lo marcado
+  «Publicado» y lo «Programado» cuya hora ya pasó, porque la plataforma lo
+  publica sola. Queda plegado al final, en «Ya publicados».
+- **Un plan al que se le pasó la fecha** sale arriba en un aviso, para ponerle
+  otra fecha o marcar que ya salió.
+- **La ficha:** al tocar un video se abre arriba su ficha: copiar el título,
+  pegar el enlace, cambiar cómo va, moverlo, o quitarlo (dentro de los tres
+  puntos).
+- **Sin fecha todavía:** los videos que Escenia ya produjo y no tienen día en
+  YouTube. Cada tarjeta trae el próximo hueco libre en el botón. Solo aparece
+  si hay alguno.
+- **Agregar un video al calendario:** formulario plegado, para cualquier
+  video y cualquier plataforma (YouTube, Facebook, Instagram, TikTok).
+- **No hay pestañas por plataforma.** La plataforma es una etiqueta de cada
+  video. Un Short en Facebook no choca con uno en YouTube.
 - **En la página del guion** («Para YouTube») sale cuándo sale cada pieza.
 
 ## El enlace y la miniatura

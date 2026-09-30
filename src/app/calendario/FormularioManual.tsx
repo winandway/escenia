@@ -7,7 +7,7 @@ import { CANALES_CALENDARIO, NOMBRE_PLATAFORMA, PLATAFORMAS, type Plataforma } f
 import { NOMBRE_CANAL } from "@compartido/tematicas";
 import { agregarManual, type EstadoManual } from "./acciones";
 
-/** Para los videos hechos fuera de Escenia: entran al calendario y ocupan su hueco igual. */
+/** Para agregar a mano cualquier video (de cualquier plataforma): entra al calendario y ocupa su hueco. */
 export function FormularioManual({ plataforma, hoy }: { plataforma: Plataforma; hoy: string }) {
   const [estado, accion, pendiente] = useActionState<EstadoManual, FormData>(agregarManual, {
     error: "",

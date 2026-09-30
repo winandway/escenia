@@ -506,3 +506,20 @@ export function revisarEnlace(
   }
   return { ok: true, enlace: u.toString() };
 }
+
+/** Lo que falta por publicarse, en orden y agrupado por día (solo los días que tienen algo). */
+export function porDia<T extends Pick<EntradaCalendario, "fecha" | "hora" | "id">>(
+  entradas: T[],
+): { fecha: string; entradas: T[] }[] {
+  const orden = [...entradas].sort(
+    (a, b) =>
+      a.fecha.localeCompare(b.fecha) || (a.hora || "99:99").localeCompare(b.hora || "99:99") || a.id - b.id,
+  );
+  const dias: { fecha: string; entradas: T[] }[] = [];
+  for (const e of orden) {
+    const ultimo = dias[dias.length - 1];
+    if (ultimo && ultimo.fecha === e.fecha) ultimo.entradas.push(e);
+    else dias.push({ fecha: e.fecha, entradas: [e] });
+  }
+  return dias;
+}

@@ -13,16 +13,15 @@ import {
 } from "@/lib/calendario";
 import { contexto } from "@/lib/entorno";
 import {
-  CANALES_CALENDARIO,
   cuando,
   diaCorto,
+  etiquetaDia,
   hora12,
   hoyEn,
-  lunesDe,
   miniaturaDeEnlace,
   NOMBRE_ESTADO,
   NOMBRE_PLATAFORMA,
-  PLATAFORMAS,
+  porDia,
   repartir,
   sePasoLaFecha,
   sumarDias,
@@ -50,170 +49,187 @@ const COLOR: Record<EstadoCalendario, string> = {
   publicado: "border-emerald-700/70 bg-emerald-500/10 text-emerald-100",
   descartado: "border-neutral-700 text-neutral-400",
 };
-const DIAS_SEMANA = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+/** Lo que falta por salir se dice en palabras de Richard, no con el nombre interno del estado. */
+const COMO_VA: Record<EstadoCalendario, string> = {
+  agendado: "Falta programarlo",
+  programado: "Ya programado",
+  publicado: "Publicado",
+  descartado: "Fuera de la lista",
+};
+// Los videos de Escenia se agendan para YouTube; lo de otras plataformas se agrega a mano.
+const PLATAFORMA_PRINCIPAL = "youtube" as const;
 
 const uno = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 const nombrePieza = (e: Pick<EntradaCalendario, "pieza" | "indice">) =>
-  e.pieza === "short" ? `Short${e.indice ? ` ${e.indice}` : ""}` : "Largo";
+  e.pieza === "short" ? "Short" : "Video largo";
+const ficha = (id: number) => `/calendario?entrada=${id}#entrada`;
 
 export default async function PaginaCalendario(props: PageProps<"/calendario">) {
   await exigirSesion();
   const sp = await props.searchParams;
-  const plataforma = PLATAFORMAS.find((p) => p === uno(sp.plataforma)) ?? "youtube";
-  const canal = CANALES_CALENDARIO.find((c) => c === uno(sp.canal)) ?? null;
-  // El calendario mira hacia adelante: lo que ya salió no se muestra.
-  const semanas = Math.max(0, Math.min(26, Math.trunc(Number(uno(sp.semana)) || 0)));
   const elegida = Math.trunc(Number(uno(sp.entrada)) || 0);
 
   const { db } = await contexto();
   const reglas = await reglasCalendario(db);
   const hoy = hoyEn(reglas.zona, new Date());
-  const inicio = sumarDias(lunesDe(hoy.fecha), semanas * 7);
-  const fin = sumarDias(inicio, 27);
-  const [visibles, futuras, lista, fuera, anteriores, elegidaEnBase] = await Promise.all([
-    entradasEntre(db, inicio, fin),
+  const [futuras, lista, fuera, anteriores, elegidaEnBase] = await Promise.all([
     entradasEntre(db, sumarDias(hoy.fecha, -1), sumarDias(hoy.fecha, 125)),
-    pendientes(db, plataforma),
+    pendientes(db, PLATAFORMA_PRINCIPAL),
     descartadas(db),
     entradasHasta(db, hoy.fecha),
     elegida ? entradaPorId(db, elegida) : null,
   ]);
 
-  const filtrar = (e: EntradaCalendario) => e.plataforma === plataforma && (!canal || e.canal === canal);
-  // Solo lo que falta por publicarse. Lo que ya salió queda plegado al final.
-  const enPantalla = visibles.filter((e) => filtrar(e) && !yaSalio(e, hoy) && !sePasoLaFecha(e, hoy));
-  const publicados = anteriores.filter((e) => filtrar(e) && yaSalio(e, hoy));
-  const vencidos = anteriores.filter((e) => filtrar(e) && sePasoLaFecha(e, hoy));
-  const plan = repartir(
-    futuras,
-    lista.filter((p) => !canal || p.canal === canal),
-    plataforma,
-    reglas,
-    hoy,
-  );
+  // Una sola lista: TODO lo que falta por publicarse, de todos los canales y plataformas.
+  const porSalir = futuras.filter((e) => !yaSalio(e, hoy) && !sePasoLaFecha(e, hoy));
+  const dias = porDia(porSalir);
+  const publicados = anteriores.filter((e) => yaSalio(e, hoy));
+  const vencidos = anteriores.filter((e) => sePasoLaFecha(e, hoy));
+  const sinHora = porSalir.filter((e) => e.hora === "");
+  const plan = repartir(futuras, lista, PLATAFORMA_PRINCIPAL, reglas, hoy);
   const seleccion = elegidaEnBase && elegidaEnBase.estado !== "descartado" ? elegidaEnBase : undefined;
-  const sinHora = enPantalla.filter((e) => e.hora === "");
-  const dias = Array.from({ length: 28 }, (_, i) => sumarDias(inicio, i));
   const propias = await miniaturasDeGuiones(
     db,
-    [...enPantalla, ...plan, ...publicados, ...vencidos, ...(seleccion ? [seleccion] : [])].map(
+    [...porSalir, ...plan, ...publicados, ...vencidos, ...(seleccion ? [seleccion] : [])].map(
       (e) => e.guion_id ?? 0,
     ),
   );
   const respaldo = (guionId: number | null) => (guionId ? (propias.get(guionId) ?? null) : null);
 
-  const enlace = (cambios: Record<string, string | number | null>) => {
-    const q = new URLSearchParams();
-    const base: Record<string, string | number | null> = {
-      plataforma: plataforma === "youtube" ? null : plataforma,
-      canal,
-      semana: semanas || null,
-      ...cambios,
-    };
-    for (const [k, v] of Object.entries(base)) if (v !== null && v !== "") q.set(k, String(v));
-    const s = q.toString();
-    return s ? `/calendario?${s}` : "/calendario";
-  };
-  const pastilla = (activa: boolean) =>
-    `rounded-full border px-3 py-1.5 text-xs font-medium ${
-      activa
-        ? "border-amber-500 bg-amber-500 text-neutral-950"
-        : "border-neutral-700 text-neutral-200 hover:bg-neutral-800"
-    }`;
-
   return (
-    <Marco titulo="Calendario de publicaciones">
-      <p className="mb-4 max-w-3xl text-sm text-neutral-400">
-        Cada video con su día y su hora. El calendario no deja que dos salgan a la misma hora, ni demasiado
-        juntos, en el mismo canal. Las horas son las de tu reloj.
-      </p>
-
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        {PLATAFORMAS.map((p) => (
-          <Link
-            key={p}
-            href={enlace({ plataforma: p === "youtube" ? null : p, entrada: null })}
-            className={pastilla(p === plataforma)}
-          >
-            {NOMBRE_PLATAFORMA[p]}
-          </Link>
-        ))}
-        <span className="mx-1 text-neutral-700">|</span>
-        <Link href={enlace({ canal: null, entrada: null })} className={pastilla(canal === null)}>
-          Todos los canales
-        </Link>
-        {CANALES_CALENDARIO.map((c) => (
-          <Link key={c} href={enlace({ canal: c, entrada: null })} className={pastilla(c === canal)}>
-            {NOMBRE_CANAL[c]}
-          </Link>
-        ))}
-      </div>
-
-      <section className="mb-8" aria-labelledby="por-agendar">
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <h2 id="por-agendar" className="text-lg font-semibold">
-            Por agendar ({plan.length})
-          </h2>
-        </div>
-        {plan.length === 0 ? (
-          <p className="text-sm text-neutral-400">
-            No hay videos esperando fecha en {NOMBRE_PLATAFORMA[plataforma]}. Cuando la Estación termine un
-            video, aparece aquí.
-          </p>
-        ) : (
-          <>
-            <div className="mb-3">
-              <BotonAgendarTodas cuantas={plan.length} plataforma={plataforma} canal={canal ?? ""} />
+    <Marco titulo="Calendario">
+      {seleccion && (
+        <div id="entrada" className="tarjeta mb-6 min-w-0 scroll-mt-4 text-sm">
+          <div className="flex items-start gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap gap-1.5">
+                <span className="chip bg-amber-500/15 text-amber-300">{nombrePieza(seleccion)}</span>
+                <span className="chip bg-neutral-800 text-neutral-300">{NOMBRE_CANAL[seleccion.canal]}</span>
+                <span className="chip bg-neutral-800 text-neutral-300">
+                  {NOMBRE_PLATAFORMA[seleccion.plataforma]}
+                </span>
+                <span className={`chip border ${COLOR[seleccion.estado]}`}>
+                  {yaSalio(seleccion, hoy) ? NOMBRE_ESTADO.publicado : COMO_VA[seleccion.estado]}
+                </span>
+              </div>
+              <p className="mt-2 text-base font-medium text-neutral-100">{seleccion.titulo}</p>
+              <p className="mt-1 text-neutral-300">
+                {yaSalio(seleccion, hoy) ? "Salió" : "Sale"}: {cuando(seleccion.fecha, seleccion.hora)}
+              </p>
+              <Miniatura
+                principal={miniaturaDeEnlace(seleccion.enlace)}
+                respaldo={respaldo(seleccion.guion_id)}
+                alt={`Miniatura de «${seleccion.titulo}»`}
+                className="mt-3 w-full max-w-xs"
+              />
             </div>
-            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {plan.map((p) => (
-                <TarjetaPendiente
-                  key={`${p.guion_id}-${p.pieza}-${p.indice}`}
-                  pieza={p}
-                  plataforma={plataforma}
-                  hueco={p.hueco}
-                  entradas={futuras}
-                  reglas={reglas}
-                  hoy={hoy}
-                  miniatura={respaldo(p.guion_id)}
-                />
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
-
-      <section className="mb-8" aria-labelledby="calendario">
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <h2 id="calendario" className="text-lg font-semibold">
-            {semanas === 0 ? `Hoy, ${diaCorto(hoy.fecha)}` : diaCorto(inicio)} al {diaCorto(fin)}
-          </h2>
-          <div className="ml-auto flex gap-2 text-xs">
-            {semanas > 0 && (
-              <Link href={enlace({ semana: semanas - 4, entrada: null })} className="boton-suave px-3 py-1.5">
-                ← Antes
+            <div className="ml-auto flex items-center gap-1">
+              <Link href="/calendario" className="boton-suave px-3 py-1 text-xs">
+                Cerrar
+              </Link>
+              <MenuTresPuntos
+                accion={quitarEntrada}
+                ocultos={{ id: seleccion.id }}
+                etiqueta="Quitar del calendario"
+                pregunta={
+                  seleccion.guion_id
+                    ? "¿Quitar esta publicación del calendario? El video vuelve a «Sin fecha todavía»."
+                    : "¿Quitar esta publicación del calendario? Esto no se puede deshacer."
+                }
+                confirmar="Sí, quitar"
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <CopiarTexto texto={seleccion.titulo} etiqueta="Copiar título" />
+            {seleccion.enlace && (
+              <a
+                href={seleccion.enlace}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="boton-suave px-3 py-1 text-xs"
+              >
+                Abrir en {NOMBRE_PLATAFORMA[seleccion.plataforma]} ↗
+              </a>
+            )}
+            {seleccion.estado === "agendado" && (
+              <form action={marcarEstado}>
+                <input type="hidden" name="id" value={seleccion.id} />
+                <input type="hidden" name="estado" value="programado" />
+                <button type="submit" className="boton-suave px-3 py-1 text-xs">
+                  Ya lo programé en {NOMBRE_PLATAFORMA[seleccion.plataforma]}
+                </button>
+              </form>
+            )}
+            {seleccion.estado !== "publicado" && (
+              <form action={marcarEstado}>
+                <input type="hidden" name="id" value={seleccion.id} />
+                <input type="hidden" name="estado" value="publicado" />
+                <button type="submit" className="boton-suave px-3 py-1 text-xs">
+                  Ya salió
+                </button>
+              </form>
+            )}
+            {seleccion.estado !== "agendado" && (
+              <form action={marcarEstado}>
+                <input type="hidden" name="id" value={seleccion.id} />
+                <input type="hidden" name="estado" value="agendado" />
+                <button type="submit" className="boton-suave px-3 py-1 text-xs">
+                  Todavía no lo he programado
+                </button>
+              </form>
+            )}
+            {seleccion.guion_id && (
+              <Link
+                href={`/guiones/${seleccion.guion_id}`}
+                className="text-xs text-neutral-400 hover:text-white"
+              >
+                Ver el guion y sus textos →
               </Link>
             )}
-            {semanas !== 0 && (
-              <Link href={enlace({ semana: null, entrada: null })} className="boton-suave px-3 py-1.5">
-                Hoy
-              </Link>
-            )}
-            <Link href={enlace({ semana: semanas + 4, entrada: null })} className="boton-suave px-3 py-1.5">
-              Después →
-            </Link>
+          </div>
+          <div className="mt-4 border-t border-neutral-800 pt-3">
+            <FormularioEnlace
+              key={seleccion.id}
+              id={seleccion.id}
+              enlace={seleccion.enlace}
+              plataforma={seleccion.plataforma}
+            />
+          </div>
+          <div className="mt-4 border-t border-neutral-800 pt-3">
+            <h3 className="mb-2 font-medium">
+              {seleccion.hora ? "Cambiar el día o la hora" : "Ponerle la hora"}
+            </h3>
+            <SelectorHueco
+              key={seleccion.id}
+              modo="mover"
+              ocultos={{ id: seleccion.id }}
+              pedido={{
+                id: seleccion.id,
+                guion_id: seleccion.guion_id,
+                canal: seleccion.canal,
+                plataforma: seleccion.plataforma,
+                pieza: seleccion.pieza,
+              }}
+              entradas={futuras}
+              reglas={reglas}
+              hoy={hoy}
+              inicial={seleccion.fecha}
+            />
           </div>
         </div>
-        <div className="mb-3 flex flex-wrap gap-2 text-xs">
-          {(["agendado", "programado"] as const).map((e) => (
-            <span key={e} className={`rounded-md border px-2 py-0.5 ${COLOR[e]}`}>
-              {NOMBRE_ESTADO[e]}
-            </span>
-          ))}
-        </div>
+      )}
+
+      <section className="mb-8" aria-labelledby="por-salir">
+        <h2 id="por-salir" className="mb-1 text-lg font-semibold">
+          Falta por publicarse ({porSalir.length})
+        </h2>
+        <p className="mb-4 text-sm text-neutral-400">
+          Todo lo que viene, en orden. Lo que ya salió no aparece aquí. Toca un video para ver su ficha.
+        </p>
 
         {vencidos.length > 0 && (
-          <div className="mb-3 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-200">
+          <div className="mb-4 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-200">
             <p>
               {vencidos.length === 1
                 ? "A 1 video se le pasó la fecha sin programarlo."
@@ -223,7 +239,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
             <ul className="mt-2 space-y-1">
               {vencidos.map((e) => (
                 <li key={e.id}>
-                  <Link href={`${enlace({ entrada: e.id })}#entrada`} className="underline hover:text-white">
+                  <Link href={ficha(e.id)} className="underline hover:text-white">
                     {cuando(e.fecha, e.hora)} · {e.titulo}
                   </Link>
                 </li>
@@ -233,199 +249,100 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
         )}
 
         {sinHora.length > 0 && (
-          <p className="mb-3 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-200">
-            {sinHora.length === 1 ? "Hay 1 publicación" : `Hay ${sinHora.length} publicaciones`} sin hora.
-            Tócala y ponle la hora que tiene en {NOMBRE_PLATAFORMA[plataforma]}, para que el calendario pueda
-            cuidar ese hueco.
+          <p className="mb-4 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-200">
+            {sinHora.length === 1 ? "Hay 1 video" : `Hay ${sinHora.length} videos`} sin hora. Tócalo y ponle
+            la hora que tiene en la plataforma.
           </p>
         )}
 
-        {seleccion && (
-          <div id="entrada" className="tarjeta mb-4 min-w-0 scroll-mt-4 text-sm">
-            <div className="flex items-start gap-2">
-              <div>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="chip bg-amber-500/15 text-amber-300">{nombrePieza(seleccion)}</span>
-                  <span className="chip bg-neutral-800 text-neutral-300">
-                    {NOMBRE_CANAL[seleccion.canal]}
-                  </span>
-                  <span className="chip bg-neutral-800 text-neutral-300">
-                    {NOMBRE_PLATAFORMA[seleccion.plataforma]}
-                  </span>
-                  <span className={`chip border ${COLOR[seleccion.estado]}`}>
-                    {NOMBRE_ESTADO[seleccion.estado]}
-                  </span>
-                </div>
-                <p className="mt-2 text-base font-medium text-neutral-100">{seleccion.titulo}</p>
-                <p className="mt-1 text-neutral-300">
-                  {yaSalio(seleccion, hoy) ? "Salió" : "Sale"}: {cuando(seleccion.fecha, seleccion.hora)}
-                </p>
-                <Miniatura
-                  principal={miniaturaDeEnlace(seleccion.enlace)}
-                  respaldo={respaldo(seleccion.guion_id)}
-                  alt={`Miniatura de «${seleccion.titulo}»`}
-                  className="mt-3 w-full max-w-xs"
-                />
-              </div>
-              <div className="ml-auto flex items-center gap-1">
-                <Link href={enlace({ entrada: null })} className="boton-suave px-3 py-1 text-xs">
-                  Cerrar
-                </Link>
-                <MenuTresPuntos
-                  accion={quitarEntrada}
-                  ocultos={{ id: seleccion.id }}
-                  etiqueta="Quitar del calendario"
-                  pregunta={
-                    seleccion.guion_id
-                      ? "¿Quitar esta publicación del calendario? El video vuelve a «Por agendar»."
-                      : "¿Quitar esta publicación del calendario? Esto no se puede deshacer."
-                  }
-                  confirmar="Sí, quitar"
-                />
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <CopiarTexto texto={seleccion.titulo} etiqueta="Copiar título" />
-              {seleccion.enlace && (
-                <a
-                  href={seleccion.enlace}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="boton-suave px-3 py-1 text-xs"
+        {dias.length === 0 ? (
+          <p className="tarjeta text-sm text-neutral-300">
+            No hay nada pendiente por publicarse. Cuando programes un video, aparece aquí con su día y su
+            hora.
+          </p>
+        ) : (
+          <ol className="space-y-5">
+            {dias.map((dia) => (
+              <li key={dia.fecha}>
+                <h3
+                  className={`mb-2 text-sm font-semibold ${
+                    dia.fecha === hoy.fecha ? "text-amber-300" : "text-neutral-300"
+                  }`}
                 >
-                  Abrir en {NOMBRE_PLATAFORMA[seleccion.plataforma]} ↗
-                </a>
-              )}
-              {seleccion.estado !== "programado" && (
-                <form action={marcarEstado}>
-                  <input type="hidden" name="id" value={seleccion.id} />
-                  <input type="hidden" name="estado" value="programado" />
-                  <button type="submit" className="boton-suave px-3 py-1 text-xs">
-                    Ya lo programé en {NOMBRE_PLATAFORMA[seleccion.plataforma]}
-                  </button>
-                </form>
-              )}
-              {seleccion.estado !== "publicado" && (
-                <form action={marcarEstado}>
-                  <input type="hidden" name="id" value={seleccion.id} />
-                  <input type="hidden" name="estado" value="publicado" />
-                  <button type="submit" className="boton-suave px-3 py-1 text-xs">
-                    Ya salió
-                  </button>
-                </form>
-              )}
-              {seleccion.estado !== "agendado" && (
-                <form action={marcarEstado}>
-                  <input type="hidden" name="id" value={seleccion.id} />
-                  <input type="hidden" name="estado" value="agendado" />
-                  <button type="submit" className="boton-suave px-3 py-1 text-xs">
-                    Volver a «agendado»
-                  </button>
-                </form>
-              )}
-              {seleccion.guion_id && (
-                <Link
-                  href={`/guiones/${seleccion.guion_id}`}
-                  className="text-xs text-neutral-400 hover:text-white"
-                >
-                  Ver el guion y sus textos →
-                </Link>
-              )}
-            </div>
-            <div className="mt-4 border-t border-neutral-800 pt-3">
-              <FormularioEnlace
-                key={seleccion.id}
-                id={seleccion.id}
-                enlace={seleccion.enlace}
-                plataforma={seleccion.plataforma}
-              />
-            </div>
-            <div className="mt-4 border-t border-neutral-800 pt-3">
-              <h3 className="mb-2 font-medium">
-                {seleccion.hora ? "Cambiar el día o la hora" : "Ponerle la hora"}
-              </h3>
-              <SelectorHueco
-                key={seleccion.id}
-                modo="mover"
-                ocultos={{ id: seleccion.id }}
-                pedido={{
-                  id: seleccion.id,
-                  guion_id: seleccion.guion_id,
-                  canal: seleccion.canal,
-                  plataforma: seleccion.plataforma,
-                  pieza: seleccion.pieza,
-                }}
-                entradas={futuras}
-                reglas={reglas}
-                hoy={hoy}
-                inicial={seleccion.fecha}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="mb-1 hidden grid-cols-7 gap-2 text-center text-xs text-neutral-500 md:grid">
-          {DIAS_SEMANA.map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
-        <ol className="grid grid-cols-1 gap-2 md:grid-cols-7">
-          {dias.map((d) => {
-            const delDia = enPantalla.filter((e) => e.fecha === d);
-            const pasado = d < hoy.fecha;
-            if (pasado) return <li key={d} aria-hidden="true" className="hidden md:block" />;
-            return (
-              <li
-                key={d}
-                className={`min-h-20 rounded-md border p-2 ${
-                  d === hoy.fecha ? "border-amber-500" : "border-neutral-800"
-                } ${pasado ? "opacity-50" : ""} ${delDia.length === 0 ? "max-md:min-h-0 max-md:py-1.5" : ""}`}
-              >
-                <div className="mb-1 flex items-center gap-2 text-xs text-neutral-400">
-                  <span className={d === hoy.fecha ? "font-semibold text-amber-300" : ""}>
-                    {d === hoy.fecha ? `Hoy · ${diaCorto(d)}` : diaCorto(d)}
+                  {dia.fecha === hoy.fecha || dia.fecha === sumarDias(hoy.fecha, 1)
+                    ? `${etiquetaDia(dia.fecha, hoy.fecha)} · ${diaCorto(dia.fecha)}`
+                    : diaCorto(dia.fecha)}
+                  <span className="ml-2 font-normal text-neutral-500">
+                    {dia.entradas.length === 1 ? "1 video" : `${dia.entradas.length} videos`}
                   </span>
-                  {delDia.length === 0 && <span className="text-neutral-600 md:hidden">libre</span>}
-                </div>
-                <div className="space-y-1">
-                  {delDia.map((e) => (
-                    <Link
-                      key={e.id}
-                      href={`${enlace({ entrada: e.id })}#entrada`}
-                      className={`block rounded-md border px-2 py-1 text-xs hover:brightness-125 ${COLOR[e.estado]} ${
-                        e.id === elegida ? "ring-2 ring-amber-400" : ""
-                      }`}
-                    >
-                      <span className="flex items-start gap-2 md:block">
+                </h3>
+                <ul className="space-y-2">
+                  {dia.entradas.map((e) => (
+                    <li key={e.id}>
+                      <Link
+                        href={ficha(e.id)}
+                        className={`flex items-start gap-3 rounded-md border p-2 text-sm hover:brightness-125 ${COLOR[e.estado]} ${
+                          e.id === elegida ? "ring-2 ring-amber-400" : ""
+                        }`}
+                      >
                         <Miniatura
                           principal={miniaturaDeEnlace(e.enlace)}
                           respaldo={respaldo(e.guion_id)}
                           alt=""
-                          className="w-24 shrink-0 md:mb-1 md:w-full"
+                          className="w-24 shrink-0"
                         />
                         <span className="block min-w-0">
-                          <span className="font-semibold">{e.hora ? hora12(e.hora) : "Falta la hora"}</span>
-                          <span className="opacity-80">
-                            {" "}
-                            · {nombrePieza(e)}
-                            {canal ? "" : ` · ${NOMBRE_CANAL[e.canal]}`}
+                          <span className="block text-base font-semibold">
+                            {e.hora ? hora12(e.hora) : "Falta la hora"}
                           </span>
-                          <span className="block truncate">{e.titulo}</span>
+                          <span className="block text-neutral-100">{e.titulo}</span>
+                          <span className="mt-1 block text-xs opacity-80">
+                            {nombrePieza(e)} · {NOMBRE_CANAL[e.canal]} · {NOMBRE_PLATAFORMA[e.plataforma]} ·{" "}
+                            {COMO_VA[e.estado]}
+                          </span>
                         </span>
-                      </span>
-                    </Link>
+                      </Link>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </li>
-            );
-          })}
-        </ol>
+            ))}
+          </ol>
+        )}
       </section>
 
+      {plan.length > 0 && (
+        <section className="mb-8" aria-labelledby="sin-fecha">
+          <h2 id="sin-fecha" className="mb-1 text-lg font-semibold">
+            Sin fecha todavía ({plan.length})
+          </h2>
+          <p className="mb-3 text-sm text-neutral-400">
+            Videos que Escenia ya produjo y no tienen día en YouTube. Cada uno trae el próximo hueco libre.
+          </p>
+          <div className="mb-3">
+            <BotonAgendarTodas cuantas={plan.length} plataforma={PLATAFORMA_PRINCIPAL} canal="" />
+          </div>
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {plan.map((p) => (
+              <TarjetaPendiente
+                key={`${p.guion_id}-${p.pieza}-${p.indice}`}
+                pieza={p}
+                plataforma={PLATAFORMA_PRINCIPAL}
+                hueco={p.hueco}
+                entradas={futuras}
+                reglas={reglas}
+                hoy={hoy}
+                miniatura={respaldo(p.guion_id)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
+
       <details className="tarjeta mb-4">
-        <summary className="cursor-pointer font-medium">Agregar un video hecho fuera de Escenia</summary>
+        <summary className="cursor-pointer font-medium">Agregar un video al calendario</summary>
         <div className="mt-4">
-          <FormularioManual plataforma={plataforma} hoy={hoy.fecha} />
+          <FormularioManual plataforma={PLATAFORMA_PRINCIPAL} hoy={hoy.fecha} />
         </div>
       </details>
 
@@ -448,7 +365,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
             {publicados.map((e) => (
               <li key={e.id}>
                 <Link
-                  href={`${enlace({ entrada: e.id })}#entrada`}
+                  href={ficha(e.id)}
                   className="flex items-start gap-3 rounded-md p-1 hover:bg-neutral-800"
                 >
                   <Miniatura
@@ -459,7 +376,8 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                   />
                   <span className="min-w-0">
                     <span className="block text-xs text-neutral-400">
-                      {cuando(e.fecha, e.hora)} · {nombrePieza(e)} · {NOMBRE_CANAL[e.canal]}
+                      {cuando(e.fecha, e.hora)} · {nombrePieza(e)} · {NOMBRE_CANAL[e.canal]} ·{" "}
+                      {NOMBRE_PLATAFORMA[e.plataforma]}
                     </span>
                     <span className="block text-neutral-200">{e.titulo}</span>
                   </span>
@@ -472,19 +390,18 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
 
       {fuera.length > 0 && (
         <details className="tarjeta mb-4 text-sm">
-          <summary className="cursor-pointer font-medium">Fuera de la lista ({fuera.length})</summary>
+          <summary className="cursor-pointer font-medium text-neutral-400">
+            Fuera de la lista ({fuera.length})
+          </summary>
           <ul className="mt-3 space-y-2">
             {fuera.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center gap-2">
                 <span className="chip bg-neutral-800 text-neutral-300">{nombrePieza(e)}</span>
-                <span className="chip bg-neutral-800 text-neutral-300">
-                  {NOMBRE_PLATAFORMA[e.plataforma]}
-                </span>
                 <span className="text-neutral-200">{e.titulo}</span>
                 <form action={quitarEntrada} className="ml-auto">
                   <input type="hidden" name="id" value={e.id} />
                   <button type="submit" className="boton-suave px-3 py-1 text-xs">
-                    Devolver a «Por agendar»
+                    Devolver a «Sin fecha todavía»
                   </button>
                 </form>
               </li>

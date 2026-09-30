@@ -10,6 +10,7 @@ import {
   lunesDe,
   normalizarHora,
   piezasPorAgendar,
+  porDia,
   proximoHueco,
   REGLAS_POR_DEFECTO,
   repartir,
@@ -186,6 +187,24 @@ describe("calendario: solo se muestra lo que falta por publicarse", () => {
     expect(sePasoLaFecha({ estado: "programado", fecha: "2026-09-30", hora: "10:00" }, ahoraMismo)).toBe(
       false,
     );
+  });
+});
+
+describe("calendario: la lista de lo que falta por publicarse", () => {
+  it("va en orden, agrupada por día, y solo con los días que tienen algo", () => {
+    const dias = porDia([
+      { id: 3, fecha: "2026-10-02", hora: "11:15" },
+      { id: 1, fecha: "2026-10-01", hora: "16:00" },
+      { id: 2, fecha: "2026-10-01", hora: "09:45" },
+      { id: 5, fecha: "2026-10-06", hora: "" },
+      { id: 4, fecha: "2026-10-02", hora: "11:00" },
+    ]);
+    expect(dias.map((d) => `${d.fecha}: ${d.entradas.map((e) => e.id).join(",")}`)).toEqual([
+      "2026-10-01: 2,1",
+      "2026-10-02: 4,3",
+      "2026-10-06: 5",
+    ]);
+    expect(porDia([])).toEqual([]);
   });
 });
 

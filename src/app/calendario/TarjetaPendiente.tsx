@@ -43,7 +43,7 @@ export function TarjetaPendiente({ pieza, plataforma, hueco, entradas, reglas, h
       <div className="flex items-start gap-2">
         <div className="flex flex-wrap gap-1.5">
           <span className="chip bg-amber-500/15 text-amber-300">
-            {pieza.pieza === "short" ? `Short ${pieza.indice}` : "Video largo"}
+            {pieza.pieza === "short" ? "Short" : "Video largo"}
           </span>
           <span className="chip bg-neutral-800 text-neutral-300">{NOMBRE_CANAL[pieza.canal]}</span>
         </div>
