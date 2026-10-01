@@ -13,6 +13,7 @@
 - La marca de cada canal en el video (Full Código) y el separador de canales: [docs/MARCA.md](docs/MARCA.md).
 - Temas propuestos y sus fuentes: [docs/TEMAS-PROPUESTOS.md](docs/TEMAS-PROPUESTOS.md).
 - Estrategia de temas (dónde el clic es más caro): [docs/ESTRATEGIA-TEMAS.md](docs/ESTRATEGIA-TEMAS.md).
+- Noticias de Losupe para los videos cortos (el prompt para la sesión de Losupe): [docs/NOTICIAS-LOSUPE.md](docs/NOTICIAS-LOSUPE.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro

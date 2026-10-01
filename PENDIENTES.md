@@ -5,6 +5,7 @@
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
 - 👤 Descargar el primer video de Full Código (guion 7: GPT-6.1 Astra, el modelo que OpenAI frenó; largo de 5 min 28 s y 3 Shorts) desde https://escenia.sitios.dev/guiones/7, subirlo al canal y programarlo; si la opinión que se escribió en su nombre no le gusta, la cambia en el panel y se vuelve a producir.
+- 👤 Pegar en la sesión de Losupe el prompt de docs/NOTICIAS-LOSUPE.md → Losupe publica cada día noticias de tecnología y de artistas, y cada nota trae un guion de 1 minuto listo para grabar que cierra nombrando losupe.com.
 - 👤 Ver el video de Prince Royce (guion 6) y agendar en el calendario el largo y sus 4 Shorts (están en «Sin fecha todavía»).
 - 👤 Programar en YouTube el video completo de Luis Miguel para el miércoles 30 de septiembre a las 4:00 p. m. (así quedó en el calendario) o moverlo en el calendario a la fecha que prefieras.
 - 👤 Pegar el enlace de cada video ya subido en su ficha del calendario → sale su miniatura de YouTube.
