@@ -93,6 +93,8 @@ export async function prepararMusica(estilo: string, carpetaPublica: string): Pr
     // La pista del repositorio la escribe el propio motor (scripts/musica-tech.mjs); las demás salen de Suno.
     credito: estaEnCarpeta(origen, CARPETA_PROPIAS)
       ? `Música de fondo: «${nombre}» (instrumental propia, sintetizada por el motor)`
-      : `Música de fondo: «${nombre}» (instrumental generada con IA)`,
+      : estaEnCarpeta(origen, CARPETAS_MUSICA[CARPETAS_MUSICA.length - 1] ?? "")
+        ? `Música de fondo: «${nombre}» (de la biblioteca de sonidos del canal)`
+        : `Música de fondo: «${nombre}» (instrumental generada con IA)`,
   };
 }
