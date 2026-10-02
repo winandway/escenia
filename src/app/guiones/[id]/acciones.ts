@@ -8,6 +8,7 @@ import { guionPorId } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
 import { esquemaEscena, esquemaGuion, insertarOpinion, OPINION_MINIMA, VOCES } from "@compartido/guion";
 import { generarPublicacion } from "@/lib/publicacion";
+import { crearVersionNueva } from "@/lib/versiones";
 
 const esquemaEdicion = z.object({
   id: z.coerce.number().int().positive(),
@@ -135,4 +136,18 @@ export async function regenerarPublicacion(datos: FormData): Promise<void> {
     console.error("[regenerarPublicacion]", e);
   }
   revalidatePath(`/guiones/${id}`);
+}
+
+/** Copia un guion ya aprobado a un borrador nuevo, para cambiarlo y volver a producirlo. */
+export async function nuevaVersion(datos: FormData): Promise<void> {
+  await exigirSesion();
+  const id = z.coerce.number().int().positive().parse(datos.get("guion_id"));
+  const { db } = await contexto();
+  const r = await crearVersionNueva(db, id);
+  if (!r.ok) {
+    console.error("[nuevaVersion]", r.error);
+    return;
+  }
+  revalidatePath("/");
+  redirect(`/guiones/${r.guionId}`);
 }

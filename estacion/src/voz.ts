@@ -13,6 +13,7 @@ import {
 } from "@compartido/subtitulos";
 import type { Voz } from "@compartido/guion";
 import { emparejarConLetras, numerosEnLetras } from "@compartido/numeros";
+import { cortesDePausas, tiempoTrasCortes, trozosQueQuedan, type Silencio } from "@compartido/pausas";
 import { paraLaVoz } from "@compartido/pronunciacion";
 import { escalarAlineacion, factorDeRitmo } from "@compartido/ritmo";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
@@ -90,6 +91,16 @@ export async function generarVoz(
       alineacion = await vozDelSistema(textoVoz, rutaPieza, narrador);
     }
     if (texto) {
+      // Mismo volumen en todas las escenas (C-VOZ-2): cada generación sale con
+      // un nivel distinto y se notaba «la voz va y viene». Va primero, porque
+      // los silencios se miden contra un nivel fijo.
+      await nivelar(rutaPieza);
+      // Pausas parejas (C-VOZ-6): la voz deja silencios de 0,3 s y otros de más
+      // de un segundo; se recortan los largos y los tiempos se corren igual.
+      const apretada = await apretarPausas(rutaPieza, alineacion);
+      alineacion = apretada.alineacion;
+      if (apretada.quitadoSeg > 0.05)
+        console.log(`  pausas escena ${i + 1}: -${apretada.quitadoSeg.toFixed(1)} s`);
       // Ritmo parejo (C-VOZ-4): cada generación lee a su velocidad; se lleva
       // toda pieza al mismo ritmo (sin cambiar el tono) y se reescalan los tiempos.
       const factor = factorDeRitmo(textoVoz, (await duracionMs(rutaPieza)) / 1000);
@@ -98,9 +109,6 @@ export async function generarVoz(
         alineacion = escalarAlineacion(alineacion, factor);
         console.log(`  ritmo escena ${i + 1}: ×${factor}`);
       }
-      // Mismo volumen en todas las escenas (C-VOZ-2): cada generación sale con
-      // un nivel distinto y se notaba «la voz va y viene».
-      await nivelar(rutaPieza);
     }
     const r = texto ? palabrasDesdeAlineacion(alineacion, [textoVoz]) : { palabras: [] as Palabra[] };
     // Los subtítulos muestran la ortografía real (C-VOZ-3) y las cifras tal
@@ -185,6 +193,97 @@ async function vozElevenLabs(
   const alineacion = datos.alignment ?? datos.normalized_alignment;
   if (!alineacion) throw new Error("ElevenLabs no devolvió la alineación de letras.");
   return { alineacion, requestId: r.headers.get("request-id") };
+}
+
+/** Los silencios de una pieza ya nivelada (por debajo de -38 dB durante 0,25 s o más). */
+export async function detectarSilencios(ruta: string): Promise<Silencio[]> {
+  const r = await exec("ffmpeg", [
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    ruta,
+    "-af",
+    "silencedetect=noise=-38dB:d=0.25",
+    "-f",
+    "null",
+    "-",
+  ]);
+  const silencios: Silencio[] = [];
+  let inicio: number | null = null;
+  for (const linea of r.stderr.split("\n")) {
+    const a = /silence_start: (-?[\d.]+)/.exec(linea);
+    const b = /silence_end: (-?[\d.]+)/.exec(linea);
+    if (a) inicio = Math.max(0, Number(a[1]));
+    if (b && inicio !== null) {
+      silencios.push({ inicioSeg: inicio, finSeg: Number(b[1]) });
+      inicio = null;
+    }
+  }
+  // Un silencio que llega hasta el final no trae «silence_end».
+  if (inicio !== null) silencios.push({ inicioSeg: inicio, finSeg: (await duracionMs(ruta)) / 1000 });
+  return silencios;
+}
+
+/**
+ * Recorta los silencios largos de una pieza (C-VOZ-6) y corre los tiempos de
+ * las letras lo mismo que el audio. Si no hay nada que recortar, no toca nada.
+ */
+export async function apretarPausas(
+  ruta: string,
+  alineacion: Alineacion,
+): Promise<{ alineacion: Alineacion; quitadoSeg: number }> {
+  const duracionSeg = (await duracionMs(ruta)) / 1000;
+  const cortes = cortesDePausas(await detectarSilencios(ruta), duracionSeg);
+  if (cortes.length === 0) return { alineacion, quitadoSeg: 0 };
+  const trozos = trozosQueQuedan(cortes, duracionSeg);
+  if (trozos.length === 0) return { alineacion, quitadoSeg: 0 };
+  // Cada trozo entra y sale con una rampa de 5 ms: un corte seco en medio de un silencio hace «clic».
+  const filtro =
+    trozos
+      .map((t, k) => {
+        const largo = t.hastaSeg - t.desdeSeg;
+        const rampa = Math.min(0.005, largo / 4);
+        return (
+          `[0:a]atrim=start=${t.desdeSeg.toFixed(4)}:end=${t.hastaSeg.toFixed(4)},asetpts=PTS-STARTPTS,` +
+          `afade=t=in:st=0:d=${rampa.toFixed(4)},afade=t=out:st=${(largo - rampa).toFixed(4)}:d=${rampa.toFixed(4)}[t${k}]`
+        );
+      })
+      .join(";") +
+    ";" +
+    trozos.map((_, k) => `[t${k}]`).join("") +
+    `concat=n=${trozos.length}:v=0:a=1[out]`;
+  const tmp = ruta.replace(/\.mp3$/, ".pausas.mp3");
+  await exec("ffmpeg", [
+    "-y",
+    "-loglevel",
+    "error",
+    "-i",
+    ruta,
+    "-filter_complex",
+    filtro,
+    "-map",
+    "[out]",
+    "-ar",
+    "44100",
+    "-codec:a",
+    "libmp3lame",
+    "-b:a",
+    "128k",
+    tmp,
+  ]);
+  await rename(tmp, ruta);
+  return {
+    alineacion: {
+      characters: alineacion.characters,
+      character_start_times_seconds: alineacion.character_start_times_seconds.map((t) =>
+        tiempoTrasCortes(t, cortes),
+      ),
+      character_end_times_seconds: alineacion.character_end_times_seconds.map((t) =>
+        tiempoTrasCortes(t, cortes),
+      ),
+    },
+    quitadoSeg: cortes.reduce((suma, c) => suma + (c.hastaSeg - c.desdeSeg), 0),
+  };
 }
 
 /** Acelera o frena una pieza sin cambiar el tono (ffmpeg atempo). */

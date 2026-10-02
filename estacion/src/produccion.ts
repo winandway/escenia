@@ -14,6 +14,8 @@ import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_DOCUMENTAL, RESERVA_POR_PARTE } from "./visuales";
 import { enfoquesDe } from "./enfoque";
+import { rellenarPlanos, resolverPlanos } from "./planos";
+import { tramosQuietos } from "@compartido/planos";
 import { prepararMusica } from "./musica";
 import { generarVoz } from "./voz";
 
@@ -47,7 +49,12 @@ const aqui = path.dirname(fileURLToPath(import.meta.url));
 // `sfx` va en el repositorio (sonidos generados, sin licencia de terceros).
 // `sfx-local` vive solo en la Mac (los sonidos de Richard) y, si trae un
 // archivo con el mismo nombre, gana.
-const CARPETAS_SFX = [path.resolve(aqui, "../recursos/sfx"), path.resolve(aqui, "../recursos/sfx-local")];
+// `sfx-panel` trae los efectos que Richard subió desde el panel (C-SONIDOS-1), y manda sobre los dos.
+const CARPETAS_SFX = [
+  path.resolve(aqui, "../recursos/sfx"),
+  path.resolve(aqui, "../recursos/sfx-local"),
+  path.resolve(aqui, "../recursos/sfx-panel"),
+];
 
 /** Copia los efectos de sonido a la carpeta pública del trabajo. */
 async function prepararSfx(carpetaPublica: string): Promise<PropsVideo["sfx"]> {
@@ -71,6 +78,11 @@ async function prepararSfx(carpetaPublica: string): Promise<PropsVideo["sfx"]> {
     riser: tiene("riser.mp3"),
     ding: tiene("ding.mp3"),
     boom: tiene("boom.mp3"),
+    // Un sonido corto por cada cambio de imagen: los «corte-N.mp3» (C-RITMO-1).
+    corte: [...archivos]
+      .filter((a) => a.startsWith("corte-"))
+      .sort()
+      .map((a) => `sfx/${a}`),
   };
 }
 
@@ -294,7 +306,27 @@ export async function producir(
       recorte,
       interludio: e.parte === "interludio",
       fondoFoto,
+      planos: [],
     });
+    // Planos del guion: cada uno entra con la frase que se dice (C-RITMO-1).
+    const escenaLista = escenas[escenas.length - 1];
+    if (escenaLista && e.visual.planos?.length) {
+      const r = await resolverPlanos({
+        planos: e.visual.planos,
+        palabras: voz.palabras.filter((p) => p.startMs >= tramo.inicioMs && p.startMs < tramo.finMs),
+        inicioMs: tramo.inicioMs,
+        finMs: tramo.finMs,
+        carpetaPublica,
+        alCredito: (credito) => creditos.push(credito),
+      });
+      escenaLista.planos = r.planos;
+      if (r.sinFrase || r.sinImagen)
+        console.warn(
+          `  planos escena ${i + 1}: ${r.planos.length} de ${e.visual.planos.length}` +
+            (r.sinFrase ? ` · ${r.sinFrase} sin su frase en la narración (se repartieron)` : "") +
+            (r.sinImagen ? ` · ${r.sinImagen} sin imagen (se quitaron)` : ""),
+        );
+    }
     paraShorts.push({
       inicioMs: tramo.inicioMs,
       finMs: tramo.finMs,
@@ -309,9 +341,57 @@ export async function producir(
     );
   }
 
+  // Relleno (C-RITMO-1): donde una escena se quedaría quieta, entran fotos del
+  // propio video o clips de ambiente. Así también mejoran los guiones sin planos.
+  await avisar("revisando que ninguna imagen se quede quieta", 37);
+  const fotosDelVideo = [
+    ...new Map(
+      escenas
+        .flatMap((e) => [
+          ...(e.foto ? [e.foto] : []),
+          ...e.fotos,
+          ...e.planos.flatMap((p) => (p.foto ? [p.foto] : [])),
+        ])
+        .map((f) => [f.ruta, f] as const),
+    ).values(),
+  ];
+  const turno = { n: 0 };
+  for (const [i, escena] of escenas.entries()) {
+    const delGuion = guion.escenas.filter((_, k) => voz.tramos[k])[i];
+    escena.planos = await rellenarPlanos({
+      escena,
+      fotosDelVideo,
+      preferirFotos: documental,
+      busquedasDeClip: [
+        delGuion?.visual.busqueda ?? "",
+        ...(reservas[escena.parte] ?? reservas.contexto ?? []),
+      ],
+      carpetaPublica,
+      alCredito: (credito) => creditos.push(credito),
+      turno,
+    });
+  }
+  const totalPlanos = escenas.reduce((n, e) => n + e.planos.length, 0);
+  const quietos = tramosQuietos(
+    escenas.map((e) => ({ inicioMs: e.inicioMs, finMs: e.finMs, cambios: e.planos.map((p) => p.inicioMs) })),
+  );
+  await avisar(
+    `ritmo visual: ${totalPlanos + escenas.length} imágenes en ${Math.round(voz.duracionMs / 1000)} s` +
+      (quietos.length ? ` · OJO: ${quietos.length} tramo(s) quietos de más de 6 s` : ""),
+    37,
+  );
+  if (quietos.length)
+    console.warn(
+      `  RITMO: tramos quietos → ${quietos.map((q) => `escena ${q.escena + 1} (${Math.round((q.hastaMs - q.desdeMs) / 1000)} s)`).join(", ")}`,
+    );
+
   // Dónde está la persona en cada foto (para el recorte vertical de los shorts).
   await avisar("buscando las caras para el recorte vertical", 38);
-  const todasLasFotos = escenas.flatMap((e) => [...(e.foto ? [e.foto] : []), ...e.fotos]);
+  const todasLasFotos = escenas.flatMap((e) => [
+    ...(e.foto ? [e.foto] : []),
+    ...e.fotos,
+    ...e.planos.flatMap((p) => (p.foto ? [p.foto] : [])),
+  ]);
   const enfoques = await enfoquesDe([
     ...new Set(todasLasFotos.map((f) => path.join(carpetaPublica, f.ruta))),
   ]);

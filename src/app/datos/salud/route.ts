@@ -30,6 +30,14 @@ export async function GET() {
       detalle = detalle || (e instanceof Error ? e.message : String(e));
     }
     try {
+      // La biblioteca de sonidos existe (C-SONIDOS-1).
+      await db.uno("SELECT COUNT(archivo) AS n FROM sonidos");
+      piezas.sonidos = "ok";
+    } catch (e) {
+      piezas.sonidos = "error";
+      detalle = detalle || (e instanceof Error ? e.message : String(e));
+    }
+    try {
       const latido = await latidoEstacion(db);
       piezas.estacion = estacionViva(latido) ? "ok" : "apagado";
     } catch {

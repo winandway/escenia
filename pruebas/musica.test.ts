@@ -75,6 +75,36 @@ describe("la música tiene que ser del mundo del video (C-MUSICA-2)", () => {
   });
 });
 
+describe("las pistas propias del motor (bombo y bachata)", () => {
+  const propias = [
+    "beat-kick-bass-driving-pulse-neutral.mp3",
+    "bachata-guitar-requinto-bongos-guira-romantic-warm.mp3",
+    "electronic-tech-synth-minimal-curious-pulse.mp3",
+    "son-cubano-1940s-tres-guitar-warm.mp3",
+  ];
+
+  it("una historia de bachata sale con la bachata, no con un son", () => {
+    expect(
+      elegirPista("warm bachata guitar undertones, minimal percussion, reflective", propias)?.archivo,
+    ).toBe("bachata-guitar-requinto-bongos-guira-romantic-warm.mp3");
+    expect(elegirPista("Dominican romantic music, bongos and güira", propias)?.archivo).toBe(
+      "bachata-guitar-requinto-bongos-guira-romantic-warm.mp3",
+    );
+  });
+
+  it("si piden bombo y bajo, sale el bombo; y también cuando nada encaja", () => {
+    expect(elegirPista("driving kick and bass beat, dark pulse", propias)?.archivo).toBe(
+      "beat-kick-bass-driving-pulse-neutral.mp3",
+    );
+    expect(elegirPista("ritmo con bombo y bajo", propias)?.archivo).toBe(
+      "beat-kick-bass-driving-pulse-neutral.mp3",
+    );
+    expect(elegirPista("baroque harpsichord", propias)?.archivo).toBe(
+      "beat-kick-bass-driving-pulse-neutral.mp3",
+    );
+  });
+});
+
 describe("volumen de la música (C-MUSICA-1)", () => {
   const interludios = [{ inicioMs: 60_000, finMs: 66_000 }];
   const finVoz = 120_000;

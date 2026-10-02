@@ -34,6 +34,25 @@ export const VOCES = ["richard", "femenina"] as const;
 export type Voz = (typeof VOCES)[number];
 export const ETIQUETA_VOZ: Record<Voz, string> = { richard: "Mi voz", femenina: "Voz femenina" };
 
+// Un PLANO es un cambio de imagen DENTRO de una escena, pegado a la frase que
+// se está diciendo: la voz nombra a alguien y sale su foto; dice una cifra y la
+// cifra salta en grande. Sin planos, una escena de 30 segundos es una sola
+// imagen quieta, y la gente se va (C-RITMO-1).
+export const TIPOS_PLANO = ["foto", "stock", "dato"] as const;
+export const PLANOS_POR_ESCENA = 16;
+export const esquemaPlano = z.object({
+  // De 2 a 6 palabras LITERALES de la narración: el plano entra cuando la voz las dice.
+  frase: z.string().trim().min(2).max(90),
+  // foto: foto real (persona o lugar) · stock: clip de ambiente · dato: cifra o frase corta en grande.
+  tipo: z.enum(TIPOS_PLANO),
+  // Qué buscar (foto: nombre real + época o situación; stock: 2 a 5 palabras en inglés).
+  busqueda: z.string().trim().max(80).optional(),
+  foto_de: z.enum(["persona", "lugar"]).optional(),
+  // En «dato», lo que se lee en grande («15 nominaciones»). En «foto», el nombre que se rotula («Shakira»).
+  texto: z.string().trim().max(60).optional(),
+});
+export type Plano = z.infer<typeof esquemaPlano>;
+
 export const esquemaVisual = z.object({
   tipo: z.enum(TIPOS_VISUAL),
   // Palabras para buscar el clip en Pexels (stock) o la foto en Wikimedia Commons (foto).
@@ -58,6 +77,8 @@ export const esquemaVisual = z.object({
   // evento (un estadio, un trofeo, una ciudad) y no de una persona. Así no se
   // exige una cara y no se cuela alguien que no es de la historia.
   foto_de: z.enum(["persona", "lugar"]).optional(),
+  // Cambios de imagen dentro de la escena, en el orden en que se dicen (C-RITMO-1).
+  planos: z.array(esquemaPlano).max(PLANOS_POR_ESCENA).optional(),
 });
 
 export const DURACION_INTERLUDIO = { minimo: 3, maximo: 15, porDefecto: 6 } as const;

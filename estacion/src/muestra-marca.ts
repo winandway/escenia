@@ -55,6 +55,7 @@ async function principal() {
     recorte: null,
     interludio: false,
     fondoFoto: null,
+    planos: [],
     ...extra,
   });
   // Medidas reales de la foto (con `sips`, que trae la Mac), para que el recorte sea el de verdad.
@@ -112,7 +113,7 @@ async function principal() {
     producto: null,
     vozDePrueba: false,
     tema: "tech",
-    sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null },
+    sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] },
     musica: null,
     marca: {
       id: marca.id,

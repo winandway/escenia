@@ -57,7 +57,29 @@ async function llamar(
   );
 }
 
+const esquemaSonidos = z.object({
+  sonidos: z.array(
+    z.object({ id: z.number(), tipo: z.enum(["musica", "efecto"]), archivo: z.string(), bytes: z.number() }),
+  ),
+});
+export type SonidoDelPanel = z.infer<typeof esquemaSonidos>["sonidos"][number];
+
 export const panel = {
+  /** La biblioteca de sonidos de Richard (C-SONIDOS-1). */
+  async sonidos(): Promise<SonidoDelPanel[]> {
+    return esquemaSonidos.parse(await llamar("/datos/estacion/sonidos", {})).sonidos;
+  },
+  async bajarSonido(id: number): Promise<Buffer> {
+    return conReintentos(async () => {
+      const r = await fetch(`${config.PANEL_URL}/datos/estacion/sonidos/${id}`, {
+        headers: { authorization: `Bearer ${config.ESTACION_SECRETO}` },
+        signal: AbortSignal.timeout(180_000),
+      });
+      if (!r.ok)
+        throw new ErrorDelPanel(`El panel respondió ${r.status} al bajar el sonido ${id}.`, r.status);
+      return Buffer.from(await r.arrayBuffer());
+    });
+  },
   async siguiente(): Promise<Trabajo | null> {
     const r = esquemaTrabajo.parse(await llamar("/datos/estacion/siguiente", { version: config.VERSION }));
     return r.trabajo;

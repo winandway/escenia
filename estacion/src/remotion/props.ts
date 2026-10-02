@@ -19,6 +19,18 @@ export const esquemaFoto = z.object({
   enfoque: z.object({ x: z.number(), y: z.number() }).nullable().default(null),
 });
 
+// Un cambio de imagen dentro de una escena (C-RITMO-1): entra en `inicioMs`
+// (tiempo del video largo) y dura hasta el siguiente plano o el fin de la escena.
+export const esquemaPlanoVideo = z.object({
+  inicioMs: z.number(),
+  // foto: imagen con movimiento · clip: video de ambiente · dato: cifra o frase corta en grande.
+  tipo: z.enum(["foto", "clip", "dato"]),
+  foto: esquemaFoto.nullable().default(null),
+  clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
+  // En «dato», lo que se lee en grande. En «foto», el nombre que se rotula (o vacío).
+  texto: z.string().default(""),
+});
+
 export const esquemaEscenaVideo = z.object({
   parte: z.string(),
   inicioMs: z.number(),
@@ -47,6 +59,8 @@ export const esquemaEscenaVideo = z.object({
   interludio: z.boolean().default(false),
   // Foto (de la persona) difuminada como fondo, en vez de clip. Biografías.
   fondoFoto: z.string().nullable().default(null),
+  // Los cambios de imagen de la escena, en orden. Vacío = la escena es una sola imagen.
+  planos: z.array(esquemaPlanoVideo).default([]),
 });
 
 export const esquemaSfx = z.object({
@@ -55,6 +69,8 @@ export const esquemaSfx = z.object({
   riser: z.string().nullable().default(null),
   ding: z.string().nullable().default(null),
   boom: z.string().nullable().default(null),
+  // Sonidos cortos y bajitos para cada cambio de imagen (chasquido, soplido): se van alternando.
+  corte: z.array(z.string()).default([]),
 });
 
 export const esquemaPropsVideo = z.object({
@@ -67,7 +83,7 @@ export const esquemaPropsVideo = z.object({
   vozDePrueba: z.boolean().default(false),
   // "tech": explicador de tecnología. "documental": biografías, más pausado y con serif.
   tema: z.enum(["tech", "documental"]).default("tech"),
-  sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null }),
+  sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] }),
   // Música de fondo (ruta relativa al publicDir), ya normalizada de volumen. Se repite en bucle.
   musica: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
   // Cierre de los shorts: «ver video completo» con la miniatura del largo

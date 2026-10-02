@@ -64,6 +64,39 @@ const SINONIMOS: Record<string, string> = {
   bongo: "bongos",
   epic: "triumphant",
   heroic: "triumphant",
+  // El bombo que pide Richard («tum, pum, pum»): se diga como se diga, es «kick» y «beat».
+  bombo: "kick",
+  kicks: "kick",
+  "808": "bass",
+  bajo: "bass",
+  bassline: "bass",
+  beats: "beat",
+  trap: "beat",
+  phonk: "beat",
+  hiphop: "beat",
+  boom: "beat",
+  pulsing: "pulse",
+  requinto: "requinto",
+  guira: "guira",
+  dominican: "bachata",
+  // Los nombres que Richard escribe en español al subir una pista.
+  guitarra: "guitar",
+  guitarras: "guitar",
+  romantica: "romantic",
+  romantico: "romantic",
+  alegre: "upbeat",
+  movida: "upbeat",
+  triste: "melancholic",
+  lenta: "soft",
+  suave: "soft",
+  trompetas: "brass",
+  tambores: "drums",
+  acordeon: "accordion",
+  electronica: "electronic",
+  reggaeton: "reggaeton",
+  regueton: "reggaeton",
+  neutra: "neutral",
+  ritmo: "beat",
 };
 
 const RUIDO = new Set([
@@ -134,19 +167,36 @@ export type PistaElegida = { archivo: string; puntos: number };
 
 const ES_AUDIO = /\.(mp3|m4a|wav|aac|ogg)$/i;
 
-export function elegirPista(estilo: string, archivos: string[]): PistaElegida | null {
+/**
+ * `preferidas`: las pistas de Richard (las que subió o dejó en la Mac). A igual
+ * parecido ganan sobre las propias del motor, que son solo la reserva.
+ */
+export function elegirPista(
+  estilo: string,
+  archivos: string[],
+  preferidas: string[] = [],
+): PistaElegida | null {
+  const suyas = new Set(preferidas);
   const pistas = archivos.filter((a) => ES_AUDIO.test(a)).sort();
   if (pistas.length === 0) return null;
   const claves = palabrasClave(estilo);
   let mejor: PistaElegida | null = null;
   for (const archivo of pistas) {
-    const propias = new Set(palabrasClave(archivo.replace(ES_AUDIO, "")));
+    const fichas = palabrasClave(archivo.replace(ES_AUDIO, ""));
+    const propias = new Set(fichas);
     const comunes = claves.filter((c) => propias.has(c));
     // Tiene que coincidir en algo de fondo (género, época, instrumento, origen), no solo en el ánimo.
-    const puntos = comunes.some((c) => !ANIMOS.has(c)) ? comunes.length : 0;
+    const parecido = comunes.some((c) => !ANIMOS.has(c)) ? comunes.length : 0;
+    // El género es la primera palabra del nombre. Una pista del género pedido gana a
+    // cualquiera que solo comparta un instrumento; y entre las del género, gana la de Richard.
+    const delGenero = parecido > 0 && fichas[0] !== undefined && claves.includes(fichas[0]);
+    const suya = suyas.has(archivo);
+    const puntos =
+      parecido === 0 ? 0 : parecido + (delGenero ? 10 : 0) + (delGenero && suya ? 5 : 0) + (suya ? 0.5 : 0);
     if (!mejor || puntos > mejor.puntos) mejor = { archivo, puntos };
   }
   if (mejor && mejor.puntos > 0) return mejor;
-  const neutra = pistas.find((a) => /neutral/i.test(a));
+  const neutras = pistas.filter((a) => /neutral/i.test(a));
+  const neutra = neutras.find((a) => suyas.has(a)) ?? neutras[0];
   return neutra ? { archivo: neutra, puntos: 0 } : null;
 }

@@ -272,6 +272,28 @@ export function EditorGuion(p: Props) {
                     : undefined
                 }
               />
+              {/* Los cambios de imagen de la escena (C-RITMO-1): cada uno entra con la frase que se dice. */}
+              {(e.visual.planos?.length ?? 0) > 0 && (
+                <details className="text-xs text-neutral-400">
+                  <summary className="cursor-pointer">
+                    {e.visual.planos?.length === 1
+                      ? "1 cambio de imagen"
+                      : `${e.visual.planos?.length} cambios de imagen`}
+                  </summary>
+                  <ul className="mt-2 space-y-1">
+                    {e.visual.planos?.map((pl, k) => (
+                      <li key={k}>
+                        <span className="text-neutral-200">«{pl.frase}»</span> →{" "}
+                        {pl.tipo === "dato"
+                          ? `cifra en grande: ${pl.texto ?? ""}`
+                          : pl.tipo === "foto"
+                            ? `foto: ${pl.busqueda ?? ""}${pl.texto ? ` (rótulo: ${pl.texto})` : ""}`
+                            : `clip: ${pl.busqueda ?? ""}`}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </li>
           ))}
         </ol>

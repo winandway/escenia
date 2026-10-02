@@ -6,6 +6,7 @@ import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEn
 import { panel } from "./panel";
 import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
+import { sincronizarSonidos } from "./sonidos";
 import { marcaDeCanal } from "@compartido/marcas";
 import { buscarTematica } from "@compartido/tematicas";
 
@@ -42,6 +43,18 @@ async function unaVuelta(): Promise<boolean> {
       console.log(`  Se retoma la entrega del video ya armado en el trabajo #${previa.numero}.`);
       await avisar("retomando el video que ya estaba armado", 97);
     } else {
+      // La música y los efectos que Richard subió desde el panel (C-SONIDOS-1). Si el
+      // panel no responde, se produce con lo que ya hay en la Mac, y se dice.
+      await sincronizarSonidos()
+        .then((x) => {
+          if (x.bajados.length) console.log(`  Sonidos nuevos del panel: ${x.bajados.join(", ")}`);
+          if (x.apartados.length) console.log(`  Sonidos quitados en el panel: ${x.apartados.join(", ")}`);
+        })
+        .catch((e) =>
+          console.warn(
+            `  (no se pudo traer la biblioteca de sonidos: ${e instanceof Error ? e.message : e}; se usa lo que hay en la Mac)`,
+          ),
+        );
       r = await producir(
         `t${trabajo.id}`,
         trabajo.contenido,

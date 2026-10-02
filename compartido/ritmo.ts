@@ -4,8 +4,12 @@
 // ajusta el tempo (sin cambiar el tono) hacia un objetivo único.
 import type { Alineacion } from "./subtitulos";
 
-/** ≈ 150 palabras por minuto en español narrado, «un poco rápido» como pidió Richard. */
-export const LETRAS_POR_SEGUNDO_OBJETIVO = 11;
+/**
+ * ≈ 158 palabras por minuto en español narrado, «un poco rápido» como pidió
+ * Richard. Subió de 11 a 11,6 el 2 oct 2026: ahora el ritmo se mide con las
+ * pausas ya recortadas (C-VOZ-6), y con 11 la voz se habría frenado.
+ */
+export const LETRAS_POR_SEGUNDO_OBJETIVO = 11.6;
 export const FACTOR_MINIMO = 0.85;
 export const FACTOR_MAXIMO = 1.25;
 

@@ -30,6 +30,7 @@ import {
   TituloTerminal,
   type MarcaVideo,
 } from "./Marca";
+import { PlanosDeEscena } from "./Planos";
 import { CIERRE_SHORT_MS, FPS, INTRO_SHORT_MS, type PropsVideo } from "./props";
 
 const { fontFamily } = loadFont("normal", {
@@ -79,7 +80,8 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
     () =>
       createTikTokStyleCaptions({
         captions: p.palabras,
-        combineTokensWithinMilliseconds: vertical ? 700 : 1100,
+        // Pocas palabras a la vez, como en CapCut: se leen de un golpe (C-RITMO-1).
+        combineTokensWithinMilliseconds: vertical ? 520 : 900,
       }),
     [p.palabras, vertical],
   );
@@ -144,6 +146,8 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               boom={p.sfx.boom}
               whoosh={whoosh}
               marca={marca}
+              desdeMs={Math.max(e.inicioMs, inicioVentanaMs)}
+              cortes={p.sfx.corte.length ? p.sfx.corte : whooshes}
             />
             {whoosh && !primera && <Audio src={staticFile(whoosh)} volume={0.4} />}
           </Sequence>
@@ -174,27 +178,52 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         </Sequence>
       )}
 
-      {/* Subtítulos palabra por palabra */}
+      {/* Subtítulos palabra por palabra, al estilo CapCut: pocas palabras, borde grueso y la
+          palabra que se está diciendo salta en el color del canal (C-RITMO-1). */}
       {pagina && !enInterludio && (
         <AbsoluteFill
           style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: vertical ? 420 : 100 }}
         >
           <div
             style={{
-              maxWidth: vertical ? "88%" : "72%",
+              maxWidth: vertical ? "90%" : "74%",
               textAlign: "center",
-              fontSize: vertical ? 64 : 54,
+              fontSize: vertical ? 76 : 60,
               fontWeight: 900,
-              lineHeight: 1.15,
-              textShadow: "0 4px 24px rgba(0,0,0,.95), 0 0 2px rgba(0,0,0,1)",
+              lineHeight: 1.12,
               color: "#fff",
+              textTransform: vertical ? "uppercase" : undefined,
+              WebkitTextStroke: `${vertical ? 12 : 9}px #000`,
+              paintOrder: "stroke fill",
+              textShadow: "0 6px 26px rgba(0,0,0,.85)",
             }}
           >
-            {pagina.tokens.map((tk, k) => (
-              <span key={k} style={{ color: tMs >= tk.fromMs ? acento : "#fff" }}>
-                {tk.text}
-              </span>
-            ))}
+            {pagina.tokens.map((tk, k) => {
+              // Solo UNA palabra encendida: la última que empezó a decirse.
+              const siguiente = pagina.tokens[k + 1];
+              const sonando = tMs >= tk.fromMs && (!siguiente || tMs < siguiente.fromMs);
+              // Salta y vuelve a su tamaño: si se quedara grande, se comería el espacio de al lado.
+              const salto = sonando
+                ? interpolate(tMs - tk.fromMs, [0, 80, 200], [1, 1.13, 1], {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  })
+                : 1;
+              return (
+                <span
+                  key={k}
+                  style={{
+                    display: "inline-block",
+                    whiteSpace: "pre",
+                    padding: "0 0.05em",
+                    color: sonando ? acento : "#fff",
+                    transform: `scale(${salto})`,
+                  }}
+                >
+                  {tk.text}
+                </span>
+              );
+            })}
           </div>
         </AbsoluteFill>
       )}
@@ -310,6 +339,10 @@ const EscenaVista: React.FC<{
   boom: string | null;
   whoosh: string | null;
   marca: MarcaVideo | null;
+  /** Tiempo del video largo en el primer cuadro de esta escena en pantalla. */
+  desdeMs: number;
+  /** Sonidos cortos para los cambios de imagen. */
+  cortes: string[];
 }> = ({
   escena,
   indice,
@@ -324,6 +357,8 @@ const EscenaVista: React.FC<{
   boom,
   whoosh,
   marca,
+  desdeMs,
+  cortes,
 }) => {
   const frame = useCurrentFrame();
   const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
@@ -426,9 +461,56 @@ const EscenaVista: React.FC<{
           <Audio src={staticFile(pop)} volume={0.5} />
         </Sequence>
       )}
+      {/* Planos: los cambios de imagen de la escena, encima de su imagen de arranque (C-RITMO-1). */}
+      {escena.planos.length > 0 && (
+        <PlanosDeEscena
+          escena={escena}
+          desdeMs={desdeMs}
+          durFrames={durFrames}
+          indiceEscena={indice}
+          vertical={vertical}
+          acento={acento}
+          fuente={fuenteTitulos}
+          colores={colores}
+          cortes={cortes}
+          golpe={boom ?? pop}
+        />
+      )}
+      {/* En la opinión, las imágenes pasan y la etiqueta se queda: se sabe quién habla. */}
+      {escena.parte === "opinion" && escena.planos.length > 0 && (
+        <EtiquetaFija texto="Mi opinión" acento={acento} fuente={fuenteTitulos} vertical={vertical} />
+      )}
     </AbsoluteFill>
   );
 };
+
+/** Etiqueta chica que acompaña toda una escena (por ejemplo «Mi opinión»). */
+const EtiquetaFija: React.FC<{ texto: string; acento: string; fuente: string; vertical: boolean }> = ({
+  texto,
+  acento,
+  fuente,
+  vertical,
+}) => (
+  <div
+    style={{
+      position: "absolute",
+      left: vertical ? 60 : 80,
+      top: vertical ? 170 : 70,
+      backgroundColor: acento,
+      color: "#0b0b0b",
+      fontFamily: fuente,
+      fontWeight: 900,
+      fontSize: vertical ? 40 : 34,
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      padding: vertical ? "10px 22px" : "8px 20px",
+      borderRadius: 10,
+      boxShadow: "0 8px 30px rgba(0,0,0,.5)",
+    }}
+  >
+    {texto}
+  </div>
+);
 
 const Fondo: React.FC<{
   clip: Escena["clip"];

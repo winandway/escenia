@@ -4,6 +4,7 @@ import {
   FACTOR_MAXIMO,
   FACTOR_MINIMO,
   factorDeRitmo,
+  LETRAS_POR_SEGUNDO_OBJETIVO,
   letrasHabladas,
 } from "@compartido/ritmo";
 
@@ -18,8 +19,8 @@ describe("ritmo de lectura parejo (C-VOZ-4)", () => {
   it("acelera las piezas lentas y frena las rápidas hacia el mismo ritmo", () => {
     const letras = letrasHabladas(texto);
     expect(factorDeRitmo(texto, letras / 8.5)).toBeGreaterThan(1.2); // leía a 8,5 letras/s: se acelera
-    expect(factorDeRitmo(texto, letras / 12)).toBeLessThan(0.95); // leía a 12: se frena un poco
-    expect(factorDeRitmo(texto, letras / 11)).toBe(1);
+    expect(factorDeRitmo(texto, letras / 13)).toBeLessThan(0.95); // leía a 13: se frena un poco
+    expect(factorDeRitmo(texto, letras / LETRAS_POR_SEGUNDO_OBJETIVO)).toBe(1);
   });
 
   it("nunca pasa de los topes ni toca piezas muy cortas", () => {

@@ -2,12 +2,18 @@
 // panel: si el resultado no es un guion válido, no se guarda nada.
 // Uso (desde la raíz): estacion/node_modules/.bin/tsx scripts/guion-remoto.ts < cambios.json
 // cambios.json: { "id": 6, "titulo"?: "...", "gancho"?: "...",
-//                 "escenas"?: { "3": { "narracion"?: "...", "visual"?: { ... } } },
+//                 "escenas"?: { "3": { "narracion"?: "...", "visual"?: { ... }, "planos"?: [ ... ] } },
 //                 "escenas_nuevas"?: [ ...todas las escenas, de cero... ],
 //                 "musica"?: "...", "hechos_a_verificar"?: ["..."] }
 import { readFileSync } from "node:fs";
 import { z } from "zod";
-import { esquemaEscena, esquemaGuion, esquemaVisual } from "@compartido/guion";
+import {
+  esquemaEscena,
+  esquemaGuion,
+  esquemaPlano,
+  esquemaVisual,
+  PLANOS_POR_ESCENA,
+} from "@compartido/guion";
 import { db } from "./base-remota";
 
 const esquemaCambios = z.object({
@@ -17,7 +23,12 @@ const esquemaCambios = z.object({
   escenas: z
     .record(
       z.string().regex(/^\d+$/),
-      z.object({ narracion: z.string().optional(), visual: esquemaVisual.optional() }),
+      z.object({
+        narracion: z.string().optional(),
+        visual: esquemaVisual.optional(),
+        // Solo los cambios de imagen de la escena (C-RITMO-1); lo demás del visual no se toca.
+        planos: z.array(esquemaPlano).max(PLANOS_POR_ESCENA).optional(),
+      }),
     )
     .default({}),
   // Reescribe el guion entero (todas las escenas). No se combina con `escenas`.
@@ -42,7 +53,12 @@ async function principal() {
   const escenas = base.map((escena, i) => {
     const c = cambios.escenas[String(i + 1)];
     if (!c) return escena;
-    return { ...escena, narracion: c.narracion ?? escena.narracion, visual: c.visual ?? escena.visual };
+    const visual = c.visual ?? escena.visual;
+    return {
+      ...escena,
+      narracion: c.narracion ?? escena.narracion,
+      visual: c.planos ? { ...visual, planos: c.planos } : visual,
+    };
   });
   for (const n of Object.keys(cambios.escenas))
     if (Number(n) < 1 || Number(n) > base.length) throw new Error(`No existe la escena ${n}.`);

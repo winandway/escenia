@@ -80,3 +80,7 @@ avatar/
 
 # Videos bajados de internet para consulta (nunca al repositorio)
 descargas/
+
+# Sonidos que Richard sube desde el panel; la Estación los baja a la Mac (C-SONIDOS-1)
+estacion/recursos/musica-panel/
+estacion/recursos/sfx-panel/

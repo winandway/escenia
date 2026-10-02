@@ -18,7 +18,7 @@ import { buscarTematica } from "@compartido/tematicas";
 import { separarEntregas } from "@compartido/videos";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
 import { EditorGuion } from "./EditorGuion";
-import { regenerarPublicacion, reintentarTrabajo } from "./acciones";
+import { nuevaVersion, regenerarPublicacion, reintentarTrabajo } from "./acciones";
 
 export const dynamic = "force-dynamic";
 
@@ -237,6 +237,18 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
             </div>
           )}
         </section>
+      )}
+
+      {guion.estado !== "borrador" && (
+        <form action={nuevaVersion} className="tarjeta mb-4 flex flex-wrap items-center gap-3 text-sm">
+          <input type="hidden" name="guion_id" value={guion.id} />
+          <span className="text-neutral-300">
+            Este guion ya no se puede cambiar. Para corregirlo y producirlo otra vez, crea una versión nueva.
+          </span>
+          <button type="submit" className="boton-suave ml-auto">
+            Crear versión nueva
+          </button>
+        </form>
       )}
 
       <EditorGuion

@@ -50,7 +50,7 @@ export const TEMATICAS: Tematica[] = [
       "Aquí no hay un personaje único: la primera escena es una «foto» real de quien protagoniza la noticia (la persona, el producto o el lugar; si no es una persona, con `visual.foto_de`: «lugar»). No uses «ia». El «periodico» aquí se ve como una ventana de noticias: úsalo para el hecho central, con su fecha real.",
       "Cada escena «dato» o «problema» arranca con una frase que se entienda sola, porque de ahí salen los Shorts.",
       "Para los clips «stock» busca imágenes de tecnología concretas («server room lights», «programmer typing code», «robot arm factory»), nunca gente genérica de oficina sonriendo.",
-      "`musica`: siempre electrónica instrumental («minimal electronic, soft synths, tech, curious»).",
+      "`musica`: siempre un ritmo con bombo y bajo que empuje («driving kick and bass beat, dark pulse»); nada de melodías que distraigan.",
     ],
   },
   {

@@ -19,7 +19,11 @@ export const CARPETAS_MUSICA = [
   path.resolve(aqui, "../recursos/musica-local"),
   // La carpeta donde Richard deja lo que genera en Suno (raíz del proyecto, ignorada por git).
   path.resolve(aqui, "../../music-cortinas-libre-de-copy"),
+  // Lo que Richard sube desde el panel (Sonidos); la Estación lo baja aquí (C-SONIDOS-1).
+  path.resolve(aqui, "../recursos/musica-panel"),
 ];
+/** La carpeta del repositorio: las pistas propias del motor, que son la reserva. */
+const CARPETA_PROPIAS = CARPETAS_MUSICA[0] ?? "";
 const ES_AUDIO = /\.(mp3|m4a|wav|aac|ogg)$/i;
 
 export type PistaCatalogo = { archivo: string; rutaCompleta: string };
@@ -37,9 +41,11 @@ export async function catalogoMusica(): Promise<PistaCatalogo[]> {
 
 export async function prepararMusica(estilo: string, carpetaPublica: string): Promise<MusicaLista | null> {
   const catalogo = await catalogoMusica();
+  // A igual parecido, gana la música de Richard sobre la pista propia del motor.
   const elegida = elegirPista(
     estilo,
     catalogo.map((c) => c.archivo),
+    catalogo.filter((c) => !c.rutaCompleta.startsWith(CARPETA_PROPIAS)).map((c) => c.archivo),
   );
   if (!elegida) return null;
   const origen = catalogo.find((c) => c.archivo === elegida.archivo)?.rutaCompleta;

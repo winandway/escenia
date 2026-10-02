@@ -5,6 +5,7 @@ const ENLACES = [
   { href: "/", texto: "Guiones" },
   { href: "/nuevo", texto: "Nuevo video" },
   { href: "/calendario", texto: "Calendario" },
+  { href: "/sonidos", texto: "Sonidos" },
   { href: "/trabajos", texto: "Estación" },
   { href: "/ajustes", texto: "Ajustes" },
 ] as const;

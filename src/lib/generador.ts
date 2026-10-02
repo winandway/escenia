@@ -7,8 +7,8 @@ import type { BaseDatos } from "./db";
 import { anotarGasto, autorizarGasto } from "./presupuesto";
 import { instruccionesSistema, mensajeUsuario, type EntradaGuion } from "./prompt";
 
-// Un guion suele costar 2–4 centavos; se reserva un poco más por seguridad.
-const ESTIMADO_GUION_USD = 0.08;
+// Un guion con sus planos suele costar 5–10 centavos; se reserva un poco más por seguridad.
+const ESTIMADO_GUION_USD = 0.15;
 
 export type ResultadoGeneracion = { guion: GuionGenerado; modelo: string; costoUsd: number };
 
@@ -26,9 +26,10 @@ export async function generarGuion(
   const cliente = new Anthropic({ apiKey: opciones.apiKey, fetch: opciones.fetch, maxRetries: 2 });
   const respuesta = await cliente.messages.parse({
     model: modelo,
-    // Un guion largo (biografías) pasa de 8 000 tokens; y sin razonamiento
-    // interno, para que todo el presupuesto vaya al JSON del guion.
-    max_tokens: 16000,
+    // Un guion largo (biografías) pasa de 8 000 tokens, y con los planos de
+    // cada escena (C-RITMO-1) casi se duplica; sin razonamiento interno, para
+    // que todo el presupuesto vaya al JSON del guion.
+    max_tokens: 30000,
     thinking: { type: "disabled" },
     system: instruccionesSistema(),
     messages: [{ role: "user", content: mensajeUsuario(entrada) }],
