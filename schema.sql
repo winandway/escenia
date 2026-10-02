@@ -172,3 +172,21 @@ CREATE UNIQUE INDEX IF NOT EXISTS calendario_hueco_3 ON calendario(canal, plataf
 -- Cada pieza de un guion va una sola vez por plataforma (moverla la cambia, no la duplica).
 CREATE UNIQUE INDEX IF NOT EXISTS calendario_pieza ON calendario(guion_id, pieza, indice, plataforma)
   WHERE guion_id IS NOT NULL;
+
+-- Biblioteca de sonidos de Richard (C-SONIDOS-1): la música y los efectos que
+-- sube desde el panel. El archivo vive en el almacén; la Estación los baja a la
+-- Mac antes de producir. «Quitar» solo apaga `activo`: nada se borra.
+CREATE TABLE IF NOT EXISTS sonidos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tipo TEXT NOT NULL CHECK (tipo IN ('musica','efecto')),
+  nombre TEXT NOT NULL,
+  genero TEXT NOT NULL DEFAULT '',   -- música: bachata, salsa, beat…
+  uso TEXT NOT NULL DEFAULT '',      -- efecto: corte, transicion, golpe, titulo, cierre
+  origen TEXT NOT NULL,              -- de dónde salió (propia, con licencia, libre)
+  archivo TEXT NOT NULL DEFAULT '',  -- el nombre con que la guarda la Estación
+  clave TEXT NOT NULL,               -- dónde está en el almacén
+  bytes INTEGER NOT NULL DEFAULT 0,
+  activo INTEGER NOT NULL DEFAULT 1,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS sonidos_activos ON sonidos(activo, tipo, id);
