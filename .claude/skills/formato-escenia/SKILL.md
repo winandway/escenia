@@ -115,7 +115,15 @@ Desde `estacion/`:
 `reintentar-remoto.ts`, el del **guion**. Armar un video de 6 minutos tarda
 unos 12; el comando se lanza en segundo plano.
 
-### 6. Entregar y contarlo
+### 6. La miniatura llamativa
+
+La automática es solo un respaldo. Cada video lleva su **portada de impacto**:
+la cara recortada, una cifra enorme y un remate en caja roja, con datos que el
+video cuenta. Se arma con `npx tsx src/portada.ts <trabajo> …` (desde
+`estacion/`), se mira, y con `--guion <guion>` se sube. Receta y opciones en
+`docs/PORTADA.md`.
+
+### 7. Entregar y contarlo
 
 - El video queda en el panel, en la página del guion, para que Richard lo
   descargue. Él lo sube y lo programa.

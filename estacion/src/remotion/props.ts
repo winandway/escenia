@@ -130,6 +130,41 @@ export const esquemaPropsVideo = z.object({
 
 export type PropsVideo = z.infer<typeof esquemaPropsVideo>;
 
+// Portada de impacto (la miniatura que se lleva el clic): el sujeto recortado
+// de su foto, encima de un fondo de color, con una cifra enorme y un remate.
+const esquemaRecorte = z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() });
+export const esquemaPortada = z.object({
+  // La persona, ya recortada (PNG con fondo transparente). Va a la derecha, grande.
+  sujeto: esquemaRecorte,
+  // Un objeto recortado (un trofeo, un disco), si va tachado con una equis roja, y cuánto de
+  // su alto se muestra desde arriba (0.62 deja fuera la base de un trofeo con la placa de otro).
+  objeto: esquemaRecorte
+    .extend({ tachado: z.boolean().default(false), mostrar: z.number().min(0.2).max(1).default(1) })
+    .nullable()
+    .default(null),
+  etiqueta: z.string().default(""), // arriba, chico: quién es («PRINCE ROYCE»)
+  cifra: z.string().default(""), // enorme («15»)
+  linea: z.string().default(""), // lo que cuenta la cifra («NOMINACIONES»)
+  // El golpe, en una caja de color. Lo que va entre asteriscos sale en el color de acento («*CERO* PREMIOS»).
+  remate: z.string().default(""),
+  // Cuánto se acerca la persona: 1 = cuerpo casi entero; 1.3 = de la cintura para arriba, la cara más grande.
+  acercar: z.number().min(0.8).max(1.8).default(1.2),
+  fondo: z.tuple([z.string(), z.string()]).default(["#d00000", "#14000a"]),
+  acento: z.string().default("#ffd60a"),
+});
+export type PropsPortada = z.infer<typeof esquemaPortada>;
+
+/** El remate, palabra por palabra: la que viene entre asteriscos («*CERO*») va en el color de acento. */
+export function partesDelRemate(remate: string): { texto: string; marcada: boolean }[] {
+  return remate
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => {
+      const marcada = w.length > 2 && w.startsWith("*") && w.endsWith("*");
+      return { texto: marcada ? w.slice(1, -1) : w, marcada };
+    });
+}
+
 export const FPS = 30;
 export const COLA_FINAL_MS = 1500;
 // Con música, el video respira al final: la música sube unos segundos y se apaga.

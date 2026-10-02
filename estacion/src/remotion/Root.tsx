@@ -1,5 +1,6 @@
 import { Composition } from "remotion";
-import { duracionEnFrames, esquemaPropsVideo, FPS, framesDe, type PropsVideo } from "./props";
+import { Portada } from "./Portada";
+import { duracionEnFrames, esquemaPortada, esquemaPropsVideo, FPS, framesDe, type PropsVideo } from "./props";
 import { Miniatura } from "./Miniatura";
 import { TechExplainer } from "./TechExplainer";
 
@@ -63,6 +64,26 @@ export const Root: React.FC = () => (
       component={Miniatura}
       schema={esquemaPropsVideo}
       defaultProps={vacio}
+      fps={FPS}
+      width={1280}
+      height={720}
+      durationInFrames={1}
+    />
+    <Composition
+      id="Portada"
+      component={Portada}
+      schema={esquemaPortada}
+      defaultProps={{
+        sujeto: { ruta: "portada/sujeto.png", ancho: 1000, alto: 1200 },
+        objeto: null,
+        etiqueta: "",
+        cifra: "",
+        linea: "",
+        remate: "",
+        acercar: 1.2,
+        fondo: ["#d00000", "#14000a"],
+        acento: "#ffd60a",
+      }}
       fps={FPS}
       width={1280}
       height={720}
