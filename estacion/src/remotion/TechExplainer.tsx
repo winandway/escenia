@@ -336,7 +336,13 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               <Audio
                 src={staticFile(p.musica?.ruta ?? "")}
                 volume={(f) =>
-                  volumenMusica(((f + desde) / FPS) * 1000, interludios, finVozLocalMs, finVideoMs)
+                  volumenMusica(
+                    ((f + desde) / FPS) * 1000,
+                    interludios,
+                    finVozLocalMs,
+                    finVideoMs,
+                    p.musica?.nivel ?? 1,
+                  )
                 }
               />
             </Sequence>

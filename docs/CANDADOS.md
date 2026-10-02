@@ -235,6 +235,16 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   tiene más palabras en el nombre y sumaba más puntos: ahora la de Richard del
   género pedido gana siempre. Las dos cosas están en `pruebas/sonidos.test.ts`
   con el catálogo real.
+- **Volumen por video (2 oct 2026):** Richard pidió la bachata «un poquitico»
+  más alta en el video de Prince Royce. Cada video puede llevar `musica.nivel`
+  (de 0.5 a 1.25; 1 = lo normal) y `volumenBajoLaVoz` nunca deja pasar de 0.15
+  bajo la voz, pida lo que se pida (sigue valiendo C-MUSICA-1). Se pone con
+  `cambiar-musica.ts … --nivel 1.25`.
+- **La IA no oye:** la primera pista que subió Richard traía el clic de un
+  metrónomo y no se notó al revisar. Lo único que se puede medir es contar los
+  golpes agudos (la pista con clic tenía 114 en 40 s; la limpia, 81). Si una
+  pista nueva suena rara, quien lo sabe es Richard: se le pide que la escuche
+  en Sonidos antes de usarla.
 - **Cambiar la música de un video ya armado:**
   `npx tsx src/cambiar-musica.ts <trabajo> "<estilo>"` y después `rearmar.ts`.
 - **Qué NO tocar:** «Quitar» apaga `activo`, nunca borra. No agregar la opción

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { elegirPista, palabrasClave } from "@compartido/musica";
-import { VOLUMEN_ALTO, VOLUMEN_BAJO, volumenMusica } from "../estacion/src/remotion/musica";
+import {
+  TOPE_BAJO_LA_VOZ,
+  VOLUMEN_ALTO,
+  VOLUMEN_BAJO,
+  volumenBajoLaVoz,
+  volumenMusica,
+} from "../estacion/src/remotion/musica";
 
 const catalogo = [
   "salsa-1950s-cuban-brass-congas-upbeat.mp3",
@@ -132,5 +138,34 @@ describe("volumen de la música (C-MUSICA-1)", () => {
     expect(volumenMusica(123_990, interludios, finVoz, finVideo)).toBeLessThan(0.01);
     expect(volumenMusica(124_000, interludios, finVoz, finVideo)).toBe(0);
     expect(volumenMusica(0, interludios, finVoz, finVideo)).toBe(0);
+  });
+});
+
+describe("un video puede pedir la música un poquito más alta, sin tapar la voz (C-MUSICA-1)", () => {
+  const interludios = [{ inicioMs: 60_000, finMs: 66_000 }];
+
+  it("con nivel 1.25 sube un poco bajo la voz, y nunca pasa del tope", () => {
+    expect(volumenBajoLaVoz(1)).toBe(VOLUMEN_BAJO);
+    expect(volumenBajoLaVoz(1.25)).toBeGreaterThan(VOLUMEN_BAJO);
+    expect(volumenBajoLaVoz(1.25)).toBeLessThanOrEqual(TOPE_BAJO_LA_VOZ);
+    // Aunque alguien pida una barbaridad, el tope manda.
+    expect(volumenBajoLaVoz(9)).toBeLessThanOrEqual(TOPE_BAJO_LA_VOZ);
+    expect(volumenBajoLaVoz(Number.NaN)).toBe(VOLUMEN_BAJO);
+    expect(TOPE_BAJO_LA_VOZ).toBeLessThanOrEqual(0.15);
+  });
+
+  it("mientras hay voz, la música de un video con nivel 1.25 sigue por debajo del tope", () => {
+    for (let ms = 1_000; ms < 120_000; ms += 250) {
+      const enInterludio = ms >= 60_000 - 800 && ms <= 66_000 + 800;
+      if (!enInterludio)
+        expect(volumenMusica(ms, interludios, 120_000, 124_000, 1.25)).toBeLessThanOrEqual(TOPE_BAJO_LA_VOZ);
+    }
+    expect(volumenMusica(30_000, interludios, 120_000, 124_000, 1.25)).toBe(volumenBajoLaVoz(1.25));
+    // En el interludio y la cola, el volumen alto no cambia con el nivel.
+    expect(volumenMusica(63_000, interludios, 120_000, 124_000, 1.25)).toBe(VOLUMEN_ALTO);
+  });
+
+  it("sin pedir nada, todo sigue igual que antes", () => {
+    expect(volumenMusica(30_000, interludios, 120_000, 124_000)).toBe(VOLUMEN_BAJO);
   });
 });

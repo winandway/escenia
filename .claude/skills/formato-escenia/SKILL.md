@@ -106,6 +106,7 @@ Desde `estacion/`:
 | Cambiar una foto              | `npx tsx src/cambiar-foto.ts <trabajo> <foto.jpg> "<búsqueda nueva>"` |
 | Usar otra foto que ya tiene   | `npx tsx src/cambiar-foto.ts <trabajo> <foto.jpg> --usar <otra.jpg>`  |
 | Cambiar la música             | `npx tsx src/cambiar-musica.ts <trabajo> "<estilo en inglés>"`        |
+| Música un poco más alta       | lo mismo, con `--nivel 1.25` al final (tope fijo: nunca tapa la voz)  |
 | Volver a armar todo           | `npx tsx src/rearmar.ts <trabajo>`                                    |
 | Terminar solo lo que se cortó | `npx tsx src/rearmar.ts <trabajo> --solo-shorts 4`                    |
 | Subir la versión corregida    | `estacion/node_modules/.bin/tsx scripts/reintentar-remoto.ts <guion>` |

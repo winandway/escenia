@@ -85,7 +85,11 @@ export const esquemaPropsVideo = z.object({
   tema: z.enum(["tech", "documental"]).default("tech"),
   sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] }),
   // Música de fondo (ruta relativa al publicDir), ya normalizada de volumen. Se repite en bucle.
-  musica: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
+  // `nivel`: cuánto más alta o más baja va la música bajo la voz en ESTE video (1 = lo normal).
+  musica: z
+    .object({ ruta: z.string(), duracionSeg: z.number(), nivel: z.number().min(0.5).max(1.25).default(1) })
+    .nullable()
+    .default(null),
   // Cierre de los shorts: «ver video completo» con la miniatura del largo
   // (data URI PNG), el título y el canal. Solo lo usan los shorts.
   cierre: z

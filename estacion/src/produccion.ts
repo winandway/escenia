@@ -407,7 +407,7 @@ export async function producir(
     vozDePrueba: voz.vozDePrueba,
     tema: plantilla === "MiniDocumental" ? "documental" : "tech",
     sfx,
-    musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg } : null,
+    musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg, nivel: 1 } : null,
     marca: marcaVideo,
     ventana: null,
     // El canal queda guardado con las props (la miniatura se agrega después, en memoria):
