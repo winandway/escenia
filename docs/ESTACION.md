@@ -245,3 +245,11 @@ sigue siendo que él apruebe en el panel.
 ```bash
 cd /Users/windocellc/Motor-Escenia && estacion/node_modules/.bin/tsx scripts/aprobar-remoto.ts < aprobar.json
 ```
+
+## Los sonidos del panel y los cuadros sueltos
+
+- Antes de cada producción la Estación baja la biblioteca de **Sonidos** del
+  panel a `recursos/musica-panel` y `recursos/sfx-panel` (C-SONIDOS-1). Si el
+  panel no responde, produce con lo que ya hay en la Mac y lo dice.
+- `npx tsx src/cuadros.ts <trabajo> <segundos>` saca cuadros sueltos de un
+  trabajo sin renderizar el video entero. Ver [RITMO.md](RITMO.md).

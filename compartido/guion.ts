@@ -210,10 +210,13 @@ export const OPINION_MINIMA = 40;
  */
 export function insertarOpinion(escenas: Escena[], opinion: string): Escena[] {
   const texto = opinion.trim();
+  // Si el guion ya traía planos para la opinión (una versión nueva de un video
+  // ya aprobado), se conservan: la opinión tampoco se queda en una sola imagen.
+  const planos = escenas.find((e) => e.parte === "opinion")?.visual.planos;
   const escenaOpinion: Escena = {
     parte: "opinion",
     narracion: texto,
-    visual: { tipo: "texto", texto_en_pantalla: "Mi opinión" },
+    visual: { tipo: "texto", texto_en_pantalla: "Mi opinión", ...(planos?.length ? { planos } : {}) },
   };
   const sinOpinion = escenas.filter((e) => e.parte !== "opinion");
   const indiceFinal = sinOpinion.findIndex((e) => e.parte === "cierre" || e.parte === "cta");

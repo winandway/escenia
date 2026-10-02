@@ -1,6 +1,7 @@
 // Cliente HTTP del panel. Todo pasa por /datos/estacion/* con el secreto.
 import { open, readFile } from "node:fs/promises";
 import { esquemaGuion, type Guion } from "@compartido/guion";
+import { CABECERA_META, metaParaCabecera } from "@compartido/meta";
 import { conReintentos, ErrorDelPanel } from "@compartido/reintentos";
 import { z } from "zod";
 import { config } from "./config";
@@ -25,7 +26,12 @@ export type Trabajo = NonNullable<z.infer<typeof esquemaTrabajo>["trabajo"]> & {
 async function llamar(
   ruta: string,
   cuerpo: unknown,
-  opciones: { crudo?: Buffer; contentType?: string; metodo?: "POST" | "PUT" } = {},
+  opciones: {
+    crudo?: Buffer;
+    contentType?: string;
+    metodo?: "POST" | "PUT";
+    cabeceras?: Record<string, string>;
+  } = {},
 ): Promise<unknown> {
   // Un corte de red de unos segundos no tumba el trabajo: se reintenta con espera (C-ENTREGA-1).
   return conReintentos(
@@ -35,6 +41,7 @@ async function llamar(
         headers: {
           authorization: `Bearer ${config.ESTACION_SECRETO}`,
           "content-type": opciones.contentType ?? "application/json",
+          ...opciones.cabeceras,
         },
         body: opciones.crudo ? new Uint8Array(opciones.crudo) : JSON.stringify(cuerpo),
         signal: AbortSignal.timeout(180_000),
@@ -158,8 +165,13 @@ export const panel = {
     meta: Record<string, unknown> = {},
   ) {
     const crudo = await readFile(ruta);
-    const q = new URLSearchParams({ guion_id: String(guionId), tipo, extension, meta: JSON.stringify(meta) });
+    const q = new URLSearchParams({ guion_id: String(guionId), tipo, extension });
     const tipos = { mp3: "audio/mpeg", json: "application/json", png: "image/png" } as const;
-    return llamar(`/datos/estacion/archivos?${q}`, null, { crudo, contentType: tipos[extension] });
+    // La ficha va en una cabecera: con cien fotos, los créditos no caben en la dirección (C-ENTREGA-2).
+    return llamar(`/datos/estacion/archivos?${q}`, null, {
+      crudo,
+      contentType: tipos[extension],
+      cabeceras: { [CABECERA_META]: metaParaCabecera(meta) },
+    });
   },
 };

@@ -176,6 +176,8 @@ async function vozElevenLabs(
       body: JSON.stringify({
         text: texto,
         model_id: modelo,
+        // La voz lee un poco rápido desde el origen: suena más natural que acelerarla después.
+        voice_settings: { speed: config.ELEVENLABS_VELOCIDAD },
         // Contexto de las escenas vecinas: misma entonación al unir las piezas.
         previous_text: contexto.anterior || undefined,
         next_text: contexto.siguiente || undefined,

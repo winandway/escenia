@@ -8,6 +8,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { elegirEnfoque, parsearCaras, type Enfoque } from "@compartido/enfoque";
+import { enSerie } from "./serie";
 import { config } from "./config";
 
 const exec = promisify(execFile);
@@ -34,7 +35,12 @@ async function asegurarDetector(): Promise<string | null> {
 }
 
 /** Enfoque de cada foto (por ruta absoluta), con caché por tamaño de archivo. */
-export async function enfoquesDe(rutas: string[]): Promise<Map<string, Enfoque | null>> {
+export function enfoquesDe(rutas: string[]): Promise<Map<string, Enfoque | null>> {
+  // De una en una: varias búsquedas a la vez comparten el mismo archivo de caché.
+  return enSerie("enfoques", () => enfoquesSinFila(rutas));
+}
+
+async function enfoquesSinFila(rutas: string[]): Promise<Map<string, Enfoque | null>> {
   const resultado = new Map<string, Enfoque | null>();
   if (rutas.length === 0) return resultado;
   const archivoCache = path.resolve(config.CARPETA_CLIPS, "../enfoques.json");

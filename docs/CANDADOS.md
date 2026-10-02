@@ -122,6 +122,114 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** el conversor a letras sigue delante de la voz; solo cambió
   lo que se muestra. El prompt no debe volver a pedir «números en letras».
 
+## C-ENTREGA-2 — Los créditos de un video con cien fotos caben en la entrega (2 oct 2026)
+
+- **Qué se rompió / cómo se veía:** el primer video con el ritmo nuevo (146
+  imágenes) se armó completo y falló en el último paso: «El panel respondió 400
+  en /datos/estacion/archivos…». La lista de créditos viajaba en la dirección
+  de la petición, con tope de 4.000 letras, y con cien fotos no cabía.
+- **Qué se hizo:** la ficha del archivo (`meta`, con los créditos) viaja ahora
+  en una cabecera (`x-escenia-meta`, en base64) con tope de 60.000 letras
+  (`compartido/meta.ts`). La ruta del panel lee la cabecera y, si no viene, el
+  parámetro viejo. La producción no se perdió: se retomó la entrega
+  (C-ENTREGA-1).
+- **Cómo se comprueba:** `pruebas/meta.test.ts` (150 créditos pasan enteros).
+- **Qué NO tocar:** no devolver la ficha a la dirección de la petición.
+
+## C-IMAGEN-6 — La foto con rótulo es de quien dice el rótulo (2 oct 2026)
+
+- **Qué se vio al revisar el primer video con planos:** una miniatura de
+  YouTube con el letrero «MIX 2025» de otro canal, un dibujo de un fan sacado
+  de Pinterest, y una foto de una galería de «famosos en la alfombra roja» que
+  no se podía saber de quién era, las tres con el rótulo «Romeo Santos».
+- **Qué se hizo:** `elegirCandidata` (`compartido/fotosweb.ts`) ordena las
+  candidatas por señales: primero la foto de un medio cuya dirección NOMBRA a
+  la persona buscada («…/romeo-santos.jpeg»); YouTube, Pinterest y arte de fans
+  quedan «de segunda» y solo entran si no hay otra. Además, el archivo de caché
+  de las fotos se escribe en fila (`estacion/src/serie.ts`): al pedir de a tres
+  se pisaban y se perdía de dónde salió cada foto.
+- **Cómo se comprueba:** `pruebas/fotosweb.test.ts` (bloques C-IMAGEN-6) y
+  `pruebas/serie.test.ts`. Al revisar un video: cada foto con rótulo se coteja
+  con su página de origen en `cache/fotos-web/consultas.json`.
+- **Para corregir una foto de un video ya armado:**
+  `npx tsx src/cambiar-foto.ts <trabajo> <foto.jpg> "<búsqueda nueva>"` y
+  después `rearmar.ts`.
+- **Qué NO tocar:** la IA no puede reconocer a una persona por la cara: la
+  única comprobación válida es la fuente (el nombre en la dirección o un texto
+  visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
+
+## C-RITMO-1 — Ninguna imagen se queda quieta más de cinco segundos (2 oct 2026)
+
+- **Qué se rompía / cómo se veía:** la gente comentaba que los videos eran
+  aburridos. Medido en el de Prince Royce: 15 imágenes en 410 segundos, cada
+  una entre 24 y 39 s. La voz nombraba a Shakira o a Romeo Santos y en pantalla
+  seguía la misma foto o el mismo titular.
+- **Causa real:** una escena = una imagen. El guion no tenía forma de decir
+  «aquí, cuando digo Shakira, cambia».
+- **Qué se hizo:** (1) `visual.planos` en el guion (`compartido/guion.ts`): cada
+  plano trae la frase literal donde entra y qué mostrar (foto, clip o cifra en
+  grande); (2) `compartido/planos.ts` calcula el momento con los tiempos de las
+  palabras de la voz (`tiemposDePlanos`) y dónde hay que rellenar
+  (`rellenarHuecos`: nada quieto más de 5 s); (3) `estacion/src/planos.ts` trae
+  cada imagen y rellena con fotos del propio video o clips nuevos; (4) la
+  plantilla (`estacion/src/remotion/Planos.tsx`) dibuja cada plano con una
+  entrada distinta, movimiento continuo, el nombre de la persona y un sonido en
+  cada corte (`sfx.corte`); (5) subtítulos al estilo CapCut: pocas palabras,
+  borde grueso y una sola palabra encendida; (6) las instrucciones del
+  guionista (`src/lib/prompt.ts`) piden los planos en todo guion nuevo.
+  Guía completa: [RITMO.md](RITMO.md).
+- **Cómo se comprueba:** `pruebas/planos.test.ts` (en rojo: sin el relleno, una
+  escena de 30 s se queda con una imagen y la prueba falla). En cada
+  producción, el paso «ritmo visual: N imágenes en M s»; si dice «OJO: tramos
+  quietos», hay una escena que se quedó sin imágenes. A la vista:
+  `npx tsx src/cuadros.ts <trabajo> <segundos>`.
+- **Qué NO tocar:** la `frase` de un plano tiene que ser literal (se compara
+  sin acentos ni signos, pero palabra por palabra); `QUIETO_MAXIMO_MS` es el
+  candado: subirlo es volver a aburrir. La palabra encendida del subtítulo
+  salta y VUELVE a su tamaño: si se queda grande se come el espacio de la de al
+  lado (pasó en la primera prueba).
+
+## C-VOZ-6 — Las pausas de la voz duran todas lo mismo (2 oct 2026)
+
+- **Qué se rompía:** «el ritmo de la voz como que no se mantiene». Medido: 50
+  pausas de más de 0,3 s en un video, unas de 0,3 y otras de más de 1,5 s; y el
+  ajuste de ritmo (C-VOZ-4) medía cada escena CON sus pausas, así que una
+  escena con silencios largos se aceleraba de más.
+- **Qué se hizo:** en `estacion/src/voz.ts`, cada escena se nivela, después se
+  le recortan los silencios largos (`apretarPausas`: ninguno pasa de 0,34 s; el
+  del arranque y el del final casi desaparecen) y los tiempos de las letras se
+  corren igual que el audio; y recién entonces se mide el ritmo. Las reglas
+  están en `compartido/pausas.ts`. El ritmo objetivo subió de 11 a 11,6 letras
+  por segundo, porque ahora se mide sin pausas. Además la voz se pide un poco
+  más rápida desde el origen (`voice_settings.speed` de ElevenLabs,
+  `ELEVENLABS_VELOCIDAD`, por defecto 1.1; admite de 0.7 a 1.2, comprobado el
+  2 oct 2026 con `npx tsx src/prueba-velocidad.ts`): antes 6 de 14 escenas
+  quedaban aceleradas al tope de ×1.25 con ffmpeg y aun así más lentas que las
+  demás; ahora los ajustes van de ×0.85 a ×1.14 y ninguna llega al tope.
+- **Cómo se comprueba:** `pruebas/pausas.test.ts` (en rojo: sin recortar las
+  pausas largas, falla). En la Estación, las líneas «pausas escena N: -X s».
+- **Qué NO tocar:** el orden nivelar → pausas → ritmo (los silencios se miden
+  contra un nivel fijo). Si los subtítulos se desfasan, el problema está en
+  `tiempoTrasCortes`, no en la plantilla.
+
+## C-SONIDOS-1 — La música y los efectos de Richard viven en el panel (2 oct 2026)
+
+- **Qué faltaba:** Richard pidió varias veces un fondo con bombo y, para la
+  historia de Prince Royce, una bachata; el catálogo solo tenía lo que hubiera
+  en una carpeta de la Mac, y sin pista del género salía «algo parecido».
+- **Qué se hizo:** página **Sonidos** del panel (`src/app/sonidos`): sube
+  música (con su género) y efectos (con su uso), los escucha y los quita desde
+  los tres puntos. Se guardan en el almacén (`sonidos/…`) y en la tabla
+  `sonidos`. La Estación los baja antes de cada producción
+  (`estacion/src/sonidos.ts`) a `recursos/musica-panel` y `recursos/sfx-panel`.
+  En `elegirPista`, la pista del género pedido gana a cualquier otra, y entre
+  las del género gana la de Richard. El canario dice `sonidos: ok`.
+- **Cómo se comprueba:** `pruebas/sonidos.test.ts` (en rojo: si «Quitar» borra
+  de verdad, falla). En vivo: subir un MP3 en Sonidos y producir un video de
+  ese género; el paso «música: …» lo nombra.
+- **Qué NO tocar:** «Quitar» apaga `activo`, nunca borra. No agregar la opción
+  «canción comercial» al origen: YouTube la detecta y el video no monetiza.
+
 ## C-MARCA-1 — Un video de Full Código sale con la marca de Full Código (30 sep 2026)
 
 - **Qué faltaba / cómo se veía:** el canal de tecnología se llamaba «Canal de

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
+import { CABECERA_META, leerMeta } from "@compartido/meta";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,6 @@ const esquemaMeta = z.object({
   guion_id: z.coerce.number().int().positive(),
   tipo: z.enum(TIPOS),
   extension: z.enum(["mp3", "json", "png", "jpg", "webp"]),
-  meta: z.string().max(4000).default("{}"),
 });
 
 export async function POST(req: Request) {
@@ -33,6 +33,9 @@ export async function POST(req: Request) {
   const parseo = esquemaMeta.safeParse(Object.fromEntries(url.searchParams));
   if (!parseo.success) return Response.json({ error: "Parámetros inválidos." }, { status: 400 });
   const d = parseo.data;
+  // La ficha (créditos y demás) viene en una cabecera; un video con cien fotos no cabe en la dirección (C-ENTREGA-2).
+  const meta = leerMeta(req.headers.get(CABECERA_META), url.searchParams.get("meta"));
+  if (meta === null) return Response.json({ error: "La ficha del archivo no es válida." }, { status: 400 });
 
   const largo = Number(req.headers.get("content-length") ?? "0");
   if (!largo || largo > MAX_BYTES)
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
     d.guion_id,
     d.tipo,
     clave,
-    d.meta,
+    meta,
   ]);
   return Response.json({ ok: true, id: fila.ultimoId, clave });
 }

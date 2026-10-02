@@ -15,6 +15,7 @@ import {
   esImagen,
   type CandidataWeb,
 } from "@compartido/fotosweb";
+import { enSerie } from "./serie";
 import { config } from "./config";
 import { enfoquesDe } from "./enfoque";
 
@@ -118,7 +119,7 @@ export async function buscarFotoWeb(
     // El detector da el centro de la cara; el área la aproximamos por la que guarda el caché de caras.
     c.cara = e ? await areaDeCara(c.rutaCache) : null;
   }
-  const mejor = elegirCandidata(candidatas, 600, persona);
+  const mejor = elegirCandidata(candidatas, 600, persona, consulta);
   const resultado = mejor
     ? {
         rutaCache: (mejor as CandidataWeb & { rutaCache: string }).rutaCache,
@@ -128,8 +129,18 @@ export async function buscarFotoWeb(
         url: mejor.url,
       }
     : null;
-  cache[clave] = resultado;
-  await writeFile(archivoCache, JSON.stringify(cache));
+  // Varias búsquedas a la vez comparten este archivo: se vuelve a leer y se anota
+  // de una en una, para que ninguna borre lo que anotó otra.
+  await enSerie("fotos-web", async () => {
+    let actual: Record<string, FotoWeb | null> = {};
+    try {
+      actual = JSON.parse(await readFile(archivoCache, "utf8")) as typeof actual;
+    } catch {
+      actual = {};
+    }
+    actual[clave] = resultado;
+    await writeFile(archivoCache, JSON.stringify(actual));
+  });
   return resultado;
 }
 

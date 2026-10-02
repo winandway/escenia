@@ -6,7 +6,9 @@
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
 - 👤 Descargar el primer video de Full Código (guion 7: GPT-6.1 Astra, el modelo que OpenAI frenó; largo de 5 min 28 s y 3 Shorts) desde https://escenia.sitios.dev/guiones/7, subirlo al canal y programarlo; si la opinión que se escribió en su nombre no le gusta, la cambia en el panel y se vuelve a producir.
 - 👤 Pegar en la sesión de Losupe el prompt de docs/NOTICIAS-LOSUPE.md → Losupe publica cada día noticias de tecnología y de artistas, y cada nota trae un guion de 1 minuto listo para grabar que cierra nombrando losupe.com.
-- 👤 Ver el video de Prince Royce (guion 6) y agendar en el calendario el largo y sus 4 Shorts (están en «Sin fecha todavía»).
+- 👤 Ver la versión nueva del video de Prince Royce (guion 8, con el ritmo nuevo) en https://escenia.sitios.dev/guiones/8 y agendar el largo y sus Shorts. La versión vieja (guion 6) ya no está en la lista del calendario.
+- 👤 Subir una bachata instrumental propia en el panel, en Sonidos (género Bachata) → reemplaza sola a la bachata provisional del motor en el próximo video de bachata.
+- 👤 Subir sus efectos (sweepers, chasquidos, barridos) en Sonidos, diciendo para qué se usa cada uno → suenan en los cambios de imagen en vez de los efectos propios del motor.
 - 👤 Programar en YouTube el video completo de Luis Miguel para el miércoles 30 de septiembre a las 4:00 p. m. (así quedó en el calendario) o moverlo en el calendario a la fecha que prefieras.
 - 👤 Pegar el enlace de cada video ya subido en su ficha del calendario → sale su miniatura de YouTube.
 - 👤 Entrenar más la voz en ElevenLabs (más muestras y volver a entrenar) → mejor dicción y ritmo.
@@ -17,6 +19,11 @@
 
 ## Fila (lo hace la IA)
 
+- [x] Ritmo (2 oct 2026, la gente decía que los videos aburrían): cambios de imagen dentro de cada escena pegados a la frase que se dice, cifras en grande, nombre de cada persona, relleno automático (nada quieto más de 5 s), sonido en cada corte, subtítulos al estilo CapCut (C-RITMO-1); pausas de la voz parejas y voz más rápida desde el origen (C-VOZ-6); biblioteca de Sonidos en el panel (C-SONIDOS-1); pistas propias de bombo y de bachata; botón «Crear versión nueva». Guía: docs/RITMO.md.
+- [x] Video de Prince Royce rehecho con el ritmo nuevo (guion 8, versión 2 del guion 6): de 15 imágenes a más de 130.
+- [ ] Editar los planos (cambios de imagen) a mano en el panel: hoy se ven en cada escena, pero no se editan.
+- [ ] Elegir la pista exacta de cada video con una lista en la página del guion (hoy se elige sola por género).
+- [ ] Imágenes divididas, memes y recortes de video dentro de los planos (biblioteca visual).
 - [x] Full Código (30 sep 2026): el canal de tecnología se llama Full Código; marca en el video (logo fijo, letra de código, ventana de terminal, cierre con «SUSCRÍBETE», logo en Shorts y miniatura; C-MARCA-1); temática «Novedades de IA»; separador de canales en Guiones, Nuevo video y Calendario; pista electrónica propia y regla de música por género (C-MUSICA-2); sin reserva de foto con el título en videos de tecnología (C-IMAGEN-5). Guía: docs/MARCA.md.
 - [x] Primer video de Full Código producido y entregado por encargo de Richard (30 sep 2026, guion 7, trabajo 24): OpenAI frenó GPT-6.1 Astra y al día siguiente lanzó los agentes Dots. Fuentes en docs/TEMAS-PROPUESTOS.md. Revisado cuadro por cuadro: se cambiaron tres imágenes (un edificio con letrero de Uber, un señor con gafas al teléfono, una cara detrás de «Mi opinión») y se volvió a armar con la misma voz (rearmar.ts).
 - [ ] Miniatura de Full Código con la foto a la derecha y el texto sobre el fondo del canal: hecha; falta verla en el próximo video con foto horizontal.
@@ -32,7 +39,7 @@
 - [x] Licencia de Remotion: Windoce es 1 persona (Richard, 25 sep 2026) → licencia gratis, no hay nada que pagar.
 - [x] Variables del panel cargadas por Richard (26 sep 2026): canario en verde, Estación conectada al panel en vivo, prueba de humo ok.
 - [x] Guion 6 (Prince Royce contra los Latin Grammy) producido y entregado el 30 sep 2026; la subida falló por un corte de red y quedó resuelto de raíz (C-ENTREGA-1); dos fotos corregidas (C-IMAGEN-4).
-- [ ] Pista instrumental de bachata para el catálogo de música (el video de Prince Royce salió con un son cubano, lo más cercano que había).
+- [x] Pista de bachata: el motor trae una provisional propia (2 oct 2026); la definitiva la sube Richard en Sonidos.
 - [x] Estudio de temas para el público latino de Estados Unidos, con consejos y tres temas (29 sep 2026, docs/ESTRATEGIA-TEMAS.md).
 - [x] Cada publicación muestra su red con color, filtro por red, y «Publicar también en» Facebook, Instagram o TikTok (29 sep 2026).
 - [x] Calendario rehecho como una sola lista de lo que falta por publicarse, sin pestañas por plataforma (29 sep 2026).

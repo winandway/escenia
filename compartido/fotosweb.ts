@@ -99,11 +99,91 @@ export function esImagen(tipoContenido: string | null, primerosBytes: Uint8Array
  *   la que NO tiene una cara en primer plano, para no meter en el video a una
  *   persona que no tiene que ver con la historia; entre esas, la más grande.
  */
+/**
+ * Fuentes «de segunda» (C-IMAGEN-6): miniaturas de YouTube (traen letreros de
+ * otros canales: «MIX 2025», «ENTREVISTA EXCLUSIVA») y tableros de Pinterest o
+ * de arte de fans (dibujos, montajes). Sirven solo si no hay nada mejor.
+ */
+const DE_SEGUNDA = [
+  "ytimg.com",
+  "youtube.com",
+  "youtu.be",
+  "pinimg.com",
+  "pinterest.",
+  "deviantart.",
+  "fanart",
+];
+
+export function esDeSegunda(direccion: string): boolean {
+  const d = direccion.toLowerCase();
+  return DE_SEGUNDA.some((x) => d.includes(x));
+}
+
+/** Texto sin acentos y en minúsculas, para comparar nombres con direcciones. */
+function plano(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/**
+ * Las palabras del nombre que se busca: las dos primeras de la consulta, sin
+ * años ni letras sueltas («Romeo Santos retrato» → romeo, santos; «Karol G
+ * 2026» → karol).
+ */
+export function nombreBuscado(consulta: string): string[] {
+  return plano(consulta)
+    .split(/[^a-z0-9ñ]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .filter((w) => w.length >= 3 && !/^\d+$/.test(w));
+}
+
+/** Cuántas palabras del nombre aparecen en la dirección de la foto o de su página. */
+export function mencionesDe(nombre: string[], c: { url: string; origen: string }): number {
+  let texto = `${c.url} ${c.origen}`;
+  try {
+    texto = decodeURIComponent(texto);
+  } catch {
+    // Dirección mal codificada: se compara tal cual.
+  }
+  const dondeBuscar = plano(texto);
+  return nombre.filter((w) => dondeBuscar.includes(w)).length;
+}
+
+/**
+ * `consulta` (opcional): lo que se buscó. Con ella, gana primero la foto cuya
+ * dirección nombra a quien se busca («…/romeo-santos.jpeg»): es la mejor señal
+ * de que la persona de la foto es la que dice el rótulo (C-IMAGEN-6). Una foto
+ * de una galería de «famosos en la alfombra roja» no nombra a nadie y queda al
+ * final.
+ */
 export function elegirCandidata(
   candidatas: CandidataWeb[],
   minAncho = 600,
   exigirCara = true,
+  consulta = "",
 ): CandidataWeb | null {
+  const nombre = nombreBuscado(consulta);
+  const primera = (c: CandidataWeb) => !esDeSegunda(c.url) && !esDeSegunda(c.origen);
+  const menciones = (c: CandidataWeb) => (nombre.length ? mencionesDe(nombre, c) : 0);
+  // De la mejor señal a la peor; gana el primer grupo donde haya una foto que sirva.
+  const grupos: CandidataWeb[][] = [
+    candidatas.filter((c) => primera(c) && nombre.length > 0 && menciones(c) === nombre.length),
+    candidatas.filter((c) => primera(c) && menciones(c) > 0),
+    candidatas.filter((c) => menciones(c) > 0),
+    candidatas.filter(primera),
+    candidatas,
+  ];
+  for (const grupo of grupos) {
+    const mejor = grupo.length ? elegirEntre(grupo, minAncho, exigirCara) : null;
+    if (mejor) return mejor;
+  }
+  return null;
+}
+
+function elegirEntre(candidatas: CandidataWeb[], minAncho: number, exigirCara: boolean): CandidataWeb | null {
   const grandes = candidatas.filter((c) => c.ancho >= minAncho);
   if (!exigirCara) {
     const tamano = (c: CandidataWeb) => c.ancho * c.alto;

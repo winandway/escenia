@@ -124,9 +124,11 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         const primera = k === 0;
         const ultima = k === visibles.length - 1;
         const desde = aFrame(Math.max(e.inicioMs, inicioVentanaMs));
+        // La última escena llega hasta el último cuadro: si se cortara al acabar la voz, la
+        // cola con música quedaría en negro (pasaba en los videos sin marca).
         const dur = Math.max(
           1,
-          aFrame(Math.min(e.finMs, finVentanaMs)) - desde + (ultima ? cierreFrames : TRANSICION),
+          ultima ? durationInFrames - desde : aFrame(Math.min(e.finMs, finVentanaMs)) - desde + TRANSICION,
         );
         const colores = paleta[i % paleta.length] ?? PALETA[0];
         const whoosh = whooshes.length ? (whooshes[i % whooshes.length] ?? null) : null;
@@ -249,6 +251,25 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
           {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.45} />}
         </Sequence>
       )}
+
+      {/* Cierre del canal sin marca propia: su nombre y «suscríbete» sobre la última imagen,
+          mientras sube la música (solo si la cola da tiempo a leerlo). */}
+      {!v &&
+        !marca &&
+        !p.producto &&
+        p.cierre?.canalNombre &&
+        durationInFrames - inicioCierreMarca >= FPS * 3 && (
+          <Sequence from={inicioCierreMarca} name="cierre del canal">
+            <CierreCanal
+              nombre={p.cierre.canalNombre}
+              usuario={p.cierre.canalUsuario}
+              acento={acento}
+              fuente={fuenteTitulos}
+              vertical={vertical}
+            />
+            {p.sfx.ding && <Audio src={staticFile(p.sfx.ding)} volume={0.4} />}
+          </Sequence>
+        )}
 
       {/* Cierre con producto (solo en el video largo y sin marca) */}
       {!v && !marca && p.producto && (
@@ -480,6 +501,72 @@ const EscenaVista: React.FC<{
       {escena.parte === "opinion" && escena.planos.length > 0 && (
         <EtiquetaFija texto="Mi opinión" acento={acento} fuente={fuenteTitulos} vertical={vertical} />
       )}
+    </AbsoluteFill>
+  );
+};
+
+/** Cierre de un canal sin marca propia: «SUSCRÍBETE», el nombre del canal y su @, sobre la última imagen. */
+const CierreCanal: React.FC<{
+  nombre: string;
+  usuario: string;
+  acento: string;
+  fuente: string;
+  vertical: boolean;
+}> = ({ nombre, usuario, acento, fuente, vertical }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const velo = interpolate(frame, [0, 12], [0, 0.86], { extrapolateRight: "clamp" });
+  const boton = spring({ frame: frame - 6, fps, config: { damping: 10, stiffness: 170 } });
+  const texto = spring({ frame: frame - 16, fps, config: { damping: 15, stiffness: 130 } });
+  return (
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+      <AbsoluteFill style={{ backgroundColor: "#000", opacity: velo }} />
+      <div style={{ position: "relative", textAlign: "center" }}>
+        <div
+          style={{
+            display: "inline-block",
+            transform: `scale(${0.6 + boton * 0.4})`,
+            opacity: Math.min(1, boton * 1.4),
+            backgroundColor: acento,
+            color: "#111",
+            fontWeight: 900,
+            fontSize: vertical ? 64 : 58,
+            letterSpacing: 2,
+            padding: vertical ? "20px 52px" : "16px 48px",
+            borderRadius: 18,
+          }}
+        >
+          SUSCRÍBETE
+        </div>
+        <div
+          style={{
+            marginTop: 30,
+            opacity: texto,
+            transform: `translateY(${(1 - texto) * 30}px)`,
+            fontFamily: fuente,
+            fontWeight: 900,
+            fontSize: vertical ? 96 : 104,
+            lineHeight: 1.05,
+            color: "#fff",
+            textShadow: "0 8px 40px rgba(0,0,0,.9)",
+          }}
+        >
+          {nombre}
+        </div>
+        {usuario && (
+          <div
+            style={{
+              marginTop: 12,
+              opacity: texto,
+              fontWeight: 700,
+              fontSize: vertical ? 46 : 44,
+              color: acento,
+            }}
+          >
+            {usuario}
+          </div>
+        )}
+      </div>
     </AbsoluteFill>
   );
 };

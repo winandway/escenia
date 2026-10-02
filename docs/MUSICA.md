@@ -5,6 +5,15 @@
 > debajo de la voz; y en alguna parte que el locutor deje de hablar, la música
 > suba y pasen imágenes».
 
+## Desde el 2 de octubre de 2026: la música se sube en el panel
+
+Richard sube su música en **Sonidos** (en el panel), eligiendo el género. Queda
+guardada y la Estación la baja sola; ya no hace falta dejar archivos en una
+carpeta de la Mac (las carpetas de antes siguen valiendo). El motor trae además
+dos pistas propias de reserva: la del **bombo** («tum, pum, pum», para todo
+video sin música de su género) y una **bachata** provisional. Todo el detalle
+en [RITMO.md](RITMO.md).
+
 ## La pista propia del motor (30 sep 2026)
 
 Para los videos de tecnología (Full Código) el motor trae su propia pista

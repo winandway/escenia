@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { esquemaEscena } from "@compartido/guion";
+import { esquemaEscena, insertarOpinion, type Escena } from "@compartido/guion";
 import {
   ANTICIPO_MS,
   buscarFrase,
@@ -123,5 +123,46 @@ describe("el guion admite planos por escena", () => {
       visual: { ...base.visual, planos: [{ frase: "con Shakira", tipo: "holograma" }] },
     });
     expect(mala.success).toBe(false);
+  });
+});
+
+describe("la opinión conserva sus planos al aprobar", () => {
+  const escenas: Escena[] = [
+    {
+      parte: "gancho",
+      narracion: "Quince nominaciones.",
+      visual: { tipo: "foto", busqueda: "Prince Royce 2026" },
+    },
+    {
+      parte: "opinion",
+      narracion: "[opinión del editor]",
+      visual: {
+        tipo: "texto",
+        texto_en_pantalla: "Mi opinión",
+        planos: [{ frase: "completamente válida", tipo: "foto", busqueda: "Prince Royce sonriendo" }],
+      },
+    },
+    {
+      parte: "cierre",
+      narracion: "La Academia no ha contestado.",
+      visual: { tipo: "foto", busqueda: "Latin Grammy" },
+    },
+  ];
+
+  it("al meter la opinión de Richard, los planos que ya tenía esa escena siguen ahí", () => {
+    const r = insertarOpinion(escenas, "La molestia de Prince Royce es completamente válida.");
+    const opinion = r.find((e) => e.parte === "opinion");
+    expect(opinion?.narracion).toContain("completamente válida");
+    expect(opinion?.visual.planos).toHaveLength(1);
+    expect(r.map((e) => e.parte)).toEqual(["gancho", "opinion", "cierre"]);
+  });
+
+  it("un guion sin planos en la opinión queda como siempre", () => {
+    const sin = escenas.map((e) =>
+      e.parte === "opinion" ? { ...e, visual: { tipo: "texto" as const } } : e,
+    );
+    expect(
+      insertarOpinion(sin, "Mi opinión de más de cuarenta letras para aprobar.")[1]?.visual.planos,
+    ).toBeUndefined();
   });
 });

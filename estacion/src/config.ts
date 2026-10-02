@@ -13,6 +13,9 @@ const esquema = z.object({
   ELEVENLABS_VOICE_ID: z.string().optional(),
   ELEVENLABS_VOICE_ID_FEMENINA: z.string().optional(),
   ELEVENLABS_MODELO: z.string().default("eleven_multilingual_v2"),
+  // Velocidad que se le pide a la voz misma (0.7 a 1.2, lo que admite ElevenLabs). Con 1.1 lee
+  // cerca del ritmo objetivo y casi no hay que acelerarla después con ffmpeg (C-VOZ-6).
+  ELEVENLABS_VELOCIDAD: z.coerce.number().min(0.7).max(1.2).default(1.1),
   PEXELS_API_KEY: z.string().optional(),
   FAL_KEY: z.string().optional(),
   SERPER_API_KEY: z.string().optional(),
