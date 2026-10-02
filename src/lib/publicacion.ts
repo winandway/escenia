@@ -15,6 +15,7 @@ import {
   type ShortPublicado,
 } from "@compartido/guion";
 import { asegurarModelo, costoTokensUsd, MODELO_POR_DEFECTO } from "@compartido/modelos";
+import { nombreDeRotulo } from "@compartido/portada";
 import { buscarTematica } from "@compartido/tematicas";
 import { guionPorId } from "./consultas";
 import type { BaseDatos } from "./db";
@@ -32,7 +33,8 @@ export function instruccionesPublicacion(): string {
     "- \`descripcion\`: 3 párrafos cortos que cuenten de qué va el video sin destriparlo, con las palabras clave dichas de forma natural, y al final una línea con 4 o 5 hashtags.",
     `- En total quedan ${ETIQUETAS_MAXIMAS} palabras clave, en dos listas. \`etiquetas\`: exactamente ${ETIQUETAS_MAXIMAS - ETIQUETAS_EN_INGLES}, EN ESPAÑOL, mezcla de: nombre y variantes, género y época, personas y lugares que aparecen, temas del video, y búsquedas típicas DEL TIPO DE VIDEO (biografías: «biografía de…», «historia de…», «documental…»; tecnología: «qué es…», «cómo funciona…», «novedades de…», «vale la pena…»). \`etiquetas_ingles\`: exactamente ${ETIQUETAS_EN_INGLES}, EN INGLÉS, tal como buscaría un latino en Estados Unidos (biografías: «Latin Grammys snub», «bachata documentary»; tecnología: «OpenAI DevDay recap», «AI agents explained»). Sin repetir y sin hashtags.`,
     "- El canal quiere que lo vean los latinos de Estados Unidos: si la historia pasa por una ciudad de allá (Nueva York, El Bronx, Miami, Los Ángeles, Las Vegas), nómbrala en la descripción y en las palabras clave.",
-    "- Nada de datos que no estén en el guion. Nada de clickbait falso: la promesa del título tiene que cumplirse en el video.",
+    "- \`portada\` (la del video largo) y \`shorts[].portada\` (una por short): el texto de la MINIATURA, que se lee en un segundo y en chiquito. Son tres líneas que se leen seguidas como un titular («15 / NOMINACIONES / CERO PREMIOS»), TODO EN MAYÚSCULAS y sin puntos. \`grande\`: UNA cifra o UNA palabra de máximo 8 letras, lo más fuerte («15», «VETADO», «NUNCA»); el cero se escribe «CERO». \`linea\`: 1 o 2 palabras, máximo 15 letras, que completan lo grande («NOMINACIONES»). \`remate\`: 2 o 3 palabras, máximo 17 letras, el golpe final, con la palabra más fuerte entre asteriscos («*CERO* PREMIOS»). \`persona\`: a quién se ve en la miniatura, con el nombre copiado TAL CUAL de la lista «PERSONAS CON FOTO» (vacío si la lista está vacía); la miniatura habla de esa persona. Cada short lleva un texto DISTINTO, sacado de lo que se cuenta en ESE short, y distinto del texto del video largo.",
+    "- Nada de datos que no estén en el guion. Nada de clickbait falso: la promesa del título y de la miniatura tiene que cumplirse en el video.",
   ].join("\n");
 }
 
@@ -49,11 +51,21 @@ export function mensajePublicacion(guion: Guion, tematica: string, shorts: Short
       .join(" ");
     return texto.length > 900 ? `${texto.slice(0, 900)}…` : texto;
   };
+  // Las personas que salen en el video con su nombre rotulado: solo de ellas hay foto para la miniatura.
+  const personasDe = (desde: number, hasta: number) => {
+    const nombres = guion.escenas
+      .slice(desde, hasta + 1)
+      .flatMap((e) => e.visual.planos ?? [])
+      .filter((p) => p.tipo === "foto" && p.foto_de !== "lugar" && p.texto)
+      .map((p) => nombreDeRotulo(p.texto ?? ""))
+      .filter(Boolean);
+    return [...new Set(nombres)].join(", ") || "(ninguna)";
+  };
   const lista = shorts.length
     ? shorts
         .map(
           (s) =>
-            `- Short ${s.indice} (escenas ${s.escena_inicio + 1} a ${s.escena_fin + 1}, ${Math.round(s.duracion_seg)} s; título provisional: «${s.titulo_original}»)\n  Lo que se cuenta en ESTE short: ${loQueCuenta(s)}`,
+            `- Short ${s.indice} (escenas ${s.escena_inicio + 1} a ${s.escena_fin + 1}, ${Math.round(s.duracion_seg)} s; título provisional: «${s.titulo_original}»)\n  Lo que se cuenta en ESTE short: ${loQueCuenta(s)}\n  Personas con foto en ESTE short: ${personasDe(s.escena_inicio, s.escena_fin)}`,
         )
         .join("\n")
     : "- (este video no tiene shorts)";
@@ -62,6 +74,7 @@ export function mensajePublicacion(guion: Guion, tematica: string, shorts: Short
     `TÍTULO DE TRABAJO DEL GUION: ${guion.titulo}`,
     `GANCHO: ${guion.gancho}`,
     `ESCENAS DEL VIDEO (lo que se narra):\n${escenas}`,
+    `PERSONAS CON FOTO (en todo el video): ${personasDe(0, guion.escenas.length - 1)}`,
     `SHORTS PRODUCIDOS (cada uno es un trozo del video largo):\n${lista}`,
     "Escribe los textos de publicación siguiendo las reglas.",
   ].join("\n\n");
@@ -103,6 +116,7 @@ export async function generarPublicacion(
   const generada = esquemaPublicacionGenerada.parse({
     titulo: cruda.titulo,
     descripcion: cruda.descripcion,
+    portada: cruda.portada,
     shorts: cruda.shorts,
     etiquetas: unirEtiquetas(cruda.etiquetas, cruda.etiquetas_ingles),
   });

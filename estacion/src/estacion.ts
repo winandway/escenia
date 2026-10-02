@@ -4,6 +4,7 @@
 import { config } from "./config";
 import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEntregada } from "./entrega";
 import { panel } from "./panel";
+import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas";
 import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
 import { sincronizarSonidos } from "./sonidos";
@@ -137,10 +138,18 @@ async function unaVuelta(): Promise<boolean> {
           duracion_seg: s.duracionSeg,
         })),
       )
-      .then(() => console.log("  Textos de YouTube: listos en el panel."))
+      .then(async (respuesta) => {
+        console.log("  Textos de YouTube: listos en el panel.");
+        // Con los textos llegan los de las miniaturas: se arma la del largo y la de cada Short.
+        const textos = textosDeLaPublicacion(respuesta);
+        if (!textos) return console.warn("  (el panel no mandó los textos de las miniaturas)");
+        await guardarTextos(producidoEn, textos);
+        const hechas = await armarPortadas(producidoEn, trabajo.guion_id, textos);
+        console.log(`  Miniaturas: ${hechas.length} armadas y subidas al panel.`);
+      })
       .catch((e) =>
         console.warn(
-          `  (no se pudieron escribir los textos de YouTube: ${e instanceof Error ? e.message : e})`,
+          `  (no se pudieron escribir los textos de YouTube ni armar las miniaturas: ${e instanceof Error ? e.message : e})`,
         ),
       );
     console.log(`[${hora()}] Listo: ${r.rutaMp4} (${(r.bytes / 1_048_576).toFixed(0)} MB)`);

@@ -11,7 +11,7 @@
 - Bajar un video de YouTube: [docs/DESCARGAR-VIDEOS.md](docs/DESCARGAR-VIDEOS.md).
 - App instalable en el teléfono: [docs/APP.md](docs/APP.md).
 - Ritmo del video (cambios de imagen por frase, sonido en cada corte, pausas de la voz) y biblioteca de sonidos: [docs/RITMO.md](docs/RITMO.md).
-- Portada de impacto (la miniatura llamativa, hecha a mano por video): [docs/PORTADA.md](docs/PORTADA.md).
+- Portadas de impacto (la miniatura llamativa del video largo y la de cada Short; salen solas): [docs/PORTADA.md](docs/PORTADA.md).
 - La marca de cada canal en el video (Full Código) y el separador de canales: [docs/MARCA.md](docs/MARCA.md).
 - Temas propuestos y sus fuentes: [docs/TEMAS-PROPUESTOS.md](docs/TEMAS-PROPUESTOS.md).
 - Estrategia de temas (dónde el clic es más caro): [docs/ESTRATEGIA-TEMAS.md](docs/ESTRATEGIA-TEMAS.md).

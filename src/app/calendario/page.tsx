@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { clavePieza } from "@compartido/portada";
 import { ChipCanal } from "@/componentes/ChipCanal";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
 import { FiltroCanal } from "@/componentes/FiltroCanal";
@@ -134,7 +135,11 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
       (e) => e.guion_id ?? 0,
     ),
   );
-  const respaldo = (guionId: number | null) => (guionId ? (propias.get(guionId) ?? null) : null);
+  // La miniatura de ESA pieza; un Short que todavía no tiene la suya muestra la del video largo.
+  const respaldo = (e: { guion_id: number | null; pieza: "largo" | "short"; indice: number }) => {
+    const deEseGuion = e.guion_id ? propias.get(e.guion_id) : undefined;
+    return deEseGuion?.[clavePieza(e.pieza, e.indice)] ?? deEseGuion?.largo ?? null;
+  };
 
   return (
     <Marco titulo="Calendario">
@@ -156,7 +161,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
               </p>
               <Miniatura
                 principal={miniaturaDeEnlace(seleccion.enlace)}
-                respaldo={respaldo(seleccion.guion_id)}
+                respaldo={respaldo(seleccion)}
                 alt={`Miniatura de «${seleccion.titulo}»`}
                 className="mt-3 w-full max-w-xs"
               />
@@ -374,7 +379,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                       >
                         <Miniatura
                           principal={miniaturaDeEnlace(e.enlace)}
-                          respaldo={respaldo(e.guion_id)}
+                          respaldo={respaldo(e)}
                           alt=""
                           className="w-24 shrink-0"
                         />
@@ -422,7 +427,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                 entradas={futuras}
                 reglas={reglas}
                 hoy={hoy}
-                miniatura={respaldo(p.guion_id)}
+                miniatura={respaldo(p)}
                 faltantes={faltantesDe(p).filter((x) => x !== PLATAFORMA_PRINCIPAL)}
               />
             ))}
@@ -461,7 +466,7 @@ export default async function PaginaCalendario(props: PageProps<"/calendario">) 
                 >
                   <Miniatura
                     principal={miniaturaDeEnlace(e.enlace)}
-                    respaldo={respaldo(e.guion_id)}
+                    respaldo={respaldo(e)}
                     alt=""
                     className="w-24 shrink-0"
                   />

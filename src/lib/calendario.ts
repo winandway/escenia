@@ -29,6 +29,7 @@ import {
   type ReglasCalendario,
 } from "@compartido/calendario";
 import { esquemaPublicacion } from "@compartido/guion";
+import { miniaturasPorPieza } from "@compartido/portada";
 import { buscarTematica } from "@compartido/tematicas";
 import { ajuste, guardarAjuste } from "./consultas";
 import type { BaseDatos } from "./db";
@@ -427,16 +428,32 @@ export async function guardarEnlace(
   return { ok: true, enlace: r.enlace, estado };
 }
 
-/** La miniatura que Escenia armó para cada guion (la más nueva), como ruta del panel. */
-export async function miniaturasDeGuiones(db: BaseDatos, ids: number[]): Promise<Map<number, string>> {
+/**
+ * Las miniaturas que Escenia armó para cada guion, por pieza («largo», «short-2»),
+ * como rutas del panel. Un Short sin miniatura propia usa la del video largo;
+ * el video largo nunca usa la de un Short.
+ */
+export async function miniaturasDeGuiones(
+  db: BaseDatos,
+  ids: number[],
+): Promise<Map<number, Record<string, string>>> {
   const unicos = [...new Set(ids)].filter((n) => Number.isInteger(n) && n > 0).slice(0, 90);
-  const mapa = new Map<number, string>();
+  const mapa = new Map<number, Record<string, string>>();
   if (unicos.length === 0) return mapa;
-  const filas = await db.todos<{ guion_id: number; clave: string }>(
-    `SELECT guion_id, clave FROM archivos
+  const filas = await db.todos<{ guion_id: number; tipo: string; clave: string; meta: string }>(
+    `SELECT guion_id, tipo, clave, meta FROM archivos
      WHERE tipo = 'miniatura' AND guion_id IN (${unicos.map(() => "?").join(", ")}) ORDER BY id DESC`,
     unicos,
   );
-  for (const f of filas) if (!mapa.has(f.guion_id)) mapa.set(f.guion_id, `/datos/archivos/${f.clave}`);
+  for (const id of unicos) {
+    const porPieza = miniaturasPorPieza(filas.filter((f) => f.guion_id === id));
+    if (Object.keys(porPieza).length === 0) continue;
+    mapa.set(
+      id,
+      Object.fromEntries(
+        Object.entries(porPieza).map(([pieza, clave]) => [pieza, `/datos/archivos/${clave}`]),
+      ),
+    );
+  }
   return mapa;
 }

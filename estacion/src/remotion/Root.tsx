@@ -1,8 +1,29 @@
 import { Composition } from "remotion";
 import { Portada } from "./Portada";
-import { duracionEnFrames, esquemaPortada, esquemaPropsVideo, FPS, framesDe, type PropsVideo } from "./props";
+import {
+  duracionEnFrames,
+  esquemaPortada,
+  esquemaPropsVideo,
+  FPS,
+  framesDe,
+  type PropsPortada,
+  type PropsVideo,
+} from "./props";
 import { Miniatura } from "./Miniatura";
 import { TechExplainer } from "./TechExplainer";
+
+const portadaVacia: PropsPortada = {
+  formato: "horizontal",
+  sujeto: null,
+  fondoFoto: null,
+  objeto: null,
+  etiqueta: "",
+  cifra: "",
+  linea: "",
+  remate: "",
+  fondo: ["#d00000", "#14000a"],
+  acento: "#ffd60a",
+};
 
 const vacio: PropsVideo = {
   titulo: "Escenia",
@@ -73,20 +94,20 @@ export const Root: React.FC = () => (
       id="Portada"
       component={Portada}
       schema={esquemaPortada}
-      defaultProps={{
-        sujeto: { ruta: "portada/sujeto.png", ancho: 1000, alto: 1200 },
-        objeto: null,
-        etiqueta: "",
-        cifra: "",
-        linea: "",
-        remate: "",
-        acercar: 1.2,
-        fondo: ["#d00000", "#14000a"],
-        acento: "#ffd60a",
-      }}
+      defaultProps={portadaVacia}
       fps={FPS}
       width={1280}
       height={720}
+      durationInFrames={1}
+    />
+    <Composition
+      id="PortadaVertical"
+      component={Portada}
+      schema={esquemaPortada}
+      defaultProps={{ ...portadaVacia, formato: "vertical" }}
+      fps={FPS}
+      width={1080}
+      height={1920}
       durationInFrames={1}
     />
     <Composition

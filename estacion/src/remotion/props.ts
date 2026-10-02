@@ -130,25 +130,42 @@ export const esquemaPropsVideo = z.object({
 
 export type PropsVideo = z.infer<typeof esquemaPropsVideo>;
 
-// Portada de impacto (la miniatura que se lleva el clic): el sujeto recortado
-// de su foto, encima de un fondo de color, con una cifra enorme y un remate.
-const esquemaRecorte = z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() });
+// Portada de impacto (la miniatura que se lleva el clic): la persona recortada
+// de su foto, encima de un fondo de color, con una palabra o cifra enorme y un
+// remate. Horizontal (1280×720) para el video largo; vertical (1080×1920) para
+// cada Short. Dónde va la persona lo calcula quien la arma (compartido/portada.ts).
 export const esquemaPortada = z.object({
-  // La persona, ya recortada (PNG con fondo transparente). Va a la derecha, grande.
-  sujeto: esquemaRecorte,
-  // Un objeto recortado (un trofeo, un disco), si va tachado con una equis roja, y cuánto de
+  formato: z.enum(["horizontal", "vertical"]).default("horizontal"),
+  // La persona, ya recortada (PNG con fondo transparente) y ya colocada, en puntos de la portada.
+  sujeto: z
+    .object({
+      ruta: z.string(),
+      izquierda: z.number(),
+      arriba: z.number(),
+      ancho: z.number(),
+      alto: z.number(),
+    })
+    .nullable()
+    .default(null),
+  // Sin persona que recortar: una foto del video a pantalla completa, oscurecida detrás del texto.
+  fondoFoto: z.string().nullable().default(null),
+  // Un objeto recortado (un trofeo, un disco), si va tachado con la señal de prohibido, y cuánto de
   // su alto se muestra desde arriba (0.62 deja fuera la base de un trofeo con la placa de otro).
-  objeto: esquemaRecorte
-    .extend({ tachado: z.boolean().default(false), mostrar: z.number().min(0.2).max(1).default(1) })
+  objeto: z
+    .object({
+      ruta: z.string(),
+      ancho: z.number(),
+      alto: z.number(),
+      tachado: z.boolean().default(false),
+      mostrar: z.number().min(0.2).max(1).default(1),
+    })
     .nullable()
     .default(null),
   etiqueta: z.string().default(""), // arriba, chico: quién es («PRINCE ROYCE»)
-  cifra: z.string().default(""), // enorme («15»)
-  linea: z.string().default(""), // lo que cuenta la cifra («NOMINACIONES»)
+  cifra: z.string().default(""), // lo enorme: una cifra o una palabra («15», «VETADO»)
+  linea: z.string().default(""), // lo que cuenta («NOMINACIONES»)
   // El golpe, en una caja de color. Lo que va entre asteriscos sale en el color de acento («*CERO* PREMIOS»).
   remate: z.string().default(""),
-  // Cuánto se acerca la persona: 1 = cuerpo casi entero; 1.3 = de la cintura para arriba, la cara más grande.
-  acercar: z.number().min(0.8).max(1.8).default(1.2),
   fondo: z.tuple([z.string(), z.string()]).default(["#d00000", "#14000a"]),
   acento: z.string().default("#ffd60a"),
 });
@@ -163,6 +180,12 @@ export function partesDelRemate(remate: string): { texto: string; marcada: boole
       const marcada = w.length > 2 && w.startsWith("*") && w.endsWith("*");
       return { texto: marcada ? w.slice(1, -1) : w, marcada };
     });
+}
+
+/** El tamaño de letra más grande con el que un texto cabe en un ancho (letra condensada, en mayúsculas). */
+export function letraQueCabe(texto: string, ancho: number, maximo: number): number {
+  const letras = Math.max(1, texto.replace(/\*/g, "").length);
+  return Math.round(Math.min(maximo, ancho / (letras * 0.52)));
 }
 
 export const FPS = 30;

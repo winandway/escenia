@@ -122,12 +122,30 @@ export const esquemaGuionGenerado = z.object({
 // Textos para YouTube: los escribe la IA al terminar el video (título del
 // largo, uno por short, descripción y 30 palabras clave). Richard los copia.
 export const ETIQUETAS_MAXIMAS = 30;
+// El texto de la miniatura de una pieza (ver docs/PORTADA.md): lo enorme, lo que
+// cuenta, el remate en su caja y a quién se ve. Lo escribe la IA con los títulos.
+export const esquemaTextoPortada = z.object({
+  persona: z.string().trim().max(80).default(""),
+  grande: z.string().trim().max(40).default(""),
+  linea: z.string().trim().max(60).default(""),
+  remate: z.string().trim().max(60).default(""),
+});
+// Si la IA no manda el texto de una miniatura, no se rechaza el trabajo: esa pieza queda sin portada.
+const SIN_PORTADA = { persona: "", grande: "", linea: "", remate: "" };
 export const esquemaPublicacionGenerada = z.object({
   titulo: z.string().trim().min(10).max(100),
   descripcion: z.string().trim().min(40).max(4500),
   etiquetas: z.array(z.string().trim().min(2).max(60)).min(10).max(ETIQUETAS_MAXIMAS),
+  // Los guiones de antes no la traen: por eso es opcional.
+  portada: esquemaTextoPortada.optional(),
   shorts: z
-    .array(z.object({ indice: z.number().int().min(1), titulo: z.string().trim().min(8).max(100) }))
+    .array(
+      z.object({
+        indice: z.number().int().min(1),
+        titulo: z.string().trim().min(8).max(100),
+        portada: esquemaTextoPortada.optional(),
+      }),
+    )
     .max(8),
 });
 /** Cuántas de las palabras clave van en inglés (público latino de Estados Unidos). */
@@ -143,8 +161,15 @@ export const esquemaPublicacionDeLaIA = z.object({
   descripcion: z.string().trim().min(40).max(4500),
   etiquetas: z.array(z.string().trim().min(2).max(60)).min(10).max(60),
   etiquetas_ingles: z.array(z.string().trim().min(2).max(60)).max(30).default([]),
+  portada: esquemaTextoPortada.default(SIN_PORTADA),
   shorts: z
-    .array(z.object({ indice: z.number().int().min(1), titulo: z.string().trim().min(8).max(100) }))
+    .array(
+      z.object({
+        indice: z.number().int().min(1),
+        titulo: z.string().trim().min(8).max(100),
+        portada: esquemaTextoPortada.default(SIN_PORTADA),
+      }),
+    )
     .max(8),
 });
 

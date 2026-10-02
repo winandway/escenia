@@ -662,8 +662,16 @@ describe("calendario: enlace y miniatura", () => {
       `INSERT INTO archivos (guion_id, tipo, clave) VALUES (5, 'miniatura', 'guiones/5/miniatura-2.png')`,
     );
     expect(await miniaturasDeGuiones(db, [5, 5, 7])).toEqual(
-      new Map([[5, "/datos/archivos/guiones/5/miniatura-2.png"]]),
+      new Map([[5, { largo: "/datos/archivos/guiones/5/miniatura-2.png" }]]),
     );
+    // La miniatura de un Short es de ese Short: aunque sea la más nueva, no pasa a ser la del video largo.
+    await db.ejecutar(
+      `INSERT INTO archivos (guion_id, tipo, clave, meta) VALUES (5, 'miniatura', 'guiones/5/miniatura-3.png', '{"portada":true,"pieza":"short","indice":2}')`,
+    );
+    expect((await miniaturasDeGuiones(db, [5])).get(5)).toEqual({
+      largo: "/datos/archivos/guiones/5/miniatura-2.png",
+      "short-2": "/datos/archivos/guiones/5/miniatura-3.png",
+    });
     expect(await miniaturasDeGuiones(db, [])).toEqual(new Map());
   });
 });

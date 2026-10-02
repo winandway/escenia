@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { clavePieza, miniaturasPorPieza } from "@compartido/portada";
 import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
 import {
@@ -64,8 +65,30 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
   const tematica = buscarTematica(guion.tematica_id);
   const trabajo = trabajos[0];
   const voz = archivos.find((a) => a.tipo === "voz");
-  // La miniatura más nueva (los archivos vienen del más nuevo al más viejo): la que se sube a YouTube.
-  const miniatura = archivos.find((a) => a.tipo === "miniatura");
+  // La miniatura de cada pieza (el largo y cada Short), para ponerla al lado de su título.
+  const miniaturas = miniaturasPorPieza(archivos);
+  const miniaturaDe = (pieza: "largo" | "short", indice: number) => {
+    const clave = miniaturas[clavePieza(pieza, indice)];
+    return clave ? (
+      <div className={`shrink-0 ${pieza === "short" ? "w-24" : "w-44"}`}>
+        {/* Sale del almacén con sesión: el optimizador de imágenes no aplica. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`/datos/archivos/${clave}`}
+          alt={pieza === "short" ? `Miniatura del Short ${indice}` : "Miniatura del video"}
+          loading="lazy"
+          decoding="async"
+          className={`w-full rounded-md bg-black object-cover ${pieza === "short" ? "aspect-[9/16]" : "aspect-video"}`}
+        />
+        <a
+          href={`/datos/archivos/${clave}?descargar=1`}
+          className="boton-suave mt-2 block px-2 py-1 text-center text-xs"
+        >
+          Descargar miniatura
+        </a>
+      </div>
+    ) : null;
+  };
 
   return (
     <Marco>
@@ -126,25 +149,6 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
               </div>
             </div>
           ))}
-          {miniatura && videos.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-neutral-800 pt-4">
-              {/* Sale del almacén con sesión: el optimizador de imágenes no aplica. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/datos/archivos/${miniatura.clave}`}
-                alt="Miniatura del video"
-                loading="lazy"
-                decoding="async"
-                className="aspect-video w-full max-w-sm rounded-md bg-black object-cover"
-              />
-              <div className="space-y-2 text-xs text-neutral-400">
-                <p>Miniatura para YouTube (1280 × 720).</p>
-                <a href={`/datos/archivos/${miniatura.clave}?descargar=1`} className="boton-suave px-3 py-1">
-                  Descargar miniatura
-                </a>
-              </div>
-            </div>
-          )}
           {anteriores.length > 0 && (
             <details className="mt-4">
               <summary className="cursor-pointer text-sm text-neutral-400 hover:text-white">
@@ -213,28 +217,37 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
             </form>
           </div>
           {!contenido.publicacion && (
-            <p className="mt-2 text-neutral-400">
-              Se escriben solos al terminar el video. Si no aparecen, toca el botón.
-            </p>
+            <div className="mt-2 flex items-start gap-3">
+              {miniaturaDe("largo", 0)}
+              <p className="text-neutral-400">
+                Se escriben solos al terminar el video. Si no aparecen, toca el botón.
+              </p>
+            </div>
           )}
           {contenido.publicacion && (
             <div className="mt-3 space-y-4">
-              <div>
-                <div className="etiqueta flex items-center justify-between">
-                  <span>Título del video</span>
-                  <CopiarTexto texto={contenido.publicacion.titulo} />
+              <div className="flex items-start gap-3">
+                {miniaturaDe("largo", 0)}
+                <div className="min-w-0 flex-1">
+                  <div className="etiqueta flex items-center justify-between">
+                    <span>Título del video</span>
+                    <CopiarTexto texto={contenido.publicacion.titulo} />
+                  </div>
+                  <p className="mt-1 text-neutral-100">{contenido.publicacion.titulo}</p>
+                  <p className="mt-1 text-xs text-neutral-500">{sale("largo", 0)}</p>
                 </div>
-                <p className="mt-1 text-neutral-100">{contenido.publicacion.titulo}</p>
-                <p className="mt-1 text-xs text-neutral-500">{sale("largo", 0)}</p>
               </div>
               {contenido.publicacion.shorts.map((s) => (
-                <div key={s.indice}>
-                  <div className="etiqueta flex items-center justify-between">
-                    <span>Short {s.indice}</span>
-                    <CopiarTexto texto={s.titulo} />
+                <div key={s.indice} className="flex items-start gap-3">
+                  {miniaturaDe("short", s.indice)}
+                  <div className="min-w-0 flex-1">
+                    <div className="etiqueta flex items-center justify-between">
+                      <span>Short {s.indice}</span>
+                      <CopiarTexto texto={s.titulo} />
+                    </div>
+                    <p className="mt-1 text-neutral-100">{s.titulo}</p>
+                    <p className="mt-1 text-xs text-neutral-500">{sale("short", s.indice)}</p>
                   </div>
-                  <p className="mt-1 text-neutral-100">{s.titulo}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{sale("short", s.indice)}</p>
                 </div>
               ))}
               <div>

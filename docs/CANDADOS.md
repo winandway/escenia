@@ -158,6 +158,34 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   única comprobación válida es la fuente (el nombre en la dirección o un texto
   visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
 
+## C-PORTADA-1 — Cada pieza tiene su miniatura, y es de quien dice ser (2 oct 2026)
+
+- **Qué faltaba / cómo se veía:** el video largo salía con una miniatura de
+  título sobre foto y los Shorts sin ninguna. Richard: «sin las miniaturas va a
+  ser difícil que esos videos tengan vida».
+- **Qué se hizo:** al terminar cada video, la Estación arma una portada de
+  impacto por pieza (horizontal para el largo, vertical para cada Short) con el
+  texto que escribe el panel, y cada una sale en el panel al lado de su título.
+  Guía completa: [PORTADA.md](PORTADA.md).
+- **Lo que este candado vigila (`pruebas/portada.test.ts`, `pruebas/calendario.test.ts`):**
+  1. **La miniatura de un Short nunca pasa a ser la del video largo**
+     (`miniaturasPorPieza`): antes valía «la más nueva del guion», y al subir
+     las verticales el largo habría mostrado la del último Short.
+  2. **La portada de impacto le gana a la automática** aunque una entrega
+     repetida suba otra automática después.
+  3. **En la miniatura solo sale la persona pedida o el protagonista**, nunca
+     otra (`candidatasDePortada`), y solo de fotos con rótulo.
+  4. **Solo sirve el recorte de una sola cara** (`recorteSirve`): ni fotos de
+     grupo, ni lugares, ni una carátula entera.
+  5. **La persona no queda flotando** (`encuadre`) y un guion viejo sin texto
+     de portada sigue siendo válido.
+- **Comprobado en rojo** el 2 oct 2026: con todas las miniaturas contadas como
+  del largo fallan dos pruebas; aceptando fotos de grupo falla una.
+- **Qué NO tocar:** que la falta del texto de una miniatura tumbe los textos de
+  YouTube (en `esquemaPublicacionDeLaIA` la portada tiene valor por defecto), ni
+  que un fallo al armar las miniaturas tumbe la entrega del video (va dentro
+  del mismo `catch` que los textos, después de marcar el trabajo como hecho).
+
 ## C-RITMO-1 — Ninguna imagen se queda quieta más de cinco segundos (2 oct 2026)
 
 - **Qué se rompía / cómo se veía:** la gente comentaba que los videos eran
