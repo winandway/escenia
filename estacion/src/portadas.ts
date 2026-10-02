@@ -100,14 +100,20 @@ function fotosRotuladas(props: PropsVideo): FotoRotulada[] {
   );
 }
 
-/** Una foto cualquiera de esas escenas, para el fondo cuando no hay persona que recortar. */
+/**
+ * Una foto para el fondo cuando no hay persona que recortar: la primera de las
+ * escenas de la pieza; si la pieza no tiene ninguna, la última que se vio antes
+ * de que empiece (y si tampoco, la primera del video).
+ */
 function fotoDeFondo(props: PropsVideo, inicio: number, fin: number): string | null {
-  for (const e of props.escenas.slice(inicio, fin + 1)) {
-    const deUnPlano = e.planos.find((p) => p.tipo === "foto" && p.foto)?.foto?.ruta;
-    const ruta = deUnPlano ?? e.foto?.ruta ?? e.fondoFoto;
-    if (ruta) return ruta;
-  }
-  return null;
+  const deLaEscena = (e: PropsVideo["escenas"][number]) =>
+    e.planos.find((p) => p.tipo === "foto" && p.foto)?.foto?.ruta ?? e.foto?.ruta ?? e.fondoFoto ?? null;
+  const buscar = (escenas: PropsVideo["escenas"]) => escenas.map(deLaEscena).find((r) => r !== null) ?? null;
+  return (
+    buscar(props.escenas.slice(inicio, fin + 1)) ??
+    buscar(props.escenas.slice(0, inicio).reverse()) ??
+    buscar(props.escenas)
+  );
 }
 
 /**

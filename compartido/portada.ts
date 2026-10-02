@@ -14,15 +14,20 @@ export type TextoPortada = { persona: string; grande: string; linea: string; rem
 
 const sinTildes = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
-/** Recorta por palabras enteras: una portada nunca termina en media palabra. */
+/**
+ * Recorta por palabras enteras: una portada nunca termina en media palabra.
+ * Los asteriscos que marcan la palabra fuerte no cuentan como letras.
+ */
 function recortarPalabras(texto: string, maximo: number): string {
   const limpio = texto
     .replace(/\s+/g, " ")
     .replace(/[.,;:!¡¿?…\s]+$/u, "")
     .trim();
-  if (limpio.length <= maximo) return limpio;
-  const corto = limpio.slice(0, maximo + 1).replace(/\s+\S*$/u, "");
-  return corto.length >= 2 ? corto : limpio.slice(0, maximo);
+  const letras = (s: string) => s.replace(/\*/g, "").length;
+  if (letras(limpio) <= maximo) return limpio;
+  const palabras = limpio.split(" ");
+  while (palabras.length > 1 && letras(palabras.join(" ")) > maximo) palabras.pop();
+  return palabras.join(" ");
 }
 
 /** Deja el texto listo para la portada: mayúsculas, sin puntos finales y del largo que se lee en chiquito. */
@@ -31,7 +36,7 @@ export function textoDePortada(t: Partial<TextoPortada>): TextoPortada {
     persona: (t.persona ?? "").replace(/\s+/g, " ").trim(),
     grande: recortarPalabras((t.grande ?? "").toUpperCase(), 9),
     linea: recortarPalabras((t.linea ?? "").toUpperCase(), 16),
-    remate: recortarPalabras((t.remate ?? "").toUpperCase(), 18),
+    remate: recortarPalabras((t.remate ?? "").toUpperCase(), 20),
   };
 }
 

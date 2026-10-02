@@ -38,7 +38,7 @@ const FORMATOS = {
   horizontal: {
     foco: "76% 40%",
     sombra: "linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.15) 46%, rgba(0,0,0,0) 62%)",
-    velo: "linear-gradient(90deg, rgba(0,0,0,.86) 0%, rgba(0,0,0,.6) 45%, rgba(0,0,0,.12) 78%)",
+    velo: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 30%)",
     etiqueta: 50,
     grande: { maximo: 286, ancho: 580, trazo: 22 },
     linea: { maximo: 104, ancho: 610, trazo: 16 },
@@ -48,7 +48,7 @@ const FORMATOS = {
   vertical: {
     foco: "50% 62%",
     sombra: "linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,.2) 42%, rgba(0,0,0,0) 60%)",
-    velo: "linear-gradient(180deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,.62) 48%, rgba(0,0,0,.15) 80%)",
+    velo: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 22%)",
     etiqueta: 66,
     grande: { maximo: 320, ancho: 940, trazo: 26 },
     linea: { maximo: 124, ancho: 960, trazo: 18 },
@@ -165,15 +165,22 @@ export const Portada: React.FC<PropsPortada> = (p) => {
       />
       {/* Sin persona que recortar: una foto del video a pantalla completa, oscurecida detrás del texto. */}
       {!p.sujeto && p.fondoFoto && (
-        <>
-          <Img
-            src={staticFile(p.fondoFoto)}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          />
-          <AbsoluteFill style={{ background: f.velo }} />
-        </>
+        // La foto ocupa el lado donde iría la persona y se funde con el color: el texto nunca le cae encima.
+        <Img
+          src={staticFile(p.fondoFoto)}
+          style={{
+            position: "absolute",
+            ...(vertical
+              ? { left: 0, top: 880, width: 1080, height: 1040 }
+              : { left: 500, top: 0, width: 780, height: 720 }),
+            objectFit: "cover",
+            objectPosition: "50% 22%",
+            maskImage: f.velo,
+            WebkitMaskImage: f.velo,
+          }}
+        />
       )}
-      {p.sujeto && <AbsoluteFill style={{ background: f.sombra }} />}
+      <AbsoluteFill style={{ background: f.sombra }} />
 
       {/* La persona: recortada, grande, con borde blanco. Quien arma la portada ya calculó dónde va. */}
       {p.sujeto && (

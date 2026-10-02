@@ -45,6 +45,8 @@ describe("portada de impacto: el texto", () => {
     expect(t.grande).toBe("NUNCA");
     expect(t.linea).toBe("HA GANADO UN");
     expect(t.remate).toBe("*15* NOMINACIONES");
+    // Los asteriscos no cuentan como letras: «SIEMPRE ENCENDIDOS» cabe entero.
+    expect(textoDePortada({ remate: "siempre *encendidos*" }).remate).toBe("SIEMPRE *ENCENDIDOS*");
   });
 
   it("una palabra larga se achica para caber; una cifra corta va al máximo", () => {
