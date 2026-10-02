@@ -7,7 +7,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
-import { elegirPista } from "@compartido/musica";
+import { elegirPista, estaEnCarpeta } from "@compartido/musica";
 import { config } from "./config";
 
 const exec = promisify(execFile);
@@ -45,7 +45,7 @@ export async function prepararMusica(estilo: string, carpetaPublica: string): Pr
   const elegida = elegirPista(
     estilo,
     catalogo.map((c) => c.archivo),
-    catalogo.filter((c) => !c.rutaCompleta.startsWith(CARPETA_PROPIAS)).map((c) => c.archivo),
+    catalogo.filter((c) => !estaEnCarpeta(c.rutaCompleta, CARPETA_PROPIAS)).map((c) => c.archivo),
   );
   if (!elegida) return null;
   const origen = catalogo.find((c) => c.archivo === elegida.archivo)?.rutaCompleta;
@@ -91,7 +91,7 @@ export async function prepararMusica(estilo: string, carpetaPublica: string): Pr
     duracionSeg: Number(stdout.trim()) || 0,
     archivo: elegida.archivo,
     // La pista del repositorio la escribe el propio motor (scripts/musica-tech.mjs); las demás salen de Suno.
-    credito: origen.startsWith(CARPETAS_MUSICA[0] ?? "\0")
+    credito: estaEnCarpeta(origen, CARPETA_PROPIAS)
       ? `Música de fondo: «${nombre}» (instrumental propia, sintetizada por el motor)`
       : `Música de fondo: «${nombre}» (instrumental generada con IA)`,
   };

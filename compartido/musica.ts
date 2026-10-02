@@ -191,12 +191,25 @@ export function elegirPista(
     // cualquiera que solo comparta un instrumento; y entre las del género, gana la de Richard.
     const delGenero = parecido > 0 && fichas[0] !== undefined && claves.includes(fichas[0]);
     const suya = suyas.has(archivo);
+    // La de Richard del género pedido gana SIEMPRE a la del motor, aunque el nombre de la
+    // del motor comparta más palabras con el estilo (su nombre es toda su ficha; el de él, no).
     const puntos =
-      parecido === 0 ? 0 : parecido + (delGenero ? 10 : 0) + (delGenero && suya ? 5 : 0) + (suya ? 0.5 : 0);
+      parecido === 0 ? 0 : parecido + (delGenero ? 10 : 0) + (delGenero && suya ? 100 : 0) + (suya ? 0.5 : 0);
     if (!mejor || puntos > mejor.puntos) mejor = { archivo, puntos };
   }
   if (mejor && mejor.puntos > 0) return mejor;
   const neutras = pistas.filter((a) => /neutral/i.test(a));
   const neutra = neutras.find((a) => suyas.has(a)) ?? neutras[0];
   return neutra ? { archivo: neutra, puntos: 0 } : null;
+}
+
+/**
+ * Si un archivo está DENTRO de una carpeta. Comparar solo el comienzo del texto
+ * engaña: «…/recursos/musica-panel/x.mp3» empieza igual que «…/recursos/musica»
+ * y no está dentro de ella. Por ese descuido la bachata que subió Richard
+ * perdía contra la provisional del motor (2 oct 2026).
+ */
+export function estaEnCarpeta(ruta: string, carpeta: string): boolean {
+  const base = carpeta.replace(/[\\/]+$/, "");
+  return ruta.startsWith(`${base}/`) || ruta.startsWith(`${base}\\`);
 }

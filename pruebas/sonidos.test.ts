@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { baseEnMemoria } from "./base-memoria";
-import { elegirPista } from "@compartido/musica";
+import { elegirPista, estaEnCarpeta } from "@compartido/musica";
 import {
   archivoDeSonido,
   esquemaSonidoNuevo,
@@ -130,5 +130,31 @@ describe("guardar y quitar sonidos", () => {
     expect(guardados.size).toBe(1);
     const fila = await db.uno<{ activo: number }>("SELECT activo FROM sonidos WHERE id = ?", [r.id]);
     expect(fila?.activo).toBe(0);
+  });
+});
+
+describe("la música de Richard no se confunde con la del motor", () => {
+  const motor = "/Users/x/estacion/recursos/musica";
+
+  it("«musica-panel» y «musica-local» no están dentro de «musica», aunque empiecen igual", () => {
+    expect(estaEnCarpeta(`${motor}/bachata-guitar.mp3`, motor)).toBe(true);
+    expect(estaEnCarpeta(`${motor}-panel/bachata-voy-p1.mp3`, motor)).toBe(false);
+    expect(estaEnCarpeta(`${motor}-local/salsa.mp3`, motor)).toBe(false);
+    expect(estaEnCarpeta(`${motor}/`, `${motor}/`)).toBe(true);
+  });
+
+  it("con el catálogo real de la Mac, gana la bachata que subió Richard", () => {
+    const catalogo = [
+      `${motor}/bachata-guitar-requinto-bongos-guira-romantic-warm.mp3`,
+      `${motor}/beat-kick-bass-driving-pulse-neutral.mp3`,
+      `${motor}-panel/bachata-voy-recorreinto-instrumenal-p1.mp3`,
+    ];
+    const nombres = catalogo.map((r) => r.split("/").pop() ?? "");
+    const suyas = catalogo.filter((r) => !estaEnCarpeta(r, motor)).map((r) => r.split("/").pop() ?? "");
+    expect(suyas).toEqual(["bachata-voy-recorreinto-instrumenal-p1.mp3"]);
+    expect(
+      elegirPista("Dominican bachata, romantic requinto guitar, bongos and güira, warm", nombres, suyas)
+        ?.archivo,
+    ).toBe("bachata-voy-recorreinto-instrumenal-p1.mp3");
   });
 });

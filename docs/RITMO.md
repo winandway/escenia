@@ -133,3 +133,19 @@ nueva es de un sitio). Después se vuelve a armar con la misma voz
 La última imagen se queda hasta el último cuadro (antes, la cola con música
 quedaba en negro). En los canales sin marca propia aparece encima «SUSCRÍBETE»,
 el nombre del canal y su @. En Full Código sale el cierre de la marca.
+
+## Cambiar la música de un video ya armado
+
+```bash
+cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/cambiar-musica.ts 27 "Dominican bachata, romantic guitar, bongos and güira"
+```
+
+Baja lo último de Sonidos, elige la pista por ese estilo (la de Richard del
+género gana siempre) y la deja lista. Después se vuelve a armar con
+`rearmar.ts` y se sube con `scripts/reintentar-remoto.ts`.
+
+## El formato quedó como norma
+
+Richard aprobó este formato el 2 de octubre de 2026 para todos los videos. La
+receta completa (reglas, pasos, revisión y correcciones) está en el skill del
+proyecto: `.claude/skills/formato-escenia/SKILL.md`.

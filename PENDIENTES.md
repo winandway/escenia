@@ -7,7 +7,7 @@
 - 👤 Descargar el primer video de Full Código (guion 7: GPT-6.1 Astra, el modelo que OpenAI frenó; largo de 5 min 28 s y 3 Shorts) desde https://escenia.sitios.dev/guiones/7, subirlo al canal y programarlo; si la opinión que se escribió en su nombre no le gusta, la cambia en el panel y se vuelve a producir.
 - 👤 Pegar en la sesión de Losupe el prompt de docs/NOTICIAS-LOSUPE.md → Losupe publica cada día noticias de tecnología y de artistas, y cada nota trae un guion de 1 minuto listo para grabar que cierra nombrando losupe.com.
 - 👤 Ver la versión nueva del video de Prince Royce (guion 8, con el ritmo nuevo) en https://escenia.sitios.dev/guiones/8 y agendar el largo y sus Shorts. La versión vieja (guion 6) ya no está en la lista del calendario.
-- 👤 Subir una bachata instrumental propia en el panel, en Sonidos (género Bachata) → reemplaza sola a la bachata provisional del motor en el próximo video de bachata.
+- [x] Richard subió su bachata instrumental en Sonidos (2 oct 2026) y el video de Prince Royce se rearmó con ella.
 - 👤 Subir sus efectos (sweepers, chasquidos, barridos) en Sonidos, diciendo para qué se usa cada uno → suenan en los cambios de imagen en vez de los efectos propios del motor.
 - 👤 Programar en YouTube el video completo de Luis Miguel para el miércoles 30 de septiembre a las 4:00 p. m. (así quedó en el calendario) o moverlo en el calendario a la fecha que prefieras.
 - 👤 Pegar el enlace de cada video ya subido en su ficha del calendario → sale su miniatura de YouTube.
@@ -19,6 +19,7 @@
 
 ## Fila (lo hace la IA)
 
+- [x] El formato del video de Prince Royce quedó como el de todos los videos: skill `formato-escenia` en el proyecto (2 oct 2026).
 - [x] Ritmo (2 oct 2026, la gente decía que los videos aburrían): cambios de imagen dentro de cada escena pegados a la frase que se dice, cifras en grande, nombre de cada persona, relleno automático (nada quieto más de 5 s), sonido en cada corte, subtítulos al estilo CapCut (C-RITMO-1); pausas de la voz parejas y voz más rápida desde el origen (C-VOZ-6); biblioteca de Sonidos en el panel (C-SONIDOS-1); pistas propias de bombo y de bachata; botón «Crear versión nueva». Guía: docs/RITMO.md.
 - [x] Video de Prince Royce rehecho con el ritmo nuevo (guion 8, versión 2 del guion 6): de 15 imágenes a más de 130.
 - [ ] Editar los planos (cambios de imagen) a mano en el panel: hoy se ven en cada escena, pero no se editan.

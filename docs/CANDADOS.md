@@ -227,6 +227,16 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Cómo se comprueba:** `pruebas/sonidos.test.ts` (en rojo: si «Quitar» borra
   de verdad, falla). En vivo: subir un MP3 en Sonidos y producir un video de
   ese género; el paso «música: …» lo nombra.
+- **Lo que falló la primera vez que Richard subió su bachata (2 oct 2026):** la
+  Estación eligió igual la bachata provisional del motor. Dos causas: (1) para
+  saber si una pista era «del motor» se miraba si su ruta EMPEZABA por
+  `recursos/musica`, y `recursos/musica-panel` empieza igual: ninguna pista
+  contaba como de Richard (`estaEnCarpeta` lo corrige); (2) la pista del motor
+  tiene más palabras en el nombre y sumaba más puntos: ahora la de Richard del
+  género pedido gana siempre. Las dos cosas están en `pruebas/sonidos.test.ts`
+  con el catálogo real.
+- **Cambiar la música de un video ya armado:**
+  `npx tsx src/cambiar-musica.ts <trabajo> "<estilo>"` y después `rearmar.ts`.
 - **Qué NO tocar:** «Quitar» apaga `activo`, nunca borra. No agregar la opción
   «canción comercial» al origen: YouTube la detecta y el video no monetiza.
 

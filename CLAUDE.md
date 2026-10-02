@@ -28,6 +28,8 @@
 
 ## Reglas del motor
 
+- **El formato de todos los videos es el del skill `formato-escenia`** (`.claude/skills/formato-escenia/SKILL.md`): una imagen nueva cada 3 segundos, lo que se nombra se muestra, sonido en cada corte, música del género. Lo pidió Richard el 2 oct 2026 al ver el video de Prince Royce. Antes de hacer, rehacer o revisar un video, se invoca ese skill.
+
 - Windoce es una sola persona (Richard). Remotion se usa con la licencia gratis (≤3 personas); no volver a preguntarlo.
 
 - Nada se publica sin aprobación de Richard; «Aprobar» exige su opinión escrita (≥ 40 letras).
