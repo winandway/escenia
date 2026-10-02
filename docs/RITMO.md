@@ -110,8 +110,9 @@ Saca esos segundos del trabajo 26 como imágenes en `out/t26/cuadros/`. Con
    `scripts/version-remota.ts <guion>`). Queda un borrador con el mismo texto y
    la misma opinión.
 2. Se corrige lo que haga falta (los planos, la música) y se aprueba.
-3. La versión anterior no se toca. En el calendario conviene sacar de la lista
-   las piezas de la versión vieja.
+3. La versión anterior no se toca. Sus piezas se sacan de «Sin fecha todavía»
+   con `estacion/node_modules/.bin/tsx scripts/sacar-del-calendario.ts <guion viejo>`
+   (no se borran: quedan en «Fuera de la lista»).
 
 ## Cambiar una foto de un video ya armado
 
