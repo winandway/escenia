@@ -3,20 +3,23 @@
 // dice cada cosa, le quita el fondo verde (si lo hay) y lo monta encima de los
 // gráficos del plan, que entran justo cuando él los nombra.
 // Uso (desde estacion/):
-//   npx tsx src/presentador.ts <grabacion.mp4> <plan.json> [--estilo neon|ilustrado|clasico]
-//       [--canal canal-ia|caprichoso-tv] [--similitud 0.14] [--sin-croma]
+//   npx tsx src/presentador.ts <grabacion.mp4> [plan.json] [--estilo neon|ilustrado|clasico]
+//       [--tema "de qué va"] [--solo-plan] [--canal canal-ia|caprichoso-tv] [--similitud 0.14] [--sin-croma]
+// Sin plan, se lo pide a la IA del panel con la transcripción (unos centavos) y lo deja en
+// out/p-<nombre>/plan.json. Con --solo-plan se detiene ahí, para leerlo o corregirlo antes de armar.
 // El plan es un guion (el mismo formato de siempre) cuya `narracion` es lo que él
 // dijo en cada tramo, en orden, y cuyos `planos` o `diagrama` dicen qué va detrás.
 // Deja el video largo y sus Shorts en out/p-<nombre>/ (no sube nada al panel).
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { CANALES } from "@compartido/canales";
-import { esquemaGuion } from "@compartido/guion";
+import { esquemaGuion, type Guion } from "@compartido/guion";
 import { marcaDeCanal } from "@compartido/marcas";
 import { momentosDelPresentador, tramosDeGrabacion } from "@compartido/presentador";
 import { ESTILOS_VIDEO, type Canal, type EstiloVideo } from "@compartido/tematicas";
 import { config } from "./config";
 import { colorDeCroma, extraerVoz, medidasDeVideo, prepararVentana, quitarCroma } from "./croma";
+import { panel } from "./panel";
 import { producir } from "./produccion";
 import { transcribir } from "./transcribir";
 import { nivelar } from "./voz";
@@ -28,10 +31,11 @@ const opcion = (nombre: string): string | null => {
 
 async function principal() {
   const grabacion = process.argv[2];
-  const archivoPlan = process.argv[3];
-  if (!grabacion || !archivoPlan || grabacion.startsWith("--") || archivoPlan.startsWith("--"))
+  const tercero = process.argv[3];
+  const archivoPlan = tercero && !tercero.startsWith("--") ? tercero : null;
+  if (!grabacion || grabacion.startsWith("--"))
     throw new Error(
-      "Uso: npx tsx src/presentador.ts <grabacion.mp4> <plan.json> [--estilo neon|ilustrado|clasico]",
+      "Uso: npx tsx src/presentador.ts <grabacion.mp4> [plan.json] [--estilo neon|ilustrado|clasico]",
     );
   const estilo: EstiloVideo = ESTILOS_VIDEO.find((x) => x === opcion("--estilo")) ?? "clasico";
   const canal: Canal = opcion("--canal") === "caprichoso-tv" ? "caprichoso-tv" : "canal-ia";
@@ -56,8 +60,26 @@ async function principal() {
     `transcripción: ${t.palabras.length} palabras${t.costoUsd ? ` ($${t.costoUsd.toFixed(3)})` : " (ya estaba guardada)"}`,
   );
 
-  // 2) El plan: en qué momento de la grabación empieza cada escena.
-  const guion = esquemaGuion.parse(JSON.parse(await readFile(path.resolve(archivoPlan), "utf8")));
+  // 2) El plan: qué va detrás de él. Si no se trajo uno, lo arma la IA del panel con lo que dijo.
+  let guion: Guion;
+  if (archivoPlan) {
+    guion = esquemaGuion.parse(JSON.parse(await readFile(path.resolve(archivoPlan), "utf8")));
+  } else {
+    paso("armando el plan con la IA del panel…");
+    const r = (await panel.plan(t.texto, estilo, opcion("--tema") ?? "")) as {
+      guion?: unknown;
+      costo_usd?: number;
+    };
+    guion = esquemaGuion.parse(r.guion);
+    const rutaPlan = path.join(carpetaTrabajo, "plan.json");
+    await writeFile(rutaPlan, JSON.stringify(guion, null, 2));
+    paso(`plan: ${guion.escenas.length} escenas ($${(r.costo_usd ?? 0).toFixed(3)}) → ${rutaPlan}`);
+  }
+  if (process.argv.includes("--solo-plan")) {
+    console.log("Plan listo. Para armar el video con ese plan, corre lo mismo pasándole el plan.json.");
+    return;
+  }
+  // En qué momento de la grabación empieza cada escena.
   const duracionMs = Math.round(medidas.duracionSeg * 1000);
   const tramos = tramosDeGrabacion(
     guion.escenas.map((e) => e.narracion),

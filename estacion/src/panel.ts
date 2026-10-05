@@ -99,6 +99,9 @@ export const panel = {
     llamar(`/datos/estacion/trabajos/${id}`, { accion: "gasto", servicio, detalle, costo_usd }),
   publicacion: (guionId: number, shorts: unknown[]) =>
     llamar(`/datos/estacion/publicacion/${guionId}`, { shorts }),
+  /** Formato Presentador: de la transcripción de una grabación, el plan de lo que va detrás de Richard. */
+  plan: (transcripcion: string, formato: string, titulo = "") =>
+    llamar("/datos/estacion/plan", { transcripcion, formato, titulo }),
   hecho: (
     id: number,
     renders: {

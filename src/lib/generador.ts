@@ -7,6 +7,7 @@ import { asegurarModelo, costoTokensUsd, MODELOS_PERMITIDOS } from "@compartido/
 import type { BaseDatos } from "./db";
 import { conEstadoIA } from "./ia-estado";
 import { anotarGasto, autorizarGasto } from "./presupuesto";
+import { mensajeDePlan, planSinInventos, type EntradaPlan } from "./plan-grabacion";
 import { instruccionesSistema, mensajeUsuario, type EntradaGuion } from "./prompt";
 
 // Un guion con sus planos suele costar 5–10 centavos; se reserva un poco más por seguridad.
@@ -21,6 +22,44 @@ export const MAX_TOKENS_GUION = 30000;
 export async function generarGuion(
   db: BaseDatos,
   entrada: EntradaGuion,
+  opciones: { modelo: string; apiKey: string; fetch?: typeof fetch },
+): Promise<ResultadoGeneracion> {
+  return pedirGuion(
+    db,
+    {
+      sistema: instruccionesSistema(),
+      usuario: mensajeUsuario(entrada),
+      detalle: `guion: ${entrada.tema.titulo}`,
+    },
+    opciones,
+  );
+}
+
+/**
+ * Formato Presentador: el PLAN de una grabación. Richard ya habló; la IA no escribe la
+ * narración, la reparte en escenas y decide qué va detrás de él en cada una.
+ */
+export async function generarPlan(
+  db: BaseDatos,
+  entrada: EntradaPlan,
+  opciones: { modelo: string; apiKey: string; fetch?: typeof fetch },
+): Promise<ResultadoGeneracion> {
+  const r = await pedirGuion(
+    db,
+    {
+      sistema: instruccionesSistema(),
+      usuario: mensajeDePlan(entrada),
+      detalle: `plan de grabación: ${entrada.titulo || entrada.transcripcion.slice(0, 40)}`,
+    },
+    opciones,
+  );
+  return { ...r, guion: planSinInventos(r.guion) };
+}
+
+/** Pide un guion a la IA (por streaming, con el formato simple) y lo devuelve limpio y validado. */
+async function pedirGuion(
+  db: BaseDatos,
+  pedido: { sistema: string; usuario: string; detalle: string },
   opciones: { modelo: string; apiKey: string; fetch?: typeof fetch },
 ): Promise<ResultadoGeneracion> {
   const modelo = asegurarModelo(opciones.modelo);
@@ -40,8 +79,8 @@ export async function generarGuion(
         model: modelo,
         max_tokens: MAX_TOKENS_GUION,
         thinking: { type: "disabled" },
-        system: instruccionesSistema(),
-        messages: [{ role: "user", content: mensajeUsuario(entrada) }],
+        system: pedido.sistema,
+        messages: [{ role: "user", content: pedido.usuario }],
         // El formato que se le exige es el simple, sin opcionales (C-GUION-3); después se limpia.
         output_config: { format: zodOutputFormat(esquemaGuionDeLaIA) },
       })
@@ -49,7 +88,7 @@ export async function generarGuion(
   );
 
   const costoUsd = costoTokensUsd(modelo, respuesta.usage.input_tokens, respuesta.usage.output_tokens);
-  await anotarGasto(db, "claude", `guion: ${entrada.tema.titulo}`, costoUsd);
+  await anotarGasto(db, "claude", pedido.detalle, costoUsd);
 
   if (respuesta.stop_reason === "max_tokens") {
     throw new Error("El guion salió demasiado largo y se cortó. Pide un video más corto o menos escenas.");

@@ -2,7 +2,8 @@
 // que hace falta para un guion con planos, el SDK se niega a pedirlo de una
 // sola vez, y desde el panel no se podía escribir NINGÚN guion (5 oct 2026).
 import { describe, expect, it } from "vitest";
-import { generarGuion, MAX_TOKENS_GUION } from "@/lib/generador";
+import { generarGuion, generarPlan, MAX_TOKENS_GUION } from "@/lib/generador";
+import { mensajeDePlan, planSinInventos } from "@/lib/plan-grabacion";
 import { conEstadoIA, problemaAbiertoDeIA, problemaDeCuenta } from "@/lib/ia-estado";
 import type { EntradaGuion } from "@/lib/prompt";
 import { TEMATICAS } from "@compartido/tematicas";
@@ -194,5 +195,67 @@ describe("estado de la cuenta de la IA (C-IA-SALDO-1)", () => {
       ),
     ).rejects.toThrow("La cuenta de Anthropic se quedó sin saldo");
     expect(await problemaAbiertoDeIA(db)).not.toBeNull();
+  });
+});
+
+// Formato Presentador: el plan de una grabación sale de lo que Richard dijo, no de la IA.
+describe("plan de una grabación (formato Presentador)", () => {
+  const transcripcion =
+    "Cada vez que vendes algo pasan cuatro cosas. El cliente compra y el vendedor le da salida al producto. Y de dónde sale ese producto, del depósito. Al final del día todo cuadra solo.";
+
+  it("a la IA se le manda lo que él dijo y la orden de copiarlo, no de escribirlo; cada formato con sus reglas", () => {
+    const neon = mensajeDePlan({ transcripcion, formato: "neon", titulo: "Cómo se mueve una venta" });
+    expect(neon).toContain(transcripcion);
+    expect(neon).toContain("se COPIA");
+    expect(neon).toContain("FORMATO: Neón");
+    expect(neon).toContain("«diagrama»");
+    expect(neon).toContain("Cómo se mueve una venta");
+    const comic = mensajeDePlan({ transcripcion, formato: "ilustrado", titulo: "" });
+    expect(comic).toContain("FORMATO: Cómic");
+    expect(comic).toContain("sale dibujada");
+    expect(comic).not.toContain("DE QUÉ VA");
+  });
+
+  it("en un plan no hay opinión aparte, ni respiros, ni escenas sin voz", () => {
+    const limpio = planSinInventos({
+      titulo: "Un plan de prueba",
+      gancho: "Cada vez que vendes algo pasan cuatro cosas.",
+      escenas: [
+        { parte: "gancho", narracion: "Cada vez que vendes algo.", visual: { tipo: "stock" } },
+        { parte: "interludio", narracion: "", visual: { tipo: "stock" }, duracion_seg: 6 },
+        { parte: "opinion", narracion: "Para mí esto es clave.", visual: { tipo: "texto" } },
+        { parte: "cierre", narracion: "Todo cuadra solo.", visual: { tipo: "stock" } },
+      ],
+      hechos_a_verificar: ["algo que la IA quiso que se verifique"],
+      descripcion_youtube: "",
+      etiquetas: [],
+      musica: "",
+    });
+    expect(limpio.escenas.map((e) => e.parte)).toEqual(["gancho", "contexto", "cierre"]);
+    expect(limpio.hechos_a_verificar).toEqual([]);
+  });
+
+  it("el plan se pide igual que un guion: por streaming, con el formato simple, y anota su gasto", async () => {
+    const db = baseEnMemoria();
+    const pedidos: Record<string, unknown>[] = [];
+    const falso: typeof fetch = async (_url, init) => {
+      pedidos.push(JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
+      return respuestaPorEventos(
+        JSON.stringify({
+          ...GUION,
+          escenas: [...GUION.escenas, escena("opinion", "Para mí esto es clave.")],
+        }),
+      );
+    };
+    const r = await generarPlan(
+      db,
+      { transcripcion, formato: "neon", titulo: "" },
+      { modelo: "claude-sonnet-5", apiKey: "clave-de-prueba", fetch: falso },
+    );
+    expect(pedidos[0]?.stream).toBe(true);
+    expect(JSON.stringify(pedidos[0]?.messages)).toContain("PLAN VISUAL");
+    expect(r.guion.escenas.map((e) => e.parte)).toEqual(["gancho", "dato", "cierre", "contexto"]);
+    const gasto = await db.uno<{ detalle: string }>("SELECT detalle FROM gastos");
+    expect(gasto?.detalle).toContain("plan de grabación");
   });
 });
