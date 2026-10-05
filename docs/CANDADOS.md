@@ -345,7 +345,7 @@ prueba no se veían:
 - **Lo que sigue faltando:** si una parte de él sale de la tela (un codo sobre
   el panel, la gorra por encima del borde), esa parte se corta recta.
 
-, y el formato ya no vive en un CHECK de la base (5 oct 2026)
+## C-FORMATO-MIXTO-1 — «Neón con personajes», y el formato ya no vive en un CHECK de la base (5 oct 2026)
 
 - **Qué se agregó:** el cuarto formato, `mixto`: diagramas de neón y las
   personas que se nombran, dibujadas sobre el mismo neón. Guía:
@@ -392,7 +392,7 @@ prueba no se veían:
   `@compartido` con código (solo tipos) desde `estacion/src/remotion/`; no dejar
   pasar fotos reales en un video de neón.
 
-, el canario lo dice (5 oct 2026)
+## C-IA-SALDO-1 — Si la cuenta de la IA se queda sin saldo, el canario lo dice (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** al pedir un guion, la API respondió «Your
   credit balance is too low to access the Anthropic API». El panel mostraba ese
