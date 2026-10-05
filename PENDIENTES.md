@@ -2,7 +2,7 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 **URGENTE — Recargar el saldo de Anthropic** (la cuenta prepago del panel quedó en cero el 5 oct 2026): https://console.anthropic.com/settings/billing → «Buy credits». Sin saldo, el panel no puede escribir guiones ni los títulos de YouTube. Al recargar, el primer guion que se pida vuelve a poner el canario en verde. Con 10 dólares alcanza para unos cien guiones.
+- 👤 **URGENTE — Recargar el saldo de Anthropic** (la cuenta prepago del panel quedó en cero el 5 oct 2026): https://platform.claude.com/settings/billing → «Buy credits». Sin saldo, el panel no puede escribir guiones ni los títulos de YouTube. Al recargar, el primer guion que se pida vuelve a poner el canario en verde. Con 10 dólares alcanza para unos cien guiones.
 
 - 👤 Probar el estilo de neón: en https://escenia.sitios.dev/nuevo elegir la temática «Así funciona: explicado con diagramas de neón» y pegar en el contexto la explicación real de un proceso de su software (quién hace qué, paso a paso) → sale el primer video con diagramas.
 - 👤 Probar el estilo ilustrado: crear en https://escenia.sitios.dev/nuevo un video de «Novedades de IA» con una noticia → las personas salen dibujadas.
