@@ -10,8 +10,10 @@ import {
   AIRE_ANTES_MS,
   AIRE_DESPUES_MS,
   APERTURA_MS,
+  corregirNombres,
   corteDeGrabacion,
   momentosDelPresentador,
+  NOMBRES_PROPIOS,
   palabrasDesde,
   palabrasDeTranscripcion,
   tramosDeGrabacion,
@@ -102,6 +104,38 @@ describe("presentador: cuándo sale en grande y cuándo en la esquina", () => {
     }
     // La escena corta (4 s) no lo trae a pantalla completa: no da tiempo a nada.
     expect(m.some((x) => x.inicioMs === 30_000)).toBe(false);
+  });
+});
+
+describe("presentador: los nombres propios de Richard (C-NOMBRES-1)", () => {
+  it("el producto que vende sale bien escrito, aunque la transcripción lo escriba como suena", () => {
+    // Caso real del 5 oct 2026: dijo «Beellon.com» y el video salió con «Billon.com» en los
+    // subtítulos, en el diagrama y en la barra de secciones.
+    expect(corregirNombres("mira Billon.com, nuestra plataforma. Todo lo hacemos en Billon, así que")).toBe(
+      "mira Beellon.com, nuestra plataforma. Todo lo hacemos en Beellon, así que",
+    );
+    expect(corregirNombres("Bilón y beellon y Beellon")).toBe("Beellon y beellon y Beellon");
+    // Una cifra no es su producto: en minúscula se queda como está.
+    expect(corregirNombres("ganó un billón de dólares, mil billones")).toBe(
+      "ganó un billón de dólares, mil billones",
+    );
+    // Lo demás no se toca.
+    expect(corregirNombres("ChatGPT de OpenAI y Gemini de Google")).toBe(
+      "ChatGPT de OpenAI y Gemini de Google",
+    );
+    // Cada nombre correcto se reconoce a sí mismo y ninguna variante es una palabra corriente.
+    for (const n of NOMBRES_PROPIOS) {
+      expect(corregirNombres(n.correcto)).toBe(n.correcto);
+      for (const v of n.variantes) expect(v).toBe(v.toLowerCase());
+    }
+  });
+
+  it("los subtítulos y el texto del plan salen con el nombre corregido", () => {
+    const palabras = palabrasDeTranscripcion([
+      { text: "mira", start: 1, end: 1.2, type: "word" },
+      { text: "Billon.com,", start: 1.3, end: 2, type: "word" },
+    ]);
+    expect(palabras.map((p) => p.text)).toEqual(["mira", " Beellon.com,"]);
   });
 });
 

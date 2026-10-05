@@ -12,6 +12,7 @@ import {
   MODELO_TRANSCRIPCION,
 } from "@compartido/modelos";
 import {
+  corregirNombres,
   palabrasDeTranscripcion,
   type PalabraDeVideo,
   type PalabraTranscrita,
@@ -58,5 +59,6 @@ export async function transcribir(rutaAudio: string, duracionSeg: number): Promi
   }
   const palabras = palabrasDeTranscripcion(crudo.words ?? []);
   if (palabras.length === 0) throw new Error("La transcripción salió vacía: ¿la grabación tiene voz?");
-  return { texto: (crudo.text ?? "").trim(), palabras, costoUsd };
+  // El texto que recibe la IA para armar el plan lleva los mismos nombres corregidos que los subtítulos.
+  return { texto: corregirNombres((crudo.text ?? "").trim()), palabras, costoUsd };
 }

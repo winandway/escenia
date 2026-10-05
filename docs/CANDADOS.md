@@ -276,6 +276,33 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   no dejar que el navegador mande la clave del almacén; no volver a ponerle
   reintentos automáticos al pedido del plan; no convertir «Quitar» en un borrado.
 
+## C-NOMBRES-1 — El producto de Richard sale bien escrito aunque la transcripción lo escriba «como suena» (5 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en su primera grabación dijo «Beellon.com» y
+  el video salió con «**Billon.com**»: en los subtítulos, en el título del
+  diagrama («Billon.com: tu alternativa») y en la barra de secciones. Justo en
+  la escena donde vende su producto.
+- **Causa real:** la transcripción (ElevenLabs Scribe) no conoce sus marcas y
+  las escribe por el sonido; el plan de la IA copia esa transcripción.
+- **Qué se hizo:** `NOMBRES_PROPIOS` y `corregirNombres` en
+  `compartido/presentador.ts`. Cada palabra que llega con mayúscula inicial y
+  es una forma mal escrita de un nombre suyo se cambia por el nombre correcto,
+  conservando lo que lleve pegado («Billon.com,» → «Beellon.com,»). Se aplica al
+  leer la transcripción (`palabrasDeTranscripcion` y el texto que va al plan),
+  así que también corrige las transcripciones ya guardadas. «un billón de
+  dólares», en minúscula, es una cifra y no se toca.
+- **El guion 12** (ya planeado con el nombre mal) se corrigió en la base con un
+  reemplazo exacto y se volvió a armar (trabajo 35).
+- **Lo que vigila (`pruebas/presentador.test.ts`):** el caso real, la cifra que
+  no se toca, y que los subtítulos salen corregidos.
+- **Comprobado en rojo** el 5 oct 2026 (tres fallos metidos a propósito).
+- **Para agregar un nombre:** una línea en `NOMBRES_PROPIOS`, con sus formas mal
+  escritas en minúsculas y sin tilde. Solo sirve para nombres de UNA palabra;
+  «Ya Dominios» o «QR Bot» partidos en dos todavía no se juntan.
+- **Qué falta:** pasarle a la transcripción la lista de nombres para que los
+  escriba bien de entrada (si el servicio lo permite), y que Richard pueda
+  agregar nombres desde el panel.
+
 ## C-CROMA-1 — El fondo verde se encuentra donde esté, se borra sin comerse la ropa, y el video empieza cuando Richard habla (5 oct 2026)
 
 Primera grabación real de Richard («videoFile-rendered 14.MOV», vertical, 109

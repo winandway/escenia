@@ -28,7 +28,8 @@ export function palabrasDeTranscripcion(palabras: PalabraTranscrita[]): PalabraD
   const salida: PalabraDeVideo[] = [];
   for (const p of palabras) {
     if ((p.type ?? "word") !== "word") continue;
-    const texto = p.text.trim();
+    // Los nombres propios de Richard salen bien escritos desde aquí (subtítulos y plan).
+    const texto = corregirNombres(p.text.trim());
     if (!texto || typeof p.start !== "number" || typeof p.end !== "number") continue;
     const startMs = Math.round(p.start * 1000);
     salida.push({
@@ -41,6 +42,41 @@ export function palabrasDeTranscripcion(palabras: PalabraTranscrita[]): PalabraD
     });
   }
   return salida;
+}
+
+/**
+ * Los nombres propios de Richard que la transcripción no conoce y escribe «como suenan».
+ * En su primera grabación dijo «Beellon.com» y salió «Billon.com»: en los subtítulos, en el
+ * diagrama y en la barra de arriba, justo donde vende su producto (C-NOMBRES-1).
+ * Cada nombre lleva las formas en que puede llegar mal escrito, en minúsculas y sin tilde.
+ */
+export const NOMBRES_PROPIOS: { correcto: string; variantes: string[] }[] = [
+  { correcto: "Beellon", variantes: ["billon", "bilon", "beelon", "bellon", "belon", "biyon", "bilion"] },
+  { correcto: "Blisor", variantes: ["blizor", "blissor", "bleesor", "blisser"] },
+  { correcto: "Mercatren", variantes: ["mercatrén", "mercatrem", "mercatrend"] },
+  { correcto: "Tokiia", variantes: ["tokia", "toquia", "tokiya"] },
+  { correcto: "Tintora", variantes: ["tintorá", "tintoora"] },
+  { correcto: "QRBOTT", variantes: ["qrbot", "qrbott", "kiurbot"] },
+  { correcto: "YaDominios", variantes: ["yadominios"] },
+  { correcto: "Losupe", variantes: ["losupe", "losupé"] },
+];
+
+const sinTilde = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/**
+ * Corrige un texto: cada palabra que sea una forma mal escrita de un nombre propio se cambia
+ * por el nombre bien escrito, conservando lo que lleve pegado («Billon.com,» → «Beellon.com,»).
+ * Solo toca palabras que llegaron con MAYÚSCULA inicial (un nombre): «un billón de dólares»,
+ * en minúscula, es una cifra y se queda como está.
+ */
+export function corregirNombres(texto: string, nombres = NOMBRES_PROPIOS): string {
+  return texto.replace(/\p{Lu}[\p{L}\d]*/gu, (palabra) => {
+    const llave = sinTilde(palabra).toLowerCase();
+    const nombre = nombres.find(
+      (n) => n.variantes.includes(llave) || sinTilde(n.correcto).toLowerCase() === llave,
+    );
+    return nombre ? nombre.correcto : palabra;
+  });
 }
 
 /**

@@ -36,6 +36,8 @@
 - [ ] Neón con personajes: que también salgan los logos de las empresas que se nombran (OpenAI, Google), no solo las personas.
 - [ ] Presentador: corregir el plan (un diagrama, una foto) desde el panel antes de armar.
 - [x] Presentador: el fondo verde se encuentra donde esté y se borra sin comerse la ropa; el principio y el final mudos se cortan solos (5 oct 2026, con la primera grabación real de Richard). Candado C-CROMA-1.
+- [x] Los nombres de sus productos salen bien escritos aunque la transcripción los escriba mal («Billon» → «Beellon»; 5 oct 2026). Candado C-NOMBRES-1.
+- [ ] Nombres propios: juntar los de dos palabras («Ya Dominios», «QR Bot»), pasarle la lista a la transcripción y que Richard agregue nombres desde el panel.
 - [ ] Presentador: cortar pausas y frases repetidas del MEDIO de la grabación antes de armar.
 - [ ] Presentador: quitar el fondo sin croma (recorte de personas de macOS, cuadro por cuadro).
 - [ ] Formato Pizarra: fotos recortadas como calcomanías, con flechas y fechas (para historias de música con presentador).
