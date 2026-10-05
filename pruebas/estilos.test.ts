@@ -597,7 +597,8 @@ describe("estilos: cada temática con su diseño", () => {
     const estacion = readFileSync(path.join(raiz, "estacion/src/estacion.ts"), "utf8");
     expect(estacion).toContain("estiloDeTematica(trabajo.tematica_id)");
     const produccion = readFileSync(path.join(raiz, "estacion/src/produccion.ts"), "utf8");
-    expect(produccion).toContain('if (estilo === "ilustrado")');
+    // Las personas se dibujan en el Cómic y en el Neón con personajes.
+    expect(produccion).toContain("if (dibujaPersonas(estilo))");
     expect(produccion).toContain("numerarDiagramas(");
   });
 });

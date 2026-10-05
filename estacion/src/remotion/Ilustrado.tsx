@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { FondoNeon, type ColoresNeon } from "./Diagrama";
 import { usePresentador } from "./Presentador";
 
 const { fontFamily: anton } = loadFont("normal", { weights: ["400"], subsets: ["latin", "latin-ext"] });
@@ -94,12 +95,14 @@ const TitularComic: React.FC<{
   const lineas = [palabras.slice(0, mitad).join(" "), palabras.slice(mitad).join(" ")].filter(Boolean);
   const ancho = vertical ? 960 : 900;
   const masLarga = Math.max(...lineas.map((l) => l.length), 3);
-  const tam = Math.round(Math.min(vertical ? 165 : 190, ancho / (masLarga * 0.5)));
+  // Con presentador el titular va más arriba y un poco más chico: debajo de la marca del canal
+  // (que está en la esquina de arriba) y sin llegar a la cabeza de él (abajo a la derecha).
+  const tam = Math.round(Math.min(vertical ? 165 : arriba ? 160 : 190, ancho / (masLarga * 0.5)));
   const lado: React.CSSProperties = vertical
     ? { left: 0, right: 0, top: 250, alignItems: "center" }
     : figuraALaDerecha
-      ? { left: 110, top: arriba ? 110 : 230, alignItems: "flex-start" }
-      : { right: 110, top: arriba ? 110 : 230, alignItems: "flex-end" };
+      ? { left: 110, top: arriba ? 150 : 230, alignItems: "flex-start" }
+      : { right: 110, top: arriba ? 150 : 230, alignItems: "flex-end" };
   return (
     <div
       style={{
@@ -123,6 +126,10 @@ const TitularComic: React.FC<{
             style={{
               fontSize: tam,
               whiteSpace: "nowrap",
+              // El degradado solo pinta dentro de la caja de la línea: sin este aire arriba, la
+              // tilde de una mayúscula («PASÓ», «FRENÓ») quedaba fuera y no se veía.
+              paddingTop: "0.2em",
+              marginTop: "-0.2em",
               opacity: Math.min(1, s * 1.6),
               transform: `scale(${1.28 - Math.min(1, s) * 0.28})`,
               transformOrigin: vertical ? "50% 50%" : figuraALaDerecha ? "0% 50%" : "100% 50%",
@@ -161,10 +168,13 @@ export const PlanoIlustrado: React.FC<{
   /** La figura entra (plano nuevo) o ya estaba (solo cambia el titular). */
   entraFigura: boolean;
   conEntrada: boolean;
-}> = ({ figura, titular, n, durFrames, vertical, entraFigura, conEntrada }) => {
+  /** Neón con personajes: el fondo y las luces son los del neón, no los del cómic. */
+  neon?: ColoresNeon | null;
+}> = ({ figura, titular, n, durFrames, vertical, entraFigura, conEntrada, neon = null }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
-  const color = LUCES_COMIC[n % LUCES_COMIC.length] ?? LUCES_COMIC[0];
+  const luces: readonly string[] = neon ? [neon.luz, neon.objeto, neon.rosa] : LUCES_COMIC;
+  const color = luces[n % luces.length] ?? LUCES_COMIC[0];
   // La figura viene de la cintura para arriba. En vertical va debajo del titular, centrada. En
   // horizontal va a un lado y el titular al otro; el lado sale de la propia figura (no del turno),
   // para que la misma persona no salte de un lado a otro cuando solo cambia el titular.
@@ -189,7 +199,19 @@ export const PlanoIlustrado: React.FC<{
   const flota = Math.sin((frame + n * 17) / 26) * 7;
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <FondoComic color={color} centroX={(centro / width) * 100} />
+      {neon ? (
+        <>
+          <FondoNeon colores={neon} />
+          {/* Un foco del color de la luz detrás de la figura, para que no flote en lo oscuro. */}
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(circle at ${(centro / width) * 100}% 46%, ${color}4d 0%, ${color}14 34%, transparent 62%)`,
+            }}
+          />
+        </>
+      ) : (
+        <FondoComic color={color} centroX={(centro / width) * 100} />
+      )}
       <Img
         src={staticFile(figura.ruta)}
         style={{

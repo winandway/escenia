@@ -16,7 +16,7 @@ monetización protege por escrito.
 En el panel, menú **Grabaciones**:
 
 1. Elige su video (MP4 o MOV, hasta 4 GB), escribe en una frase de qué habla,
-   elige **qué va detrás** (Neón, Cómic o Documental) y el canal.
+   elige **qué va detrás** (Neón, Neón con personajes, Cómic o Documental) y el canal.
 2. Toca **«Subir y armar el video»**. El archivo sube por trozos de 8 MB con una
    barra de avance. Si se corta el internet, la subida queda **en pausa** y con
    «Seguir subiendo» continúa desde donde iba. No hay que cerrar la pestaña
@@ -27,7 +27,7 @@ En el panel, menú **Grabaciones**:
 4. Cuando dice **«Video listo»**, el botón lleva a la página del guion, donde
    están el video horizontal, los verticales, sus miniaturas y los textos de
    YouTube, igual que cualquier otro video.
-5. **«Probar en Cómic / Neón / Documental»** vuelve a armar el MISMO video con
+5. **«Probar en…»** (los otros formatos) vuelve a armar el MISMO video con
    otro diseño detrás, sin subirlo otra vez. Así se comparan. Cada prueba es un
    guion aparte.
 6. **«Quitar de la lista»** (en los tres puntos) no borra nada: el archivo, el
@@ -93,7 +93,7 @@ tramo), arma el video largo y sus Shorts:
 5. Los subtítulos nunca le tapan la cara: van a su lado, sobre su cabeza o, si
    está en grande, sobre su pecho.
 
-Detrás de él puede ir cualquiera de los tres formatos: Neón, Cómic o Documental.
+Detrás de él puede ir cualquiera de los cuatro formatos: Neón, Neón con personajes, Cómic o Documental.
 
 ## La herramienta de la Mac (para probar sin pasar por el panel)
 
@@ -104,7 +104,7 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/presentador.ts /ruta/
 Sin más, hace todo: transcribe, le pide el **plan** a la IA del panel, quita el
 fondo y arma el video.
 
-- `--estilo`: `neon`, `ilustrado` (Cómic) o `clasico` (Documental).
+- `--estilo`: `neon`, `mixto` (Neón con personajes), `ilustrado` (Cómic) o `clasico` (Documental).
 - `--tema "…"`: de qué va, en una frase (ayuda a la IA a titular). Opcional.
 - `--solo-plan`: se detiene después de armar el plan, para leerlo o corregirlo.
   El plan queda en `estacion/out/p-<nombre>/plan.json`. Para armar el video con

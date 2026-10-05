@@ -8,18 +8,26 @@ export type Canal = "canal-ia" | "caprichoso-tv";
 // El diseño del video (docs/ESTILOS.md). "clasico": fotos y clips a pantalla llena, con rótulos.
 // "ilustrado": las personas salen DIBUJADAS sobre un fondo de cómic (tecnología y noticias de IA).
 // "neon": no hay fotos ni clips; todo se explica con diagramas de neón (cómo funciona algo).
-export const ESTILOS_VIDEO = ["clasico", "ilustrado", "neon"] as const;
+// "mixto": neón CON personajes: diagramas de neón y, cuando se nombra a una persona, sale dibujada
+// sobre el mismo fondo de neón (pedido por Richard el 5 oct 2026 para sus grabaciones).
+export const ESTILOS_VIDEO = ["clasico", "ilustrado", "neon", "mixto"] as const;
 export type EstiloVideo = (typeof ESTILOS_VIDEO)[number];
 
 /**
- * El NOMBRE de cada formato, como lo pide Richard (docs/FORMATOS.md). A cualquiera de los tres
+ * El NOMBRE de cada formato, como lo pide Richard (docs/FORMATOS.md). A cualquiera de ellos
  * se le puede sumar el modo Presentador: él, grabado, encima de los gráficos.
  */
 export const NOMBRE_FORMATO: Record<EstiloVideo, string> = {
   clasico: "Documental",
   ilustrado: "Cómic",
   neon: "Neón",
+  mixto: "Neón con personajes",
 };
+
+/** Los formatos sin fotos ni clips reales: todo lo que se ve es dibujado (diagramas, figuras). */
+export const esDeNeon = (estilo: EstiloVideo): boolean => estilo === "neon" || estilo === "mixto";
+/** Los formatos donde las personas con rótulo salen dibujadas. */
+export const dibujaPersonas = (estilo: EstiloVideo): boolean => estilo === "ilustrado" || estilo === "mixto";
 
 export type Tematica = {
   id: string;

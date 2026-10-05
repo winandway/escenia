@@ -5,6 +5,7 @@
 //   npx tsx src/cuadros.ts 21 5,12.5,40            → cuadros del video largo
 //   npx tsx src/cuadros.ts 21 5,12.5,40 --short 2  → cuadros del short 2
 //   npx tsx src/cuadros.ts 21 5,12 --props ruta/props.json  → con otras props (misma carpeta pública)
+//   npx tsx src/cuadros.ts p-mi-grabacion 5,12        → de una prueba de src/presentador.ts
 // Quedan en out/t<número>/cuadros/.
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -20,7 +21,9 @@ async function principal() {
     .split(",")
     .map(Number)
     .filter((n) => Number.isFinite(n) && n >= 0);
-  if (!Number.isInteger(numero) || segundos.length === 0)
+  // También sirve para una prueba de la herramienta del Presentador: su carpeta es «p-<nombre>».
+  const deHerramienta = /^p-[\w-]+$/.test(process.argv[2] ?? "") ? (process.argv[2] ?? "") : "";
+  if ((!Number.isInteger(numero) && !deHerramienta) || segundos.length === 0)
     throw new Error(
       "Uso: npx tsx src/cuadros.ts <número del trabajo> <seg,seg,…> [--short N] [--props ruta]",
     );
@@ -28,8 +31,9 @@ async function principal() {
     const i = process.argv.indexOf(nombre);
     return i === -1 ? null : (process.argv[i + 1] ?? null);
   };
-  const carpetaTrabajo = path.join(config.CARPETA_SALIDA, `t${numero}`);
-  const carpetaPublica = path.join(config.CARPETA_PUBLICA, `t${numero}`);
+  const clave = deHerramienta || `t${numero}`;
+  const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
+  const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
   const rutaProps = opcion("--props") ?? path.join(carpetaTrabajo, "props.json");
   const props: PropsVideo = esquemaPropsVideo.parse(JSON.parse(await readFile(rutaProps, "utf8")));
   const short = opcion("--short");

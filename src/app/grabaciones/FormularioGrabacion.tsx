@@ -20,12 +20,14 @@ const EN_REPOSO: Estado = { fase: "listo", subidos: 0, total: 0, error: "", ok: 
 
 const QUE_VA_DETRAS = {
   neon: "diagramas de neón que se encienden cuando nombras cada cosa",
+  mixto: "diagramas de neón y, cuando nombras a una persona, sale dibujada",
   ilustrado: "las personas que nombras, dibujadas, con titulares",
   clasico: "fotos y videos reales de lo que vas nombrando",
 } as const;
 
-// El que más se usa con una grabación va primero.
-const ORDEN_DE_FORMATOS = [...ESTILOS_VIDEO].reverse();
+// El que más se usa con una grabación va primero; un formato nuevo sin sitio propio cae al final.
+const ORDEN = ["neon", "mixto", "ilustrado", "clasico"] as const;
+const ORDEN_DE_FORMATOS = [...ORDEN, ...ESTILOS_VIDEO.filter((f) => !ORDEN.some((o) => o === f))];
 
 const megas = (bytes: number) => `${Math.round(bytes / 1_048_576)} MB`;
 

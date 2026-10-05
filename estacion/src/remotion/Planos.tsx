@@ -16,6 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import type { ColoresNeon } from "./Diagrama";
 import { posicionObjeto } from "./enfoque";
 import { figuraALaDerecha, PlanoIlustrado } from "./Ilustrado";
 import { usePresentador } from "./Presentador";
@@ -39,7 +40,21 @@ export const PlanosDeEscena: React.FC<{
   colores: readonly [string, string];
   cortes: string[];
   golpe: string | null;
-}> = ({ escena, desdeMs, durFrames, indiceEscena, vertical, acento, fuente, colores, cortes, golpe }) => {
+  /** Neón con personajes: las figuras van sobre el fondo de neón (y no sobre el de cómic). */
+  neon?: ColoresNeon | null;
+}> = ({
+  escena,
+  desdeMs,
+  durFrames,
+  indiceEscena,
+  vertical,
+  acento,
+  fuente,
+  colores,
+  cortes,
+  golpe,
+  neon = null,
+}) => {
   const aFrame = (ms: number) => Math.round(((ms - desdeMs) / 1000) * FPS);
   const planos = escena.planos;
   return (
@@ -66,6 +81,7 @@ export const PlanosDeEscena: React.FC<{
               colores={colores}
               // Un plano que ya venía de antes (short que arranca a mitad de escena) no «entra».
               conEntrada={arranca >= 0}
+              neon={neon}
             />
             {arranca >= 0 && plano.tipo === "dato" && golpe && <Audio src={staticFile(golpe)} volume={0.5} />}
             {arranca >= 0 && plano.tipo !== "dato" && sonido && (
@@ -87,7 +103,8 @@ const PlanoVista: React.FC<{
   fuente: string;
   colores: readonly [string, string];
   conEntrada: boolean;
-}> = ({ plano, n, durFrames, vertical, acento, fuente, colores, conEntrada }) => {
+  neon: ColoresNeon | null;
+}> = ({ plano, n, durFrames, vertical, acento, fuente, colores, conEntrada, neon }) => {
   const frame = useCurrentFrame();
   const e = conEntrada
     ? interpolate(frame, [0, ENTRADA], [0, 1], {
@@ -121,6 +138,7 @@ const PlanoVista: React.FC<{
           vertical={vertical}
           entraFigura={!plano.sigue}
           conEntrada={conEntrada}
+          neon={neon}
         />
         {plano.tipo === "foto" && plano.texto && (
           <EtiquetaNombre

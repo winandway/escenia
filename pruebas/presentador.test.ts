@@ -164,6 +164,11 @@ describe("presentador: en el video y en los nombres", () => {
       producto: null,
     });
     expect(p.presentador).toBeNull();
-    expect(NOMBRE_FORMATO).toEqual({ clasico: "Documental", ilustrado: "Cómic", neon: "Neón" });
+    expect(NOMBRE_FORMATO).toEqual({
+      clasico: "Documental",
+      ilustrado: "Cómic",
+      neon: "Neón",
+      mixto: "Neón con personajes",
+    });
   });
 });

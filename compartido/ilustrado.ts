@@ -63,3 +63,22 @@ export function repartirFiguras(
     }
   }
 }
+
+/**
+ * Formato «Neón con personajes»: en una escena de personas solo valen los planos que tienen
+ * figura dibujada (la persona y los datos que le caen encima). Una foto real o un dato suelto
+ * romperían el fondo de neón, así que se quitan: ese tramo se queda con la lámina de neón.
+ * Devuelve cuántos planos se quitaron.
+ */
+export function dejarSoloFiguras(escenas: { planos: PlanoConFigura[] }[]): number {
+  let quitados = 0;
+  for (const escena of escenas) {
+    const antes = escena.planos.length;
+    escena.planos = escena.planos.filter((p) => p.figura);
+    quitados += antes - escena.planos.length;
+    // Si se fue el plano que traía la figura, el que queda primero es el que la hace entrar.
+    const primero = escena.planos[0];
+    if (primero) primero.sigue = false;
+  }
+  return quitados;
+}

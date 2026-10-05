@@ -118,7 +118,10 @@ export const esquemaPropsVideo = z.object({
   tema: z.enum(["tech", "documental"]).default("tech"),
   // El diseño del video (docs/ESTILOS.md). "clasico": fotos y clips a pantalla llena.
   // "ilustrado": las personas salen dibujadas sobre fondo de cómic. "neon": diagramas de neón.
-  estilo: z.enum(["clasico", "ilustrado", "neon"]).default("clasico"),
+  // "mixto": neón con personajes (diagramas, y las personas que se nombran, dibujadas sobre el neón).
+  // (La lista se repite aquí porque la plantilla no puede importar código de fuera de su
+  // carpeta; una prueba comprueba que sea la misma que ESTILOS_VIDEO.)
+  estilo: z.enum(["clasico", "ilustrado", "neon", "mixto"]).default("clasico"),
   sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] }),
   // Música de fondo (ruta relativa al publicDir), ya normalizada de volumen. Se repite en bucle.
   // `nivel`: cuánto más alta o más baja va la música bajo la voz en ESTE video (1 = lo normal).

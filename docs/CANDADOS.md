@@ -276,7 +276,38 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   no dejar que el navegador mande la clave del almacén; no volver a ponerle
   reintentos automáticos al pedido del plan; no convertir «Quitar» en un borrado.
 
-## C-IA-SALDO-1 — Si la cuenta de la IA se queda sin saldo, el canario lo dice (5 oct 2026)
+## C-FORMATO-MIXTO-1 — «Neón con personajes», y el formato ya no vive en un CHECK de la base (5 oct 2026)
+
+- **Qué se agregó:** el cuarto formato, `mixto`: diagramas de neón y las
+  personas que se nombran, dibujadas sobre el mismo neón. Guía:
+  [ESTILOS.md](ESTILOS.md).
+- **Lo que se encontró al agregarlo:** la tabla `grabaciones` había nacido ese
+  mismo día con `CHECK (formato IN (…tres…))`. SQLite **no deja cambiar un
+  CHECK**: con el cuarto formato, guardar la grabación habría fallado en vivo
+  aunque todas las pruebas pasaran (las pruebas arman la tabla desde
+  `schema.sql`, que sí se puede editar).
+- **Qué se hizo:** el formato se valida **en el código** (`esquemaGrabacionNueva`
+  con `ESTILOS_VIDEO`), no en la tabla. En vivo se armó la tabla nueva sin ese
+  CHECK, se copiaron las filas y se cambiaron los nombres
+  (`scripts/migrar-grabaciones-formato.ts`, que se puede correr dos veces). **No
+  se borró nada:** la tabla vieja quedó como `grabaciones_v1`, con su índice
+  `grabaciones_estado`; el índice nuevo se llama `grabaciones_por_estado`.
+- **Regla que queda:** una lista que va a crecer (formatos, estilos) no se pone
+  en un CHECK de la base. Los CHECK se dejan para lo que no cambia (estados).
+- **La plantilla de video repite la lista** de formatos (`props.ts`), porque no
+  puede importar código de fuera de su carpeta (el empaquetador de Remotion no
+  conoce el alias `@compartido`; intentarlo tumba el armado). Una prueba
+  compara las dos listas.
+- **Lo que vigila (`pruebas/formato-mixto.test.ts`):** el formato existe con su
+  nombre; se puede elegir y la base lo guarda; un formato inventado no pasa del
+  formulario; el plan le explica a la IA cuándo va persona y cuándo diagrama, y
+  que una empresa no es una persona; en una escena de personas solo queda lo
+  dibujado; la plantilla conoce los mismos formatos que el panel.
+- **Qué NO tocar:** no volver a poner un CHECK sobre `formato`; no importar
+  `@compartido` con código (solo tipos) desde `estacion/src/remotion/`; no dejar
+  pasar fotos reales en un video de neón.
+
+, el canario lo dice (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** al pedir un guion, la API respondió «Your
   credit balance is too low to access the Anthropic API». El panel mostraba ese

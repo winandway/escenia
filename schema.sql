@@ -197,7 +197,7 @@ CREATE INDEX IF NOT EXISTS sonidos_activos ON sonidos(activo, tipo, id);
 CREATE TABLE IF NOT EXISTS grabaciones (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tema TEXT NOT NULL DEFAULT '',
-  formato TEXT NOT NULL DEFAULT 'neon' CHECK (formato IN ('clasico','ilustrado','neon')),
+  formato TEXT NOT NULL DEFAULT 'neon',  -- se valida en el código (ESTILOS_VIDEO): los formatos crecen y un CHECK no se puede cambiar
   canal TEXT NOT NULL DEFAULT 'canal-ia' CHECK (canal IN ('canal-ia','caprichoso-tv')),
   archivo TEXT NOT NULL DEFAULT '',     -- el nombre que tenía en la computadora de Richard
   clave TEXT NOT NULL,                  -- dónde está en el almacén (BUCKET)
@@ -209,4 +209,5 @@ CREATE TABLE IF NOT EXISTS grabaciones (
   creado_en TEXT NOT NULL DEFAULT (datetime('now')),
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
-CREATE INDEX IF NOT EXISTS grabaciones_estado ON grabaciones(estado, id);
+-- (En vivo el índice viejo `grabaciones_estado` quedó en `grabaciones_v1`: ver scripts/migrar-grabaciones-formato.ts.)
+CREATE INDEX IF NOT EXISTS grabaciones_por_estado ON grabaciones(estado, id);

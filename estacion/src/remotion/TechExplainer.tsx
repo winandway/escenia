@@ -116,7 +116,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
   const fuenteTitulos = marca ? mono : documental ? serif : fontFamily;
   const paleta = marca ? PALETA_MARCA : PALETA;
   // El diseño del video (docs/ESTILOS.md): en neón no hay clips ni fotos, solo diagramas y láminas.
-  const neon = p.estilo === "neon";
+  const neon = p.estilo === "neon" || p.estilo === "mixto";
   const coloresNeon: ColoresNeon = marca ? { ...NEON, luz: marca.acento } : NEON;
   // En los estilos nuevos, la palabra que se dice va dentro de una caja de color (como en CapCut).
   const cajaDePalabra = p.estilo === "clasico" ? null : (marca?.secundario ?? "#7c3aed");
@@ -465,16 +465,40 @@ const EscenaVista: React.FC<{
     );
   }
   if (neon) {
+    // Neón con personajes: la escena donde se nombra a alguien lleva sus planos (la persona
+    // dibujada y sus datos) encima de la lámina, sobre el mismo fondo de neón.
+    const conPersonas = escena.planos.length > 0;
     return (
       <AbsoluteFill style={{ opacity: opacidad }}>
         <LaminaNeon
           etiqueta={
-            escena.parte === "opinion" ? "Mi opinión" : escena.parte === "cta" ? "Pruébalo" : "En resumen"
+            escena.parte === "opinion"
+              ? "Mi opinión"
+              : escena.parte === "cta"
+                ? "Pruébalo"
+                : conPersonas
+                  ? "Quién es quién"
+                  : "En resumen"
           }
           texto={escena.textoEnPantalla || escena.recorte?.titular || ""}
           vertical={vertical}
           colores={neon}
         />
+        {conPersonas && (
+          <PlanosDeEscena
+            escena={escena}
+            desdeMs={desdeMs}
+            durFrames={durFrames}
+            indiceEscena={indice}
+            vertical={vertical}
+            acento={acento}
+            fuente={fuenteTitulos}
+            colores={colores}
+            cortes={cortes}
+            golpe={boom ?? pop}
+            neon={neon}
+          />
+        )}
       </AbsoluteFill>
     );
   }

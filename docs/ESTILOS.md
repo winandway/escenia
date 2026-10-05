@@ -99,6 +99,35 @@ pantallas): la IA solo dibuja lo que está ahí.
 Ejemplo completo de guion: `estacion/ejemplos/guion-neon.json` (la venta y el
 depósito, el ejemplo que dio Richard).
 
+## Neón con personajes (formato `mixto`)
+
+Pedido por Richard el 5 oct 2026, mirando el formulario de Grabaciones: _«quiero
+una cuarta opción donde mezclamos el neón con las imágenes de los personajes
+que yo vaya nombrando»_.
+
+- **Cada escena es una de dos cosas.** Si en ese tramo se nombra a una
+  **persona**, la escena lleva planos: la persona **dibujada** (la misma figura
+  del Cómic) y los datos que se dicen de ella como titulares. Si no se nombra a
+  nadie, la escena es un **diagrama** de neón. Una empresa o un producto no es
+  una persona.
+- **Todo va sobre el fondo de neón.** La figura dibujada no lleva el fondo de
+  cómic: va sobre la rejilla morada, con un foco y un borde de los colores del
+  neón. Mientras nadie ha sido nombrado, la escena muestra la lámina de neón
+  con su titular.
+- **Nada real entra.** No se buscan clips ni fotos de fondo. Las fotos de las
+  personas se buscan solo para dibujarlas; la que no se pudo dibujar (no hay
+  clave de fal.ai, o en la foto hay más de una cara) **no sale**: una foto real
+  rompería el neón. Ese tramo se queda con la lámina.
+- Cuesta lo mismo que el Cómic: tres centavos por persona dibujada, con el
+  mismo tope de 24 por video.
+- Las reglas que recibe la IA al armar el plan de una grabación están en
+  `REGLAS_POR_FORMATO.mixto` (`src/lib/plan-grabacion.ts`). Las temáticas de
+  «Nuevo video» todavía no lo usan: hoy se elige al subir una grabación.
+- En el código: `esDeNeon(estilo)` (sin fotos ni clips reales) y
+  `dibujaPersonas(estilo)` (figuras) en `compartido/tematicas`;
+  `dejarSoloFiguras` en `compartido/ilustrado.ts`; `PlanoIlustrado` recibe
+  `neon` para cambiar el fondo.
+
 ## Ver los estilos sin producir un video
 
 Cuadros y clips cortos de muestra (sin voz; el ilustrado cuesta tres centavos

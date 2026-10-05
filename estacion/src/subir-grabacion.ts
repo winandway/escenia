@@ -1,7 +1,7 @@
 // Sube a «Grabaciones» del panel un video que ya está en la Mac (lo mismo que hace Richard
 // desde el navegador). Desde ahí la Estación lo toma sola y arma el video.
 // Uso (desde estacion/):
-//   npx tsx src/subir-grabacion.ts <video.mp4> --tema "de qué habla" [--formato neon|ilustrado|clasico]
+//   npx tsx src/subir-grabacion.ts <video.mp4> --tema "de qué habla" [--formato neon|mixto|ilustrado|clasico]
 //       [--canal canal-ia|caprichoso-tv]
 import path from "node:path";
 import { esquemaGrabacionNueva } from "@compartido/grabaciones";

@@ -13,6 +13,7 @@ import {
 } from "@/lib/consultas";
 import { entradasDeGuion, reglasCalendario } from "@/lib/calendario";
 import { contexto } from "@/lib/entorno";
+import { grabacionDeGuion } from "@/lib/grabaciones";
 import { cuando, hoyEn, NOMBRE_PLATAFORMA, yaSalio } from "@compartido/calendario";
 import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ, etiquetasParaYouTube } from "@compartido/guion";
 import { NOMBRE_FORMATO, buscarTematica } from "@compartido/tematicas";
@@ -42,13 +43,15 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
   if (!guion) notFound();
 
   const contenido = esquemaGuion.parse(JSON.parse(guion.contenido));
-  const [producto, trabajos, renders, archivos, videos, agenda] = await Promise.all([
+  const [producto, trabajos, renders, archivos, videos, agenda, grabacion] = await Promise.all([
     guion.producto_id ? productoPorId(db, guion.producto_id) : null,
     trabajosDeGuion(db, numero),
     rendersDeGuion(db, numero),
     archivosDeGuion(db, numero),
     videosDeGuion(db, numero),
     entradasDeGuion(db, numero).catch(() => []),
+    // Si el guion salió de una grabación de Richard: el diseño de atrás es el que él eligió.
+    grabacionDeGuion(db, numero),
   ]);
   const hoy = hoyEn((await reglasCalendario(db).catch(() => null))?.zona ?? "America/New_York", new Date());
   const sale = (pieza: "largo" | "short", indice: number) => {
@@ -97,10 +100,13 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
           ← Guiones
         </Link>
         <span className="mx-2">·</span>#{guion.id} · {tematica?.nombre ?? guion.tematica_id} · formato{" "}
-        {NOMBRE_FORMATO[tematica?.estilo ?? "clasico"]} · ~
-        {Math.round(duracionEstimadaSeg(contenido.escenas) / 60)} min · costó ${guion.costo_usd.toFixed(3)} ·
-        estado <strong className="text-neutral-200">{guion.estado}</strong> · narra{" "}
-        <strong className="text-neutral-200">{ETIQUETA_VOZ[contenido.voz].toLowerCase()}</strong>
+        {NOMBRE_FORMATO[grabacion?.formato ?? tematica?.estilo ?? "clasico"]}
+        {grabacion ? " con Presentador" : ""} · ~{Math.round(duracionEstimadaSeg(contenido.escenas) / 60)} min
+        · costó ${guion.costo_usd.toFixed(3)} · estado{" "}
+        <strong className="text-neutral-200">{guion.estado}</strong> · narra{" "}
+        <strong className="text-neutral-200">
+          {grabacion ? "tu voz, grabada" : ETIQUETA_VOZ[contenido.voz].toLowerCase()}
+        </strong>
       </div>
 
       {guion.aviso_parecido && (

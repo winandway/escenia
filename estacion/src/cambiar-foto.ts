@@ -6,6 +6,8 @@
 //   npx tsx src/cambiar-foto.ts 27 web-fb24bfc277836b5b.jpg "Romeo Santos concierto 2024"
 //   npx tsx src/cambiar-foto.ts 27 web-da8b76f3d7c0b587.jpg --usar web-000c2b02f2d7daff.jpg
 //   (añade --lugar si la foto nueva es de un sitio y no de una persona)
+import { dejarSoloFiguras } from "@compartido/ilustrado";
+import { dibujaPersonas, esDeNeon } from "@compartido/tematicas";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { config } from "./config";
@@ -72,7 +74,7 @@ async function principal() {
   for (const e of props.escenas)
     if (e.fondoFoto && path.basename(e.fondoFoto) === vieja) e.fondoFoto = nueva.ruta;
   // Estilo ilustrado: la figura dibujada era de la foto vieja. Se dibuja la nueva y se reparten otra vez.
-  if (props.estilo === "ilustrado") {
+  if (dibujaPersonas(props.estilo)) {
     const r = await ilustrarPlanos(
       props.escenas,
       carpetaPublica,
@@ -82,6 +84,8 @@ async function principal() {
     console.log(
       `  personas dibujadas: ${r.dibujadas}${r.fallidas ? ` · ${r.fallidas} quedaron con su foto` : ""}`,
     );
+    // Neón con personajes: lo que no se pudo dibujar no sale.
+    if (esDeNeon(props.estilo)) dejarSoloFiguras(props.escenas);
   }
   await writeFile(rutaProps, JSON.stringify(props, null, 2));
   console.log(`${vieja} → ${path.basename(nueva.ruta)} en ${aCambiar.length} sitio(s).`);

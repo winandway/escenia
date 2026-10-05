@@ -3,7 +3,7 @@
 // dice cada cosa, le quita el fondo verde (si lo hay) y lo monta encima de los
 // gráficos del plan, que entran justo cuando él los nombra.
 // Uso (desde estacion/):
-//   npx tsx src/presentador.ts <grabacion.mp4> [plan.json] [--estilo neon|ilustrado|clasico]
+//   npx tsx src/presentador.ts <grabacion.mp4> [plan.json] [--estilo neon|mixto|ilustrado|clasico]
 //       [--tema "de qué va"] [--solo-plan] [--canal canal-ia|caprichoso-tv] [--similitud 0.14] [--sin-croma]
 // Sin plan, se lo pide a la IA del panel con la transcripción (unos centavos) y lo deja en
 // out/p-<nombre>/plan.json. Con --solo-plan se detiene ahí, para leerlo o corregirlo antes de armar.
@@ -32,7 +32,7 @@ async function principal() {
   const archivoPlan = tercero && !tercero.startsWith("--") ? tercero : null;
   if (!grabacion || grabacion.startsWith("--"))
     throw new Error(
-      "Uso: npx tsx src/presentador.ts <grabacion.mp4> [plan.json] [--estilo neon|ilustrado|clasico]",
+      "Uso: npx tsx src/presentador.ts <grabacion.mp4> [plan.json] [--estilo neon|mixto|ilustrado|clasico]",
     );
   const estilo: EstiloVideo = ESTILOS_VIDEO.find((x) => x === opcion("--estilo")) ?? "clasico";
   const canal: Canal = opcion("--canal") === "caprichoso-tv" ? "caprichoso-tv" : "canal-ia";
