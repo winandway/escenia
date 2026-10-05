@@ -11,7 +11,56 @@ Por qué importa (más allá del gusto): ver [FORMATOS.md](FORMATOS.md), la part
 de YouTube. Un video con el dueño del canal a la vista es lo que la política de
 monetización protege por escrito.
 
-## Qué hace hoy (primera versión, en la Mac)
+## Cómo lo usa Richard: «grabo, subo y sale» (desde el 6 oct 2026)
+
+En el panel, menú **Grabaciones**:
+
+1. Elige su video (MP4 o MOV, hasta 4 GB), escribe en una frase de qué habla,
+   elige **qué va detrás** (Neón, Cómic o Documental) y el canal.
+2. Toca **«Subir y armar el video»**. El archivo sube por trozos de 8 MB con una
+   barra de avance. Si se corta el internet, la subida queda **en pausa** y con
+   «Seguir subiendo» continúa desde donde iba. No hay que cerrar la pestaña
+   mientras sube.
+3. La Mac la toma sola (en menos de un minuto si está encendida), y en la misma
+   página se va viendo: bajando, transcribiendo, armando el plan, armando el
+   video con su porcentaje.
+4. Cuando dice **«Video listo»**, el botón lleva a la página del guion, donde
+   están el video horizontal, los verticales, sus miniaturas y los textos de
+   YouTube, igual que cualquier otro video.
+5. **«Probar en Cómic / Neón / Documental»** vuelve a armar el MISMO video con
+   otro diseño detrás, sin subirlo otra vez. Así se comparan. Cada prueba es un
+   guion aparte.
+6. **«Quitar de la lista»** (en los tres puntos) no borra nada: el archivo, el
+   guion y los videos se conservan.
+
+Lo que pasa por dentro:
+
+```
+panel /grabaciones ──(trozos de 8 MB)──▶ almacén (BUCKET)  +  fila en `grabaciones` (subida)
+        Estación: ¿hay grabación? ──▶ la baja a estacion/cache/grabaciones/g<id>/
+                  saca la voz ─▶ transcribe ─▶ le manda el texto al panel
+        panel: la IA arma el plan ─▶ guion APROBADO + trabajo «producir» (planeada)
+        Estación: toma el trabajo ─▶ quita el croma ─▶ produce ─▶ sube videos, textos y miniaturas
+```
+
+- **El guion nace aprobado.** La regla del panel («nada se produce sin la
+  opinión escrita de Richard») existe para lo que escribe la IA. Aquí la
+  narración es lo que él mismo dijo, en cámara, y subir la grabación es la orden
+  de armarla. En el lugar de la opinión queda una nota que lo dice; no se le
+  inventa una opinión. Publicar en YouTube lo sigue haciendo él.
+- **El tema de cada video lo decide Richard antes de grabar.** La IA no propone
+  ni escribe lo que él dice: copia su transcripción y decide qué va detrás.
+- Los guiones de grabaciones usan las temáticas `presentador` (Full Código) y
+  `presentador-tv` (Caprichoso TV), que no aparecen en «Nuevo video».
+- Una grabación de menos de 30 palabras (unos 15 segundos) no alcanza para un
+  video: se le dice en la página, con el botón «Intentar otra vez».
+- Subir desde la Mac un archivo que ya está ahí (lo mismo, sin navegador):
+
+  ```bash
+  cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /ruta/del/video.mp4 --tema "de qué habla" --formato neon
+  ```
+
+## Qué hace el motor con la grabación
 
 De una grabación de Richard hablando y un **plan** (qué va detrás de él en cada
 tramo), arma el video largo y sus Shorts:
@@ -39,7 +88,7 @@ tramo), arma el video largo y sus Shorts:
 
 Detrás de él puede ir cualquiera de los tres formatos: Neón, Cómic o Documental.
 
-## Cómo se usa hoy
+## La herramienta de la Mac (para probar sin pasar por el panel)
 
 ```bash
 cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/presentador.ts /ruta/de/la/grabacion.mp4 --estilo neon --tema "de qué va el video"
@@ -65,8 +114,8 @@ detrás y con qué frase entra cada cosa. Lo arma `generarPlan`
 cuesta unos 3 centavos. Ejemplos escritos a mano:
 `estacion/ejemplos/guion-neon.json` y `guion-ilustrado.json`.
 
-El video queda en `estacion/out/p-<nombre de la grabación>/`. Todavía no sube
-al panel.
+Con esta herramienta el video queda en `estacion/out/p-<nombre de la grabación>/`
+y no sube al panel (para eso está «Grabaciones»).
 
 ## Cómo grabar para que salga bien
 
@@ -81,27 +130,35 @@ al panel.
 - El fondo **negro** no sirve para quitar el fondo (el pelo y la ropa oscura se
   borrarían): esas grabaciones van en ventana.
 
-## Lo que falta para que sea «grabo, subo y sale» (en orden)
+## Lo que falta (en orden)
 
 1. **Una grabación de prueba de Richard** (30 a 60 segundos, con su croma), para
    ajustar el borrado del verde con imagen real. Hasta hoy solo se probó con un
    muñeco dibujado sobre verde.
 2. ~~Que la IA arme el plan sola~~ — hecho el 6 oct 2026.
-3. **Subir la grabación desde el panel** (por partes, porque pesa cientos de
-   megas) y que la Estación la tome sola, como un trabajo más.
+3. ~~Subir la grabación desde el panel y que la Estación la tome sola~~ — hecho
+   el 6 oct 2026 (candado C-GRABACIONES-1).
 4. **Cortar pausas y frases repetidas** antes de armar.
 5. Quitar el fondo **sin croma** (el estudio de la mesa), con el recorte de
    personas de macOS, cuadro por cuadro.
 6. El formato **Pizarra** (fotos recortadas con flechas) para las historias de música.
+7. Corregir el plan (un diagrama, una foto) desde el panel antes de armar.
 
 ## Las piezas
 
-| Qué                                            | Dónde                                   |
-| ---------------------------------------------- | --------------------------------------- |
-| Tiempos de escenas, momentos en grande/esquina | `compartido/presentador.ts`             |
-| Transcripción                                  | `estacion/src/transcribir.ts`           |
-| Croma, recorte, ventana, voz                   | `estacion/src/croma.ts`                 |
-| La herramienta                                 | `estacion/src/presentador.ts`           |
-| El dibujo de la capa                           | `estacion/src/remotion/Presentador.tsx` |
-| Pruebas                                        | `pruebas/presentador.test.ts`           |
-| Candado                                        | C-PRESENTADOR-1 en `docs/CANDADOS.md`   |
+| Qué                                            | Dónde                                                                                          |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Tiempos de escenas, momentos en grande/esquina | `compartido/presentador.ts`                                                                    |
+| Transcripción                                  | `estacion/src/transcribir.ts`                                                                  |
+| Croma, recorte, ventana, voz                   | `estacion/src/croma.ts`                                                                        |
+| La herramienta de la Mac                       | `estacion/src/presentador.ts`                                                                  |
+| Reglas de la subida (tamaños, avisos)          | `compartido/grabaciones.ts`                                                                    |
+| Grabaciones en la base (fila, plan, versiones) | `src/lib/grabaciones.ts`                                                                       |
+| Subida desde el navegador                      | `src/app/grabaciones/`                                                                         |
+| Rutas de subida (sesión o secreto)             | `src/app/datos/grabaciones/`                                                                   |
+| Rutas de la Estación                           | `src/app/datos/estacion/grabaciones/`                                                          |
+| La Estación: bajar, transcribir, montar        | `estacion/src/grabaciones.ts`                                                                  |
+| Subir desde la Mac                             | `estacion/src/subir-grabacion.ts`                                                              |
+| El dibujo de la capa                           | `estacion/src/remotion/Presentador.tsx`                                                        |
+| Pruebas                                        | `pruebas/presentador.test.ts`, `pruebas/grabaciones.test.ts`, `pruebas/permiso-subida.test.ts` |
+| Candados                                       | C-PRESENTADOR-1 y C-GRABACIONES-1 en `docs/CANDADOS.md`                                        |

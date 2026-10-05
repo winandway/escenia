@@ -5,6 +5,7 @@ import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
 import { tocarLatido } from "@/lib/estacion-estado";
 import { guionPorId, productoPorId, type FilaTrabajo, ajuste } from "@/lib/consultas";
+import { grabacionDeGuion } from "@/lib/grabaciones";
 import { esquemaGuion } from "@compartido/guion";
 import { CANALES, clavesDeCanal } from "@compartido/canales";
 import { buscarTematica } from "@compartido/tematicas";
@@ -58,6 +59,8 @@ export async function POST(req: Request) {
     usuario: await ajuste(db, claves.usuario, CANALES[canalId].porDefecto.usuario),
   };
 
+  const grabacion = await grabacionDeGuion(db, guion.id);
+
   return Response.json({
     trabajo: {
       id: pendiente.id,
@@ -68,6 +71,10 @@ export async function POST(req: Request) {
       contenido,
       producto: producto ? { nombre: producto.nombre, url: producto.url } : null,
       canal,
+      // Formato Presentador: este guion salió de una grabación de Richard (va él en cámara).
+      grabacion: grabacion
+        ? { id: grabacion.id, formato: grabacion.formato, archivo: grabacion.archivo, bytes: grabacion.bytes }
+        : null,
     },
   });
 }

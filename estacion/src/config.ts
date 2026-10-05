@@ -37,5 +37,7 @@ export const config = {
   CARPETA_SALIDA: path.resolve(process.cwd(), parseo.data.CARPETA_SALIDA),
   CARPETA_PUBLICA: path.resolve(process.cwd(), "cache/public"),
   CARPETA_CLIPS: path.resolve(process.cwd(), "cache/clips"),
+  // Las grabaciones que Richard sube desde el panel (formato Presentador) se bajan aquí.
+  CARPETA_GRABACIONES: path.resolve(process.cwd(), "cache/grabaciones"),
   VERSION: "0.1.0",
 };

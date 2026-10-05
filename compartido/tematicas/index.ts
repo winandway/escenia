@@ -213,6 +213,39 @@ export const TEMATICAS: Tematica[] = [
     cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
     reglas: ["Solo material propio de Caprichoso TV."],
   },
+  // Formato Presentador: los guiones que nacen de una grabación de Richard (docs/PRESENTADOR.md).
+  // No se eligen en «Nuevo video»: se crean solos al subir la grabación. El diseño de atrás
+  // (Neón, Cómic o Documental) lo elige él en cada grabación, por eso aquí no va `estilo`.
+  {
+    id: "presentador",
+    nombre: "Presentador (grabación propia)",
+    canal: "canal-ia",
+    activa: false,
+    tono: "el de Richard hablando en cámara",
+    duracionObjetivo: { largo: 300, short: 45 },
+    plantilla: "TechExplainer",
+    ctaProductos: [],
+    estructuras: [["gancho", "contexto", "dato", "cierre"]],
+    bibliotecaEtiquetas: [],
+    densidadRecursos: "media",
+    cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
+    reglas: ["La narración es lo que Richard dijo en la grabación: no se reescribe."],
+  },
+  {
+    id: "presentador-tv",
+    nombre: "Presentador (grabación propia)",
+    canal: "caprichoso-tv",
+    activa: false,
+    tono: "el de Richard hablando en cámara",
+    duracionObjetivo: { largo: 300, short: 45 },
+    plantilla: "MiniDocumental",
+    ctaProductos: [],
+    estructuras: [["gancho", "contexto", "dato", "cierre"]],
+    bibliotecaEtiquetas: [],
+    densidadRecursos: "media",
+    cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
+    reglas: ["La narración es lo que Richard dijo en la grabación: no se reescribe."],
+  },
 ];
 
 export function buscarTematica(id: string): Tematica | undefined {

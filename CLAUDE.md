@@ -27,6 +27,7 @@
 - Publicación: YaDominios Cloud, sitio `escenia` → https://escenia.sitios.dev, **en vivo desde el 25 sep 2026**, conectado a `winandway/escenia` rama `yapanel-build`. Cuenta de YaDominios: torplanet1@gmail.com, plan Galaxia (de pago; no pasar a «sistema»). Variables y secretos SOLO se cargan en el panel (tarjeta del sitio → Variables de entorno).
 - El token de la base (para consultarla desde fuera por HTTP) vive en `estacion/.env` como `YAPANEL_DB_TOKEN`, fuera de git. El panel publicado NO lo usa: habla con `env.DB` directo.
 - Base y archivos: `env.DB` / `env.BUCKET` de ese sitio. **Sin Supabase.**
+- Las grabaciones que Richard sube desde el panel (menú «Grabaciones») viven en `env.BUCKET` bajo `grabaciones/` y la Estación las baja a `estacion/cache/grabaciones/`.
 - Los MP4 se quedan en la Mac; nunca suben a la nube. La Estación corre siempre en la Mac como LaunchAgent `com.windoce.escenia-estacion` (ver docs/ESTACION.md).
 - Losupe es OTRO proyecto: solo se lee su feed público, jamás su base ni su repo.
 
@@ -37,6 +38,8 @@
 - **Cada temática tiene su estilo** ([docs/ESTILOS.md](docs/ESTILOS.md)): tecnología y noticias de IA van **ilustradas** (las personas dibujadas), «Así funciona» va en **neón** (diagramas), y las biografías siguen en el clásico. El diagrama del guion NO lleva campos opcionales: la IA admite 24 en total (C-ESTILOS-1).
 
 - **Antes de hacer un video se confirma el formato por su nombre** (Documental, Cómic, Neón, y si va con Presentador). Lo pidió Richard el 5 oct 2026. Si ya lo dijo, no se pregunta.
+
+- **El tema de cada video se acuerda primero con Richard.** No se crea un guion, un borrador ni un video «de muestra» en el panel con un tema que él no eligió. Un tema vale si es información importante, que la gente quiera compartir, y si dentro se puede vender un producto suyo. Lo que él dice «para poner un ejemplo» es un ejemplo de la forma, no un tema. Para probar una función se usa material sintético en la Mac y, si pasa por el panel, se saca de sus listas al terminar. (Dictado el 6 oct 2026 al leer el guion 9.)
 
 - Windoce es una sola persona (Richard). Remotion se usa con la licencia gratis (≤3 personas); no volver a preguntarlo.
 

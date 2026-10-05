@@ -3,6 +3,7 @@
 // los subtítulos.
 import { config } from "./config";
 import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEntregada } from "./entrega";
+import { atenderGrabacion, materialDeGrabacion } from "./grabaciones";
 import { panel } from "./panel";
 import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas";
 import { catalogoMusica } from "./musica";
@@ -56,6 +57,13 @@ async function unaVuelta(): Promise<boolean> {
             `  (no se pudo traer la biblioteca de sonidos: ${e instanceof Error ? e.message : e}; se usa lo que hay en la Mac)`,
           ),
         );
+      // Formato Presentador: el guion salió de una grabación de Richard. Se prepara su voz y su
+      // imagen, y la producción las usa en vez de la voz generada.
+      const material = trabajo.grabacion
+        ? await materialDeGrabacion(trabajo.grabacion, trabajo.contenido, `t${trabajo.id}`, (texto) =>
+            avisar(texto, 3),
+          )
+        : null;
       r = await producir(
         `t${trabajo.id}`,
         trabajo.contenido,
@@ -67,7 +75,9 @@ async function unaVuelta(): Promise<boolean> {
         // El canal de la temática decide la marca del video (logo, colores, cierre).
         marcaDeCanal(buscarTematica(trabajo.tematica_id)?.canal),
         // Y la temática, su diseño: clásico, con las personas dibujadas o con diagramas de neón.
-        estiloDeTematica(trabajo.tematica_id),
+        // En una grabación, el diseño de atrás es el que Richard eligió al subirla.
+        trabajo.grabacion?.formato ?? estiloDeTematica(trabajo.tematica_id),
+        material,
       );
       await guardarProduccion(trabajo.id, huella, r);
       if (r.costoVozUsd > 0)
@@ -183,7 +193,8 @@ async function principal() {
   for (;;) {
     let espera = ESPERA_MS;
     try {
-      const hubo = await unaVuelta();
+      // Primero los videos ya aprobados; si no hay, las grabaciones que Richard subió.
+      const hubo = (await unaVuelta()) || (await atenderGrabacion());
       if (hubo) espera = 1000;
     } catch (e) {
       console.error(`[${hora()}] No se pudo hablar con el panel:`, e instanceof Error ? e.message : e);

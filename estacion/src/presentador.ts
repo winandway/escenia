@@ -15,14 +15,11 @@ import path from "node:path";
 import { CANALES } from "@compartido/canales";
 import { esquemaGuion, type Guion } from "@compartido/guion";
 import { marcaDeCanal } from "@compartido/marcas";
-import { momentosDelPresentador, tramosDeGrabacion } from "@compartido/presentador";
 import { ESTILOS_VIDEO, type Canal, type EstiloVideo } from "@compartido/tematicas";
 import { config } from "./config";
-import { colorDeCroma, extraerVoz, medidasDeVideo, prepararVentana, quitarCroma } from "./croma";
+import { montarPresentador, vozDeGrabacion } from "./grabaciones";
 import { panel } from "./panel";
 import { producir } from "./produccion";
-import { transcribir } from "./transcribir";
-import { nivelar } from "./voz";
 
 const opcion = (nombre: string): string | null => {
   const i = process.argv.indexOf(nombre);
@@ -41,21 +38,15 @@ async function principal() {
   const canal: Canal = opcion("--canal") === "caprichoso-tv" ? "caprichoso-tv" : "canal-ia";
   const clave = `p-${path.basename(grabacion, path.extname(grabacion)).replace(/[^a-zA-Z0-9_-]+/g, "-")}`;
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
-  const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
   await mkdir(carpetaTrabajo, { recursive: true });
-  await mkdir(carpetaPublica, { recursive: true });
   const entrada = path.resolve(grabacion);
   const paso = (texto: string) => console.log(`  ${texto}`);
 
-  const medidas = await medidasDeVideo(entrada);
-  paso(`grabación: ${medidas.ancho}×${medidas.alto}, ${Math.round(medidas.duracionSeg)} s`);
-
   // 1) Su voz: se saca, se empareja de volumen y se transcribe (sin tocarle el ritmo: la imagen
   //    tiene que seguir calzando con la boca).
-  const rutaVoz = path.join(carpetaTrabajo, "voz-grabada.mp3");
-  await extraerVoz(entrada, rutaVoz);
-  await nivelar(rutaVoz);
-  const t = await transcribir(rutaVoz, medidas.duracionSeg);
+  const voz = await vozDeGrabacion(entrada, carpetaTrabajo);
+  const { medidas, t } = voz;
+  paso(`grabación: ${medidas.ancho}×${medidas.alto}, ${Math.round(medidas.duracionSeg)} s`);
   paso(
     `transcripción: ${t.palabras.length} palabras${t.costoUsd ? ` ($${t.costoUsd.toFixed(3)})` : " (ya estaba guardada)"}`,
   );
@@ -79,38 +70,14 @@ async function principal() {
     console.log("Plan listo. Para armar el video con ese plan, corre lo mismo pasándole el plan.json.");
     return;
   }
-  // En qué momento de la grabación empieza cada escena.
-  const duracionMs = Math.round(medidas.duracionSeg * 1000);
-  const tramos = tramosDeGrabacion(
-    guion.escenas.map((e) => e.narracion),
-    t.palabras,
-    duracionMs,
-  );
 
-  // 3) Su imagen: sin fondo si se grabó con croma; si no, en una ventana.
-  const color = process.argv.includes("--sin-croma")
-    ? null
-    : await colorDeCroma(entrada, medidas.duracionSeg);
-  let video: { ruta: string; ancho: number; alto: number; transparente: boolean };
-  if (color) {
-    paso(`fondo de croma detectado (${color}): quitándolo…`);
-    const similitud = Number(opcion("--similitud")) || undefined;
-    const r = await quitarCroma(entrada, path.join(carpetaPublica, "presentador.webm"), color, { similitud });
-    video = { ruta: "presentador.webm", ...r, transparente: true };
-  } else {
-    paso("sin fondo de croma: la grabación va en una ventana");
-    const r = await prepararVentana(entrada, path.join(carpetaPublica, "presentador.mp4"));
-    video = { ruta: "presentador.mp4", ...r, transparente: false };
-  }
-  const momentos = momentosDelPresentador(
-    guion.escenas.map((e, i) => ({
-      parte: e.parte,
-      inicioMs: tramos[i]?.inicioMs ?? 0,
-      finMs: tramos[i]?.finMs ?? duracionMs,
-    })),
-  );
+  // 3) Su imagen (sin fondo si se grabó con croma; si no, en una ventana) y sus tiempos.
+  const material = await montarPresentador(entrada, guion, voz, clave, paso, {
+    sinCroma: process.argv.includes("--sin-croma"),
+    similitud: Number(opcion("--similitud")) || undefined,
+  });
   paso(
-    `presentador: ${momentos.filter((m) => m.modo === "completo").length} veces en grande, el resto en la esquina`,
+    `presentador: ${material.presentador.momentos.filter((m) => m.modo === "completo").length} veces en grande, el resto en la esquina`,
   );
 
   // 4) Lo demás es la producción de siempre, con su voz y su imagen en vez de la voz generada.
@@ -126,17 +93,7 @@ async function principal() {
     CANALES[canal].porDefecto,
     marcaDeCanal(canal),
     estilo,
-    {
-      voz: {
-        rutaMp3: rutaVoz,
-        palabras: t.palabras,
-        tramos,
-        duracionMs,
-        vozDePrueba: false,
-        costoUsd: t.costoUsd,
-      },
-      presentador: { ...video, momentos },
-    },
+    material,
   );
   console.log(
     `\nVideo: ${r.rutaMp4}\n${(r.bytes / 1_048_576).toFixed(1)} MB · ${r.duracionSeg.toFixed(1)} s`,

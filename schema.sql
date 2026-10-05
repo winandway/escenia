@@ -190,3 +190,23 @@ CREATE TABLE IF NOT EXISTS sonidos (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS sonidos_activos ON sonidos(activo, tipo, id);
+
+-- Grabaciones (formato Presentador): un video de Richard hablando, subido desde el panel.
+-- La Estación lo baja, lo transcribe y pide el plan; ahí nace su guion (ya aprobado: son
+-- sus propias palabras) y su trabajo, y lo demás es la producción de siempre.
+CREATE TABLE IF NOT EXISTS grabaciones (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tema TEXT NOT NULL DEFAULT '',
+  formato TEXT NOT NULL DEFAULT 'neon' CHECK (formato IN ('clasico','ilustrado','neon')),
+  canal TEXT NOT NULL DEFAULT 'canal-ia' CHECK (canal IN ('canal-ia','caprichoso-tv')),
+  archivo TEXT NOT NULL DEFAULT '',     -- el nombre que tenía en la computadora de Richard
+  clave TEXT NOT NULL,                  -- dónde está en el almacén (BUCKET)
+  bytes INTEGER NOT NULL DEFAULT 0,
+  estado TEXT NOT NULL DEFAULT 'subiendo' CHECK (estado IN ('subiendo','subida','tomada','planeada','error','quitada')),
+  paso TEXT NOT NULL DEFAULT '',
+  error TEXT NOT NULL DEFAULT '',
+  guion_id INTEGER REFERENCES guiones(id),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS grabaciones_estado ON grabaciones(estado, id);

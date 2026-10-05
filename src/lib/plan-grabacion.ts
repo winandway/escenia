@@ -32,7 +32,7 @@ export function mensajeDePlan(e: EntradaPlan): string {
     `TRANSCRIPCIÓN (lo que dijo, ${palabras} palabras, con los errores propios de transcribir una voz):\n"""\n${e.transcripcion.trim().slice(0, 30000)}\n"""`,
     "REGLAS DEL PLAN (mandan sobre cualquier otra regla que las contradiga):",
     "- `narracion` NO se escribe: se COPIA. Reparte la transcripción en escenas, en orden, copiando su texto LITERAL: sin corregir, sin resumir, sin quitar muletillas y sin agregar nada. Cada palabra de la transcripción queda en exactamente una escena, y la primera escena empieza con su primera palabra.",
-    "- Corta una escena donde él cambia de idea: cada escena tiene entre 25 y 70 palabras (10 a 28 segundos). Mínimo 3 escenas.",
+    "- Corta una escena donde él cambia de idea: cada escena tiene entre 25 y 70 palabras (10 a 28 segundos). Mínimo 3 escenas: si la grabación es corta y no alcanza para eso, haz exactamente 3 escenas aunque queden de menos palabras.",
     "- `parte`: «gancho» la primera; después «contexto», «demo», «dato» o «problema» según lo que diga; «cierre» la última. NO uses «opinion» (todo el video es él opinando), ni «interludio», ni «cta».",
     "- Cada `frase` (de un plano o de un objeto) son 2 a 5 palabras LITERALES y seguidas de la narración de ESA escena: es el instante en que entra la imagen. Tómala tal como está transcrita, aunque esté mal dicha.",
     `- ${REGLAS_POR_FORMATO[e.formato]}`,

@@ -1,8 +1,11 @@
 // Cliente HTTP del panel. Todo pasa por /datos/estacion/* con el secreto.
-import { open, readFile } from "node:fs/promises";
+import { open, readFile, stat } from "node:fs/promises";
+import path from "node:path";
+import { partesDe, TAMANO_PARTE } from "@compartido/grabaciones";
 import { esquemaGuion, type Guion } from "@compartido/guion";
 import { CABECERA_META, metaParaCabecera } from "@compartido/meta";
 import { conReintentos, ErrorDelPanel } from "@compartido/reintentos";
+import { ESTILOS_VIDEO, type Canal, type EstiloVideo } from "@compartido/tematicas";
 import { z } from "zod";
 import { config } from "./config";
 
@@ -17,9 +20,28 @@ const esquemaTrabajo = z.object({
       contenido: esquemaGuion,
       producto: z.object({ nombre: z.string(), url: z.string() }).nullable(),
       canal: z.object({ nombre: z.string(), usuario: z.string() }).nullable().default(null),
+      // Formato Presentador: el guion salió de una grabación de Richard.
+      grabacion: z
+        .object({ id: z.number(), formato: z.enum(ESTILOS_VIDEO), archivo: z.string(), bytes: z.number() })
+        .nullable()
+        .default(null),
     })
     .nullable(),
 });
+
+const esquemaGrabacion = z.object({
+  grabacion: z
+    .object({
+      id: z.number(),
+      tema: z.string(),
+      formato: z.enum(ESTILOS_VIDEO),
+      canal: z.enum(["canal-ia", "caprichoso-tv"]),
+      archivo: z.string(),
+      bytes: z.number(),
+    })
+    .nullable(),
+});
+export type GrabacionDelPanel = NonNullable<z.infer<typeof esquemaGrabacion>["grabacion"]>;
 
 export type Trabajo = NonNullable<z.infer<typeof esquemaTrabajo>["trabajo"]> & { contenido: Guion };
 
@@ -31,6 +53,10 @@ async function llamar(
     contentType?: string;
     metodo?: "POST" | "PUT";
     cabeceras?: Record<string, string>;
+    /** Cuánto se espera la respuesta (por defecto, 3 minutos). */
+    esperaMs?: number;
+    /** Para lo que no se puede pedir dos veces (cuesta dinero o crea cosas): un solo intento. */
+    unSoloIntento?: boolean;
   } = {},
 ): Promise<unknown> {
   // Un corte de red de unos segundos no tumba el trabajo: se reintenta con espera (C-ENTREGA-1).
@@ -44,7 +70,7 @@ async function llamar(
           ...opciones.cabeceras,
         },
         body: opciones.crudo ? new Uint8Array(opciones.crudo) : JSON.stringify(cuerpo),
-        signal: AbortSignal.timeout(180_000),
+        signal: AbortSignal.timeout(opciones.esperaMs ?? 180_000),
       });
       const texto = await r.text();
       if (!r.ok)
@@ -55,6 +81,7 @@ async function llamar(
       return texto ? (JSON.parse(texto) as unknown) : {};
     },
     {
+      esperas: opciones.unSoloIntento ? [] : undefined,
       alReintentar: (intento, esperaMs, fallo) =>
         console.warn(
           `  (el panel no respondió en ${ruta.split("?")[0]}: ${fallo instanceof Error ? fallo.message : fallo}; ` +
@@ -102,6 +129,98 @@ export const panel = {
   /** Formato Presentador: de la transcripción de una grabación, el plan de lo que va detrás de Richard. */
   plan: (transcripcion: string, formato: string, titulo = "") =>
     llamar("/datos/estacion/plan", { transcripcion, formato, titulo }),
+  /** ¿Richard subió una grabación desde el panel? Si hay, queda tomada. */
+  async grabacionSiguiente(): Promise<GrabacionDelPanel | null> {
+    return esquemaGrabacion.parse(await llamar("/datos/estacion/grabaciones/siguiente", {})).grabacion;
+  },
+  avanceGrabacion: (id: number, paso: string) =>
+    llamar(`/datos/estacion/grabaciones/${id}`, { accion: "avance", paso }),
+  errorGrabacion: (id: number, error: string) =>
+    llamar(`/datos/estacion/grabaciones/${id}`, { accion: "error", error: error.slice(0, 2000) }),
+  /** Con lo que Richard dijo, el panel arma el plan, guarda el guion y lo manda a producir. */
+  planDeGrabacion: (id: number, transcripcion: string, costoTranscripcionUsd: number) =>
+    llamar(
+      `/datos/estacion/grabaciones/${id}`,
+      { accion: "plan", transcripcion, costo_transcripcion_usd: costoTranscripcionUsd },
+      // La IA tarda uno o dos minutos con una grabación larga, y el pedido no se repite solo.
+      { esperaMs: 420_000, unSoloIntento: true },
+    ) as Promise<{ guion_id: number; trabajo_id: number }>,
+  /**
+   * Baja una grabación a la Mac por rangos de 16 MB. Si quedó a medias de un intento anterior,
+   * sigue desde donde iba. Devuelve cuánto pesa.
+   */
+  async bajarGrabacion(
+    id: number,
+    destino: string,
+    total: number,
+    avisar: (pct: number) => void = () => {},
+  ): Promise<number> {
+    const RANGO = 16 * 1024 * 1024;
+    let posicion = await stat(destino).then(
+      (s) => s.size,
+      () => 0,
+    );
+    if (posicion > total) posicion = 0;
+    const archivo = await open(destino, posicion === 0 ? "w" : "r+");
+    try {
+      while (posicion < total) {
+        const hasta = Math.min(total, posicion + RANGO) - 1;
+        const desde = posicion;
+        const trozo = await conReintentos(async () => {
+          const r = await fetch(`${config.PANEL_URL}/datos/estacion/grabaciones/${id}/archivo`, {
+            headers: { authorization: `Bearer ${config.ESTACION_SECRETO}`, range: `bytes=${desde}-${hasta}` },
+            signal: AbortSignal.timeout(180_000),
+          });
+          if (r.status !== 206 && r.status !== 200)
+            throw new ErrorDelPanel(`El panel respondió ${r.status} al bajar la grabación ${id}.`, r.status);
+          return Buffer.from(await r.arrayBuffer());
+        });
+        if (trozo.length === 0) throw new Error(`La grabación ${id} llegó cortada del panel.`);
+        await archivo.write(trozo, 0, trozo.length, posicion);
+        posicion += trozo.length;
+        avisar(Math.round((posicion / total) * 100));
+      }
+    } finally {
+      await archivo.close();
+    }
+    return posicion;
+  },
+  /** Sube a «Grabaciones» un video que ya está en la Mac (lo mismo que hace el panel desde el navegador). */
+  async subirGrabacion(
+    ruta: string,
+    datos: { tema: string; formato: EstiloVideo; canal: Canal },
+    avisar: (pct: number) => void = () => {},
+  ): Promise<{ id: number; bytes: number }> {
+    const total = (await stat(ruta)).size;
+    const inicio = (await llamar("/datos/grabaciones/iniciar", {
+      ...datos,
+      archivo: path.basename(ruta),
+      bytes: total,
+    })) as { id: number; uploadId: string };
+    const archivo = await open(ruta, "r");
+    const partes: { partNumber: number; etag: string }[] = [];
+    try {
+      for (const p of partesDe(total, TAMANO_PARTE)) {
+        const trozo = Buffer.alloc(p.hasta - p.desde);
+        await archivo.read(trozo, 0, trozo.length, p.desde);
+        const q = new URLSearchParams({ id: String(inicio.id), uploadId: inicio.uploadId, n: String(p.n) });
+        const r = (await llamar(`/datos/grabaciones/parte?${q}`, null, {
+          crudo: trozo,
+          contentType: "application/octet-stream",
+          metodo: "PUT",
+        })) as { partNumber: number; etag: string };
+        partes.push({ partNumber: r.partNumber, etag: r.etag });
+        avisar(Math.round((p.hasta / total) * 100));
+      }
+    } finally {
+      await archivo.close();
+    }
+    return (await llamar("/datos/grabaciones/terminar", {
+      id: inicio.id,
+      uploadId: inicio.uploadId,
+      partes,
+    })) as { id: number; bytes: number };
+  },
   hecho: (
     id: number,
     renders: {

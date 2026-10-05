@@ -2,6 +2,7 @@
 import { contexto } from "@/lib/entorno";
 import { latidoEstacion } from "@/lib/consultas";
 import { estacionViva } from "@/lib/estacion-estado";
+import { grabacionesAtascadas } from "@/lib/grabaciones";
 import { problemaAbiertoDeIA } from "@/lib/ia-estado";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,19 @@ export async function GET() {
       piezas.estacion = estacionViva(latido) ? "ok" : "apagado";
     } catch {
       piezas.estacion = "error";
+    }
+    try {
+      // Las grabaciones de Richard (C-GRABACIONES-1): la tabla existe y, con la Mac encendida,
+      // ninguna lleva horas esperando sin que nadie la atienda.
+      const atascadas = await grabacionesAtascadas(db);
+      const atasco = atascadas > 0 && piezas.estacion === "ok";
+      piezas.grabaciones = atasco ? "error" : "ok";
+      if (atasco)
+        detalle =
+          detalle || `Hay ${atascadas} grabación(es) esperando hace más de tres horas con la Mac encendida.`;
+    } catch (e) {
+      piezas.grabaciones = "error";
+      detalle = detalle || (e instanceof Error ? e.message : String(e));
     }
   } catch (e) {
     piezas.variables = "error";

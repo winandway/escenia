@@ -4,6 +4,7 @@ import { salir } from "@/app/entrar/acciones";
 const ENLACES = [
   { href: "/", texto: "Guiones" },
   { href: "/nuevo", texto: "Nuevo video" },
+  { href: "/grabaciones", texto: "Grabaciones" },
   { href: "/calendario", texto: "Calendario" },
   { href: "/sonidos", texto: "Sonidos" },
   { href: "/trabajos", texto: "Estación" },

@@ -2,10 +2,10 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Grabar una prueba de 30 a 60 segundos con el croma verde (horizontal, de la cintura para arriba, hablando de cualquier tema) y dejarla en la Mac o pasarla → se ajusta el borrado del fondo con su imagen real y sale el primer video del formato Presentador. Cómo grabar: docs/PRESENTADOR.md.
+- 👤 Grabar una prueba de 30 a 60 segundos con el croma verde (horizontal, de la cintura para arriba) y subirla en el panel, menú «Grabaciones» → se ajusta el borrado del fondo con su imagen real y sale el primer video del formato Presentador. Cómo grabar: docs/PRESENTADOR.md.
 - 👤 Decir si le gustan los nombres de los formatos (Documental, Cómic, Neón, Presentador) y cuál de las ideas nuevas quiere primero (Pizarra, Pantalla, Ranking, Versus, Línea de tiempo): docs/FORMATOS.md.
 
-- 👤 Leer el borrador del primer video de Neón (guion 9, «Así se mueve una venta: de la compra al depósito») en https://escenia.sitios.dev/guiones/9, escribir su opinión y aprobarlo → la Estación lo produce con su voz. OJO al leer: la frase «el sistema sabe de cuál sale cada producto» la agregó la IA; si no es así en el software, se quita antes de aprobar.
+- 👤 Conversar y elegir los temas de los próximos videos (información importante, que la gente comparta, y con un producto suyo para vender dentro) → recién con el tema acordado se escribe un guion. El borrador del guion 9 se rechazó el 6 oct 2026: era un ejemplo improvisado, no un tema.
 - 👤 Probar el estilo ilustrado: crear en https://escenia.sitios.dev/nuevo un video de «Novedades de IA» con una noticia → las personas salen dibujadas.
 
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
@@ -31,7 +31,8 @@
 - [x] Miniaturas de impacto por pieza (2 oct 2026): la Estación arma sola la del video largo y la de cada Short al terminar; salen al lado de cada título en el panel. Candado C-PORTADA-1, guía docs/PORTADA.md.
 - [x] Formato Presentador, primera versión en la Mac (5 oct 2026): de una grabación y un plan sale el video con Richard encima de los gráficos. Candado C-PRESENTADOR-1, guía docs/PRESENTADOR.md.
 - [x] Presentador: la IA arma el plan sola desde la transcripción (6 oct 2026; probado en vivo con la grabación de prueba: copió las 110 palabras y armó 3 diagramas).
-- [ ] Presentador: subir la grabación desde el panel (por partes) y que la Estación la tome como un trabajo.
+- [x] Presentador: subir la grabación desde el panel (por partes) y que la Estación la tome sola (6 oct 2026). Página «Grabaciones», con «Probar en otro formato» para comparar diseños con el mismo video. Candado C-GRABACIONES-1.
+- [ ] Presentador: corregir el plan (un diagrama, una foto) desde el panel antes de armar.
 - [ ] Presentador: cortar pausas y frases repetidas de la grabación antes de armar.
 - [ ] Presentador: quitar el fondo sin croma (recorte de personas de macOS, cuadro por cuadro).
 - [ ] Formato Pizarra: fotos recortadas como calcomanías, con flechas y fechas (para historias de música con presentador).

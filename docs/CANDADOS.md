@@ -223,6 +223,47 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** no acelerar ni recortar pausas de la voz grabada sin cortar
   igual el video (se desfasa la boca); no volver a `cropdetect`.
 
+## C-GRABACIONES-1 — Subir una grabación desde el panel: no se pierde, no se duplica, no se borra (6 oct 2026)
+
+- **Qué se agregó:** la página **Grabaciones** del panel. Richard sube un video
+  suyo hablando y la Estación lo convierte sola en un video del formato
+  Presentador. Guía: [PRESENTADOR.md](PRESENTADOR.md).
+- **Cómo funciona (lo que no hay que cambiar sin pensar):**
+  - El archivo sube **por trozos de 8 MB** (multipart del almacén; el mínimo es
+    5 MB por trozo y el panel acepta hasta 10). Un video no cabe en una sola
+    petición.
+  - La dirección en el almacén la arma el panel (`grabaciones/<fecha>-<azar>.<ext>`)
+    y **se lee de la base** en cada trozo: el navegador nunca manda una ruta.
+  - Sube quien tenga **sesión, desde el propio panel**, o la Estación con su
+    secreto (`src/lib/permiso-subida.ts`).
+  - La Estación solo ve grabaciones **terminadas de subir**, y las toma de a una.
+    Una «tomada» sin señales por 40 minutos vuelve a la fila.
+  - Con el plan nace **un** guion aprobado y **un** trabajo. El pedido del plan
+    se hace una sola vez (sin reintentos automáticos: cuesta dinero), y si
+    igual llega dos veces, `registrarPlan` reclama la grabación antes de crear
+    nada: el segundo pedido devuelve el mismo guion.
+  - Lo que falla queda **escrito en la grabación**, en palabras normales, con el
+    botón «Intentar otra vez». Un error técnico de la IA no se le muestra crudo.
+  - «Quitar» cambia el estado a `quitada`: no se borra ni la fila, ni el
+    archivo, ni el guion, ni los videos.
+- **Canario:** pieza `grabaciones` en `/datos/salud`. En rojo si falta la tabla
+  o si, con la Mac encendida, hay una grabación esperando hace más de tres horas.
+- **Lo que vigilan las pruebas** (`pruebas/grabaciones.test.ts`,
+  `pruebas/permiso-subida.test.ts`): una subida a medias no se entrega; el plan
+  duplicado no crea otro guion; la clave no usa el nombre del archivo; quitar
+  no borra; al seguir una subida cortada no se repiten los trozos que ya
+  llegaron; con la sesión cerrada no se insiste; sin sesión o desde otro sitio
+  no se sube nada; las temáticas del Presentador no salen en «Nuevo video».
+- **Comprobado en rojo** el 6 oct 2026: nueve fallos metidos a propósito, uno
+  por uno; todos tumbaron su prueba. (El de la subida a medias tiene dos
+  guardas —la consulta y la toma— y la prueba cae cuando se quitan las dos.)
+- **Comprobado en local** con el panel empaquetado: subida desde el navegador de
+  un archivo de 20 MB en tres trozos, toma por la Estación, bajada por rangos
+  (206 y 416), avance, error corto y canario.
+- **Qué NO tocar:** no subir `TAMANO_PARTE` por encima de 10 MB ni bajarlo de 5;
+  no dejar que el navegador mande la clave del almacén; no volver a ponerle
+  reintentos automáticos al pedido del plan; no convertir «Quitar» en un borrado.
+
 ## C-IA-SALDO-1 — Si la cuenta de la IA se queda sin saldo, el canario lo dice (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** al pedir un guion, la API respondió «Your
