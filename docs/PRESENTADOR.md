@@ -42,18 +42,28 @@ Detrás de él puede ir cualquiera de los tres formatos: Neón, Cómic o Documen
 ## Cómo se usa hoy
 
 ```bash
-cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/presentador.ts /ruta/de/la/grabacion.mp4 /ruta/del/plan.json --estilo neon
+cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/presentador.ts /ruta/de/la/grabacion.mp4 --estilo neon --tema "de qué va el video"
 ```
 
+Sin más, hace todo: transcribe, le pide el **plan** a la IA del panel, quita el
+fondo y arma el video.
+
 - `--estilo`: `neon`, `ilustrado` (Cómic) o `clasico` (Documental).
+- `--tema "…"`: de qué va, en una frase (ayuda a la IA a titular). Opcional.
+- `--solo-plan`: se detiene después de armar el plan, para leerlo o corregirlo.
+  El plan queda en `estacion/out/p-<nombre>/plan.json`. Para armar el video con
+  ese plan ya revisado, se corre lo mismo pasándole el archivo después de la grabación.
 - `--canal caprichoso-tv` para Caprichoso TV (sin decirlo, Full Código).
 - `--similitud 0.18` si quedan restos de verde alrededor (más alto = borra más;
   por defecto 0.14). `--sin-croma` para forzar la ventana.
 
-El **plan** es un guion en el formato de siempre. La `narracion` de cada escena
-es lo que él dijo en ese tramo (copiado de la transcripción, en orden), y los
-`planos` o el `diagrama` dicen qué va detrás y con qué frase entra cada cosa.
-Ejemplos: `estacion/ejemplos/guion-neon.json` y `guion-ilustrado.json`.
+**El plan** es un guion en el formato de siempre. La `narracion` de cada escena
+es lo que él dijo en ese tramo, **copiado** de la transcripción y en orden (la
+IA no escribe lo que él dice), y los `planos` o el `diagrama` dicen qué va
+detrás y con qué frase entra cada cosa. Lo arma `generarPlan`
+(`src/lib/generador.ts`, con las reglas de `src/lib/plan-grabacion.ts`) y
+cuesta unos 3 centavos. Ejemplos escritos a mano:
+`estacion/ejemplos/guion-neon.json` y `guion-ilustrado.json`.
 
 El video queda en `estacion/out/p-<nombre de la grabación>/`. Todavía no sube
 al panel.
@@ -76,9 +86,7 @@ al panel.
 1. **Una grabación de prueba de Richard** (30 a 60 segundos, con su croma), para
    ajustar el borrado del verde con imagen real. Hasta hoy solo se probó con un
    muñeco dibujado sobre verde.
-2. **Que la IA arme el plan sola** a partir de la transcripción (parte lo que él
-   dijo en escenas y decide qué va detrás). Necesita saldo en la cuenta de
-   Anthropic.
+2. ~~Que la IA arme el plan sola~~ — hecho el 6 oct 2026.
 3. **Subir la grabación desde el panel** (por partes, porque pesa cientos de
    megas) y que la Estación la tome sola, como un trabajo más.
 4. **Cortar pausas y frases repetidas** antes de armar.
