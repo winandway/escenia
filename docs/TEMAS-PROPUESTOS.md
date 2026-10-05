@@ -77,3 +77,69 @@ Lo que NO se dice en el video, y por qué:
   seguridad», otra «entrenamiento de seguridad». El video dice «del equipo de
   seguridad de OpenAI».
 - **Citas textuales:** ninguna entre comillas; todo en estilo indirecto.
+
+## 5 oct 2026 — texto para la primera grabación de Richard (formato Presentador): «se acaba la IA gratis»
+
+Richard pidió un texto de un minuto a minuto y medio para grabarse con el fondo
+verde, de un tema de tendencia, para cualquiera de los dos canales. Tema que se
+le propuso, para **Full Código**: en la misma semana, ChatGPT anuncia
+publicidad al generar imágenes y Gemini le quita a quien no paga sus dos
+modelos más potentes. El gancho: «la inteligencia artificial gratis se está
+acabando». Producto que se vende dentro: **Beellon** (chat, imágenes, flyers y
+video con IA), que es justo lo que esas dos noticias encarecen.
+
+Fuentes leídas el 5 oct 2026:
+
+- TechCrunch (los anuncios visuales junto a los resultados de imágenes; finales de octubre; solo Estados Unidos; planes gratis y de bajo costo; van marcados y no influyen en las respuestas; 1.200 millones de usuarios a la semana): https://techcrunch.com/2026/10/05/openai-launches-visual-ads-that-appear-alongside-image-generation-results/
+- BleepingComputer (lo mismo; los anuncios van separados de la imagen que se crea; protecciones en conversaciones sensibles): https://www.bleepingcomputer.com/news/artificial-intelligence/openai-will-show-visual-ads-in-chatgpt-while-you-generate-images/
+- El Imparcial (en español; el anuncio es interactivo: se le puede preguntar por el producto dentro del chat): https://www.elimparcial.com/tecnologia/2026/10/05/openai-probara-publicidad-interactiva-en-chatgpt-a-finales-de-octubre-en-eeuu-durante-la-espera-de-generacion-de-imagenes-para-financiar-su-servicio/
+- Semana (Gemini desde el 9 de octubre: gratis solo Flash-Lite; AI Plus sin el modelo Pro; Pro y Ultra con todo): https://www.semana.com/tecnologia/articulo/gemini-ya-no-sera-igual-para-todos-google-prepara-cambios-que-afectaran-a-usuarios-a-partir-de-esta-fecha/202645/
+- AndroidPure (la tabla de qué tiene hoy y qué conserva cada plan; hoy el gratis tiene tres modelos y se queda con uno; Google lo llama «una actualización de rutina»): https://www.androidpure.com/gemini-free-model-access-limits/
+- Yahoo Finance, iTech Post y Time News confirman los dos titulares en el buscador (no se leyeron completos).
+
+Lo que NO se dice en el video, y por qué:
+
+- **Los nombres de los modelos de Gemini** (Flash-Lite, Flash, Pro): difíciles
+  de decir en cámara y de transcribir; se dice «el más liviano» y «los dos más
+  potentes».
+- **El precio del plan AI Plus** (4,99 dólares en una sola fuente, y cambia por
+  país): se dice «el plan de pago más barato».
+- **Si el anuncio sale «mientras esperas» o «junto al resultado»:** las fuentes
+  lo cuentan de las dos maneras; el texto dice «cuando le pidas una imagen, al
+  lado».
+- **Nada de Beellon que no esté en su ficha del panel.** Si Beellon no lleva
+  anuncios o tiene plan gratis, eso lo agrega Richard con sus palabras: la IA
+  no lo sabe y no lo afirma.
+- **«Se acabó la fiesta» y «tres caminos»** son la lectura de Richard, no un
+  dato: va dicho como opinión suya.
+
+El texto (unas 210 palabras, cerca de un minuto y medio hablando):
+
+> La inteligencia artificial gratis se está acabando. Y esta semana, los dos
+> gigantes dieron el paso.
+>
+> Primero, ChatGPT. OpenAI anunció que va a mostrar anuncios cuando generes
+> imágenes. Cuando le pidas una imagen, al lado te va a salir publicidad de
+> marcas. Empieza a finales de octubre, primero en Estados Unidos, en el plan
+> gratis y en los más baratos. OpenAI dice que los anuncios van marcados y que
+> no cambian las respuestas. Pero piensa en esto: ChatGPT tiene mil doscientos
+> millones de usuarios cada semana. Ese es el negocio.
+>
+> Segundo, Google. Desde el nueve de octubre, si usas Gemini gratis, te quedas
+> solo con el modelo más liviano. Los dos modelos más potentes pasan a ser de
+> pago. Y el plan de pago más barato también pierde el modelo más avanzado.
+>
+> ¿Qué significa esto? Que la fiesta de la inteligencia artificial gratis se
+> terminó. Ahora tienes tres caminos: pagas, ves anuncios, o usas la versión
+> más débil.
+>
+> Si tú creas contenido, mira Beellon. Es nuestra plataforma con chat,
+> imágenes, flyers y video con inteligencia artificial, todo en un solo lugar.
+> El enlace está en la descripción.
+>
+> Y tú, ¿pagarías por la inteligencia artificial, o prefieres ver anuncios?
+> Déjamelo en los comentarios, y suscríbete a Full Código.
+
+Formato recomendado: **Neón** (y después «Probar en Documental» con la misma
+grabación, para comparar). Para esta primera prueba se graba de corrido, en una
+sola toma: todavía no se cortan solas las frases repetidas.
