@@ -60,6 +60,13 @@ panel /grabaciones ──(trozos de 8 MB)──▶ almacén (BUCKET)  +  fila en
   cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /ruta/del/video.mp4 --tema "de qué habla" --formato neon
   ```
 
+- Una prueba técnica que pase por el panel en vivo se sube con un tema que
+  empiece por «Prueba técnica» y al terminar se saca de las listas de Richard:
+
+  ```bash
+  cd /Users/windocellc/Motor-Escenia && estacion/node_modules/.bin/tsx scripts/retirar-prueba-remota.ts 1
+  ```
+
 ## Qué hace el motor con la grabación
 
 De una grabación de Richard hablando y un **plan** (qué va detrás de él en cada

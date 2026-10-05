@@ -260,6 +260,18 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Comprobado en local** con el panel empaquetado: subida desde el navegador de
   un archivo de 20 MB en tres trozos, toma por la Estación, bajada por rangos
   (206 y 416), avance, error corto y canario.
+- **Comprobado en vivo** el 6 oct 2026, versión `1eb4b9f`: una grabación
+  sintética de 19 MB (un muñeco sobre verde con la voz de la Mac) subida al
+  panel real en tres trozos con `subir-grabacion.ts`; la Estación la tomó a los
+  veinte segundos, la bajó, la transcribió (110 palabras), el panel armó el plan
+  (guion 10, trabajo 31) y salió el video largo, un Short, los textos y dos
+  miniaturas. Dos minutos y medio en total y menos de cinco centavos. Se
+  revisaron cuadros del largo y del Short. Después la prueba se sacó de las
+  listas con `scripts/retirar-prueba-remota.ts` (no borra nada).
+- **Lo que NO se pudo comprobar en vivo:** la subida desde el navegador con la
+  sesión de Richard (se probó en local con el mismo paquete que se publica; en
+  vivo, sin sesión, las rutas responden 401 y la página manda a «Entrar»), y el
+  borrado del verde con una grabación real suya.
 - **Qué NO tocar:** no subir `TAMANO_PARTE` por encima de 10 MB ni bajarlo de 5;
   no dejar que el navegador mande la clave del almacén; no volver a ponerle
   reintentos automáticos al pedido del plan; no convertir «Quitar» en un borrado.
