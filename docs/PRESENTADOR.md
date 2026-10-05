@@ -11,7 +11,7 @@ Por qué importa (más allá del gusto): ver [FORMATOS.md](FORMATOS.md), la part
 de YouTube. Un video con el dueño del canal a la vista es lo que la política de
 monetización protege por escrito.
 
-## Cómo lo usa Richard: «grabo, subo y sale» (desde el 6 oct 2026)
+## Cómo lo usa Richard: «grabo, subo y sale» (desde el 5 oct 2026)
 
 En el panel, menú **Grabaciones**:
 
@@ -142,9 +142,9 @@ y no sube al panel (para eso está «Grabaciones»).
 1. **Una grabación de prueba de Richard** (30 a 60 segundos, con su croma), para
    ajustar el borrado del verde con imagen real. Hasta hoy solo se probó con un
    muñeco dibujado sobre verde.
-2. ~~Que la IA arme el plan sola~~ — hecho el 6 oct 2026.
+2. ~~Que la IA arme el plan sola~~ — hecho el 5 oct 2026.
 3. ~~Subir la grabación desde el panel y que la Estación la tome sola~~ — hecho
-   el 6 oct 2026 (candado C-GRABACIONES-1).
+   el 5 oct 2026 (candado C-GRABACIONES-1).
 4. **Cortar pausas y frases repetidas** antes de armar.
 5. Quitar el fondo **sin croma** (el estudio de la mesa), con el recorte de
    personas de macOS, cuadro por cuadro.

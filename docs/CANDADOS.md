@@ -158,7 +158,7 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   única comprobación válida es la fuente (el nombre en la dirección o un texto
   visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
 
-## C-GUION-3 — A la IA se le exige un formato simple, sin opcionales (6 oct 2026)
+## C-GUION-3 — A la IA se le exige un formato simple, sin opcionales (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** al pedir un guion (cualquier temática), la
   API respondió «Schema is too complex» y no se escribía ninguno.
@@ -223,7 +223,7 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** no acelerar ni recortar pausas de la voz grabada sin cortar
   igual el video (se desfasa la boca); no volver a `cropdetect`.
 
-## C-GRABACIONES-1 — Subir una grabación desde el panel: no se pierde, no se duplica, no se borra (6 oct 2026)
+## C-GRABACIONES-1 — Subir una grabación desde el panel: no se pierde, no se duplica, no se borra (5 oct 2026)
 
 - **Qué se agregó:** la página **Grabaciones** del panel. Richard sube un video
   suyo hablando y la Estación lo convierte sola en un video del formato
@@ -254,13 +254,13 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   no borra; al seguir una subida cortada no se repiten los trozos que ya
   llegaron; con la sesión cerrada no se insiste; sin sesión o desde otro sitio
   no se sube nada; las temáticas del Presentador no salen en «Nuevo video».
-- **Comprobado en rojo** el 6 oct 2026: nueve fallos metidos a propósito, uno
+- **Comprobado en rojo** el 5 oct 2026: nueve fallos metidos a propósito, uno
   por uno; todos tumbaron su prueba. (El de la subida a medias tiene dos
   guardas —la consulta y la toma— y la prueba cae cuando se quitan las dos.)
 - **Comprobado en local** con el panel empaquetado: subida desde el navegador de
   un archivo de 20 MB en tres trozos, toma por la Estación, bajada por rangos
   (206 y 416), avance, error corto y canario.
-- **Comprobado en vivo** el 6 oct 2026, versión `1eb4b9f`: una grabación
+- **Comprobado en vivo** el 5 oct 2026, versión `1eb4b9f`: una grabación
   sintética de 19 MB (un muñeco sobre verde con la voz de la Mac) subida al
   panel real en tres trozos con `subir-grabacion.ts`; la Estación la tomó a los
   veinte segundos, la bajó, la transcribió (110 palabras), el panel armó el plan

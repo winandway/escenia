@@ -39,7 +39,7 @@
 
 - **Antes de hacer un video se confirma el formato por su nombre** (Documental, Cómic, Neón, y si va con Presentador). Lo pidió Richard el 5 oct 2026. Si ya lo dijo, no se pregunta.
 
-- **El tema de cada video se acuerda primero con Richard.** No se crea un guion, un borrador ni un video «de muestra» en el panel con un tema que él no eligió. Un tema vale si es información importante, que la gente quiera compartir, y si dentro se puede vender un producto suyo. Lo que él dice «para poner un ejemplo» es un ejemplo de la forma, no un tema. Para probar una función se usa material sintético en la Mac y, si pasa por el panel, se saca de sus listas al terminar. (Dictado el 6 oct 2026 al leer el guion 9.)
+- **El tema de cada video se acuerda primero con Richard.** No se crea un guion, un borrador ni un video «de muestra» en el panel con un tema que él no eligió. Un tema vale si es información importante, que la gente quiera compartir, y si dentro se puede vender un producto suyo. Lo que él dice «para poner un ejemplo» es un ejemplo de la forma, no un tema. Para probar una función se usa material sintético en la Mac y, si pasa por el panel, se saca de sus listas al terminar. (Dictado el 5 oct 2026 al leer el guion 9.)
 
 - Windoce es una sola persona (Richard). Remotion se usa con la licencia gratis (≤3 personas); no volver a preguntarlo.
 

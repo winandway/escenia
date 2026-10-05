@@ -50,7 +50,7 @@ function opcionalesDe(esquema: Parameters<typeof zodOutputFormat>[0]): string[] 
 describe("estilos: el formato del guion no rompe a la IA (C-ESTILOS-1)", () => {
   it("el formato que se le exige a la IA no tiene NI UN campo opcional ni listas de dos tipos", () => {
     // La API admite 24 opcionales, pero además tiene un tope de «complejidad» que no publica: el
-    // 6 oct 2026, con 16 opcionales y el diagrama, respondió «Schema is too complex» y no se pudo
+    // 5 oct 2026, con 16 opcionales y el diagrama, respondió «Schema is too complex» y no se pudo
     // escribir ningún guion (C-GUION-3). Sin opcionales, el formato es el más simple posible.
     expect(opcionalesDe(esquemaGuionDeLaIA)).toEqual([]);
     const formato = JSON.stringify(zodOutputFormat(esquemaGuionDeLaIA));
@@ -306,7 +306,7 @@ describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
   });
 
   it("un valor que no existe no tumba el guion: va al válido más cercano", () => {
-    // Caso real del 6 oct 2026: la IA dejó `foto_de` vacío (se le pide vaciar lo que no aplica) y,
+    // Caso real del 5 oct 2026: la IA dejó `foto_de` vacío (se le pide vaciar lo que no aplica) y,
     // como la lista de valores no viaja como regla a la API, el guion entero se rechazó.
     const g = guionDesdeLaIA(
       guionIA([

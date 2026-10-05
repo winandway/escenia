@@ -4,7 +4,7 @@
 // Por qué son dos (C-GUION-3): el guion guardado tiene muchos campos opcionales
 // (los guiones viejos no traen planos ni diagramas, y así tiene que seguir).
 // Pero cada opcional le multiplica el trabajo a la API al preparar el formato,
-// y el 6 oct 2026 respondió «Schema is too complex»: no se podía escribir
+// y el 5 oct 2026 respondió «Schema is too complex»: no se podía escribir
 // NINGÚN guion. Aquí no hay ni un opcional: todo va siempre, y lo que no aplica
 // va vacío. Después `guionDesdeLaIA` quita los vacíos,
 // recorta lo que se pasó de largo y deja el guion como lo espera el resto.
