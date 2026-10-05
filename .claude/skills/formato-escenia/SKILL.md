@@ -15,6 +15,13 @@ cada corte. Esto es lo que hay que cumplir en cada video. El detalle técnico
 está en `docs/RITMO.md` y los candados en `docs/CANDADOS.md` (C-RITMO-1,
 C-VOZ-6, C-SONIDOS-1, C-IMAGEN-6, C-ENTREGA-2).
 
+## Antes de empezar: ¿qué formato?
+
+Los formatos tienen nombre (`docs/FORMATOS.md`): **Documental**, **Cómic**,
+**Neón**, y a cualquiera se le suma **Presentador** (Richard grabado, encima de
+los gráficos; `docs/PRESENTADOR.md`). Si Richard no dijo cuál quiere, se le
+pregunta por el nombre antes de hacer el video.
+
 ## Tres estilos, las mismas reglas
 
 Desde el 5 de octubre de 2026 cada temática tiene su estilo (`docs/ESTILOS.md`):

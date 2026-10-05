@@ -15,7 +15,7 @@ import { entradasDeGuion, reglasCalendario } from "@/lib/calendario";
 import { contexto } from "@/lib/entorno";
 import { cuando, hoyEn, NOMBRE_PLATAFORMA, yaSalio } from "@compartido/calendario";
 import { duracionEstimadaSeg, esquemaGuion, ETIQUETA_VOZ, etiquetasParaYouTube } from "@compartido/guion";
-import { buscarTematica } from "@compartido/tematicas";
+import { NOMBRE_FORMATO, buscarTematica } from "@compartido/tematicas";
 import { separarEntregas } from "@compartido/videos";
 import { CopiarTexto } from "@/componentes/CopiarTexto";
 import { EditorGuion } from "./EditorGuion";
@@ -96,7 +96,8 @@ export default async function PaginaGuion(props: PageProps<"/guiones/[id]">) {
         <Link href="/" className="hover:text-white">
           ← Guiones
         </Link>
-        <span className="mx-2">·</span>#{guion.id} · {tematica?.nombre ?? guion.tematica_id} · ~
+        <span className="mx-2">·</span>#{guion.id} · {tematica?.nombre ?? guion.tematica_id} · formato{" "}
+        {NOMBRE_FORMATO[tematica?.estilo ?? "clasico"]} · ~
         {Math.round(duracionEstimadaSeg(contenido.escenas) / 60)} min · costó ${guion.costo_usd.toFixed(3)} ·
         estado <strong className="text-neutral-200">{guion.estado}</strong> · narra{" "}
         <strong className="text-neutral-200">{ETIQUETA_VOZ[contenido.voz].toLowerCase()}</strong>

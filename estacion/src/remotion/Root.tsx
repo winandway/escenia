@@ -54,6 +54,7 @@ const vacio: PropsVideo = {
   sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] },
   musica: null,
   marca: null,
+  presentador: null,
   ventana: null,
   cierre: null,
 };

@@ -2,6 +2,9 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Grabar una prueba de 30 a 60 segundos con el croma verde (horizontal, de la cintura para arriba, hablando de cualquier tema) y dejarla en la Mac o pasarla → se ajusta el borrado del fondo con su imagen real y sale el primer video del formato Presentador. Cómo grabar: docs/PRESENTADOR.md.
+- 👤 Decir si le gustan los nombres de los formatos (Documental, Cómic, Neón, Presentador) y cuál de las ideas nuevas quiere primero (Pizarra, Pantalla, Ranking, Versus, Línea de tiempo): docs/FORMATOS.md.
+
 - 👤 **URGENTE — Recargar el saldo de Anthropic** (la cuenta prepago del panel quedó en cero el 5 oct 2026): https://platform.claude.com/settings/billing → «Buy credits». Sin saldo, el panel no puede escribir guiones ni los títulos de YouTube. Al recargar, el primer guion que se pida vuelve a poner el canario en verde. Con 10 dólares alcanza para unos cien guiones.
 
 - 👤 Probar el estilo de neón: en https://escenia.sitios.dev/nuevo elegir la temática «Así funciona: explicado con diagramas de neón» y pegar en el contexto la explicación real de un proceso de su software (quién hace qué, paso a paso) → sale el primer video con diagramas.
@@ -28,6 +31,12 @@
 - [x] Ritmo (2 oct 2026, la gente decía que los videos aburrían): cambios de imagen dentro de cada escena pegados a la frase que se dice, cifras en grande, nombre de cada persona, relleno automático (nada quieto más de 5 s), sonido en cada corte, subtítulos al estilo CapCut (C-RITMO-1); pausas de la voz parejas y voz más rápida desde el origen (C-VOZ-6); biblioteca de Sonidos en el panel (C-SONIDOS-1); pistas propias de bombo y de bachata; botón «Crear versión nueva». Guía: docs/RITMO.md.
 - [x] Video de Prince Royce rehecho con el ritmo nuevo (guion 8, versión 2 del guion 6): de 15 imágenes a más de 130.
 - [x] Miniaturas de impacto por pieza (2 oct 2026): la Estación arma sola la del video largo y la de cada Short al terminar; salen al lado de cada título en el panel. Candado C-PORTADA-1, guía docs/PORTADA.md.
+- [x] Formato Presentador, primera versión en la Mac (5 oct 2026): de una grabación y un plan sale el video con Richard encima de los gráficos. Candado C-PRESENTADOR-1, guía docs/PRESENTADOR.md.
+- [ ] Presentador: que la IA arme el plan sola desde la transcripción (necesita saldo de Anthropic).
+- [ ] Presentador: subir la grabación desde el panel (por partes) y que la Estación la tome como un trabajo.
+- [ ] Presentador: cortar pausas y frases repetidas de la grabación antes de armar.
+- [ ] Presentador: quitar el fondo sin croma (recorte de personas de macOS, cuadro por cuadro).
+- [ ] Formato Pizarra: fotos recortadas como calcomanías, con flechas y fechas (para historias de música con presentador).
 - [ ] Auditoría de dependencias: cuando salga `braces` corregido (aviso GHSA-vfj7-8cjw-p6xm, solo toca a la herramienta que revisa el código), actualizar y comprobar que `npm run audit:todo` da cero. Ver C-AUDITORIA-1.
 - [x] Dos estilos nuevos de video (5 oct 2026): ilustrado (personas dibujadas, para tecnología) y neón (diagramas, temática «Así funciona»). Candado C-ESTILOS-1, guía docs/ESTILOS.md.
 - [ ] Estilo ilustrado: varias personas dibujadas juntas en un plano, y marcadores de juego (barra de «vida») encima de la figura.

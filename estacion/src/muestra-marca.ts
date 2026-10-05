@@ -126,6 +126,7 @@ async function principal() {
       acento: marca.acento,
       secundario: marca.secundario,
     },
+    presentador: null,
     ventana: null,
     cierre: { canalNombre: "Full Código", canalUsuario: "@FullCodigo", miniatura: null },
   };

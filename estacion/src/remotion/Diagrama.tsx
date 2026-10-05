@@ -18,6 +18,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { sitiosDeNodos, type Sitio } from "./diagrama-sitios";
+import { usePresentador } from "./Presentador";
 import { Baldosa, iconoNeon } from "./IconosNeon";
 import { FPS, type DiagramaVideo } from "./props";
 
@@ -455,6 +456,7 @@ export const DiagramaNeon: React.FC<{
   const { width, height, fps } = useVideoConfig();
   const tMs = desdeMs + (frame / FPS) * 1000;
   const aFrame = (ms: number) => Math.round(((ms - desdeMs) / 1000) * FPS);
+  const { activo: hayPresentador } = usePresentador();
   const sitios = sitiosDeNodos(diagrama.nodos.length, vertical);
   const porId = new Map(diagrama.nodos.map((n, k) => [n.id, k] as const));
   // El objeto «activo» es el último que entró: brilla más y su tarjeta se enciende.
@@ -475,7 +477,11 @@ export const DiagramaNeon: React.FC<{
     <AbsoluteFill>
       <FondoNeon colores={colores} />
       <AbsoluteFill
-        style={{ transform: `scale(${acerca})`, transformOrigin: vertical ? "50% 52%" : "50% 58%" }}
+        style={{
+          // Con presentador en horizontal, el escenario se achica hacia la izquierda: él va abajo a la derecha.
+          transform: `scale(${acerca * (hayPresentador && !vertical ? 0.77 : 1)})`,
+          transformOrigin: hayPresentador && !vertical ? "0% 56%" : vertical ? "50% 52%" : "50% 58%",
+        }}
       >
         <svg width={width} height={height} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
           {/* Las flechas, debajo de los objetos: primero la guía tenue, encima la que se enciende. */}

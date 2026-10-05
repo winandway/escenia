@@ -20,7 +20,7 @@ import { enfoquesDe } from "./enfoque";
 import { rellenarPlanos, resolverPlanos } from "./planos";
 import { tramosQuietos } from "@compartido/planos";
 import { prepararMusica } from "./musica";
-import { generarVoz } from "./voz";
+import { generarVoz, type ResultadoVoz } from "./voz";
 
 export type Avisar = (paso: string, progreso: number) => Promise<unknown>;
 export type Gastar = (servicio: string, detalle: string, costoUsd: number) => Promise<unknown>;
@@ -135,6 +135,8 @@ export async function producir(
   canal: { nombre: string; usuario: string } | null = null,
   marca: Marca | null = null,
   estilo: EstiloVideo = "clasico",
+  // Formato Presentador: la voz y la imagen vienen de una grabación de Richard, no del generador.
+  grabacion: { voz: ResultadoVoz; presentador: NonNullable<PropsVideo["presentador"]> } | null = null,
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
@@ -142,15 +144,18 @@ export async function producir(
   await mkdir(carpetaTrabajo, { recursive: true });
   await mkdir(carpetaPublica, { recursive: true });
 
-  const voz = await generarVoz(
-    guion.escenas.map((e) => ({
-      texto: e.parte === "interludio" ? "" : e.narracion,
-      silencioSeg: e.parte === "interludio" ? (e.duracion_seg ?? DURACION_INTERLUDIO.porDefecto) : undefined,
-    })),
-    carpetaTrabajo,
-    avisar,
-    guion.voz,
-  );
+  const voz =
+    grabacion?.voz ??
+    (await generarVoz(
+      guion.escenas.map((e) => ({
+        texto: e.parte === "interludio" ? "" : e.narracion,
+        silencioSeg:
+          e.parte === "interludio" ? (e.duracion_seg ?? DURACION_INTERLUDIO.porDefecto) : undefined,
+      })),
+      carpetaTrabajo,
+      avisar,
+      guion.voz,
+    ));
   await cp(voz.rutaMp3, path.join(carpetaPublica, "voz.mp3"));
   const rutaSubtitulos = path.join(carpetaTrabajo, "subtitulos.json");
   await writeFile(rutaSubtitulos, JSON.stringify({ palabras: voz.palabras, tramos: voz.tramos }, null, 2));
@@ -471,6 +476,7 @@ export async function producir(
     sfx,
     musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg, nivel: 1 } : null,
     marca: marcaVideo,
+    presentador: grabacion?.presentador ?? null,
     ventana: null,
     // El canal queda guardado con las props (la miniatura se agrega después, en memoria):
     // así rearmar.ts puede volver a armar el cierre sin preguntarle nada al panel.

@@ -32,6 +32,7 @@ import {
 } from "./Marca";
 import { DiagramaNeon, LaminaNeon, NEON, type ColoresNeon } from "./Diagrama";
 import { PlanosDeEscena } from "./Planos";
+import { CapaPresentador, ContextoPresentador, grandeEn } from "./Presentador";
 import { CIERRE_SHORT_MS, FPS, INTRO_SHORT_MS, type PropsVideo } from "./props";
 
 const { fontFamily } = loadFont("normal", {
@@ -123,45 +124,73 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
   const inicioCierreMarca = aFrame(p.duracionMs) + 8;
   const finMarcaFija = v ? durationInFrames - cierreFrames : inicioCierreMarca;
 
+  // Formato Presentador: Richard, grabado, encima de los gráficos (docs/PRESENTADOR.md).
+  const presentador = p.presentador;
+  // Qué tan «en grande» está él en este instante (0 = esquina, 1 = pantalla completa).
+  const grande = presentador ? grandeEn(presentador.momentos, tMs) : 0;
   return (
-    <AbsoluteFill style={{ backgroundColor: "#000", fontFamily }}>
-      {/* Escenas: cada una se funde sobre la anterior */}
-      {visibles.map(({ e, i }, k) => {
-        const primera = k === 0;
-        const ultima = k === visibles.length - 1;
-        const desde = aFrame(Math.max(e.inicioMs, inicioVentanaMs));
-        // La última escena llega hasta el último cuadro: si se cortara al acabar la voz, la
-        // cola con música quedaría en negro (pasaba en los videos sin marca).
-        const dur = Math.max(
-          1,
-          ultima ? durationInFrames - desde : aFrame(Math.min(e.finMs, finVentanaMs)) - desde + TRANSICION,
-        );
-        const colores = paleta[i % paleta.length] ?? PALETA[0];
-        const whoosh = whooshes.length ? (whooshes[i % whooshes.length] ?? null) : null;
-        return (
-          <Sequence key={i} from={desde} durationInFrames={dur} name={`escena ${i + 1} · ${e.parte}`}>
-            <EscenaVista
-              escena={e}
-              indice={i}
-              colores={colores}
-              durFrames={dur}
-              vertical={vertical}
-              fundir={!primera}
-              pop={p.sfx.pop}
-              retraso={primera ? (v ? Math.round(FPS * 3.1) : 8) : TRANSICION}
-              acento={acento}
-              fuenteTitulos={fuenteTitulos}
-              boom={p.sfx.boom}
-              whoosh={whoosh}
-              marca={marca}
-              desdeMs={Math.max(e.inicioMs, inicioVentanaMs)}
-              cortes={p.sfx.corte.length ? p.sfx.corte : whooshes}
-              neon={neon ? coloresNeon : null}
-            />
-            {whoosh && !primera && <Audio src={staticFile(whoosh)} volume={0.4} />}
-          </Sequence>
-        );
-      })}
+    <AbsoluteFill style={{ backgroundColor: neon ? "#070412" : "#000", fontFamily }}>
+      {/* Escenas: cada una se funde sobre la anterior. Con presentador, en vertical van en una
+          «pantalla» arriba (él ocupa la franja de abajo); en horizontal, a cuadro completo. */}
+      <ContextoPresentador.Provider value={{ activo: presentador !== null }}>
+        <AbsoluteFill
+          style={
+            presentador && vertical
+              ? { transform: "scale(0.78)", transformOrigin: "50% 11%", borderRadius: 40, overflow: "hidden" }
+              : undefined
+          }
+        >
+          {visibles.map(({ e, i }, k) => {
+            const primera = k === 0;
+            const ultima = k === visibles.length - 1;
+            const desde = aFrame(Math.max(e.inicioMs, inicioVentanaMs));
+            // La última escena llega hasta el último cuadro: si se cortara al acabar la voz, la
+            // cola con música quedaría en negro (pasaba en los videos sin marca).
+            const dur = Math.max(
+              1,
+              ultima
+                ? durationInFrames - desde
+                : aFrame(Math.min(e.finMs, finVentanaMs)) - desde + TRANSICION,
+            );
+            const colores = paleta[i % paleta.length] ?? PALETA[0];
+            const whoosh = whooshes.length ? (whooshes[i % whooshes.length] ?? null) : null;
+            return (
+              <Sequence key={i} from={desde} durationInFrames={dur} name={`escena ${i + 1} · ${e.parte}`}>
+                <EscenaVista
+                  escena={e}
+                  indice={i}
+                  colores={colores}
+                  durFrames={dur}
+                  vertical={vertical}
+                  fundir={!primera}
+                  pop={p.sfx.pop}
+                  retraso={primera ? (v ? Math.round(FPS * 3.1) : 8) : TRANSICION}
+                  acento={acento}
+                  fuenteTitulos={fuenteTitulos}
+                  boom={p.sfx.boom}
+                  whoosh={whoosh}
+                  marca={marca}
+                  desdeMs={Math.max(e.inicioMs, inicioVentanaMs)}
+                  cortes={p.sfx.corte.length ? p.sfx.corte : whooshes}
+                  neon={neon ? coloresNeon : null}
+                />
+                {whoosh && !primera && <Audio src={staticFile(whoosh)} volume={0.4} />}
+              </Sequence>
+            );
+          })}
+        </AbsoluteFill>
+      </ContextoPresentador.Provider>
+
+      {/* El presentador: solo mientras dura su grabación (en un Short, su trozo). */}
+      {presentador && (
+        <Sequence
+          from={introFrames}
+          durationInFrames={Math.max(1, msAFrame(finVentanaMs - inicioVentanaMs))}
+          name="presentador"
+        >
+          <CapaPresentador presentador={presentador} desdeMs={inicioVentanaMs} acento={acento} />
+        </Sequence>
+      )}
 
       {/* Título como banda encima de la primera imagen: nada de portada oscura,
           los primeros 3 segundos son imagen y voz (C-GANCHO-1). */}
@@ -192,7 +221,15 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
           palabra que se está diciendo salta en el color del canal (C-RITMO-1). */}
       {pagina && !enInterludio && (
         <AbsoluteFill
-          style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: vertical ? 420 : 100 }}
+          style={{
+            justifyContent: "flex-end",
+            alignItems: "center",
+            // Con presentador, los subtítulos se corren para no caerle encima. En la esquina: en
+            // vertical van sobre su cabeza y en horizontal, centrados en el espacio que él deja libre.
+            // Cuando sale en grande, bajan a su pecho (nunca le tapan la cara).
+            paddingBottom: vertical ? (presentador ? 720 - 330 * grande : 420) : 100,
+            paddingRight: presentador && !vertical ? 460 * (1 - grande) : 0,
+          }}
         >
           <div
             style={{

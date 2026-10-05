@@ -55,6 +55,24 @@ export function costoVozUsd(modelo: ModeloVoz, caracteres: number): number {
   return (caracteres / 1000) * VOCES_PERMITIDAS[modelo];
 }
 
+// Transcripción (la voz de una grabación → palabras con su tiempo): ElevenLabs Scribe v2,
+// $0.22 por HORA de audio (https://elevenlabs.io/pricing/api, 5-oct-2026). Un video de
+// diez minutos cuesta unos 4 centavos.
+export const TRANSCRIPCION_PERMITIDA = { scribe_v2: 0.22 } as const;
+export type ModeloTranscripcion = keyof typeof TRANSCRIPCION_PERMITIDA;
+export const MODELO_TRANSCRIPCION: ModeloTranscripcion = "scribe_v2";
+
+export function asegurarModeloTranscripcion(modelo: string): ModeloTranscripcion {
+  if (!Object.prototype.hasOwnProperty.call(TRANSCRIPCION_PERMITIDA, modelo)) {
+    throw new Error(`Modelo de transcripción bloqueado: «${modelo}».`);
+  }
+  return modelo as ModeloTranscripcion;
+}
+
+export function costoTranscripcionUsd(modelo: ModeloTranscripcion, segundos: number): number {
+  return (segundos / 3600) * TRANSCRIPCION_PERMITIDA[modelo];
+}
+
 // Imágenes: solo modelos de ~$0.03 por imagen (regla global: los caros están
 // bloqueados en código, ni como respaldo). Precio de fal.ai, 26-sep-2026.
 export const IMAGENES_PERMITIDAS = {

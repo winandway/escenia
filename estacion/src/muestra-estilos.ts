@@ -213,6 +213,7 @@ function muestraNeon(base: Awaited<ReturnType<typeof recursos>>): PropsVideo {
     vozDePrueba: false,
     tema: "tech",
     estilo: "neon",
+    presentador: null,
     ventana: null,
     cierre: { canalNombre: "Full Código", canalUsuario: "@FullCodigo", miniatura: null },
   };
@@ -263,6 +264,7 @@ function muestraIlustrado(
     vozDePrueba: false,
     tema: "tech",
     estilo: "ilustrado",
+    presentador: null,
     ventana: null,
     cierre: { canalNombre: "Full Código", canalUsuario: "@FullCodigo", miniatura: null },
   };

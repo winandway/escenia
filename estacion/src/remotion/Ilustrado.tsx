@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { usePresentador } from "./Presentador";
 
 const { fontFamily: anton } = loadFont("normal", { weights: ["400"], subsets: ["latin", "latin-ext"] });
 
@@ -82,7 +83,9 @@ const TitularComic: React.FC<{
   conEntrada: boolean;
   /** En horizontal: de qué lado está la figura (el titular va al otro). */
   figuraALaDerecha: boolean;
-}> = ({ texto, color, vertical, conEntrada, figuraALaDerecha }) => {
+  /** Con presentador (abajo a la derecha), el titular sube para no tocarle la cabeza. */
+  arriba?: boolean;
+}> = ({ texto, color, vertical, conEntrada, figuraALaDerecha, arriba = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const palabras = texto.toUpperCase().split(/\s+/).filter(Boolean);
@@ -95,8 +98,8 @@ const TitularComic: React.FC<{
   const lado: React.CSSProperties = vertical
     ? { left: 0, right: 0, top: 250, alignItems: "center" }
     : figuraALaDerecha
-      ? { left: 110, top: 230, alignItems: "flex-start" }
-      : { right: 110, top: 230, alignItems: "flex-end" };
+      ? { left: 110, top: arriba ? 110 : 230, alignItems: "flex-start" }
+      : { right: 110, top: arriba ? 110 : 230, alignItems: "flex-end" };
   return (
     <div
       style={{
@@ -168,7 +171,9 @@ export const PlanoIlustrado: React.FC<{
   const alto = vertical ? height * 0.56 : height * 0.92;
   const ancho = (alto * figura.ancho) / figura.alto;
   const arriba = vertical ? height * 0.305 : height * 0.15;
-  const aLaDerecha = figuraALaDerecha(figura.ruta);
+  // Con presentador, él ocupa abajo a la derecha: la figura va siempre a la izquierda.
+  const { activo: hayPresentador } = usePresentador();
+  const aLaDerecha = hayPresentador ? false : figuraALaDerecha(figura.ruta);
   const centro = vertical ? width / 2 : width * (aLaDerecha ? 0.7 : 0.3);
   const entra =
     conEntrada && entraFigura
@@ -210,6 +215,7 @@ export const PlanoIlustrado: React.FC<{
           vertical={vertical}
           conEntrada={conEntrada}
           figuraALaDerecha={aLaDerecha}
+          arriba={hayPresentador}
         />
       )}
     </AbsoluteFill>

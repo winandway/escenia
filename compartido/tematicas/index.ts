@@ -11,6 +11,16 @@ export type Canal = "canal-ia" | "caprichoso-tv";
 export const ESTILOS_VIDEO = ["clasico", "ilustrado", "neon"] as const;
 export type EstiloVideo = (typeof ESTILOS_VIDEO)[number];
 
+/**
+ * El NOMBRE de cada formato, como lo pide Richard (docs/FORMATOS.md). A cualquiera de los tres
+ * se le puede sumar el modo Presentador: él, grabado, encima de los gráficos.
+ */
+export const NOMBRE_FORMATO: Record<EstiloVideo, string> = {
+  clasico: "Documental",
+  ilustrado: "Cómic",
+  neon: "Neón",
+};
+
 export type Tematica = {
   id: string;
   nombre: string;

@@ -18,6 +18,7 @@ import {
 } from "remotion";
 import { posicionObjeto } from "./enfoque";
 import { figuraALaDerecha, PlanoIlustrado } from "./Ilustrado";
+import { usePresentador } from "./Presentador";
 import { FPS, type PropsVideo } from "./props";
 
 type Escena = PropsVideo["escenas"][number];
@@ -106,6 +107,7 @@ const PlanoVista: React.FC<{
           : { transform: `scale(${0.86 + e * 0.14})`, opacity: Math.min(1, e * 2) };
   const destello =
     conEntrada && modo === 0 ? interpolate(frame, [0, 5], [0.38, 0], { extrapolateRight: "clamp" }) : 0;
+  const { activo: hayPresentador } = usePresentador();
   // Estilo ilustrado: la persona dibujada sobre fondo de cómic. Si la figura ya estaba en el
   // plano anterior (`sigue`), el cuadro no vuelve a entrar: solo cambia el titular de arriba.
   if (plano.figura) {
@@ -127,7 +129,7 @@ const PlanoVista: React.FC<{
             fuente={fuente}
             vertical={vertical}
             // En horizontal, el nombre va al lado contrario de la figura: nunca encima de ella.
-            aLaDerecha={!vertical && !figuraALaDerecha(plano.figura.ruta)}
+            aLaDerecha={!vertical && !hayPresentador && !figuraALaDerecha(plano.figura.ruta)}
           />
         )}
         {destello > 0 && !plano.sigue && (

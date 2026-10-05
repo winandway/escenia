@@ -3,7 +3,7 @@ import { exigirSesion } from "@/lib/auth";
 import { productosActivos } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
 import { canalDesde, LISTA_CANALES } from "@compartido/canales";
-import { NOMBRE_CANAL, TEMATICAS } from "@compartido/tematicas";
+import { NOMBRE_CANAL, NOMBRE_FORMATO, TEMATICAS } from "@compartido/tematicas";
 import { FormularioNuevo } from "./FormularioNuevo";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,8 @@ export default async function PaginaNuevo(props: PageProps<"/nuevo">) {
   const productos = await productosActivos(db);
   const tematicas = TEMATICAS.filter((t) => t.activa).map((t) => ({
     id: t.id,
-    nombre: t.nombre,
+    // El formato va en el nombre: así se sabe cómo va a verse el video antes de pedirlo.
+    nombre: `${t.nombre} · formato ${NOMBRE_FORMATO[t.estilo ?? "clasico"]}`,
     canal: t.canal,
   }));
   // Solo se ofrecen los canales que tienen al menos una temática activa.

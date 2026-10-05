@@ -150,6 +150,21 @@ export const esquemaPropsVideo = z.object({
     })
     .nullable()
     .default(null),
+  // Formato Presentador (docs/PRESENTADOR.md): la grabación de Richard encima de los gráficos.
+  // `transparente`: se grabó con croma y ya no tiene fondo; si no, se muestra en una ventana.
+  // `momentos`: cuándo sale grande («completo») y cuándo en la esquina, en tiempo del video largo.
+  presentador: z
+    .object({
+      ruta: z.string(),
+      ancho: z.number(),
+      alto: z.number(),
+      transparente: z.boolean().default(true),
+      momentos: z
+        .array(z.object({ inicioMs: z.number(), modo: z.enum(["completo", "esquina"]) }))
+        .default([]),
+    })
+    .nullable()
+    .default(null),
   // Short: trozo del video largo que se dibuja en 9:16, con su título al
   // arrancar y un cierre de «ver video completo». Todo lo demás es lo mismo.
   ventana: z

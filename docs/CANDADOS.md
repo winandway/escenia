@@ -158,6 +158,33 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   única comprobación válida es la fuente (el nombre en la dirección o un texto
   visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
 
+## C-PRESENTADOR-1 — El formato Presentador no le corta la cabeza ni le tapa la cara (5 oct 2026)
+
+- **Qué se agregó:** el formato donde Richard sale grabado encima de los
+  gráficos. Guía: [PRESENTADOR.md](PRESENTADOR.md).
+- **Qué se rompió en la primera prueba y cómo se veía:** el presentador salía
+  **sin cabeza**: el recorte empezaba en el cuello.
+- **Causa real:** para saber qué espacio ocupa la figura se usaba el filtro
+  `cropdetect` de ffmpeg, que decide por el promedio de cada fila. Una fila
+  donde solo está la cabeza es casi toda negra, así que la daba por vacía.
+- **Qué se hizo:** `quitarCroma` (`estacion/src/croma.ts`) mide el recuadro con
+  el filtro `bbox` (cualquier punto de la figura cuenta) en toda la grabación,
+  y `recorteDeFigura` toma el mayor, con margen, y nunca recorta por abajo. La
+  cadena lleva `format=yuva420p,alphaextract,format=gray` (sin eso, ffmpeg no
+  arranca).
+- **Lo que vigila (`pruebas/presentador.test.ts`):** el recorte incluye la
+  cabeza y llega hasta abajo; solo se quita un croma verde o azul parejo (un
+  fondo negro va en ventana); cada escena empieza donde él dice sus primeras
+  palabras y ninguna se pierde; abre en grande, va a la esquina y en la opinión
+  se queda en grande; los ruidos de la transcripción no entran como palabras.
+- **Comprobado en rojo** el 5 oct 2026 (tres fallos metidos a propósito).
+- **Comprobado de punta a punta** con una grabación sintética (un muñeco sobre
+  verde y la voz de la Mac): transcripción real, croma, video largo y Short, con
+  fondo de Neón y de Cómic. **Falta probarlo con una grabación de Richard**: el
+  borrado del verde con imagen real puede pedir ajuste (`--similitud`).
+- **Qué NO tocar:** no acelerar ni recortar pausas de la voz grabada sin cortar
+  igual el video (se desfasa la boca); no volver a `cropdetect`.
+
 ## C-IA-SALDO-1 — Si la cuenta de la IA se queda sin saldo, el canario lo dice (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** al pedir un guion, la API respondió «Your
