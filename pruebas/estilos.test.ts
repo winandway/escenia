@@ -265,6 +265,52 @@ describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
     expect(g.escenas[1]?.visual.diagrama).toBeUndefined();
   });
 
+  it("un valor que no existe no tumba el guion: va al válido más cercano", () => {
+    // Caso real del 6 oct 2026: la IA dejó `foto_de` vacío (se le pide vaciar lo que no aplica) y,
+    // como la lista de valores no viaja como regla a la API, el guion entero se rechazó.
+    const g = guionDesdeLaIA(
+      guionIA([
+        {
+          parte: "Introducción",
+          narracion: "Cada vez que vendes algo pasan cuatro cosas.",
+          duracion_seg: 0,
+          visual: visual({
+            tipo: "video",
+            foto_de: "",
+            busqueda: "shop counter",
+            planos: [
+              { frase: "Cada vez que", tipo: "clip", busqueda: "shop counter", foto_de: "", texto: "" },
+              { frase: "cuatro cosas", tipo: "dato", busqueda: "", foto_de: "LUGAR", texto: "4 cosas" },
+            ],
+          }),
+        },
+        {
+          parte: "Opinión",
+          narracion: "[opinión del editor]",
+          duracion_seg: 0,
+          visual: visual({ tipo: "texto", foto_de: "ninguno" }),
+        },
+        {
+          parte: "cierre",
+          narracion: "Todo cuadra solo.",
+          duracion_seg: 0,
+          visual: visual({ tipo: "Diagrama", foto_de: "" }),
+        },
+      ]),
+    );
+    expect(g.escenas.map((e) => e.parte)).toEqual(["contexto", "opinion", "cierre"]);
+    expect(g.escenas[0]?.visual.tipo).toBe("stock");
+    expect(g.escenas[0]?.visual.foto_de).toBeUndefined();
+    expect(g.escenas[0]?.visual.planos?.map((p) => [p.tipo, p.foto_de])).toEqual([
+      ["stock", undefined],
+      ["dato", "lugar"],
+    ]);
+    // «Diagrama» sin objetos: frase en grande.
+    expect(g.escenas[2]?.visual.tipo).toBe("texto");
+    // Y el formato que viaja a la API no trae ni una lista cerrada (irían solo como texto de ayuda).
+    expect(JSON.stringify(zodOutputFormat(esquemaGuionDeLaIA))).not.toContain("enum");
+  });
+
   it("cada dibujo se encuentra por su nombre o por cómo le dice la gente; lo desconocido es una caja", () => {
     for (const icono of ICONOS_DIAGRAMA) expect(iconoDeDiagrama(icono)).toBe(icono);
     expect(iconoDeDiagrama("Almacén")).toBe("deposito");

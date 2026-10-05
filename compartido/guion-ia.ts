@@ -8,6 +8,12 @@
 // NINGÚN guion. Aquí no hay ni un opcional: todo va siempre, y lo que no aplica
 // va vacío. Después `guionDesdeLaIA` quita los vacíos,
 // recorta lo que se pasó de largo y deja el guion como lo espera el resto.
+//
+// Tampoco hay listas cerradas de valores (segunda parte del mismo candado): la
+// librería NO se las manda a la API como regla, solo como texto de ayuda, y las
+// comprueba después. La IA escribió `foto_de: ""` (se le pide dejar vacío lo que
+// no aplica) y el guion entero se rechazó por eso. Aquí todo es texto, y
+// `guionDesdeLaIA` lo lleva al valor válido más cercano.
 import { z } from "zod";
 import {
   DURACION_INTERLUDIO,
@@ -26,12 +32,13 @@ export const esquemaGuionDeLaIA = z.object({
   gancho: z.string(),
   escenas: z.array(
     z.object({
-      parte: z.enum(PARTES),
+      // Texto libre (ver arriba): `parteValida` lo lleva a una de las partes que existen.
+      parte: z.string(),
       narracion: z.string(),
       // Solo cuenta en un interludio; en las demás escenas va 0.
       duracion_seg: z.number(),
       visual: z.object({
-        tipo: z.enum(TIPOS_VISUAL),
+        tipo: z.string(),
         busqueda: z.string(),
         url: z.string(),
         prompt_imagen: z.string(),
@@ -40,13 +47,13 @@ export const esquemaGuionDeLaIA = z.object({
         fecha: z.string(),
         cuerpo: z.string(),
         texto_en_pantalla: z.string(),
-        foto_de: z.enum(["persona", "lugar"]),
+        foto_de: z.string(),
         planos: z.array(
           z.object({
             frase: z.string(),
-            tipo: z.enum(TIPOS_PLANO),
+            tipo: z.string(),
             busqueda: z.string(),
-            foto_de: z.enum(["persona", "lugar"]),
+            foto_de: z.string(),
             texto: z.string(),
           }),
         ),
@@ -125,6 +132,24 @@ export function iconoDeDiagrama(nombre: string): (typeof ICONOS_DIAGRAMA)[number
   return "producto";
 }
 
+/** La parte de la escena: la que escribió la IA si existe; si no, una escena normal de contexto. */
+export function parteValida(valor: string): (typeof PARTES)[number] {
+  const pedida = sinTildes(valor);
+  return PARTES.find((p) => p === pedida) ?? (pedida.includes("opini") ? "opinion" : "contexto");
+}
+
+/** El tipo de visual: el que escribió la IA si existe; si no, un clip de ambiente. */
+export function tipoVisualValido(valor: string): (typeof TIPOS_VISUAL)[number] {
+  const pedido = sinTildes(valor);
+  return TIPOS_VISUAL.find((t) => t === pedido) ?? (pedido.includes("diagram") ? "diagrama" : "stock");
+}
+
+/** El tipo de un plano: «clip», «video» o cualquier otra cosa es un clip de ambiente. */
+export function tipoDePlanoValido(valor: string): (typeof TIPOS_PLANO)[number] {
+  const pedido = sinTildes(valor);
+  return TIPOS_PLANO.find((t) => t === pedido) ?? (pedido.includes("cifra") ? "dato" : "stock");
+}
+
 /** Recorta un texto a su largo máximo sin dejarlo en media palabra. Vacío → `undefined`. */
 function texto(valor: string, maximo: number): string | undefined {
   const limpio = valor.replace(/\s+/g, " ").trim();
@@ -141,7 +166,8 @@ function texto(valor: string, maximo: number): string | undefined {
  */
 export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
   const escenas = crudo.escenas.map((e) => {
-    const v = e.visual;
+    const v = { ...e.visual, tipo: tipoVisualValido(e.visual.tipo) };
+    const parte = parteValida(e.parte);
     const nodos =
       v.tipo === "diagrama"
         ? v.diagrama.nodos
@@ -160,9 +186,9 @@ export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
     const planos = v.planos
       .map((p) => ({
         frase: texto(p.frase, 90) ?? "",
-        tipo: p.tipo,
+        tipo: tipoDePlanoValido(p.tipo),
         busqueda: texto(p.busqueda, 80),
-        foto_de: p.foto_de === "lugar" ? ("lugar" as const) : undefined,
+        foto_de: sinTildes(p.foto_de) === "lugar" ? ("lugar" as const) : undefined,
         texto: texto(p.texto, 60),
       }))
       .filter((p) => p.frase.length >= 2)
@@ -173,10 +199,10 @@ export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
       .slice(0, 6);
     const titular = texto(v.titular, 90);
     return {
-      parte: e.parte,
+      parte,
       narracion: texto(e.narracion, 1500) ?? "",
       duracion_seg:
-        e.parte === "interludio"
+        parte === "interludio"
           ? Math.min(DURACION_INTERLUDIO.maximo, Math.max(DURACION_INTERLUDIO.minimo, e.duracion_seg || 0))
           : undefined,
       visual: {
@@ -191,7 +217,7 @@ export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
         cuerpo: texto(v.cuerpo, 300),
         texto_en_pantalla:
           texto(v.texto_en_pantalla, 90) ?? (v.tipo === "diagrama" && !esDiagrama ? titular : undefined),
-        foto_de: v.foto_de === "lugar" ? ("lugar" as const) : undefined,
+        foto_de: sinTildes(v.foto_de) === "lugar" ? ("lugar" as const) : undefined,
         planos: planos.length && !esDiagrama ? planos : undefined,
         diagrama: esDiagrama
           ? {

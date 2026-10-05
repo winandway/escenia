@@ -178,14 +178,20 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   largo sin cortar palabras, lleva cada ícono al dibujo que existe
   (`iconoDeDiagrama`), y un «diagrama» sin objetos queda como frase en grande.
   El guion guardado (`esquemaGuionGenerado`) no cambió.
+- **Segunda parte, el mismo día:** con el formato ya aceptado, el primer plan
+  de una grabación se rechazó porque la IA dejó `foto_de` vacío. La librería no
+  le manda a la API las listas cerradas de valores (van como texto de ayuda) y
+  las comprueba después: un valor fuera de lista tumbaba el guion entero. Ahora
+  en `esquemaGuionDeLaIA` todo es texto, y `parteValida`, `tipoVisualValido` y
+  `tipoDePlanoValido` llevan cada valor al válido más cercano.
 - **Cómo se comprueba:** `pruebas/estilos.test.ts` (bloques C-GUION-3 y
   C-ESTILOS-1) y `pruebas/generador.test.ts`. **En vivo**, que es lo que
   manda: `estacion/node_modules/.bin/tsx scripts/crear-guion-remoto.ts < tema.json`
   tiene que dejar un borrador.
 - **Comprobado en rojo:** con un opcional de vuelta en el formato de la IA, la
   prueba falla.
-- **Qué NO tocar:** no agregar `.optional()`, `.nullable()` ni uniones a
-  `esquemaGuionDeLaIA`. Un campo nuevo entra obligatorio y
+- **Qué NO tocar:** no agregar `.optional()`, `.nullable()`, uniones ni
+  `z.enum` a `esquemaGuionDeLaIA`. Un campo nuevo entra obligatorio y
   vacío cuando no aplica, y se limpia en `guionDesdeLaIA`.
 - **Lección:** el tope de la API no se puede medir desde aquí. Todo cambio en
   ese formato se prueba pidiendo un guion de verdad, el mismo día.
