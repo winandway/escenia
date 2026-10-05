@@ -15,7 +15,7 @@ export type EntradaPlan = {
 };
 
 const REGLAS_POR_FORMATO: Record<EstiloVideo, string> = {
-  neon: "FORMATO NEÓN: TODAS las escenas son `visual.tipo`: «diagrama» (no uses «stock», «foto», «ia» ni `planos`). Cada escena es una etapa de lo que él explica, con 2 a 5 objetos que se encienden cuando él los nombra. Si en un tramo no explica un proceso (un saludo, una opinión, una despedida), usa un diagrama de UN solo objeto con un `visual.titular` de hasta 3 palabras que resuma lo que dice, y la frase de apoyo en `visual.cuerpo`.",
+  neon: "FORMATO NEÓN: TODAS las escenas son `visual.tipo`: «diagrama» (no uses «stock», «foto», «ia» ni `planos`). Cada escena es una etapa de lo que él explica, con 2 a 5 objetos que se encienden cuando él los nombra, y SIEMPRE lleva su `visual.titular`: el título de esa etapa en 3 a 7 palabras, con dos puntos si se puede («El depósito: de dónde sale»). Si en un tramo no explica un proceso (un saludo, una opinión, una despedida), usa un diagrama de UN solo objeto con un `visual.titular` de hasta 3 palabras que resuma lo que dice, y la frase de apoyo en `visual.cuerpo`.",
   ilustrado:
     "FORMATO CÓMIC: las escenas son «stock» con `visual.planos`. Cada vez que él nombra a una persona, va su plano «foto» con `texto` = el nombre (sale dibujada), y enseguida 1 o 2 planos «dato» con lo que dice de ella en 2 a 4 palabras. Cuando dice una cifra o una frase que pesa, plano «dato». Para lo demás, planos «stock» con búsquedas concretas en inglés. Un cambio de imagen cada 3 o 4 segundos.",
   clasico:

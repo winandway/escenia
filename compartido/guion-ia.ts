@@ -197,7 +197,12 @@ export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
       .map((c) => ({ prompt_imagen: texto(c.prompt_imagen, 400) ?? "" }))
       .filter((c) => c.prompt_imagen.length >= 10)
       .slice(0, 6);
-    const titular = texto(v.titular, 90);
+    // Un diagrama sin título queda cojo: si la IA no lo puso, va la sección o el arranque de lo que se dice.
+    const titular =
+      texto(v.titular, 90) ??
+      (esDiagrama
+        ? (texto(v.diagrama.seccion, 90) ?? texto(e.narracion.split(/\s+/).slice(0, 5).join(" "), 90))
+        : undefined);
     return {
       parte,
       narracion: texto(e.narracion, 1500) ?? "",

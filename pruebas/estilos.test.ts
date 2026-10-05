@@ -258,11 +258,51 @@ describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
       ["n2", "deposito", "Bodega"],
     ]);
     expect(d?.flechas).toEqual([{ de: "cliente", a: "n2" }]);
+    expect(g.escenas[0]?.visual.titular).toBe("La venta: quién hace qué");
     // En una escena de diagrama no van planos: taparían el diagrama.
     expect(g.escenas[0]?.visual.planos).toBeUndefined();
     // Un «diagrama» que llegó sin objetos no se pierde: queda como frase en grande.
     expect(g.escenas[1]?.visual).toMatchObject({ tipo: "texto", texto_en_pantalla: "TODO CUADRA SOLO" });
     expect(g.escenas[1]?.visual.diagrama).toBeUndefined();
+  });
+
+  it("un diagrama al que la IA no le puso título no sale sin título: va su sección", () => {
+    const g = guionDesdeLaIA(
+      guionIA([
+        {
+          parte: "gancho",
+          narracion: "Cada vez que vendes algo pasan cuatro cosas.",
+          duracion_seg: 0,
+          visual: visual({
+            tipo: "diagrama",
+            diagrama: {
+              seccion: "Venta",
+              nodos: [{ id: "c", icono: "persona", etiqueta: "Cliente", nota: "", frase: "Cada vez que" }],
+              flechas: [],
+              formula: "",
+            },
+          }),
+        },
+        {
+          parte: "demo",
+          narracion: "El producto sale del depósito principal.",
+          duracion_seg: 0,
+          visual: visual({
+            tipo: "diagrama",
+            diagrama: {
+              seccion: "",
+              nodos: [{ id: "d", icono: "deposito", etiqueta: "Depósito", nota: "", frase: "del depósito" }],
+              flechas: [],
+              formula: "",
+            },
+          }),
+        },
+        { parte: "cierre", narracion: "Listo.", duracion_seg: 0, visual: visual({ tipo: "stock" }) },
+      ]),
+    );
+    expect(g.escenas[0]?.visual.titular).toBe("Venta");
+    expect(g.escenas[1]?.visual.titular).toBe("El producto sale del depósito");
+    expect(g.escenas[2]?.visual.titular).toBeUndefined();
   });
 
   it("un valor que no existe no tumba el guion: va al válido más cercano", () => {
