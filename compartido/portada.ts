@@ -91,7 +91,9 @@ export function candidatasDePortada(
 }
 
 export type Cara = { x: number; y: number; ancho: number; alto: number };
-export type Recorte = { ancho: number; alto: number; cobertura: number; caras: Cara[] };
+// `cobertura`: qué parte de la foto ocupa el recuadro del recorte. `lleno`: qué parte de ese
+// recuadro es figura (el resto quedó transparente); cerca de 1 = no se quitó ningún fondo.
+export type Recorte = { ancho: number; alto: number; cobertura: number; lleno?: number; caras: Cara[] };
 
 /**
  * ¿Sirve este recorte para una portada? Tiene que ser UNA persona (una foto de

@@ -1,12 +1,16 @@
 // Produce un video desde un guion en JSON, sin panel. Sirve para probar la
 // plantilla en la Mac:  npm run render -- pruebas/guion-ejemplo.json
+// Con plantilla y estilo:  npm run render -- pruebas/guion-neon.json TechExplainer neon
+// (para no gastar en voz: ELEVENLABS_API_KEY= delante del comando usa la voz de prueba)
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { esquemaGuion } from "@compartido/guion";
+import { ESTILOS_VIDEO, type EstiloVideo } from "@compartido/tematicas";
 import { producir } from "./produccion";
 
 const archivo = process.argv[2];
 const plantilla = process.argv[3] === "MiniDocumental" ? "MiniDocumental" : "TechExplainer";
+const estilo: EstiloVideo = ESTILOS_VIDEO.find((x) => x === process.argv[4]) ?? "clasico";
 if (!archivo) {
   console.error("Uso: npm run render -- <ruta-del-guion.json>");
   process.exit(1);
@@ -21,6 +25,10 @@ const r = await producir(
     console.log(`${String(progreso).padStart(3)}% ${paso}`);
   },
   plantilla,
+  async () => {},
+  null,
+  null,
+  estilo,
 );
 console.log(
   `\nVideo: ${r.rutaMp4}\n${(r.bytes / 1_048_576).toFixed(1)} MB · ${r.duracionSeg.toFixed(1)} s · voz ${r.vozDePrueba ? "de prueba" : "ElevenLabs"}`,

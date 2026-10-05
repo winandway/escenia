@@ -30,6 +30,7 @@ import {
   TituloTerminal,
   type MarcaVideo,
 } from "./Marca";
+import { DiagramaNeon, LaminaNeon, NEON, type ColoresNeon } from "./Diagrama";
 import { PlanosDeEscena } from "./Planos";
 import { CIERRE_SHORT_MS, FPS, INTRO_SHORT_MS, type PropsVideo } from "./props";
 
@@ -113,6 +114,11 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
   const acento = marca ? marca.acento : documental ? ORO : AMBAR;
   const fuenteTitulos = marca ? mono : documental ? serif : fontFamily;
   const paleta = marca ? PALETA_MARCA : PALETA;
+  // El diseño del video (docs/ESTILOS.md): en neón no hay clips ni fotos, solo diagramas y láminas.
+  const neon = p.estilo === "neon";
+  const coloresNeon: ColoresNeon = marca ? { ...NEON, luz: marca.acento } : NEON;
+  // En los estilos nuevos, la palabra que se dice va dentro de una caja de color (como en CapCut).
+  const cajaDePalabra = p.estilo === "clasico" ? null : (marca?.secundario ?? "#7c3aed");
   // Donde termina la voz del video largo empieza el cierre del canal.
   const inicioCierreMarca = aFrame(p.duracionMs) + 8;
   const finMarcaFija = v ? durationInFrames - cierreFrames : inicioCierreMarca;
@@ -150,6 +156,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
               marca={marca}
               desdeMs={Math.max(e.inicioMs, inicioVentanaMs)}
               cortes={p.sfx.corte.length ? p.sfx.corte : whooshes}
+              neon={neon ? coloresNeon : null}
             />
             {whoosh && !primera && <Audio src={staticFile(whoosh)} volume={0.4} />}
           </Sequence>
@@ -159,7 +166,8 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
       {/* Título como banda encima de la primera imagen: nada de portada oscura,
           los primeros 3 segundos son imagen y voz (C-GANCHO-1). */}
       <Sequence from={0} durationInFrames={Math.round(FPS * 3)} name="título">
-        {marca ? (
+        {/* En neón el título es el titular de la primera escena: una banda encima lo taparía. */}
+        {neon ? null : marca ? (
           <TituloTerminal texto={v ? v.titulo : p.titulo} vertical={vertical} marca={marca} />
         ) : (
           <TituloBanda
@@ -218,8 +226,17 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
                     display: "inline-block",
                     whiteSpace: "pre",
                     padding: "0 0.05em",
-                    color: sonando ? acento : "#fff",
+                    color: sonando && !cajaDePalabra ? acento : "#fff",
                     transform: `scale(${salto})`,
+                    ...(sonando && cajaDePalabra
+                      ? {
+                          backgroundColor: cajaDePalabra,
+                          borderRadius: 14,
+                          padding: "0 0.16em",
+                          WebkitTextStroke: "0px transparent",
+                          boxShadow: `0 6px 22px ${cajaDePalabra}88`,
+                        }
+                      : {}),
                   }}
                 >
                   {tk.text}
@@ -370,6 +387,8 @@ const EscenaVista: React.FC<{
   desdeMs: number;
   /** Sonidos cortos para los cambios de imagen. */
   cortes: string[];
+  /** Video de estilo neón: los colores del neón (y ninguna foto ni clip). */
+  neon: ColoresNeon | null;
 }> = ({
   escena,
   indice,
@@ -386,9 +405,42 @@ const EscenaVista: React.FC<{
   marca,
   desdeMs,
   cortes,
+  neon,
 }) => {
   const frame = useCurrentFrame();
   const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
+  // Estilo neón: la escena es un diagrama; si no trae uno (la opinión, un cierre), una lámina con la frase.
+  if (escena.estilo === "diagrama" && escena.diagrama) {
+    return (
+      <AbsoluteFill style={{ opacity: opacidad }}>
+        <DiagramaNeon
+          diagrama={escena.diagrama}
+          desdeMs={desdeMs}
+          durFrames={durFrames}
+          inicioMs={escena.inicioMs}
+          finMs={escena.finMs}
+          vertical={vertical}
+          colores={neon ?? NEON}
+          sonidoNodo={pop ?? cortes[0] ?? null}
+          sonidoFlecha={whoosh ?? cortes[1] ?? null}
+        />
+      </AbsoluteFill>
+    );
+  }
+  if (neon) {
+    return (
+      <AbsoluteFill style={{ opacity: opacidad }}>
+        <LaminaNeon
+          etiqueta={
+            escena.parte === "opinion" ? "Mi opinión" : escena.parte === "cta" ? "Pruébalo" : "En resumen"
+          }
+          texto={escena.textoEnPantalla || escena.recorte?.titular || ""}
+          vertical={vertical}
+          colores={neon}
+        />
+      </AbsoluteFill>
+    );
+  }
   const esFrase = escena.estilo === "frase";
   const esFoto = escena.estilo === "foto" && escena.foto !== null;
   const esTitular = escena.estilo === "titular" && escena.recorte !== null;

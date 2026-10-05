@@ -7,12 +7,9 @@
 //   npx tsx src/portadas.ts 27 --guion 8                  → todas, con los textos de out/t27/portadas.json
 //   npx tsx src/portadas.ts 27 --guion 8 --solo short-2   → solo esa pieza
 // Sin --guion no se suben: quedan en out/t<n>/portada-*.png para mirarlas.
-import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 import { renderStill, selectComposition } from "@remotion/renderer";
 import { z } from "zod";
 import { esquemaPublicacionGenerada } from "@compartido/guion";
@@ -29,14 +26,10 @@ import {
 } from "@compartido/portada";
 import { config } from "./config";
 import { panel } from "./panel";
+import { recortar } from "./recorte";
 import type { ResultadoProduccion } from "./produccion";
 import { esquemaPropsVideo, type PropsPortada, type PropsVideo } from "./remotion/props";
 import { empaquetar } from "./render";
-
-const exec = promisify(execFile);
-const aqui = path.dirname(fileURLToPath(import.meta.url));
-const FUENTE = path.resolve(aqui, "../herramientas/recortar.swift");
-const BINARIO = path.resolve(aqui, "../bin/recortar");
 
 /** Los textos de las portadas de un video: el del largo y el de cada Short (por su número). */
 export type TextosDePortadas = {
@@ -54,17 +47,7 @@ const COLORES_BASE: Pick<PropsPortada, "fondo" | "acento"> = {
   acento: "#ffd60a",
 };
 
-/** Recorta al sujeto de una foto (fondo transparente) y dice su tamaño y las caras que se ven. */
-export async function recortar(origen: string, destino: string): Promise<Recorte> {
-  if (!existsSync(BINARIO)) {
-    await mkdir(path.dirname(BINARIO), { recursive: true });
-    await exec("swiftc", ["-O", FUENTE, "-o", BINARIO]);
-  }
-  const { stdout } = await exec(BINARIO, [origen, destino]);
-  const r = JSON.parse(stdout) as Partial<Recorte>;
-  if (!r.ancho || !r.alto) throw new Error(`No se pudo recortar ${path.basename(origen)}.`);
-  return { ancho: r.ancho, alto: r.alto, cobertura: r.cobertura ?? 1, caras: r.caras ?? [] };
-}
+export { recortar };
 
 export function carpetasDeTrabajo(numero: number) {
   return {

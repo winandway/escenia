@@ -16,7 +16,8 @@ export const PARTES = [
 ] as const;
 // stock: clip de fondo · foto: foto real con licencia · ia: imagen generada con IA ·
 // texto: frase grande · titulo: portada · titular: titular enorme con golpe ·
-// periodico: recorte de periódico · red: tarjeta de red social · pantalla: grabación web
+// periodico: recorte de periódico · red: tarjeta de red social · pantalla: grabación web ·
+// diagrama: explicación con objetos de neón que se encienden al nombrarlos (estilo neón)
 export const TIPOS_VISUAL = [
   "stock",
   "foto",
@@ -27,6 +28,7 @@ export const TIPOS_VISUAL = [
   "periodico",
   "red",
   "pantalla",
+  "diagrama",
 ] as const;
 
 // Quién narra el video: la voz clonada de Richard o la voz femenina de la Estación.
@@ -52,6 +54,65 @@ export const esquemaPlano = z.object({
   texto: z.string().trim().max(60).optional(),
 });
 export type Plano = z.infer<typeof esquemaPlano>;
+
+// Un DIAGRAMA explica cómo funciona algo con objetos de neón (docs/ESTILOS.md): cada
+// objeto se enciende cuando la voz lo nombra, y las flechas dicen quién le pasa qué a quién.
+// Los nombres de `icono` son los dibujos que existen en estacion/src/remotion/IconosNeon.tsx.
+export const ICONOS_DIAGRAMA = [
+  "persona",
+  "vendedor",
+  "tienda",
+  "producto",
+  "deposito",
+  "dinero",
+  "factura",
+  "carrito",
+  "servidor",
+  "datos",
+  "telefono",
+  "computadora",
+  "nube",
+  "camion",
+  "banco",
+  "grafica",
+  "candado",
+  "engranaje",
+  "casa",
+  "edificio",
+  "ia",
+  "reloj",
+  "correo",
+  "tarjeta",
+  "alerta",
+  "listo",
+] as const;
+export const NODOS_POR_DIAGRAMA = 6;
+// OJO: aquí TODOS los campos son obligatorios (los que no aplican van vacíos). El formato que
+// se le exige a la IA admite como mucho 24 campos opcionales en total, y el guion ya lleva 16
+// con `visual.diagrama` (C-ESTILOS-1). Un opcional de más y la IA deja de poder escribir guiones.
+export const esquemaDiagrama = z.object({
+  // La etapa del video a la que pertenece la escena («Ventas», «Inventario»): arma la barra de arriba.
+  seccion: z.string().trim().max(18),
+  nodos: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(24),
+        icono: z.enum(ICONOS_DIAGRAMA),
+        etiqueta: z.string().trim().min(1).max(28),
+        // Una aclaración de 1 a 3 palabras bajo el nombre («se descuenta»), o vacía.
+        nota: z.string().trim().max(32),
+        // De 2 a 5 palabras LITERALES de la narración: el objeto se enciende cuando la voz las dice.
+        frase: z.string().trim().min(2).max(90),
+      }),
+    )
+    .min(1)
+    .max(NODOS_POR_DIAGRAMA),
+  // Quién le pasa algo a quién (ids de los nodos). La flecha se enciende cuando entra su destino.
+  flechas: z.array(z.object({ de: z.string().trim().max(24), a: z.string().trim().max(24) })).max(8),
+  // La idea de la escena en una línea («venta → salida → descuento»), o vacía.
+  formula: z.string().trim().max(60),
+});
+export type Diagrama = z.infer<typeof esquemaDiagrama>;
 
 export const esquemaVisual = z.object({
   tipo: z.enum(TIPOS_VISUAL),
@@ -79,6 +140,8 @@ export const esquemaVisual = z.object({
   foto_de: z.enum(["persona", "lugar"]).optional(),
   // Cambios de imagen dentro de la escena, en el orden en que se dicen (C-RITMO-1).
   planos: z.array(esquemaPlano).max(PLANOS_POR_ESCENA).optional(),
+  // Solo en tipo = diagrama: los objetos, las flechas y la fórmula. El título va en `titular`.
+  diagrama: esquemaDiagrama.optional(),
 });
 
 export const DURACION_INTERLUDIO = { minimo: 3, maximo: 15, porDefecto: 6 } as const;

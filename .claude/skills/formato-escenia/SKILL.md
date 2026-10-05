@@ -15,6 +15,21 @@ cada corte. Esto es lo que hay que cumplir en cada video. El detalle técnico
 está en `docs/RITMO.md` y los candados en `docs/CANDADOS.md` (C-RITMO-1,
 C-VOZ-6, C-SONIDOS-1, C-IMAGEN-6, C-ENTREGA-2).
 
+## Tres estilos, las mismas reglas
+
+Desde el 5 de octubre de 2026 cada temática tiene su estilo (`docs/ESTILOS.md`):
+
+- **Clásico** (biografías): fotos y clips a pantalla llena. Es el de Prince Royce.
+- **Ilustrado** (tecnología y noticias de IA): las personas salen dibujadas,
+  recortadas, sobre fondo de cómic, y los «dato» les caen encima como titulares.
+  El guion se escribe igual; después de mostrar a alguien van uno o dos «dato».
+- **Neón** (temática «Así funciona»): sin fotos ni clips; cada escena es un
+  `diagrama` cuyos objetos se encienden cuando la voz los nombra.
+
+Las reglas de abajo valen para los tres. En neón, «imagen nueva» quiere decir
+un objeto que se enciende. Al revisar un ilustrado, se compara cada dibujo con
+su foto; al revisar uno de neón, que cada objeto se encienda con su frase.
+
 ## Las diez reglas del formato
 
 1. **Ninguna imagen dura más de 5 segundos.** Meta: un cambio cada 3 o 4.

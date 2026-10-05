@@ -8,8 +8,11 @@ import type { Marca } from "@compartido/marcas";
 import { anioDe, elegirReferencia, ES_INFANCIA } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
+import { ilustrarPlanos } from "./ilustrado";
 import { empaquetar, renderizar, renderizarMiniatura } from "./render";
+import { armarDiagrama, numerarDiagramas } from "@compartido/diagrama";
 import { planificarShorts, type EscenaParaShort } from "@compartido/shorts";
+import type { EstiloVideo } from "@compartido/tematicas";
 import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_DOCUMENTAL, RESERVA_POR_PARTE } from "./visuales";
@@ -131,6 +134,7 @@ export async function producir(
   gastar: Gastar = async () => {},
   canal: { nombre: string; usuario: string } | null = null,
   marca: Marca | null = null,
+  estilo: EstiloVideo = "clasico",
 ): Promise<ResultadoProduccion> {
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
@@ -199,10 +203,13 @@ export async function producir(
   for (const [i, e] of guion.escenas.entries()) {
     const tramo = voz.tramos[i];
     if (!tramo) continue;
+    // Estilo neón: no hay fotos ni clips. La escena es un diagrama (o una lámina con la frase).
+    const esDiagrama = e.visual.tipo === "diagrama" && Boolean(e.visual.diagrama?.nodos.length);
+    const sinImagenes = estilo === "neon" || esDiagrama;
     // Toda escena lleva clip: primero la búsqueda de la IA, luego las de reserva por parte.
     const busquedas = [e.visual.busqueda ?? "", ...(reservas[e.parte] ?? reservas.contexto ?? [])];
     let foto: PropsVideo["escenas"][number]["foto"] = null;
-    if (e.visual.tipo === "foto" && e.visual.busqueda) {
+    if (e.visual.tipo === "foto" && e.visual.busqueda && !sinImagenes) {
       // Una foto de lugar no cae de reserva en el nombre del artista ni exige una cara.
       const deLugar = e.visual.foto_de === "lugar";
       // La reserva con el nombre del título solo vale en biografías (C-IMAGEN-5).
@@ -222,7 +229,7 @@ export async function producir(
     const anioEscena: number | null =
       anioDe(`${e.visual.fecha ?? ""} ${e.visual.texto_en_pantalla ?? ""} ${e.narracion}`) ?? ultimoAnio;
     if (anioEscena !== null) ultimoAnio = anioEscena;
-    if (e.visual.tipo === "ia" && imagenesActivas()) {
+    if (e.visual.tipo === "ia" && imagenesActivas() && !sinImagenes) {
       const persona = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
       const prompts = (e.visual.cuadros?.map((c) => c.prompt_imagen) ?? [])
         .concat(e.visual.cuadros?.length ? [] : e.visual.prompt_imagen ? [e.visual.prompt_imagen] : [])
@@ -281,25 +288,40 @@ export async function producir(
       const propia = foto ?? fotos[0] ?? null;
       fondoFoto = propia ? propia.ruta : await fotoDeFondo(referencias, carpetaPublica);
     }
-    const c = fondoFoto
-      ? null
-      : await buscarClip(foto ? busquedas.slice(1) : busquedas, false, carpetaPublica);
+    const c =
+      fondoFoto || sinImagenes
+        ? null
+        : await buscarClip(foto ? busquedas.slice(1) : busquedas, false, carpetaPublica);
     if (c) creditos.push(c.credito);
-    const estilo: PropsVideo["escenas"][number]["estilo"] = foto
-      ? "foto"
-      : recorte
-        ? recorte.tipo === "titular"
-          ? "titular"
-          : "recorte"
-        : esFrase
-          ? "frase"
-          : "clip";
+    const palabrasDeEscena = voz.palabras.filter(
+      (p) => p.startMs >= tramo.inicioMs && p.startMs < tramo.finMs,
+    );
+    const diagrama =
+      esDiagrama && e.visual.diagrama
+        ? armarDiagrama(
+            { ...e.visual, diagrama: e.visual.diagrama },
+            palabrasDeEscena,
+            tramo.inicioMs,
+            tramo.finMs,
+          )
+        : null;
+    const estiloEscena: PropsVideo["escenas"][number]["estilo"] = diagrama
+      ? "diagrama"
+      : foto
+        ? "foto"
+        : recorte
+          ? recorte.tipo === "titular"
+            ? "titular"
+            : "recorte"
+          : esFrase
+            ? "frase"
+            : "clip";
     escenas.push({
       parte: e.parte,
       inicioMs: tramo.inicioMs,
       finMs: tramo.finMs,
       textoEnPantalla: limpiarRotulo(e.visual.texto_en_pantalla),
-      estilo,
+      estilo: estiloEscena,
       clip: c ? { ruta: c.ruta, duracionSeg: c.duracionSeg } : null,
       foto,
       fotos,
@@ -307,13 +329,14 @@ export async function producir(
       interludio: e.parte === "interludio",
       fondoFoto,
       planos: [],
+      diagrama,
     });
     // Planos del guion: cada uno entra con la frase que se dice (C-RITMO-1).
     const escenaLista = escenas[escenas.length - 1];
-    if (escenaLista && e.visual.planos?.length) {
+    if (escenaLista && e.visual.planos?.length && !sinImagenes) {
       const r = await resolverPlanos({
         planos: e.visual.planos,
-        palabras: voz.palabras.filter((p) => p.startMs >= tramo.inicioMs && p.startMs < tramo.finMs),
+        palabras: palabrasDeEscena,
         inicioMs: tramo.inicioMs,
         finMs: tramo.finMs,
         carpetaPublica,
@@ -341,6 +364,14 @@ export async function producir(
     );
   }
 
+  // Estilo neón: los diagramas se numeran y se arma la barra de secciones de arriba.
+  numerarDiagramas(
+    escenas,
+    guion.escenas.filter((_, k) => voz.tramos[k]).map((e) => e.visual.diagrama?.seccion ?? null),
+  );
+  const diagramas = escenas.filter((e) => e.diagrama).length;
+  if (diagramas) await avisar(`diagramas de neón: ${diagramas}`, 36);
+
   // Relleno (C-RITMO-1): donde una escena se quedaría quieta, entran fotos del
   // propio video o clips de ambiente. Así también mejoran los guiones sin planos.
   await avisar("revisando que ninguna imagen se quede quieta", 37);
@@ -357,6 +388,8 @@ export async function producir(
   ];
   const turno = { n: 0 };
   for (const [i, escena] of escenas.entries()) {
+    // En neón no se rellena con fotos ni clips: el diagrama se mueve solo (pulsos, flechas, objetos).
+    if (estilo === "neon" || escena.diagrama) continue;
     const delGuion = guion.escenas.filter((_, k) => voz.tramos[k])[i];
     escena.planos = await rellenarPlanos({
       escena,
@@ -371,9 +404,18 @@ export async function producir(
       turno,
     });
   }
-  const totalPlanos = escenas.reduce((n, e) => n + e.planos.length, 0);
+  // Cada plano es una imagen nueva; en un diagrama, cada objeto que se enciende también.
+  const totalPlanos = escenas.reduce((n, e) => n + e.planos.length + (e.diagrama?.nodos.length ?? 0), 0);
   const quietos = tramosQuietos(
-    escenas.map((e) => ({ inicioMs: e.inicioMs, finMs: e.finMs, cambios: e.planos.map((p) => p.inicioMs) })),
+    escenas
+      // Una lámina de neón (la opinión) no cambia de imagen, pero tampoco está quieta: no cuenta.
+      .filter((e) => estilo !== "neon" || e.diagrama)
+      .map((e) => ({
+        inicioMs: e.inicioMs,
+        finMs: e.finMs,
+        // En un diagrama, cada objeto que se enciende es un cambio de imagen.
+        cambios: [...e.planos.map((p) => p.inicioMs), ...(e.diagrama?.nodos.map((n) => n.entraMs) ?? [])],
+      })),
   );
   await avisar(
     `ritmo visual: ${totalPlanos + escenas.length} imágenes en ${Math.round(voz.duracionMs / 1000)} s` +
@@ -397,6 +439,25 @@ export async function producir(
   ]);
   for (const f of todasLasFotos) f.enfoque = enfoques.get(path.join(carpetaPublica, f.ruta)) ?? null;
 
+  // Estilo ilustrado: las personas con rótulo salen dibujadas (docs/ESTILOS.md).
+  if (estilo === "ilustrado") {
+    await avisar("dibujando a las personas del video", 39);
+    const r = await ilustrarPlanos(
+      escenas,
+      carpetaPublica,
+      async (detalle, costo) => {
+        await gastar("fal.ai", detalle, costo);
+      },
+      (credito) => creditos.push(credito),
+    );
+    await avisar(
+      imagenesActivas()
+        ? `personas dibujadas: ${r.dibujadas}` + (r.fallidas ? ` · ${r.fallidas} quedaron con su foto` : "")
+        : "personas dibujadas: ninguna (falta la clave de fal.ai; el video sale con las fotos)",
+      39,
+    );
+  }
+
   const props: PropsVideo = {
     titulo: guion.titulo,
     audio: "voz.mp3",
@@ -406,6 +467,7 @@ export async function producir(
     producto,
     vozDePrueba: voz.vozDePrueba,
     tema: plantilla === "MiniDocumental" ? "documental" : "tech",
+    estilo,
     sfx,
     musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg, nivel: 1 } : null,
     marca: marcaVideo,

@@ -5,6 +5,12 @@
 
 export type Canal = "canal-ia" | "caprichoso-tv";
 
+// El diseño del video (docs/ESTILOS.md). "clasico": fotos y clips a pantalla llena, con rótulos.
+// "ilustrado": las personas salen DIBUJADAS sobre un fondo de cómic (tecnología y noticias de IA).
+// "neon": no hay fotos ni clips; todo se explica con diagramas de neón (cómo funciona algo).
+export const ESTILOS_VIDEO = ["clasico", "ilustrado", "neon"] as const;
+export type EstiloVideo = (typeof ESTILOS_VIDEO)[number];
+
 export type Tematica = {
   id: string;
   nombre: string;
@@ -13,6 +19,8 @@ export type Tematica = {
   tono: string;
   duracionObjetivo: { largo: number; short: number };
   plantilla: "TechExplainer" | "MiniDocumental";
+  /** El diseño de los videos de esta temática. Sin decirlo, el clásico. */
+  estilo?: EstiloVideo;
   ctaProductos: string[];
   // Estructuras posibles; el motor rota entre ellas para que no todos los
   // videos salgan iguales (candado contra el «contenido no auténtico»).
@@ -25,6 +33,15 @@ export type Tematica = {
 
 const PRODUCTOS_SOFTWARE = ["blisor", "beellon", "qrbott", "tintora", "yadominios"];
 
+// Estilo ilustrado: la persona sale dibujada y los datos le caen encima como titulares.
+const REGLA_ILUSTRADO =
+  "Este video sale con las personas DIBUJADAS: cada vez que nombres a una persona, pon su plano «foto» con `texto` = su nombre, y justo después 1 o 2 planos «dato» con lo que se dice de ella en 2 a 4 palabras («Un día antes», «No pasó la prueba»): caen como titulares encima del dibujo, con la persona todavía en pantalla. Que en cada escena salga al menos una persona.";
+
+/** El diseño de los videos de una temática (clásico si no dice nada o si no existe). */
+export function estiloDeTematica(id: string): EstiloVideo {
+  return TEMATICAS.find((t) => t.id === id)?.estilo ?? "clasico";
+}
+
 export const TEMATICAS: Tematica[] = [
   {
     id: "novedades-ia",
@@ -34,6 +51,7 @@ export const TEMATICAS: Tematica[] = [
     tono: "directo y sin rodeos, de alguien que construye software con IA todos los días; claro para quien no programa, con opinión propia y sin exagerar",
     duracionObjetivo: { largo: 300, short: 50 },
     plantilla: "TechExplainer",
+    estilo: "ilustrado",
     ctaProductos: [],
     estructuras: [
       ["gancho", "contexto", "dato", "problema", "dato", "opinion", "cierre"],
@@ -51,6 +69,33 @@ export const TEMATICAS: Tematica[] = [
       "Cada escena «dato» o «problema» arranca con una frase que se entienda sola, porque de ahí salen los Shorts.",
       "Para los clips «stock» busca imágenes de tecnología concretas («server room lights», «programmer typing code», «robot arm factory»), nunca gente genérica de oficina sonriendo.",
       "`musica`: siempre un ritmo con bombo y bajo que empuje («driving kick and bass beat, dark pulse»); nada de melodías que distraigan.",
+      REGLA_ILUSTRADO,
+    ],
+  },
+  {
+    id: "explicador",
+    nombre: "Así funciona: explicado con diagramas de neón",
+    canal: "canal-ia",
+    activa: true,
+    tono: "de profesor claro y directo: explica cómo funciona algo paso a paso, con palabras de todos los días y sin jerga",
+    duracionObjetivo: { largo: 150, short: 45 },
+    plantilla: "TechExplainer",
+    estilo: "neon",
+    ctaProductos: PRODUCTOS_SOFTWARE,
+    estructuras: [
+      ["gancho", "contexto", "demo", "demo", "dato", "opinion", "cierre"],
+      ["gancho", "problema", "demo", "demo", "demo", "opinion", "cierre"],
+    ],
+    bibliotecaEtiquetas: ["sorpresa", "exito"],
+    densidadRecursos: "baja",
+    cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
+    reglas: [
+      "Este video NO lleva fotos, clips ni imágenes generadas: TODAS las escenas con narración son `visual.tipo`: «diagrama», también la primera (esta temática no abre con una persona). No uses «stock», «foto», «ia», «periodico», «red» ni `visual.planos`.",
+      "La única escena que no es diagrama es la de opinión: va como «texto», con `visual.texto_en_pantalla`: «Mi opinión».",
+      "Explica UN proceso de punta a punta, en el orden en que pasa de verdad: quién empieza, qué hace cada uno, qué cambia y qué queda al final. Cada escena es una etapa (su `diagrama.seccion`), con 2 a 5 objetos.",
+      "Solo se explica lo que está en el contexto pegado: los pasos, los nombres de las pantallas y las reglas del sistema salen de ahí. Si un paso no está, no se inventa.",
+      "La última escena («cierre») es el remate: un `visual.titular` de hasta 3 palabras que resuma el beneficio («TODO CUADRA SOLO»), la frase de apoyo en `visual.cuerpo`, y un solo objeto («grafica», «listo» o «dinero»).",
+      "`musica`: un ritmo con bombo y bajo, constante y sin melodía («driving kick and bass beat, dark pulse»).",
     ],
   },
   {
@@ -61,6 +106,7 @@ export const TEMATICAS: Tematica[] = [
     tono: "cercano, técnico pero claro, con opinión propia y sin exagerar",
     duracionObjetivo: { largo: 180, short: 45 },
     plantilla: "TechExplainer",
+    estilo: "ilustrado",
     ctaProductos: ["blisor", "beellon", "qrbott"],
     estructuras: [
       ["gancho", "problema", "demo", "opinion", "cta"],
@@ -104,6 +150,7 @@ export const TEMATICAS: Tematica[] = [
     tono: "informativo, directo, con una lectura propia de qué significa la noticia",
     duracionObjetivo: { largo: 120, short: 40 },
     plantilla: "TechExplainer",
+    estilo: "ilustrado",
     ctaProductos: ["beellon", "blisor", "yadominios"],
     estructuras: [
       ["gancho", "contexto", "dato", "opinion", "cierre", "cta"],
@@ -115,6 +162,7 @@ export const TEMATICAS: Tematica[] = [
     reglas: [
       "Todo dato sale del texto de la nota que se pegó como contexto. Si no está ahí, no se dice.",
       "Cita la fuente en la descripción.",
+      REGLA_ILUSTRADO,
     ],
   },
   {

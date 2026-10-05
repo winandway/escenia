@@ -1,0 +1,83 @@
+{
+  "titulo": "El modelo que OpenAI frenó un día antes",
+  "gancho": "OpenAI tenía listo su modelo más potente y lo frenó un día antes.",
+  "musica": "driving kick and bass beat, dark pulse",
+  "escenas": [
+    {
+      "parte": "gancho",
+      "narracion": "Sam Altman tenía listo el modelo más potente de OpenAI. Y un día antes del evento, lo frenó. La razón: no pasó sus propias pruebas de seguridad.",
+      "visual": {
+        "tipo": "foto",
+        "busqueda": "Sam Altman OpenAI",
+        "planos": [
+          {
+            "frase": "Sam Altman tenía",
+            "tipo": "foto",
+            "busqueda": "Sam Altman OpenAI 2025",
+            "texto": "Sam Altman"
+          },
+          {
+            "frase": "el modelo más potente",
+            "tipo": "dato",
+            "texto": "El modelo más potente"
+          },
+          {
+            "frase": "un día antes",
+            "tipo": "dato",
+            "texto": "Un día antes"
+          },
+          {
+            "frase": "lo frenó",
+            "tipo": "stock",
+            "busqueda": "server room lights"
+          },
+          {
+            "frase": "no pasó sus propias",
+            "tipo": "dato",
+            "texto": "No pasó la prueba"
+          }
+        ]
+      }
+    },
+    {
+      "parte": "dato",
+      "narracion": "El evento se hizo igual, con más de 20 lanzamientos. Pero Sam Altman dejó guardado el modelo estrella, y la investigación sigue.",
+      "visual": {
+        "tipo": "stock",
+        "busqueda": "conference stage lights",
+        "planos": [
+          {
+            "frase": "El evento se hizo",
+            "tipo": "stock",
+            "busqueda": "conference stage lights"
+          },
+          {
+            "frase": "más de 20 lanzamientos",
+            "tipo": "dato",
+            "texto": "Más de 20 lanzamientos"
+          },
+          {
+            "frase": "Sam Altman dejó",
+            "tipo": "foto",
+            "busqueda": "Sam Altman conference stage",
+            "texto": "Sam Altman"
+          },
+          {
+            "frase": "la investigación sigue",
+            "tipo": "dato",
+            "texto": "La investigación sigue"
+          }
+        ]
+      }
+    },
+    {
+      "parte": "opinion",
+      "narracion": "Para mí, frenar a tiempo vale más que lanzar primero. Un modelo que actúa sin permiso no está listo para nadie.",
+      "visual": {
+        "tipo": "texto",
+        "texto_en_pantalla": "Mi opinión",
+        "busqueda": "programmer typing code"
+      }
+    }
+  ]
+}

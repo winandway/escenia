@@ -2,6 +2,9 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Probar el estilo de neón: en https://escenia.sitios.dev/nuevo elegir la temática «Así funciona: explicado con diagramas de neón» y pegar en el contexto la explicación real de un proceso de su software (quién hace qué, paso a paso) → sale el primer video con diagramas.
+- 👤 Probar el estilo ilustrado: crear en https://escenia.sitios.dev/nuevo un video de «Novedades de IA» con una noticia → las personas salen dibujadas.
+
 - 👤 Escribir la opinión (40 letras) y Aprobar el guion 4 (https://escenia.sitios.dev/guiones/4) → se produce solo con las 25 imágenes.
 - 👤 (Opcional, si las imágenes con referencia no convencen) Clave de API de OpenAI con saldo prepago (https://platform.openai.com/api-keys) → imágenes con el generador de ChatGPT (gpt-image, calidad baja), que sí conoce las caras de los famosos.
 - 👤 Descargar el primer video de Full Código (guion 7: GPT-6.1 Astra, el modelo que OpenAI frenó; largo de 5 min 28 s y 3 Shorts) desde https://escenia.sitios.dev/guiones/7, con la miniatura de cada pieza (están al lado de cada título), subirlo al canal y programarlo; si la opinión que se escribió en su nombre no le gusta, la cambia en el panel y se vuelve a producir.
@@ -23,6 +26,10 @@
 - [x] Ritmo (2 oct 2026, la gente decía que los videos aburrían): cambios de imagen dentro de cada escena pegados a la frase que se dice, cifras en grande, nombre de cada persona, relleno automático (nada quieto más de 5 s), sonido en cada corte, subtítulos al estilo CapCut (C-RITMO-1); pausas de la voz parejas y voz más rápida desde el origen (C-VOZ-6); biblioteca de Sonidos en el panel (C-SONIDOS-1); pistas propias de bombo y de bachata; botón «Crear versión nueva». Guía: docs/RITMO.md.
 - [x] Video de Prince Royce rehecho con el ritmo nuevo (guion 8, versión 2 del guion 6): de 15 imágenes a más de 130.
 - [x] Miniaturas de impacto por pieza (2 oct 2026): la Estación arma sola la del video largo y la de cada Short al terminar; salen al lado de cada título en el panel. Candado C-PORTADA-1, guía docs/PORTADA.md.
+- [ ] Auditoría de dependencias: cuando salga `braces` corregido (aviso GHSA-vfj7-8cjw-p6xm, solo toca a la herramienta que revisa el código), actualizar y comprobar que `npm run audit:todo` da cero. Ver C-AUDITORIA-1.
+- [x] Dos estilos nuevos de video (5 oct 2026): ilustrado (personas dibujadas, para tecnología) y neón (diagramas, temática «Así funciona»). Candado C-ESTILOS-1, guía docs/ESTILOS.md.
+- [ ] Estilo ilustrado: varias personas dibujadas juntas en un plano, y marcadores de juego (barra de «vida») encima de la figura.
+- [ ] Estilo neón: editar el diagrama a mano en el panel, y meter capturas reales del software dentro de un objeto.
 - [ ] Cambiar el texto de una miniatura desde el panel y volver a armarla con un botón (hoy se corrige desde la Mac con `estacion/src/portadas.ts`).
 - [ ] Editar los planos (cambios de imagen) a mano en el panel: hoy se ven en cada escena, pero no se editan.
 - [ ] Elegir la pista exacta de cada video con una lista en la página del guion (hoy se elige sola por género).

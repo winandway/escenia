@@ -12,6 +12,7 @@ import { config } from "./config";
 import { enfoquesDe } from "./enfoque";
 import { buscarFoto } from "./fotos";
 import type { PropsVideo } from "./remotion/props";
+import { ilustrarPlanos } from "./ilustrado";
 
 type FotoVideo = NonNullable<PropsVideo["escenas"][number]["foto"]>;
 
@@ -70,6 +71,18 @@ async function principal() {
   // El fondo difuminado de una escena también puede ser esa foto.
   for (const e of props.escenas)
     if (e.fondoFoto && path.basename(e.fondoFoto) === vieja) e.fondoFoto = nueva.ruta;
+  // Estilo ilustrado: la figura dibujada era de la foto vieja. Se dibuja la nueva y se reparten otra vez.
+  if (props.estilo === "ilustrado") {
+    const r = await ilustrarPlanos(
+      props.escenas,
+      carpetaPublica,
+      async (detalle, costo) => console.log(`  ${detalle}: $${costo.toFixed(2)}`),
+      () => {},
+    );
+    console.log(
+      `  personas dibujadas: ${r.dibujadas}${r.fallidas ? ` · ${r.fallidas} quedaron con su foto` : ""}`,
+    );
+  }
   await writeFile(rutaProps, JSON.stringify(props, null, 2));
   console.log(`${vieja} → ${path.basename(nueva.ruta)} en ${aCambiar.length} sitio(s).`);
 }

@@ -13,6 +13,7 @@ import {
   IMAGENES_PERMITIDAS,
   MODELO_IMAGEN_CON_REFERENCIA,
   MODELO_IMAGEN_POR_DEFECTO,
+  type ModeloImagen,
 } from "@compartido/modelos";
 import { config } from "./config";
 
@@ -69,6 +70,43 @@ function urlDeFal(direccion: string): string {
   return u.toString();
 }
 
+/** Encola un pedido en fal.ai, espera a que termine (hasta 90 s) y devuelve la imagen. */
+async function pedirAFal(modelo: ModeloImagen, cuerpo: Record<string, unknown>): Promise<Buffer> {
+  const cabeceras = { authorization: `Key ${config.FAL_KEY}`, "content-type": "application/json" };
+  const envio = await fetch(`https://queue.fal.run/${modelo}`, {
+    method: "POST",
+    headers: cabeceras,
+    body: JSON.stringify(cuerpo),
+  });
+  if (!envio.ok)
+    throw new Error(`fal.ai respondió ${envio.status} al encolar: ${(await envio.text()).slice(0, 200)}`);
+  // fal devuelve las direcciones exactas de estado y resultado (no cuelgan del id del modelo).
+  const cola = (await envio.json()) as { request_id: string; status_url: string; response_url: string };
+
+  // Espera hasta 90 s a que termine.
+  const inicio = Date.now();
+  let listo = false;
+  while (Date.now() - inicio < 90_000) {
+    const est = await fetch(urlDeFal(cola.status_url), { headers: cabeceras });
+    const estado = (await est.json()) as { status: string };
+    if (estado.status === "COMPLETED") {
+      listo = true;
+      break;
+    }
+    if (estado.status === "FAILED") throw new Error("fal.ai no pudo generar la imagen.");
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  if (!listo) throw new Error("fal.ai tardó demasiado en generar la imagen.");
+
+  const res = await fetch(urlDeFal(cola.response_url), { headers: cabeceras });
+  const salida = (await res.json()) as { images?: { url: string; width?: number; height?: number }[] };
+  const url = salida.images?.[0]?.url;
+  if (!url) throw new Error("fal.ai devolvió una respuesta sin imagen.");
+  const d = await fetch(url);
+  if (!d.ok) throw new Error(`No se pudo bajar la imagen generada (${d.status}).`);
+  return Buffer.from(await d.arrayBuffer());
+}
+
 export function imagenesActivas(): boolean {
   return Boolean(config.FAL_KEY);
 }
@@ -94,45 +132,14 @@ export async function generarImagen(
   let costoUsd = 0;
 
   if (!existsSync(destino)) {
-    const cabeceras = { authorization: `Key ${config.FAL_KEY}`, "content-type": "application/json" };
-    const envio = await fetch(`https://queue.fal.run/${modelo}`, {
-      method: "POST",
-      headers: cabeceras,
-      body: JSON.stringify({
-        prompt: promptFinal,
-        ...(referencia ? { image_urls: [referencia.dataUri] } : {}),
-        image_size: tam,
-        num_images: 1,
-        enable_safety_checker: true,
-      }),
+    const imagen = await pedirAFal(modelo, {
+      prompt: promptFinal,
+      ...(referencia ? { image_urls: [referencia.dataUri] } : {}),
+      image_size: tam,
+      num_images: 1,
+      enable_safety_checker: true,
     });
-    if (!envio.ok)
-      throw new Error(`fal.ai respondió ${envio.status} al encolar: ${(await envio.text()).slice(0, 200)}`);
-    // fal devuelve las direcciones exactas de estado y resultado (no cuelgan del id del modelo).
-    const cola = (await envio.json()) as { request_id: string; status_url: string; response_url: string };
-
-    // Espera hasta 90 s a que termine.
-    const inicio = Date.now();
-    let listo = false;
-    while (Date.now() - inicio < 90_000) {
-      const est = await fetch(urlDeFal(cola.status_url), { headers: cabeceras });
-      const estado = (await est.json()) as { status: string };
-      if (estado.status === "COMPLETED") {
-        listo = true;
-        break;
-      }
-      if (estado.status === "FAILED") throw new Error("fal.ai no pudo generar la imagen.");
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    if (!listo) throw new Error("fal.ai tardó demasiado en generar la imagen.");
-
-    const res = await fetch(urlDeFal(cola.response_url), { headers: cabeceras });
-    const salida = (await res.json()) as { images?: { url: string; width?: number; height?: number }[] };
-    const url = salida.images?.[0]?.url;
-    if (!url) throw new Error("fal.ai devolvió una respuesta sin imagen.");
-    const d = await fetch(url);
-    if (!d.ok) throw new Error(`No se pudo bajar la imagen generada (${d.status}).`);
-    await writeFile(destino, Buffer.from(await d.arrayBuffer()));
+    await writeFile(destino, imagen);
     costoUsd = IMAGENES_PERMITIDAS[modelo];
   }
 
@@ -147,6 +154,50 @@ export async function generarImagen(
     credito: referencia
       ? `Imagen generada con IA (${modelo}) a partir de una foto libre de la persona · contenido sintético`
       : `Imagen generada con IA (${modelo}) · contenido sintético`,
+    costoUsd,
+  };
+}
+
+// Estilo ilustrado (videos de tecnología): la MISMA foto real, redibujada como
+// ilustración de cómic. No inventa a nadie: parte de una foto que ya se cotejó
+// con su fuente, y la figura sale sobre un fondo liso para poder recortarla.
+const ILUSTRACION =
+  "Redraw this photo as a bold comic-book style digital illustration: cel-shaded cartoon portrait with clean dark ink outlines, smooth flat colors and simple two-tone shading, like a modern editorial vector caricature. Keep the SAME person: same face shape, facial features, hairstyle, skin tone, expression and clothes, clearly recognizable. Show only this one person from the waist up, centered, with the whole head and some space above the hair. Plain solid dark navy blue background and nothing else in the scene. No text, no letters, no logos, no watermark.";
+
+/** Redibuja una foto real como ilustración (misma persona, misma ropa). `null` si la pieza está apagada. */
+export async function ilustrarFoto(rutaFoto: string, carpetaPublica: string): Promise<ImagenIA | null> {
+  if (!config.FAL_KEY) return null;
+  const referencia = await referenciaEnBase64(rutaFoto);
+  const modelo = asegurarModeloImagen(MODELO_IMAGEN_CON_REFERENCIA);
+  const tam = { width: 1536, height: 2048 };
+  const carpeta = path.join(config.CARPETA_CLIPS, "ia");
+  await mkdir(carpeta, { recursive: true });
+  const nombre = `dibujo-${createHash("sha1")
+    .update(`${modelo}|${ILUSTRACION}|${tam.width}x${tam.height}|${referencia.huella}`)
+    .digest("hex")
+    .slice(0, 16)}.jpg`;
+  const destino = path.join(carpeta, nombre);
+  let costoUsd = 0;
+  if (!existsSync(destino)) {
+    const imagen = await pedirAFal(modelo, {
+      prompt: ILUSTRACION,
+      image_urls: [referencia.dataUri],
+      image_size: tam,
+      num_images: 1,
+      enable_safety_checker: true,
+    });
+    await writeFile(destino, imagen);
+    costoUsd = IMAGENES_PERMITIDAS[modelo];
+  }
+  await mkdir(path.join(carpetaPublica, "ia"), { recursive: true });
+  await link(destino, path.join(carpetaPublica, "ia", nombre)).catch(() =>
+    copyFile(destino, path.join(carpetaPublica, "ia", nombre)),
+  );
+  return {
+    ruta: `ia/${nombre}`,
+    ancho: tam.width,
+    alto: tam.height,
+    credito: `Ilustración generada con IA (${modelo}) a partir de una foto real de la persona · contenido sintético`,
     costoUsd,
   };
 }

@@ -294,6 +294,28 @@ export function EditorGuion(p: Props) {
                   </ul>
                 </details>
               )}
+              {/* El diagrama de la escena (estilo neón): cada objeto se enciende con la frase que se dice. */}
+              {e.visual.diagrama && (
+                <details className="text-xs text-neutral-400">
+                  <summary className="cursor-pointer">
+                    Diagrama de neón: {e.visual.diagrama.nodos.length}{" "}
+                    {e.visual.diagrama.nodos.length === 1 ? "objeto" : "objetos"}
+                    {e.visual.diagrama.seccion ? ` · sección «${e.visual.diagrama.seccion}»` : ""}
+                  </summary>
+                  <ul className="mt-2 space-y-1">
+                    {e.visual.diagrama.nodos.map((n, k) => (
+                      <li key={k}>
+                        <span className="text-neutral-200">«{n.frase}»</span> → {n.etiqueta} ({n.icono}
+                        {n.nota ? ` · ${n.nota}` : ""})
+                      </li>
+                    ))}
+                    {e.visual.diagrama.flechas.length > 0 && (
+                      <li>Flechas: {e.visual.diagrama.flechas.map((f) => `${f.de} → ${f.a}`).join(" · ")}</li>
+                    )}
+                    {e.visual.diagrama.formula && <li>Fórmula: {e.visual.diagrama.formula}</li>}
+                  </ul>
+                </details>
+              )}
             </li>
           ))}
         </ol>

@@ -29,7 +29,38 @@ export const esquemaPlanoVideo = z.object({
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
   // En «dato», lo que se lee en grande. En «foto», el nombre que se rotula (o vacío).
   texto: z.string().default(""),
+  // Estilo ilustrado: la persona de la foto, redibujada y recortada (PNG sin fondo). Con figura,
+  // el plano se dibuja como una ilustración sobre fondo de cómic, no como una foto a pantalla llena.
+  figura: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }).nullable().default(null),
+  // La figura ya estaba en pantalla en el plano anterior: no vuelve a entrar, solo cambia el titular.
+  sigue: z.boolean().default(false),
 });
+
+// Estilo neón: una escena explicada con un diagrama. Cada elemento entra cuando la voz lo nombra.
+export const esquemaDiagramaVideo = z.object({
+  numero: z.number(), // qué diagrama es dentro del video (1, 2, 3…)
+  secciones: z.array(z.string()).default([]), // las secciones de todo el video, para la barra de arriba
+  seccion: z.number().default(0), // en cuál va esta escena
+  titular: z.string().default(""),
+  bajada: z.string().default(""),
+  nodos: z
+    .array(
+      z.object({
+        id: z.string(),
+        icono: z.string(),
+        etiqueta: z.string(),
+        nota: z.string().default(""),
+        entraMs: z.number(),
+      }),
+    )
+    .default([]),
+  flechas: z
+    .array(z.object({ de: z.string(), a: z.string(), texto: z.string().default(""), entraMs: z.number() }))
+    .default([]),
+  formula: z.string().default(""),
+  formulaMs: z.number().nullable().default(null),
+});
+export type DiagramaVideo = z.infer<typeof esquemaDiagramaVideo>;
 
 export const esquemaEscenaVideo = z.object({
   parte: z.string(),
@@ -39,7 +70,8 @@ export const esquemaEscenaVideo = z.object({
   // "clip": clip de fondo con rótulo arriba. "frase": clip difuminado con la frase
   // grande al centro. "foto": fotografía real con movimiento lento y marco.
   // "titular": titular enorme con golpe. "recorte": recorte de periódico o tarjeta de red social.
-  estilo: z.enum(["clip", "frase", "foto", "titular", "recorte"]).default("clip"),
+  // "diagrama": explicación con elementos de neón que entran al nombrarlos (estilo neón).
+  estilo: z.enum(["clip", "frase", "foto", "titular", "recorte", "diagrama"]).default("clip"),
   // Ruta relativa al publicDir (staticFile) del clip de fondo, o null si no hubo ninguno.
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable(),
   foto: esquemaFoto.nullable().default(null),
@@ -61,6 +93,7 @@ export const esquemaEscenaVideo = z.object({
   fondoFoto: z.string().nullable().default(null),
   // Los cambios de imagen de la escena, en orden. Vacío = la escena es una sola imagen.
   planos: z.array(esquemaPlanoVideo).default([]),
+  diagrama: esquemaDiagramaVideo.nullable().default(null),
 });
 
 export const esquemaSfx = z.object({
@@ -83,6 +116,9 @@ export const esquemaPropsVideo = z.object({
   vozDePrueba: z.boolean().default(false),
   // "tech": explicador de tecnología. "documental": biografías, más pausado y con serif.
   tema: z.enum(["tech", "documental"]).default("tech"),
+  // El diseño del video (docs/ESTILOS.md). "clasico": fotos y clips a pantalla llena.
+  // "ilustrado": las personas salen dibujadas sobre fondo de cómic. "neon": diagramas de neón.
+  estilo: z.enum(["clasico", "ilustrado", "neon"]).default("clasico"),
   sfx: esquemaSfx.default({ whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] }),
   // Música de fondo (ruta relativa al publicDir), ya normalizada de volumen. Se repite en bucle.
   // `nivel`: cuánto más alta o más baja va la música bajo la voz en ESTE video (1 = lo normal).

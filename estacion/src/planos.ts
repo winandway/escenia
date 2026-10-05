@@ -11,6 +11,9 @@ type EscenaVideo = PropsVideo["escenas"][number];
 export type PlanoVideo = EscenaVideo["planos"][number];
 type FotoVideo = NonNullable<EscenaVideo["foto"]>;
 
+/** Un plano nace sin figura dibujada: el estilo ilustrado se la pone después (ilustrado.ts). */
+const SIN_FIGURA = { figura: null, sigue: false } as const;
+
 /** De a cuántas imágenes se piden a la vez (internet aguanta, y el trabajo no se eterniza). */
 const A_LA_VEZ = 3;
 
@@ -48,7 +51,7 @@ async function unPlano(
   const texto = (plano.texto ?? "").trim();
   if (plano.tipo === "dato") {
     // Un dato sin texto no tiene nada que mostrar.
-    return texto ? { inicioMs, tipo: "dato", foto: null, clip: null, texto } : null;
+    return texto ? { inicioMs, tipo: "dato", foto: null, clip: null, texto, ...SIN_FIGURA } : null;
   }
   const busqueda = (plano.busqueda ?? "").trim();
   if (!busqueda) return null;
@@ -67,6 +70,7 @@ async function unPlano(
       foto: { ruta: f.ruta, ancho: f.ancho, alto: f.alto, enfoque: null },
       clip: null,
       texto,
+      ...SIN_FIGURA,
     };
   }
   const c = await buscarClip([busqueda], false, args.carpetaPublica);
@@ -78,6 +82,7 @@ async function unPlano(
     foto: null,
     clip: { ruta: c.ruta, duracionSeg: c.duracionSeg },
     texto: "",
+    ...SIN_FIGURA,
   };
 }
 
@@ -114,7 +119,7 @@ export async function rellenarPlanos(args: {
     let plano: PlanoVideo | null = null;
     if (usarFoto) {
       const foto = candidatas[args.turno.n++ % candidatas.length];
-      if (foto) plano = { inicioMs, tipo: "foto", foto: { ...foto }, clip: null, texto: "" };
+      if (foto) plano = { inicioMs, tipo: "foto", foto: { ...foto }, clip: null, texto: "", ...SIN_FIGURA };
     }
     if (!plano) {
       const c = await buscarClip(args.busquedasDeClip, false, args.carpetaPublica);
@@ -126,13 +131,14 @@ export async function rellenarPlanos(args: {
           foto: null,
           clip: { ruta: c.ruta, duracionSeg: c.duracionSeg },
           texto: "",
+          ...SIN_FIGURA,
         };
       }
     }
     // Sin clip nuevo (sin clave o sin resultados): una foto del video, aunque se repita.
     if (!plano && args.fotosDelVideo.length > 0) {
       const foto = args.fotosDelVideo[args.turno.n++ % args.fotosDelVideo.length];
-      if (foto) plano = { inicioMs, tipo: "foto", foto: { ...foto }, clip: null, texto: "" };
+      if (foto) plano = { inicioMs, tipo: "foto", foto: { ...foto }, clip: null, texto: "", ...SIN_FIGURA };
     }
     if (plano) planos.push(plano);
   }

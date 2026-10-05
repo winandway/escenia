@@ -158,6 +158,61 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   única comprobación válida es la fuente (el nombre en la dirección o un texto
   visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
 
+## C-AUDITORIA-1 — La compuerta audita lo que se publica; lo de desarrollo se mira aparte (5 oct 2026)
+
+- **Qué pasó:** el 5 oct 2026 la auditoría de dependencias se puso en rojo sola,
+  sin ningún cambio nuestro: salió un aviso nuevo (GHSA-vfj7-8cjw-p6xm, agotar la
+  pila con patrones muy anidados) contra **todas** las versiones de `braces`.
+  No existe versión corregida (la última, 3.0.3, es de 2024). El «arreglo» que
+  ofrece npm es bajar `eslint-config-next` a la 14, que rompe el proyecto.
+- **A quién le toca de verdad:** `braces` entra solo por la herramienta que revisa
+  el código (`eslint-config-next` → `fast-glob` → `micromatch`). No va en el
+  panel publicado ni en la Estación: `npm ls braces --omit=dev` sale vacío y
+  `npm audit --omit=dev` da cero.
+- **Qué se hizo:** `npm run audit` (el que frena un push, en la Mac y en GitHub)
+  audita **lo que se publica** (`--omit=dev`). La auditoría completa sigue a
+  mano: `npm run audit:todo`. No se apagó la compuerta: se le quitó lo que no
+  llega a producción y no tiene arreglo.
+- **Cómo se comprueba:** `npm run audit` → 0 vulnerabilidades. `npm run audit:todo`
+  → lista lo de desarrollo; cuando salga `braces` corregido, tiene que dar cero.
+- **Pendiente:** cuando exista la versión corregida, actualizar y dejar anotado
+  aquí la fecha. Está en PENDIENTES.
+- **Qué NO tocar:** no bajar `--audit-level`, no quitar el paso, y no meter en
+  `dependencies` (lo que sí se publica) nada que traiga un aviso alto.
+
+## C-ESTILOS-1 — Los estilos nuevos no rompen la escritura de guiones ni dibujan a quien no es (5 oct 2026)
+
+- **Qué se agregó:** dos diseños de video, el ilustrado y el de neón. Guía
+  completa: [ESTILOS.md](ESTILOS.md).
+- **El riesgo que se vio antes de publicar:** el formato que se le exige a la IA
+  para escribir un guion admite **24 campos opcionales en total** (límite de la
+  API de Anthropic, leído en su documentación el 5 oct 2026; con más, responde
+  error 400 y no se escribe ningún guion). El guion llevaba 15; con
+  `visual.diagrama` lleva 16. Por eso **dentro del diagrama todo es
+  obligatorio** y lo que no aplica va vacío.
+- **Lo que se vio en la primera prueba del ilustrado:** la búsqueda «Sam Altman
+  conference stage» trajo una foto de tres personas en un escenario. El dibujo
+  se quedó con una de ellas y el rótulo decía «Sam Altman». Ahora, antes de
+  dibujar, se cuenta cuántas caras hay en la foto: solo se dibuja si hay una.
+- **Lo que vigila (`pruebas/estilos.test.ts`):**
+  1. El guion no pasa de 24 opcionales y el diagrama no agrega ninguno.
+  2. Cada ícono que el guion puede pedir tiene su dibujo, y la IA recibe la lista entera.
+  3. Solo se dibuja la foto de una sola cara; un dibujo sin fondo quitado no se usa.
+  4. La figura «sigue» en los datos que vienen después y vuelve a entrar tras un clip.
+  5. Ningún objeto de un diagrama se pierde ni se enciende fuera de su escena, y la
+     escena no abre apagada.
+  6. Los objetos caben entre el titular y los subtítulos, sin encimarse y sin caer
+     bajo los botones de un Short.
+  7. Un video de antes (sin estilo) se sigue pudiendo volver a armar.
+- **Comprobado en rojo** el 5 oct 2026: seis fallos metidos a propósito, seis
+  pruebas en rojo.
+- **Comprobado de punta a punta** el mismo día, con la voz de prueba de la Mac:
+  `estacion/ejemplos/guion-neon.json` y `guion-ilustrado.json` produjeron su
+  video largo y su Short.
+- **Qué NO tocar:** agregar un `.optional()` al guion sin contar; quitar la
+  cuenta de caras; subir `MAXIMO_DE_DIBUJOS` o cambiar de modelo de imagen sin
+  la aprobación de Richard con el costo por escrito.
+
 ## C-PORTADA-1 — Cada pieza tiene su miniatura, y es de quien dice ser (2 oct 2026)
 
 - **Qué faltaba / cómo se veía:** el video largo salía con una miniatura de

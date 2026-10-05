@@ -17,6 +17,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { posicionObjeto } from "./enfoque";
+import { figuraALaDerecha, PlanoIlustrado } from "./Ilustrado";
 import { FPS, type PropsVideo } from "./props";
 
 type Escena = PropsVideo["escenas"][number];
@@ -105,6 +106,36 @@ const PlanoVista: React.FC<{
           : { transform: `scale(${0.86 + e * 0.14})`, opacity: Math.min(1, e * 2) };
   const destello =
     conEntrada && modo === 0 ? interpolate(frame, [0, 5], [0.38, 0], { extrapolateRight: "clamp" }) : 0;
+  // Estilo ilustrado: la persona dibujada sobre fondo de cómic. Si la figura ya estaba en el
+  // plano anterior (`sigue`), el cuadro no vuelve a entrar: solo cambia el titular de arriba.
+  if (plano.figura) {
+    return (
+      <AbsoluteFill style={{ overflow: "hidden", ...(plano.sigue ? {} : entrada) }}>
+        <PlanoIlustrado
+          figura={plano.figura}
+          titular={plano.tipo === "dato" ? plano.texto : ""}
+          n={n}
+          durFrames={durFrames}
+          vertical={vertical}
+          entraFigura={!plano.sigue}
+          conEntrada={conEntrada}
+        />
+        {plano.tipo === "foto" && plano.texto && (
+          <EtiquetaNombre
+            texto={plano.texto}
+            acento={acento}
+            fuente={fuente}
+            vertical={vertical}
+            // En horizontal, el nombre va al lado contrario de la figura: nunca encima de ella.
+            aLaDerecha={!vertical && !figuraALaDerecha(plano.figura.ruta)}
+          />
+        )}
+        {destello > 0 && !plano.sigue && (
+          <AbsoluteFill style={{ backgroundColor: "#fff", opacity: destello }} />
+        )}
+      </AbsoluteFill>
+    );
+  }
   return (
     <AbsoluteFill style={{ overflow: "hidden", ...entrada }}>
       {plano.tipo === "foto" && plano.foto && (
@@ -320,12 +351,13 @@ const DatoPlano: React.FC<{
 };
 
 /** El nombre de quien sale en la foto, abajo a la izquierda, como en un noticiero. */
-const EtiquetaNombre: React.FC<{ texto: string; acento: string; fuente: string; vertical: boolean }> = ({
-  texto,
-  acento,
-  fuente,
-  vertical,
-}) => {
+const EtiquetaNombre: React.FC<{
+  texto: string;
+  acento: string;
+  fuente: string;
+  vertical: boolean;
+  aLaDerecha?: boolean;
+}> = ({ texto, acento, fuente, vertical, aLaDerecha = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const entra = spring({ frame: frame - 5, fps, config: { damping: 15, stiffness: 170 } });
@@ -333,10 +365,10 @@ const EtiquetaNombre: React.FC<{ texto: string; acento: string; fuente: string; 
     <div
       style={{
         position: "absolute",
-        left: vertical ? 56 : 80,
+        ...(aLaDerecha ? { right: 80 } : { left: vertical ? 56 : 80 }),
         // En vertical va por encima de los subtítulos; en horizontal, a su izquierda y más arriba.
         bottom: vertical ? 700 : 230,
-        transform: `translateX(${(1 - entra) * -60}px)`,
+        transform: `translateX(${(1 - entra) * (aLaDerecha ? 60 : -60)}px)`,
         opacity: entra,
         display: "flex",
         alignItems: "stretch",

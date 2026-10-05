@@ -1,0 +1,121 @@
+{
+  "titulo": "Así se mueve una venta por tu sistema",
+  "gancho": "¿Qué pasa por dentro cada vez que vendes algo?",
+  "musica": "driving kick and bass beat, dark pulse",
+  "escenas": [
+    {
+      "parte": "gancho",
+      "narracion": "Cada vez que vendes algo, pasan cuatro cosas. El cliente compra. El vendedor le da salida al producto. El producto sale de la tienda. Y la venta queda registrada, con su factura.",
+      "visual": {
+        "tipo": "diagrama",
+        "titular": "La venta: quién hace qué",
+        "diagrama": {
+          "seccion": "Ventas",
+          "nodos": [
+            {
+              "id": "cliente",
+              "icono": "persona",
+              "etiqueta": "Cliente",
+              "nota": "compra",
+              "frase": "El cliente compra"
+            },
+            {
+              "id": "vendedor",
+              "icono": "vendedor",
+              "etiqueta": "Vendedor",
+              "nota": "da salida",
+              "frase": "El vendedor le da"
+            },
+            {
+              "id": "producto",
+              "icono": "producto",
+              "etiqueta": "Producto",
+              "nota": "",
+              "frase": "El producto sale"
+            },
+            {
+              "id": "venta",
+              "icono": "factura",
+              "etiqueta": "Venta registrada",
+              "nota": "con factura",
+              "frase": "la venta queda registrada"
+            }
+          ],
+          "flechas": [
+            { "de": "cliente", "a": "vendedor" },
+            { "de": "vendedor", "a": "producto" },
+            { "de": "producto", "a": "venta" }
+          ],
+          "formula": ""
+        }
+      }
+    },
+    {
+      "parte": "demo",
+      "narracion": "¿Y de dónde sale ese producto? Del depósito. Al dar la salida, el sistema lo descuenta solo del depósito principal. Y si tienes más de un depósito, cada uno lleva su propia cuenta.",
+      "visual": {
+        "tipo": "diagrama",
+        "titular": "El depósito: de dónde sale",
+        "diagrama": {
+          "seccion": "Depósito",
+          "nodos": [
+            {
+              "id": "producto",
+              "icono": "producto",
+              "etiqueta": "Producto vendido",
+              "nota": "",
+              "frase": "ese producto"
+            },
+            {
+              "id": "principal",
+              "icono": "deposito",
+              "etiqueta": "Depósito principal",
+              "nota": "se descuenta",
+              "frase": "lo descuenta solo"
+            },
+            {
+              "id": "otro",
+              "icono": "deposito",
+              "etiqueta": "Depósito 2",
+              "nota": "su propia cuenta",
+              "frase": "más de un depósito"
+            }
+          ],
+          "flechas": [
+            { "de": "producto", "a": "principal" },
+            { "de": "principal", "a": "otro" }
+          ],
+          "formula": "venta → salida → descuento del depósito"
+        }
+      }
+    },
+    {
+      "parte": "opinion",
+      "narracion": "Para mí, esto es lo que separa un sistema serio de una libreta: que el inventario se mueva solo con cada venta.",
+      "visual": { "tipo": "texto", "texto_en_pantalla": "Mi opinión" }
+    },
+    {
+      "parte": "cierre",
+      "narracion": "Al final del día no hay que contar nada a mano. Cada venta ya descontó lo suyo, y el inventario está al día.",
+      "visual": {
+        "tipo": "diagrama",
+        "titular": "TODO CUADRA SOLO",
+        "cuerpo": "Cada venta descuenta el inventario.",
+        "diagrama": {
+          "seccion": "Resultado",
+          "nodos": [
+            {
+              "id": "ok",
+              "icono": "grafica",
+              "etiqueta": "Inventario al día",
+              "nota": "sin contar a mano",
+              "frase": "no hay que contar"
+            }
+          ],
+          "flechas": [],
+          "formula": ""
+        }
+      }
+    }
+  ]
+}

@@ -9,7 +9,7 @@ import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
 import { sincronizarSonidos } from "./sonidos";
 import { marcaDeCanal } from "@compartido/marcas";
-import { buscarTematica } from "@compartido/tematicas";
+import { buscarTematica, estiloDeTematica } from "@compartido/tematicas";
 
 const ESPERA_MS = 30_000;
 const ESPERA_ERROR_MS = 60_000;
@@ -66,6 +66,8 @@ async function unaVuelta(): Promise<boolean> {
         trabajo.canal,
         // El canal de la temática decide la marca del video (logo, colores, cierre).
         marcaDeCanal(buscarTematica(trabajo.tematica_id)?.canal),
+        // Y la temática, su diseño: clásico, con las personas dibujadas o con diagramas de neón.
+        estiloDeTematica(trabajo.tematica_id),
       );
       await guardarProduccion(trabajo.id, huella, r);
       if (r.costoVozUsd > 0)
