@@ -56,10 +56,25 @@ function respuestaPorEventos(texto: string): Response {
   });
 }
 
+// Lo que devuelve la IA: TODOS los campos, y el que no aplica, vacío (C-GUION-3).
 const escena = (parte: string, narracion: string) => ({
   parte,
   narracion,
-  visual: { tipo: "stock", busqueda: "server room lights" },
+  duracion_seg: 0,
+  visual: {
+    tipo: "stock",
+    busqueda: "server room lights",
+    url: "",
+    prompt_imagen: "",
+    cuadros: [],
+    titular: "",
+    fecha: "",
+    cuerpo: "",
+    texto_en_pantalla: "",
+    foto_de: "persona",
+    planos: [],
+    diagrama: { seccion: "", nodos: [], flechas: [], formula: "" },
+  },
 });
 const GUION = {
   titulo: "Un guion de prueba para el generador",
@@ -99,6 +114,9 @@ describe("generador de guiones (C-GUION-2)", () => {
       fetch: falso,
     });
     expect(r.guion.escenas).toHaveLength(3);
+    // Lo vacío no llega al guion guardado.
+    expect(r.guion.escenas[0]?.visual.diagrama).toBeUndefined();
+    expect(r.guion.escenas[0]?.visual.planos).toBeUndefined();
     expect(r.guion.titulo).toBe(GUION.titulo);
     expect(r.costoUsd).toBeGreaterThan(0);
     // El pedido salió una sola vez, por streaming y con el tope que necesita un guion con planos.

@@ -6,6 +6,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { describe, expect, it } from "vitest";
 import { armarDiagrama, numerarDiagramas, PRIMER_NODO_MS, tiemposDeNodos } from "@compartido/diagrama";
 import { esquemaDiagrama, esquemaGuionGenerado, ICONOS_DIAGRAMA, TIPOS_VISUAL } from "@compartido/guion";
+import { esquemaGuionDeLaIA, guionDesdeLaIA, iconoDeDiagrama, type GuionDeLaIA } from "@compartido/guion-ia";
 import {
   figuraSirve,
   fotoSirveParaDibujar,
@@ -47,13 +48,17 @@ function opcionalesDe(esquema: Parameters<typeof zodOutputFormat>[0]): string[] 
 }
 
 describe("estilos: el formato del guion no rompe a la IA (C-ESTILOS-1)", () => {
-  it("el guion no pasa de los 24 campos opcionales que admite el formato de la IA", () => {
-    // Límite de la API (leído en su documentación el 5 oct 2026): 24 opcionales en total.
-    // Con uno de más, la IA devuelve un error y no se puede escribir NINGÚN guion.
-    expect(opcionalesDe(esquemaGuionGenerado).length).toBeLessThanOrEqual(24);
+  it("el formato que se le exige a la IA no tiene NI UN campo opcional ni listas de dos tipos", () => {
+    // La API admite 24 opcionales, pero además tiene un tope de «complejidad» que no publica: el
+    // 6 oct 2026, con 16 opcionales y el diagrama, respondió «Schema is too complex» y no se pudo
+    // escribir ningún guion (C-GUION-3). Sin opcionales, el formato es el más simple posible.
+    expect(opcionalesDe(esquemaGuionDeLaIA)).toEqual([]);
+    const formato = JSON.stringify(zodOutputFormat(esquemaGuionDeLaIA));
+    expect(formato).not.toContain('"anyOf"');
+    expect(formato).not.toContain('"null"');
   });
 
-  it("el diagrama no agrega ni un opcional: lo que no aplica va vacío", () => {
+  it("el diagrama guardado tampoco tiene opcionales: lo que no aplica va vacío", () => {
     expect(opcionalesDe(esquemaDiagrama)).toEqual([]);
   });
 
@@ -102,6 +107,170 @@ describe("estilos: el formato del guion no rompe a la IA (C-ESTILOS-1)", () => {
     expect([...ICONOS_DIAGRAMA].sort()).toEqual([...NOMBRES_DE_ICONOS].sort());
     const instrucciones = instruccionesSistema();
     for (const icono of ICONOS_DIAGRAMA) expect(instrucciones).toContain(`«${icono}»`);
+  });
+});
+
+describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
+  const vacio = { seccion: "", nodos: [], flechas: [], formula: "" };
+  const visual = (
+    extra: Partial<GuionDeLaIA["escenas"][number]["visual"]>,
+  ): GuionDeLaIA["escenas"][number]["visual"] => ({
+    tipo: "stock",
+    busqueda: "",
+    url: "",
+    prompt_imagen: "",
+    cuadros: [],
+    titular: "",
+    fecha: "",
+    cuerpo: "",
+    texto_en_pantalla: "",
+    foto_de: "persona",
+    planos: [],
+    diagrama: vacio,
+    ...extra,
+  });
+  const guionIA = (escenas: GuionDeLaIA["escenas"]): GuionDeLaIA => ({
+    titulo: "  Así se mueve una venta por el sistema  ",
+    gancho: "¿Qué pasa por dentro cada vez que vendes?",
+    escenas,
+    hechos_a_verificar: ["", "El inventario se descuenta al dar salida."],
+    descripcion_youtube: "",
+    etiquetas: ["ventas", ""],
+    musica: "driving kick and bass beat",
+  });
+
+  it("lo vacío desaparece, lo largo se recorta sin cortar palabras y el guion queda válido", () => {
+    const g = guionDesdeLaIA(
+      guionIA([
+        {
+          parte: "gancho",
+          narracion: "Sam Altman tenía listo el modelo más potente.",
+          duracion_seg: 0,
+          visual: visual({
+            tipo: "foto",
+            busqueda: "Sam Altman OpenAI",
+            planos: [
+              {
+                frase: "Sam Altman tenía",
+                tipo: "foto",
+                busqueda: "Sam Altman 2025",
+                foto_de: "persona",
+                texto: "Sam Altman",
+              },
+              { frase: "", tipo: "dato", busqueda: "", foto_de: "persona", texto: "sin frase: se quita" },
+              {
+                frase: "el modelo",
+                tipo: "dato",
+                busqueda: "",
+                foto_de: "persona",
+                texto: "x".repeat(20) + " " + "palabra ".repeat(12),
+              },
+            ],
+          }),
+        },
+        {
+          parte: "interludio",
+          narracion: "",
+          duracion_seg: 40,
+          visual: visual({ busqueda: "server room lights" }),
+        },
+        {
+          parte: "cierre",
+          narracion: "Y por eso conviene mirarlo con calma.",
+          duracion_seg: 7,
+          visual: visual({ tipo: "foto", busqueda: "OpenAI oficina", foto_de: "lugar" }),
+        },
+      ]),
+    );
+    expect(g.titulo).toBe("Así se mueve una venta por el sistema");
+    expect(g.hechos_a_verificar).toEqual(["El inventario se descuenta al dar salida."]);
+    expect(g.etiquetas).toEqual(["ventas"]);
+    const [a, b, c] = g.escenas;
+    expect(a?.visual.planos).toHaveLength(2);
+    expect(a?.visual.planos?.[0]).toEqual({
+      frase: "Sam Altman tenía",
+      tipo: "foto",
+      busqueda: "Sam Altman 2025",
+      texto: "Sam Altman",
+    });
+    expect(a?.visual.planos?.[1]?.texto?.length).toBeLessThanOrEqual(60);
+    expect(a?.visual.planos?.[1]?.texto?.endsWith("palabra")).toBe(true);
+    expect(a?.visual.diagrama).toBeUndefined();
+    expect(a?.visual.titular).toBeUndefined();
+    expect(a?.duracion_seg).toBeUndefined();
+    // El interludio dura lo que puede durar (de 3 a 15 s), no lo que diga un número suelto.
+    expect(b?.duracion_seg).toBe(15);
+    expect(c?.duracion_seg).toBeUndefined();
+    expect(c?.visual.foto_de).toBe("lugar");
+  });
+
+  it("el diagrama llega con sus objetos; el ícono que escribió la IA va al dibujo que existe", () => {
+    const g = guionDesdeLaIA(
+      guionIA([
+        {
+          parte: "gancho",
+          narracion: "El cliente compra y el vendedor da salida al producto de la bodega.",
+          duracion_seg: 0,
+          visual: visual({
+            tipo: "diagrama",
+            titular: "La venta: quién hace qué",
+            planos: [
+              { frase: "El cliente compra", tipo: "stock", busqueda: "shop", foto_de: "persona", texto: "" },
+            ],
+            diagrama: {
+              seccion: "Ventas",
+              nodos: [
+                {
+                  id: "cliente",
+                  icono: "Cliente",
+                  etiqueta: "Cliente",
+                  nota: "compra",
+                  frase: "El cliente compra",
+                },
+                { id: "", icono: "bodega principal", etiqueta: "Bodega", nota: "", frase: "" },
+                { id: "x", icono: "persona", etiqueta: "", nota: "", frase: "sin nombre: se quita" },
+              ],
+              flechas: [
+                { de: "cliente", a: "n2" },
+                { de: "", a: "cliente" },
+              ],
+              formula: "",
+            },
+          }),
+        },
+        {
+          parte: "demo",
+          narracion: "Sin objetos no hay diagrama.",
+          duracion_seg: 0,
+          visual: visual({ tipo: "diagrama", titular: "TODO CUADRA SOLO" }),
+        },
+        {
+          parte: "cierre",
+          narracion: "Listo.",
+          duracion_seg: 0,
+          visual: visual({ tipo: "texto", texto_en_pantalla: "Mi opinión" }),
+        },
+      ]),
+    );
+    const d = g.escenas[0]?.visual.diagrama;
+    expect(d?.nodos.map((n) => [n.id, n.icono, n.frase])).toEqual([
+      ["cliente", "persona", "El cliente compra"],
+      ["n2", "deposito", "Bodega"],
+    ]);
+    expect(d?.flechas).toEqual([{ de: "cliente", a: "n2" }]);
+    // En una escena de diagrama no van planos: taparían el diagrama.
+    expect(g.escenas[0]?.visual.planos).toBeUndefined();
+    // Un «diagrama» que llegó sin objetos no se pierde: queda como frase en grande.
+    expect(g.escenas[1]?.visual).toMatchObject({ tipo: "texto", texto_en_pantalla: "TODO CUADRA SOLO" });
+    expect(g.escenas[1]?.visual.diagrama).toBeUndefined();
+  });
+
+  it("cada dibujo se encuentra por su nombre o por cómo le dice la gente; lo desconocido es una caja", () => {
+    for (const icono of ICONOS_DIAGRAMA) expect(iconoDeDiagrama(icono)).toBe(icono);
+    expect(iconoDeDiagrama("Almacén")).toBe("deposito");
+    expect(iconoDeDiagrama("base de datos")).toBe("datos");
+    expect(iconoDeDiagrama("Reporte de ventas")).toBe("grafica");
+    expect(iconoDeDiagrama("unicornio")).toBe("producto");
   });
 });
 

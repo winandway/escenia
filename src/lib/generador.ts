@@ -1,7 +1,8 @@
 // Genera el guion con la IA, respetando el candado de modelos y el de gasto.
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { esquemaGuionGenerado, type GuionGenerado } from "@compartido/guion";
+import type { GuionGenerado } from "@compartido/guion";
+import { esquemaGuionDeLaIA, guionDesdeLaIA } from "@compartido/guion-ia";
 import { asegurarModelo, costoTokensUsd, MODELOS_PERMITIDOS } from "@compartido/modelos";
 import type { BaseDatos } from "./db";
 import { conEstadoIA } from "./ia-estado";
@@ -41,7 +42,8 @@ export async function generarGuion(
         thinking: { type: "disabled" },
         system: instruccionesSistema(),
         messages: [{ role: "user", content: mensajeUsuario(entrada) }],
-        output_config: { format: zodOutputFormat(esquemaGuionGenerado) },
+        // El formato que se le exige es el simple, sin opcionales (C-GUION-3); después se limpia.
+        output_config: { format: zodOutputFormat(esquemaGuionDeLaIA) },
       })
       .finalMessage(),
   );
@@ -58,5 +60,5 @@ export async function generarGuion(
   if (!respuesta.parsed_output) {
     throw new Error("La IA devolvió un guion con formato inválido. Vuelve a intentarlo.");
   }
-  return { guion: esquemaGuionGenerado.parse(respuesta.parsed_output), modelo, costoUsd };
+  return { guion: guionDesdeLaIA(esquemaGuionDeLaIA.parse(respuesta.parsed_output)), modelo, costoUsd };
 }

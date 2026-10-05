@@ -158,6 +158,38 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   única comprobación válida es la fuente (el nombre en la dirección o un texto
   visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
 
+## C-GUION-3 — A la IA se le exige un formato simple, sin opcionales (6 oct 2026)
+
+- **Qué se rompió y cómo se veía:** al pedir un guion (cualquier temática), la
+  API respondió «Schema is too complex» y no se escribía ninguno.
+- **Causa real:** el formato que se le exigía a la IA era el mismo del guion
+  guardado: 16 campos opcionales, varios dentro de listas que van dentro de
+  otras listas (escenas → planos, escenas → diagrama → objetos). La API admite
+  24 opcionales, pero además tiene un tope de complejidad que no publica, y esa
+  combinación lo pasó. Contar opcionales (C-ESTILOS-1) no alcanzó para verlo
+  venir. (Dato que salió al mirar el formato: la librería no le manda a la API
+  las listas cerradas de valores; las pone como texto de ayuda y las valida
+  después. O sea que el problema eran los opcionales, no las listas.)
+- **Qué se hizo:** dos formatos. `compartido/guion-ia.ts` tiene el que se le
+  exige a la IA (`esquemaGuionDeLaIA`): ni un opcional ni un campo de dos
+  tipos; lo que no aplica va vacío. El ícono es texto libre, para no rechazar
+  un guion porque la IA escribió «bodega» en vez de «deposito». Y
+  `guionDesdeLaIA` lo pasa al guion de verdad: quita los vacíos, recorta lo
+  largo sin cortar palabras, lleva cada ícono al dibujo que existe
+  (`iconoDeDiagrama`), y un «diagrama» sin objetos queda como frase en grande.
+  El guion guardado (`esquemaGuionGenerado`) no cambió.
+- **Cómo se comprueba:** `pruebas/estilos.test.ts` (bloques C-GUION-3 y
+  C-ESTILOS-1) y `pruebas/generador.test.ts`. **En vivo**, que es lo que
+  manda: `estacion/node_modules/.bin/tsx scripts/crear-guion-remoto.ts < tema.json`
+  tiene que dejar un borrador.
+- **Comprobado en rojo:** con un opcional de vuelta en el formato de la IA, la
+  prueba falla.
+- **Qué NO tocar:** no agregar `.optional()`, `.nullable()` ni uniones a
+  `esquemaGuionDeLaIA`. Un campo nuevo entra obligatorio y
+  vacío cuando no aplica, y se limpia en `guionDesdeLaIA`.
+- **Lección:** el tope de la API no se puede medir desde aquí. Todo cambio en
+  ese formato se prueba pidiendo un guion de verdad, el mismo día.
+
 ## C-PRESENTADOR-1 — El formato Presentador no le corta la cabeza ni le tapa la cara (5 oct 2026)
 
 - **Qué se agregó:** el formato donde Richard sale grabado encima de los
