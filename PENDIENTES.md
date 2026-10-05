@@ -39,6 +39,7 @@
 - [x] Los nombres de sus productos salen bien escritos aunque la transcripción los escriba mal («Billon» → «Beellon»; 5 oct 2026). Candado C-NOMBRES-1.
 - [ ] Nombres propios: juntar los de dos palabras («Ya Dominios», «QR Bot»), pasarle la lista a la transcripción y que Richard agregue nombres desde el panel.
 - [ ] Presentador: cortar pausas y frases repetidas del MEDIO de la grabación antes de armar.
+- [ ] Shorts de un video corto (menos de dos minutos): hoy sale UN vertical con el video entero (108 s en el guion 12). Decidir con Richard si prefiere dos o tres piezas de 30 a 60 segundos.
 - [ ] Presentador: quitar el fondo sin croma (recorte de personas de macOS, cuadro por cuadro).
 - [ ] Formato Pizarra: fotos recortadas como calcomanías, con flechas y fechas (para historias de música con presentador).
 - [ ] Auditoría de dependencias: cuando salga `braces` corregido (aviso GHSA-vfj7-8cjw-p6xm, solo toca a la herramienta que revisa el código), actualizar y comprobar que `npm run audit:todo` da cero. Ver C-AUDITORIA-1.
