@@ -219,7 +219,7 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Comprobado de punta a punta** con una grabación sintética (un muñeco sobre
   verde y la voz de la Mac): transcripción real, croma, video largo y Short, con
   fondo de Neón y de Cómic. **Falta probarlo con una grabación de Richard**: el
-  borrado del verde con imagen real puede pedir ajuste (`--similitud`).
+  borrado del verde con imagen real se rehízo después: ver C-CROMA-1.
 - **Qué NO tocar:** no acelerar ni recortar pausas de la voz grabada sin cortar
   igual el video (se desfasa la boca); no volver a `cropdetect`.
 
@@ -276,7 +276,49 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   no dejar que el navegador mande la clave del almacén; no volver a ponerle
   reintentos automáticos al pedido del plan; no convertir «Quitar» en un borrado.
 
-## C-FORMATO-MIXTO-1 — «Neón con personajes», y el formato ya no vive en un CHECK de la base (5 oct 2026)
+## C-CROMA-1 — El fondo verde se encuentra donde esté, se borra sin comerse la ropa, y el video empieza cuando Richard habla (5 oct 2026)
+
+Primera grabación real de Richard («videoFile-rendered 14.MOV», vertical, 109
+segundos, grabación 3, guion 12). Salieron tres fallos que con el muñeco de
+prueba no se veían:
+
+1. **«Tu grabación no tiene fondo de croma: va en una ventana».** Sí lo tenía.
+   El detector miraba las dos esquinas de arriba, y en su estudio el tercio de
+   arriba del cuadro es techo blanco y a la izquierda hay un panel gris.
+   **Arreglo:** `detectarCroma` (`estacion/src/croma.ts`, con la lógica en
+   `compartido/croma.ts`) mira cinco cuadros enteros, busca la tela verde o azul
+   **donde esté** (al menos el 12 % del cuadro), toma su color (la mediana) y
+   devuelve la **zona** que cubre. Todo lo de afuera de esa zona se recorta
+   antes de borrar el color.
+2. **El borrado se comía la chaqueta negra y la camiseta** (quedaban la cara y
+   las manos flotando). El `chromakey` de ffmpeg compara el tono sin mirar la
+   luz, y con una tela de verde apagado (`0x53b367`, luz de ventana) lo negro,
+   lo gris y lo blanco le quedan «cerca». **Arreglo:** ya no se usa. El alfa se
+   saca de **cuánto verde le sobra a cada punto** sobre sus otros dos colores
+   (`umbralesDeCroma` y `filtroDeCroma`: planos sueltos, `blend` y `lut`, todo
+   filtros rápidos). Lo negro, lo gris, lo blanco y la piel no tienen exceso de
+   verde. De paso el verde de cada punto se baja al mayor de los otros dos, y
+   no queda borde verde. La grabación entera se procesa en 14 segundos.
+3. **El video abría con Richard de lado, callado**, acercándose a la cámara
+   (tres segundos antes de hablar y cuatro después). **Arreglo:**
+   `corteDeGrabacion` usa solo el trozo entre la primera y la última palabra
+   (con un respiro), y la voz y la imagen se cortan igual.
+
+- **Lo que vigila (`pruebas/presentador.test.ts`):** un cuadro como el suyo
+  (techo arriba, panel a un lado, él en el centro) da croma, con la zona
+  correcta; una sala, un fondo negro o una planta no; la tela y sus arrugas se
+  borran enteras y nada de la persona llega al umbral; el corte y las palabras
+  corridas.
+- **Comprobado en rojo** el 5 oct 2026: siete fallos metidos a propósito.
+- **Comprobado con su grabación:** cuadros revisados del video transparente y
+  del video armado (trabajo 34): sale entero, con gorra, lentes y chaqueta.
+- **Qué NO tocar:** no volver a `chromakey`; no volver a mirar solo las
+  esquinas; `extractplanes` entrega los planos SIEMPRE en el orden rojo, verde,
+  azul (no en el que se le piden: al revés, la piel se vuelve transparente).
+- **Lo que sigue faltando:** si una parte de él sale de la tela (un codo sobre
+  el panel, la gorra por encima del borde), esa parte se corta recta.
+
+, y el formato ya no vive en un CHECK de la base (5 oct 2026)
 
 - **Qué se agregó:** el cuarto formato, `mixto`: diagramas de neón y las
   personas que se nombran, dibujadas sobre el mismo neón. Guía:

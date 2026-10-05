@@ -4,6 +4,7 @@
 // ventana. Todo con ffmpeg, en la Mac y sin gastar.
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { cromaDeCuadro, juntarCromas, umbralesDeCroma, zonaEnPuntos, type Croma } from "@compartido/croma";
 
 const exec = promisify(execFile);
 const GRANDE = { maxBuffer: 64 * 1024 * 1024 };
@@ -37,13 +38,15 @@ export async function medidasDeVideo(ruta: string): Promise<MedidasDeVideo> {
   };
 }
 
-/** El color promedio de un trozo del cuadro (fracciones 0-1), como [r, g, b]. */
-async function colorDeZona(
+/** Un cuadro de la grabación, achicado (el lado más largo de 160 puntos), como puntos RGB. */
+async function cuadroChico(
   ruta: string,
-  x: number,
-  y: number,
   seg: number,
-): Promise<[number, number, number]> {
+  origen: MedidasDeVideo,
+): Promise<{ rgb: Uint8Array; ancho: number; alto: number }> {
+  const escala = 160 / Math.max(origen.ancho, origen.alto);
+  const ancho = Math.max(4, Math.round(origen.ancho * escala));
+  const alto = Math.max(4, Math.round(origen.alto * escala));
   const { stdout } = await exec(
     "ffmpeg",
     [
@@ -56,7 +59,7 @@ async function colorDeZona(
       "-frames:v",
       "1",
       "-vf",
-      `crop=iw*0.1:ih*0.1:iw*${x}:ih*${y},scale=1:1`,
+      `scale=${ancho}:${alto}`,
       "-f",
       "rawvideo",
       "-pix_fmt",
@@ -65,34 +68,25 @@ async function colorDeZona(
     ],
     { encoding: "buffer", ...GRANDE },
   );
-  return [stdout[0] ?? 0, stdout[1] ?? 0, stdout[2] ?? 0];
+  return { rgb: new Uint8Array(stdout), ancho, alto };
 }
 
 /**
- * ¿Se grabó con croma? Mira las dos esquinas de arriba (donde casi nunca está
- * la persona) en dos momentos. Si son de un verde o un azul parejo, devuelve
- * ese color para quitarlo; si no (fondo negro, una sala), `null`.
+ * ¿Se grabó con croma? Mira cinco cuadros repartidos por la grabación y busca la tela verde
+ * (o azul) DONDE ESTÉ: casi nunca llena el cuadro (arriba se ve el techo, a un lado una pared).
+ * Devuelve su color y la zona que cubre; si no hay tela (fondo negro, una sala), `null`.
+ * Antes solo se miraban las dos esquinas de arriba, y la primera grabación real de Richard
+ * —con el techo en el tercio de arriba— salió «sin croma», en una ventana (C-CROMA-1).
  */
-export async function colorDeCroma(ruta: string, duracionSeg: number): Promise<string | null> {
-  const momentos = [Math.min(1, duracionSeg / 4), Math.max(0, duracionSeg / 2)];
-  const muestras: [number, number, number][] = [];
+export async function detectarCroma(ruta: string, duracionSeg: number): Promise<Croma | null> {
+  const origen = await medidasDeVideo(ruta);
+  const momentos = [0.1, 0.3, 0.5, 0.7, 0.9].map((f) => Math.max(0, duracionSeg * f));
+  const cuadros = [];
   for (const seg of momentos) {
-    muestras.push(await colorDeZona(ruta, 0.02, 0.03, seg), await colorDeZona(ruta, 0.88, 0.03, seg));
+    const c = await cuadroChico(ruta, seg, origen);
+    cuadros.push(cromaDeCuadro(c.rgb, c.ancho, c.alto));
   }
-  return colorSiEsCroma(muestras);
-}
-
-/** De unas muestras de color del fondo, el color de croma (en hexadecimal) o `null` si no es verde ni azul parejo. */
-export function colorSiEsCroma(muestras: [number, number, number][]): string | null {
-  if (muestras.length === 0) return null;
-  const esVerde = (c: [number, number, number]) => c[1] > 70 && c[1] > c[0] * 1.35 && c[1] > c[2] * 1.35;
-  const esAzul = (c: [number, number, number]) => c[2] > 70 && c[2] > c[0] * 1.35 && c[2] > c[1] * 1.2;
-  const todas = (prueba: (c: [number, number, number]) => boolean) => muestras.every(prueba);
-  if (!todas(esVerde) && !todas(esAzul)) return null;
-  const prom = [0, 1, 2].map((k) =>
-    Math.round(muestras.reduce((s, c) => s + (c[k] ?? 0), 0) / muestras.length),
-  );
-  return `0x${prom.map((n) => n.toString(16).padStart(2, "0")).join("")}`;
+  return juntarCromas(cuadros);
 }
 
 /**
@@ -120,13 +114,49 @@ export function recorteDeFigura(
 }
 
 export type OpcionesDeCroma = {
-  /** Qué tan parecido al color del fondo tiene que ser un punto para borrarse (0.05 a 0.4). */
-  similitud?: number;
-  /** Cuánto se suaviza el borde. */
-  mezcla?: number;
   /** Alto del video que sale, en puntos. */
   alto?: number;
+  /** La zona del cuadro que cubre la tela (fracciones): lo de afuera se recorta antes de borrar el color. */
+  zona?: Croma["zona"];
+  /** El trozo de la grabación que se usa (sin el principio ni el final en los que no habla). */
+  corte?: Corte;
 };
+
+/** Un trozo de la grabación, en milisegundos. */
+export type Corte = { desdeMs: number; hastaMs: number };
+
+/** Las opciones de ffmpeg que hacen leer solo ese trozo (van ANTES de la entrada). */
+const soloElTrozo = (corte?: Corte): string[] =>
+  corte
+    ? ["-ss", (corte.desdeMs / 1000).toFixed(3), "-t", ((corte.hastaMs - corte.desdeMs) / 1000).toFixed(3)]
+    : [];
+
+/**
+ * El trozo de filtro que saca, de una imagen, cuánto hay que dejar ver de cada punto (su «alfa»):
+ * blanco donde está la persona, negro donde está la tela. Deja también los tres colores sueltos,
+ * con el de la tela ya rebajado (para que no le quede un borde verde a la persona).
+ * Entra una imagen sin etiqueta y salen `[uno]`, `[dos]`, `[tres]` (verde, azul y rojo) y `[alfa]`.
+ */
+function filtroDeCroma(color: string): string {
+  const { verde, bajo, alto } = umbralesDeCroma(color);
+  // La tela es del color `tela`; los otros dos son `otroA` y `otroB`.
+  const [tela, otroA, otroB] = verde ? ["g", "r", "b"] : ["b", "r", "g"];
+  return [
+    `format=gbrp,extractplanes=r+g+b[r][g][b]`,
+    `[${otroA}]split[a1][a2]`,
+    `[${otroB}]split[b1][b2]`,
+    `[${tela}]split[t1][t2]`,
+    // El mayor de los otros dos colores, punto por punto.
+    `[a1][b1]blend=all_mode=lighten,split[m1][m2]`,
+    // Cuánto le sobra del color de la tela a cada punto; de ahí, cuánto se deja ver.
+    `[t1][m1]blend=all_mode=subtract,lut=y='255-clip((val-${bajo})*255/(${alto - bajo})\\,0\\,255)'[alfa]`,
+    // El color de la tela nunca pasa del mayor de los otros dos: sin reflejo verde en la piel.
+    `[t2][m2]blend=all_mode=darken[limpio]`,
+    verde
+      ? `[limpio]null[uno];[b2]null[dos];[a2]null[tres]`
+      : `[b2]null[uno];[limpio]null[dos];[a2]null[tres]`,
+  ].join(";");
+}
 
 /**
  * Quita el fondo de croma y deja un video transparente (WebM con canal alfa),
@@ -139,11 +169,12 @@ export async function quitarCroma(
   color: string,
   opciones: OpcionesDeCroma = {},
 ): Promise<{ ancho: number; alto: number }> {
-  const similitud = opciones.similitud ?? 0.14;
-  const mezcla = opciones.mezcla ?? 0.06;
   const alto = opciones.alto ?? 1080;
-  const verde = parseInt(color.slice(4, 6), 16) >= parseInt(color.slice(6, 8), 16);
-  const llave = `chromakey=${color}:${similitud}:${mezcla},despill=type=${verde ? "green" : "blue"}:mix=0.6:expand=0.1`;
+  const llave = filtroDeCroma(color);
+  // Primero se recorta a la tela: el techo, una pared o una lámpara no son verdes y quedarían pegados.
+  const original = await medidasDeVideo(entrada);
+  const tela = opciones.zona ? zonaEnPuntos(opciones.zona, original) : null;
+  const aLaTela = tela ? `crop=${tela.ancho}:${tela.alto}:${tela.x}:${tela.y},` : "";
 
   // 1) Dónde está la persona: el recuadro que ocupa su figura en toda la grabación (a baja
   //    resolución, dos cuadros por segundo). OJO: `cropdetect` no sirve aquí; decide por el
@@ -151,11 +182,14 @@ export async function quitarCroma(
   const { stderr } = await exec(
     "ffmpeg",
     [
+      ...soloElTrozo(opciones.corte),
       "-i",
       entrada,
       "-an",
-      "-vf",
-      `fps=2,scale=480:-2,${llave},format=yuva420p,alphaextract,format=gray,bbox=min_val=40`,
+      "-filter_complex",
+      `[0:v]fps=2,${aLaTela}scale=480:-2,${llave};[alfa]bbox=min_val=110[v];[uno][dos][tres]mergeplanes=0x001020:gbrp,nullsink`,
+      "-map",
+      "[v]",
       "-f",
       "null",
       "-",
@@ -165,18 +199,21 @@ export async function quitarCroma(
   const cajas = [...stderr.matchAll(/x1:(\d+) x2:(\d+) y1:(\d+) y2:(\d+)/g)].map((m) =>
     m.slice(1, 5).map(Number),
   );
-  const origen = await medidasDeVideo(entrada);
+  const origen = tela ? { ancho: tela.ancho, alto: tela.alto } : original;
   const recorte = recorteDeFigura(cajas, 480, origen);
   // 2) El video transparente.
   await exec(
     "ffmpeg",
     [
       "-y",
+      ...soloElTrozo(opciones.corte),
       "-i",
       entrada,
       "-an",
-      "-vf",
-      `fps=30,${recorte ? `crop=${recorte.ancho}:${recorte.alto}:${recorte.x}:${recorte.y},` : ""}scale=-2:${alto},${llave},format=yuva420p`,
+      "-filter_complex",
+      `[0:v]fps=30,${aLaTela}${recorte ? `crop=${recorte.ancho}:${recorte.alto}:${recorte.x}:${recorte.y},` : ""}scale=-2:${alto},${llave};[uno][dos][tres][alfa]mergeplanes=0x00102030:gbrap,format=yuva420p[v]`,
+      "-map",
+      "[v]",
       "-c:v",
       "libvpx-vp9",
       "-pix_fmt",
@@ -217,11 +254,13 @@ export async function prepararVentana(
   entrada: string,
   salida: string,
   alto = 1080,
+  corte?: Corte,
 ): Promise<{ ancho: number; alto: number }> {
   await exec(
     "ffmpeg",
     [
       "-y",
+      ...soloElTrozo(corte),
       "-i",
       entrada,
       "-an",
@@ -241,6 +280,15 @@ export async function prepararVentana(
   );
   const m = await medidasDeVideo(salida);
   return { ancho: m.ancho, alto: m.alto };
+}
+
+/** El mismo trozo, de la voz ya emparejada (se vuelve a codificar para que el corte sea exacto). */
+export async function recortarVoz(entradaMp3: string, salidaMp3: string, corte: Corte): Promise<void> {
+  await exec(
+    "ffmpeg",
+    ["-y", "-i", entradaMp3, ...soloElTrozo(corte), "-ac", "1", "-ar", "44100", "-b:a", "192k", salidaMp3],
+    GRANDE,
+  );
 }
 
 /** La voz de la grabación, sola, para transcribirla y usarla de pista del video. */

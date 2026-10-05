@@ -9,9 +9,21 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { extensionDeVideo } from "@compartido/grabaciones";
 import type { Guion } from "@compartido/guion";
-import { momentosDelPresentador, tramosDeGrabacion } from "@compartido/presentador";
+import {
+  corteDeGrabacion,
+  momentosDelPresentador,
+  palabrasDesde,
+  tramosDeGrabacion,
+} from "@compartido/presentador";
 import { config } from "./config";
-import { colorDeCroma, extraerVoz, medidasDeVideo, prepararVentana, quitarCroma } from "./croma";
+import {
+  detectarCroma,
+  extraerVoz,
+  medidasDeVideo,
+  prepararVentana,
+  quitarCroma,
+  recortarVoz,
+} from "./croma";
 import { panel } from "./panel";
 import type { producir } from "./produccion";
 import { transcribir } from "./transcribir";
@@ -69,28 +81,35 @@ export async function montarPresentador(
   voz: Awaited<ReturnType<typeof vozDeGrabacion>>,
   clave: string,
   avisar: (texto: string) => unknown,
-  opciones: { sinCroma?: boolean; similitud?: number } = {},
+  opciones: { sinCroma?: boolean } = {},
 ): Promise<Material> {
-  const { medidas, rutaVoz, t } = voz;
-  const duracionMs = Math.round(medidas.duracionSeg * 1000);
-  const tramos = tramosDeGrabacion(
-    guion.escenas.map((e) => e.narracion),
-    t.palabras,
-    duracionMs,
-  );
+  const { medidas, t } = voz;
+  // Solo se usa el trozo en el que habla: lo de antes y lo de después (él acercándose a la cámara
+  // para darle a grabar y a parar) se corta, en la voz y en la imagen por igual.
+  const corte = corteDeGrabacion(t.palabras, Math.round(medidas.duracionSeg * 1000));
+  const duracionMs = corte.hastaMs - corte.desdeMs;
+  const palabras = palabrasDesde(t.palabras, corte.desdeMs);
   const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
   await mkdir(carpetaPublica, { recursive: true });
-  const color = opciones.sinCroma ? null : await colorDeCroma(entrada, medidas.duracionSeg);
+  const rutaVoz = path.join(carpetaPublica, "voz-del-presentador.mp3");
+  await recortarVoz(voz.rutaVoz, rutaVoz, corte);
+  const tramos = tramosDeGrabacion(
+    guion.escenas.map((e) => e.narracion),
+    palabras,
+    duracionMs,
+  );
+  const croma = opciones.sinCroma ? null : await detectarCroma(entrada, medidas.duracionSeg);
   let video: { ruta: string; ancho: number; alto: number; transparente: boolean };
-  if (color) {
-    await avisar(`quitando el fondo verde de tu grabación (${color})`);
-    const r = await quitarCroma(entrada, path.join(carpetaPublica, "presentador.webm"), color, {
-      similitud: opciones.similitud,
+  if (croma) {
+    await avisar(`quitando el fondo verde de tu grabación (${croma.color})`);
+    const r = await quitarCroma(entrada, path.join(carpetaPublica, "presentador.webm"), croma.color, {
+      zona: croma.zona,
+      corte,
     });
     video = { ruta: "presentador.webm", ...r, transparente: true };
   } else {
     await avisar("tu grabación no tiene fondo de croma: va en una ventana");
-    const r = await prepararVentana(entrada, path.join(carpetaPublica, "presentador.mp4"));
+    const r = await prepararVentana(entrada, path.join(carpetaPublica, "presentador.mp4"), 1080, corte);
     video = { ruta: "presentador.mp4", ...r, transparente: false };
   }
   const momentos = momentosDelPresentador(
@@ -103,7 +122,7 @@ export async function montarPresentador(
   return {
     voz: {
       rutaMp3: rutaVoz,
-      palabras: t.palabras,
+      palabras,
       tramos,
       duracionMs,
       vozDePrueba: false,

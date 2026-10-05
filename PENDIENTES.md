@@ -2,7 +2,7 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Grabar una prueba de 30 a 60 segundos con el croma verde (horizontal, de la cintura para arriba) y subirla en el panel, menú «Grabaciones» → se ajusta el borrado del fondo con su imagen real y sale el primer video del formato Presentador. Cómo grabar: docs/PRESENTADOR.md.
+- 👤 Ver su primer video con el formato Presentador (guion 12, «ChatGPT y Gemini ya no son gratis»), decir qué le cambiaría y probarlo en los otros formatos con el botón «Probar en…» → con su opinión se afina el diseño (tamaño en la esquina, cuánto rato sale en grande).
 - 👤 Decir si le gustan los nombres de los formatos (Documental, Cómic, Neón, Presentador) y cuál de las ideas nuevas quiere primero (Pizarra, Pantalla, Ranking, Versus, Línea de tiempo): docs/FORMATOS.md.
 
 - 👤 Conversar y elegir los temas de los próximos videos (información importante, que la gente comparta, y con un producto suyo para vender dentro) → recién con el tema acordado se escribe un guion. El borrador del guion 9 se rechazó el 5 oct 2026: era un ejemplo improvisado, no un tema.
@@ -35,7 +35,8 @@
 - [x] Formato «Neón con personajes» (`mixto`, 5 oct 2026): cuarta opción al subir una grabación; diagramas de neón y las personas nombradas, dibujadas sobre el neón. Candado C-FORMATO-MIXTO-1.
 - [ ] Neón con personajes: que también salgan los logos de las empresas que se nombran (OpenAI, Google), no solo las personas.
 - [ ] Presentador: corregir el plan (un diagrama, una foto) desde el panel antes de armar.
-- [ ] Presentador: cortar pausas y frases repetidas de la grabación antes de armar.
+- [x] Presentador: el fondo verde se encuentra donde esté y se borra sin comerse la ropa; el principio y el final mudos se cortan solos (5 oct 2026, con la primera grabación real de Richard). Candado C-CROMA-1.
+- [ ] Presentador: cortar pausas y frases repetidas del MEDIO de la grabación antes de armar.
 - [ ] Presentador: quitar el fondo sin croma (recorte de personas de macOS, cuadro por cuadro).
 - [ ] Formato Pizarra: fotos recortadas como calcomanías, con flechas y fechas (para historias de música con presentador).
 - [ ] Auditoría de dependencias: cuando salga `braces` corregido (aviso GHSA-vfj7-8cjw-p6xm, solo toca a la herramienta que revisa el código), actualizar y comprobar que `npm run audit:todo` da cero. Ver C-AUDITORIA-1.

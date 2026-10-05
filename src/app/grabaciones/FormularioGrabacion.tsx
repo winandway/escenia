@@ -9,14 +9,14 @@ import { ESTILOS_VIDEO, NOMBRE_CANAL, NOMBRE_FORMATO } from "@compartido/tematic
 import { FalloDeSubida, iniciarSubida, seguirSubida, type SubidaEnCurso } from "./subida";
 
 type Estado = {
-  fase: "listo" | "subiendo" | "pausada";
+  /** «hecho»: ya subió. El formulario se guarda y queda a la vista solo la confirmación. */
+  fase: "listo" | "subiendo" | "pausada" | "hecho";
   subidos: number;
   total: number;
   error: string;
-  ok: string;
 };
 
-const EN_REPOSO: Estado = { fase: "listo", subidos: 0, total: 0, error: "", ok: "" };
+const EN_REPOSO: Estado = { fase: "listo", subidos: 0, total: 0, error: "" };
 
 const QUE_VA_DETRAS = {
   neon: "diagramas de neón que se encienden cuando nombras cada cosa",
@@ -47,17 +47,17 @@ export function FormularioGrabacion() {
 
   async function continuar(s: SubidaEnCurso) {
     const total = s.archivo.size;
-    setEstado((e) => ({ ...e, fase: "subiendo", total, error: "", ok: "" }));
+    setEstado((e) => ({ ...e, fase: "subiendo", total, error: "" }));
     try {
       await seguirSubida(s, (subidos) => setEstado((e) => ({ ...e, subidos })));
       subida.current = null;
       descartar();
       ref.current?.reset();
-      setEstado({
-        ...EN_REPOSO,
-        ok: "Tu video ya subió. La Mac lo toma sola: aquí abajo vas viendo cómo avanza.",
-      });
+      // Ya no queda nada por tocar: el formulario se guarda (con su botón) para que no parezca
+      // que falta un paso, y se lleva la vista a la lista, donde se ve el avance.
+      setEstado({ ...EN_REPOSO, fase: "hecho" });
       router.refresh();
+      document.getElementById("titulo-lista")?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (e) {
       const seguir = e instanceof FalloDeSubida && e.sePuedeSeguir;
       if (!seguir) subida.current = null;
@@ -108,111 +108,123 @@ export function FormularioGrabacion() {
   const pct = estado.total > 0 ? Math.round((estado.subidos / estado.total) * 100) : 0;
 
   return (
-    <form ref={ref} onSubmit={subir} className="max-w-2xl space-y-5">
-      <AvisoBorrador visible={recuperado} alEmpezarDeNuevo={empezarDeNuevo} />
-
-      <div>
-        <label htmlFor="archivo" className="etiqueta">
-          Tu video (MP4 o MOV, hasta {MAX_BYTES_GRABACION / 1_073_741_824} GB)
-        </label>
-        <input
-          id="archivo"
-          name="archivo"
-          type="file"
-          accept="video/*,.mp4,.mov,.m4v,.webm,.mkv"
-          required
-          disabled={ocupado || estado.fase === "pausada"}
-          className="campo file:mr-3 file:rounded-md file:border-0 file:bg-neutral-700 file:px-3 file:py-1.5 file:text-neutral-100"
-        />
-        <p className="mt-1.5 text-xs text-neutral-400">
-          Grábate en horizontal, de la cintura para arriba, con el fondo verde parejo y bien iluminado. Sirve
-          el archivo tal como sale del teléfono o de la cámara. Si lo grabas sin fondo verde, sales en una
-          ventana.
-        </p>
-      </div>
-
-      <div>
-        <label htmlFor="tema" className="etiqueta">
-          De qué hablas en el video
-        </label>
-        <textarea
-          id="tema"
-          name="tema"
-          required
-          minLength={5}
-          maxLength={300}
-          rows={2}
-          className="campo"
-          placeholder="El tema del video, en una frase"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="formato" className="etiqueta">
-          Qué va detrás de ti
-        </label>
-        <select id="formato" name="formato" required className="campo" defaultValue="neon">
-          {ORDEN_DE_FORMATOS.map((f) => (
-            <option key={f} value={f}>
-              {NOMBRE_FORMATO[f]}: {QUE_VA_DETRAS[f]}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1.5 text-xs text-neutral-400">
-          Después puedes probar el mismo video con otro formato, sin subirlo otra vez.
-        </p>
-      </div>
-
-      <div>
-        <label htmlFor="canal" className="etiqueta">
-          Para qué canal
-        </label>
-        <select id="canal" name="canal" required className="campo" defaultValue="canal-ia">
-          {(["canal-ia", "caprichoso-tv"] as const).map((c) => (
-            <option key={c} value={c}>
-              {NOMBRE_CANAL[c]}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {estado.fase !== "listo" && (
-        <div role="status" aria-live="polite">
-          <div
-            className="h-2 overflow-hidden rounded-full bg-neutral-800"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={pct}
-            aria-label="Avance de la subida"
-          >
-            <div className="h-full bg-amber-500 transition-[width]" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="mt-1.5 text-sm text-neutral-300">
-            {estado.fase === "subiendo" ? "Subiendo" : "En pausa"}: {pct}% ({megas(estado.subidos)} de{" "}
-            {megas(estado.total)}).{" "}
-            {estado.fase === "subiendo" && "No cierres esta pestaña hasta que termine."}
+    <>
+      {estado.fase === "hecho" && (
+        <div role="status" className="max-w-2xl rounded-md border border-emerald-900 bg-emerald-950/40 p-4">
+          <p className="text-base font-semibold text-emerald-200">Listo: tu video ya subió.</p>
+          <p className="mt-1 text-sm text-emerald-100/90">
+            No tienes que tocar nada más. La Mac lo arma sola y aquí abajo, en «Tus grabaciones», ves cómo
+            avanza. Cuando diga «Video listo», entra a verlo y descargarlo.
           </p>
+          <button type="button" onClick={() => setEstado(EN_REPOSO)} className="boton-suave mt-3">
+            Subir otro video
+          </button>
         </div>
       )}
+      {/* El formulario sigue montado (guarda lo escrito), pero no se ve después de subir. */}
+      <form
+        ref={ref}
+        onSubmit={subir}
+        className={estado.fase === "hecho" ? "hidden" : "max-w-2xl space-y-5"}
+        aria-hidden={estado.fase === "hecho"}
+      >
+        <AvisoBorrador visible={recuperado} alEmpezarDeNuevo={empezarDeNuevo} />
 
-      {estado.error && (
-        <p role="alert" className="rounded-md border border-red-900 bg-red-950/50 p-3 text-sm text-red-200">
-          {estado.error}
-        </p>
-      )}
-      {estado.ok && (
-        <p
-          role="status"
-          className="rounded-md border border-emerald-900 bg-emerald-950/40 p-3 text-sm text-emerald-200"
-        >
-          {estado.ok}
-        </p>
-      )}
+        <div>
+          <label htmlFor="archivo" className="etiqueta">
+            Tu video (MP4 o MOV, hasta {MAX_BYTES_GRABACION / 1_073_741_824} GB)
+          </label>
+          <input
+            id="archivo"
+            name="archivo"
+            type="file"
+            accept="video/*,.mp4,.mov,.m4v,.webm,.mkv"
+            required
+            disabled={ocupado || estado.fase === "pausada"}
+            className="campo file:mr-3 file:rounded-md file:border-0 file:bg-neutral-700 file:px-3 file:py-1.5 file:text-neutral-100"
+          />
+          <p className="mt-1.5 text-xs text-neutral-400">
+            Grábate en horizontal, de la cintura para arriba, con el fondo verde parejo y bien iluminado.
+            Sirve el archivo tal como sale del teléfono o de la cámara. Si lo grabas sin fondo verde, sales en
+            una ventana.
+          </p>
+        </div>
 
-      <button type="submit" disabled={ocupado} className="boton">
-        {ocupado ? "Subiendo…" : estado.fase === "pausada" ? "Seguir subiendo" : "Subir y armar el video"}
-      </button>
-    </form>
+        <div>
+          <label htmlFor="tema" className="etiqueta">
+            De qué hablas en el video
+          </label>
+          <textarea
+            id="tema"
+            name="tema"
+            required
+            minLength={5}
+            maxLength={300}
+            rows={2}
+            className="campo"
+            placeholder="El tema del video, en una frase"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="formato" className="etiqueta">
+            Qué va detrás de ti
+          </label>
+          <select id="formato" name="formato" required className="campo" defaultValue="neon">
+            {ORDEN_DE_FORMATOS.map((f) => (
+              <option key={f} value={f}>
+                {NOMBRE_FORMATO[f]}: {QUE_VA_DETRAS[f]}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1.5 text-xs text-neutral-400">
+            Después puedes probar el mismo video con otro formato, sin subirlo otra vez.
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="canal" className="etiqueta">
+            Para qué canal
+          </label>
+          <select id="canal" name="canal" required className="campo" defaultValue="canal-ia">
+            {(["canal-ia", "caprichoso-tv"] as const).map((c) => (
+              <option key={c} value={c}>
+                {NOMBRE_CANAL[c]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(estado.fase === "subiendo" || estado.fase === "pausada") && (
+          <div role="status" aria-live="polite">
+            <div
+              className="h-2 overflow-hidden rounded-full bg-neutral-800"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={pct}
+              aria-label="Avance de la subida"
+            >
+              <div className="h-full bg-amber-500 transition-[width]" style={{ width: `${pct}%` }} />
+            </div>
+            <p className="mt-1.5 text-sm text-neutral-300">
+              {estado.fase === "subiendo" ? "Subiendo" : "En pausa"}: {pct}% ({megas(estado.subidos)} de{" "}
+              {megas(estado.total)}).{" "}
+              {estado.fase === "subiendo" && "No cierres esta pestaña hasta que termine."}
+            </p>
+          </div>
+        )}
+
+        {estado.error && (
+          <p role="alert" className="rounded-md border border-red-900 bg-red-950/50 p-3 text-sm text-red-200">
+            {estado.error}
+          </p>
+        )}
+
+        <button type="submit" disabled={ocupado} className="boton">
+          {ocupado ? "Subiendo…" : estado.fase === "pausada" ? "Seguir subiendo" : "Subir y armar el video"}
+        </button>
+      </form>
+    </>
   );
 }

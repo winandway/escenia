@@ -7,13 +7,18 @@ import {
   MODELO_TRANSCRIPCION,
 } from "@compartido/modelos";
 import {
+  AIRE_ANTES_MS,
+  AIRE_DESPUES_MS,
   APERTURA_MS,
+  corteDeGrabacion,
   momentosDelPresentador,
+  palabrasDesde,
   palabrasDeTranscripcion,
   tramosDeGrabacion,
 } from "@compartido/presentador";
 import { NOMBRE_FORMATO } from "@compartido/tematicas";
-import { colorSiEsCroma, recorteDeFigura } from "../estacion/src/croma";
+import { cromaDeCuadro, juntarCromas, umbralesDeCroma, zonaEnPuntos } from "@compartido/croma";
+import { recorteDeFigura } from "../estacion/src/croma";
 import { esquemaPropsVideo } from "../estacion/src/remotion/props";
 
 const dicho = (texto: string, cadaMs = 400) =>
@@ -101,34 +106,110 @@ describe("presentador: cuándo sale en grande y cuándo en la esquina", () => {
 });
 
 describe("presentador: el fondo de la grabación", () => {
-  it("reconoce un croma verde o azul parejo; un fondo negro o una sala no son croma", () => {
-    expect(
-      colorSiEsCroma([
-        [32, 170, 60],
-        [30, 168, 58],
-        [34, 172, 61],
-        [31, 169, 60],
-      ]),
-    ).toBe("0x20aa3c");
-    expect(
-      colorSiEsCroma([
-        [20, 60, 200],
-        [22, 62, 205],
-      ]),
-    ).toMatch(/^0x/);
-    expect(
-      colorSiEsCroma([
-        [12, 12, 14],
-        [10, 11, 12],
-      ]),
-    ).toBeNull();
-    expect(
-      colorSiEsCroma([
-        [200, 190, 180],
-        [32, 170, 60],
-      ]),
-    ).toBeNull();
-    expect(colorSiEsCroma([])).toBeNull();
+  /** Un cuadro de prueba de 90 × 160: se pinta punto por punto con la función que se le pase. */
+  const cuadro = (pintar: (x: number, y: number) => [number, number, number]) => {
+    const [ancho, alto] = [90, 160];
+    const rgb = new Uint8Array(ancho * alto * 3);
+    for (let y = 0; y < alto; y++) for (let x = 0; x < ancho; x++) rgb.set(pintar(x, y), (y * ancho + x) * 3);
+    return { rgb, ancho, alto };
+  };
+  const TELA: [number, number, number] = [83, 179, 103];
+  const ARRUGA: [number, number, number] = [60, 140, 78];
+  const TECHO: [number, number, number] = [228, 226, 220];
+  const PANEL: [number, number, number] = [150, 150, 152];
+  const CHAQUETA: [number, number, number] = [22, 22, 26];
+  const PIEL: [number, number, number] = [196, 150, 124];
+  /** La grabación real de Richard: techo en el tercio de arriba, un panel gris a la izquierda y él en el centro. */
+  const comoLaDeRichard = (x: number, y: number): [number, number, number] => {
+    if (y < 48) return TECHO;
+    if (x < 10) return PANEL;
+    if (y >= 54 && y < 76 && x >= 36 && x < 56) return PIEL; // la cabeza
+    if (y >= 76 && x >= 16 && x < 78) return CHAQUETA; // el cuerpo, hasta abajo
+    return (x + y) % 7 === 0 ? ARRUGA : TELA;
+  };
+
+  it("encuentra la tela verde aunque no llene el cuadro, y dice qué zona cubre", () => {
+    // Caso real del 5 oct 2026: antes se miraban las dos esquinas de arriba (aquí, techo blanco)
+    // y la primera grabación de Richard salió «sin croma», en una ventana.
+    const c = cuadro(comoLaDeRichard);
+    const uno = cromaDeCuadro(c.rgb, c.ancho, c.alto);
+    if (!uno) throw new Error("tenía que encontrar la tela");
+    expect(uno.zona.y0).toBeCloseTo(48 / 160, 2);
+    expect(uno.zona.x0).toBeCloseTo(10 / 90, 2);
+    expect(uno.zona.x1).toBe(1);
+    // El color es el de la tela (no el de sus arrugas ni un promedio con la chaqueta).
+    expect(uno.color).toEqual(TELA);
+
+    const croma = juntarCromas([uno, uno, uno, uno, uno]);
+    if (!croma) throw new Error("tenía que haber croma");
+    expect(croma.color).toBe("0x53b367");
+    // La zona deja afuera el techo y el panel, con un margen hacia adentro; por la derecha y por
+    // abajo la tela llega al borde y no se recorta nada.
+    const z = zonaEnPuntos(croma.zona, { ancho: 720, alto: 1280 });
+    expect(z.y).toBeGreaterThanOrEqual(384);
+    expect(z.y).toBeLessThan(384 + 40);
+    expect(z.x).toBeGreaterThanOrEqual(80);
+    expect(z.x).toBeLessThan(80 + 24);
+    expect(z.x + z.ancho).toBe(720);
+    expect(z.y + z.alto).toBe(1280);
+    expect([z.x % 2, z.y % 2, z.ancho % 2, z.alto % 2]).toEqual([0, 0, 0, 0]);
+  });
+
+  it("una tela que llena el cuadro no se recorta; un fondo negro, una sala o una planta no son croma", () => {
+    const lleno = cuadro((x, y) => (y >= 40 && x >= 30 && x < 60 ? CHAQUETA : [30, 170, 60]));
+    const c = cromaDeCuadro(lleno.rgb, lleno.ancho, lleno.alto);
+    expect(c?.zona).toEqual({ x0: 0, x1: 1, y0: 0 });
+    expect(juntarCromas([c, c, c])?.zona).toEqual({ x0: 0, x1: 1, y0: 0 });
+    const azul = cuadro(() => [20, 60, 200]);
+    expect(juntarCromas([cromaDeCuadro(azul.rgb, azul.ancho, azul.alto)])?.color).toBe("0x143cc8");
+
+    const negro = cuadro(() => [12, 12, 14]);
+    expect(cromaDeCuadro(negro.rgb, negro.ancho, negro.alto)).toBeNull();
+    const sala = cuadro((x, y) => ((x * 7 + y * 3) % 5 === 0 ? [200, 190, 180] : [120, 100, 90]));
+    expect(cromaDeCuadro(sala.rgb, sala.ancho, sala.alto)).toBeNull();
+    // Una planta en una esquina es verde, pero no es una tela: ocupa muy poco.
+    const planta = cuadro((x, y) => (x < 20 && y > 120 ? [40, 150, 50] : [200, 200, 200]));
+    expect(cromaDeCuadro(planta.rgb, planta.ancho, planta.alto)).toBeNull();
+    // Si solo un cuadro de cinco parece croma, no lo es.
+    expect(juntarCromas([c, null, null, null, null])).toBeNull();
+    expect(juntarCromas([])).toBeNull();
+  });
+
+  it("el verde se borra por cuánto verde le sobra a cada punto: lo negro, lo gris, lo blanco y la piel se quedan", () => {
+    // Caso real del 5 oct 2026: con el `chromakey` de ffmpeg y esta misma tela, la chaqueta negra
+    // y la camiseta desaparecían (para ese filtro, un gris queda «cerca» de un verde apagado).
+    const u = umbralesDeCroma("0x53b367");
+    expect(u.verde).toBe(true);
+    const exceso = ([r, g, b]: [number, number, number]) => g - Math.max(r, b);
+    // La tela y sus arrugas se van enteras.
+    expect(exceso(TELA)).toBeGreaterThanOrEqual(u.alto);
+    expect(exceso(ARRUGA)).toBeGreaterThanOrEqual(u.alto);
+    // La persona se queda entera: nada de lo suyo llega siquiera al umbral de abajo.
+    for (const color of [CHAQUETA, PIEL, TECHO, PANEL, [180, 205, 235] as [number, number, number]])
+      expect(exceso(color)).toBeLessThan(u.bajo);
+    expect(u.alto).toBeGreaterThan(u.bajo);
+    // Con una tela azul se mira el azul.
+    expect(umbralesDeCroma("0x143cc8").verde).toBe(false);
+  });
+
+  it("se usa solo el trozo en el que habla: sin el principio ni el final en los que se acerca a la cámara", () => {
+    // Su primera grabación: 109 s; empieza a hablar a los 2,96 s y termina a los 105,2 s.
+    const palabras = [
+      { text: "La", startMs: 2960, endMs: 3100, timestampMs: 2960, confidence: null },
+      { text: "inteligencia", startMs: 3120, endMs: 3800, timestampMs: 3120, confidence: null },
+      { text: "chao.", startMs: 104_800, endMs: 105_220, timestampMs: 104_800, confidence: null },
+    ];
+    const corte = corteDeGrabacion(palabras, 109_192);
+    expect(corte).toEqual({ desdeMs: 2960 - AIRE_ANTES_MS, hastaMs: 105_220 + AIRE_DESPUES_MS });
+    const corridas = palabrasDesde(palabras, corte.desdeMs);
+    expect(corridas[0]).toMatchObject({ text: "La", startMs: AIRE_ANTES_MS, timestampMs: AIRE_ANTES_MS });
+    expect(corridas[2]?.endMs).toBe(105_220 - corte.desdeMs);
+    // Si habla desde el primer instante, no se corta nada por delante; y nunca se sale de la grabación.
+    expect(corteDeGrabacion([{ startMs: 100, endMs: 9_900 }], 10_000)).toEqual({
+      desdeMs: 0,
+      hastaMs: 10_000,
+    });
+    expect(corteDeGrabacion([], 5_000)).toEqual({ desdeMs: 0, hastaMs: 5_000 });
   });
 
   it("el recorte abarca a la persona en TODA la grabación, cabeza incluida, y llega hasta abajo", () => {

@@ -110,8 +110,7 @@ fondo y arma el video.
   El plan queda en `estacion/out/p-<nombre>/plan.json`. Para armar el video con
   ese plan ya revisado, se corre lo mismo pasándole el archivo después de la grabación.
 - `--canal caprichoso-tv` para Caprichoso TV (sin decirlo, Full Código).
-- `--similitud 0.18` si quedan restos de verde alrededor (más alto = borra más;
-  por defecto 0.14). `--sin-croma` para forzar la ventana.
+- `--sin-croma` para forzar la ventana.
 
 **El plan** es un guion en el formato de siempre. La `narracion` de cada escena
 es lo que él dijo en ese tramo, **copiado** de la transcripción y en orden (la
@@ -126,22 +125,25 @@ y no sube al panel (para eso está «Grabaciones»).
 
 ## Cómo grabar para que salga bien
 
-- **Horizontal**, cámara fija, a la altura de los ojos, de la cintura para arriba.
-- **Fondo verde parejo**: sin arrugas ni sombras, bien iluminado. Las dos
-  esquinas de arriba tienen que verse verdes (por ahí detecta el croma).
+- **Horizontal o vertical, las dos sirven** (lo que se usa es su figura
+  recortada). Cámara fija, a la altura de los ojos, de la cintura para arriba.
+- **La tela verde no tiene que llenar el cuadro**, pero **él sí tiene que estar
+  entero delante de la tela**: lo que quede fuera de ella (un codo sobre la
+  pared, la gorra por encima del borde) se corta recto. Acercar la cámara o la
+  tela hasta que detrás de él solo se vea verde es lo más seguro.
 - **Nada verde encima**: ni ropa, ni reflejos en lentes. Separado del fondo un
   metro o más, para que el verde no le rebote en la piel.
-- **Luz de frente** en la cara, pareja.
-- Hablar de corrido. Si se equivoca, repetir la frase completa: después se corta.
-- Dejar un segundo de silencio al empezar y al terminar.
+- **Luz de frente** en la cara, pareja. Las arrugas de la tela no molestan.
+- Hablar de corrido, en una sola toma: todavía no se cortan solas las frases
+  repetidas. El principio y el final (cuando le da a grabar y a parar) sí se
+  cortan solos.
 - El fondo **negro** no sirve para quitar el fondo (el pelo y la ropa oscura se
   borrarían): esas grabaciones van en ventana.
 
 ## Lo que falta (en orden)
 
-1. **Una grabación de prueba de Richard** (30 a 60 segundos, con su croma), para
-   ajustar el borrado del verde con imagen real. Hasta hoy solo se probó con un
-   muñeco dibujado sobre verde.
+1. ~~Una grabación de prueba de Richard~~ — llegó el 5 oct 2026 y con ella se
+   rehízo el borrado del fondo (candado C-CROMA-1).
 2. ~~Que la IA arme el plan sola~~ — hecho el 5 oct 2026.
 3. ~~Subir la grabación desde el panel y que la Estación la tome sola~~ — hecho
    el 5 oct 2026 (candado C-GRABACIONES-1).

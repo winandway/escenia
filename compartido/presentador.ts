@@ -100,6 +100,41 @@ export function tramosDeGrabacion(
 export type ModoPresentador = "completo" | "esquina";
 export type MomentoPresentador = { inicioMs: number; modo: ModoPresentador };
 
+/** Aire que se deja antes de la primera palabra y después de la última. */
+export const AIRE_ANTES_MS = 350;
+export const AIRE_DESPUES_MS = 600;
+
+/**
+ * Qué trozo de la grabación se usa: desde un instante antes de la primera palabra hasta un
+ * instante después de la última. Lo de antes y lo de después es Richard acercándose a la cámara
+ * para darle a grabar y a parar; en su primera grabación eran tres segundos al principio y
+ * cuatro al final, y el video abría con él de lado, callado (C-CROMA-1).
+ */
+export function corteDeGrabacion(
+  palabras: { startMs: number; endMs: number }[],
+  duracionMs: number,
+): { desdeMs: number; hastaMs: number } {
+  const primera = palabras[0];
+  const ultima = palabras[palabras.length - 1];
+  if (!primera || !ultima) return { desdeMs: 0, hastaMs: duracionMs };
+  const desdeMs = Math.max(0, Math.round(primera.startMs - AIRE_ANTES_MS));
+  const hastaMs = Math.min(duracionMs, Math.round(ultima.endMs + AIRE_DESPUES_MS));
+  return hastaMs - desdeMs < 1000 ? { desdeMs: 0, hastaMs: duracionMs } : { desdeMs, hastaMs };
+}
+
+/** Las palabras, con sus tiempos contados desde el corte. */
+export function palabrasDesde<T extends { startMs: number; endMs: number; timestampMs?: number | null }>(
+  palabras: T[],
+  desdeMs: number,
+): T[] {
+  return palabras.map((p) => ({
+    ...p,
+    startMs: Math.max(0, p.startMs - desdeMs),
+    endMs: Math.max(0, p.endMs - desdeMs),
+    ...(typeof p.timestampMs === "number" ? { timestampMs: Math.max(0, p.timestampMs - desdeMs) } : {}),
+  }));
+}
+
 /** Cuánto dura él en grande al arrancar el video: los primeros segundos son su cara y su voz. */
 export const APERTURA_MS = 3500;
 /** Al empezar cada tema vuelve a salir grande un momento, y se va a la esquina cuando entran los gráficos. */

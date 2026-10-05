@@ -4,7 +4,7 @@
 // gráficos del plan, que entran justo cuando él los nombra.
 // Uso (desde estacion/):
 //   npx tsx src/presentador.ts <grabacion.mp4> [plan.json] [--estilo neon|mixto|ilustrado|clasico]
-//       [--tema "de qué va"] [--solo-plan] [--canal canal-ia|caprichoso-tv] [--similitud 0.14] [--sin-croma]
+//       [--tema "de qué va"] [--solo-plan] [--canal canal-ia|caprichoso-tv] [--sin-croma]
 // Sin plan, se lo pide a la IA del panel con la transcripción (unos centavos) y lo deja en
 // out/p-<nombre>/plan.json. Con --solo-plan se detiene ahí, para leerlo o corregirlo antes de armar.
 // El plan es un guion (el mismo formato de siempre) cuya `narracion` es lo que él
@@ -74,7 +74,6 @@ async function principal() {
   // 3) Su imagen (sin fondo si se grabó con croma; si no, en una ventana) y sus tiempos.
   const material = await montarPresentador(entrada, guion, voz, clave, paso, {
     sinCroma: process.argv.includes("--sin-croma"),
-    similitud: Number(opcion("--similitud")) || undefined,
   });
   paso(
     `presentador: ${material.presentador.momentos.filter((m) => m.modo === "completo").length} veces en grande, el resto en la esquina`,
