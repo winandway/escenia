@@ -3,6 +3,7 @@
 // sola vez, y desde el panel no se podía escribir NINGÚN guion (5 oct 2026).
 import { describe, expect, it } from "vitest";
 import { generarGuion, MAX_TOKENS_GUION } from "@/lib/generador";
+import { conEstadoIA, problemaAbiertoDeIA, problemaDeCuenta } from "@/lib/ia-estado";
 import type { EntradaGuion } from "@/lib/prompt";
 import { TEMATICAS } from "@compartido/tematicas";
 import { baseEnMemoria } from "./base-memoria";
@@ -109,5 +110,71 @@ describe("generador de guiones (C-GUION-2)", () => {
     // Y el gasto quedó anotado.
     const gasto = await db.uno<{ n: number }>("SELECT count(*) n FROM gastos");
     expect(gasto?.n).toBe(1);
+  });
+});
+
+// C-IA-SALDO-1: la cuenta de la IA se quedó sin saldo y el canario seguía diciendo «ok».
+const SIN_SALDO =
+  '400 {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."}}';
+
+describe("estado de la cuenta de la IA (C-IA-SALDO-1)", () => {
+  it("un fallo de la cuenta se dice en claro; un tropiezo pasajero no es un problema de cuenta", () => {
+    expect(problemaDeCuenta(new Error(SIN_SALDO))).toContain("sin saldo");
+    expect(problemaDeCuenta(new Error("401 authentication_error: invalid x-api-key"))).toContain("clave");
+    expect(problemaDeCuenta(new Error("529 overloaded_error"))).toBeNull();
+    expect(problemaDeCuenta(new Error("fetch failed"))).toBeNull();
+  });
+
+  it("el problema queda anotado para el canario y se borra cuando la IA vuelve a responder", async () => {
+    const db = baseEnMemoria();
+    expect(await problemaAbiertoDeIA(db)).toBeNull();
+    await expect(
+      conEstadoIA(db, async () => {
+        throw new Error(SIN_SALDO);
+      }),
+    ).rejects.toThrow("sin saldo");
+    expect((await problemaAbiertoDeIA(db))?.mensaje).toContain("sin saldo");
+    // Un error pasajero no borra ni pisa lo anotado.
+    await expect(
+      conEstadoIA(db, async () => {
+        throw new Error("529 overloaded_error");
+      }),
+    ).rejects.toThrow("529");
+    expect((await problemaAbiertoDeIA(db))?.mensaje).toContain("sin saldo");
+    expect(await conEstadoIA(db, async () => "listo")).toBe("listo");
+    expect(await problemaAbiertoDeIA(db)).toBeNull();
+  });
+
+  it("al pedir un guion sin saldo, el panel recibe la frase clara y no el error crudo de la API", async () => {
+    const db = baseEnMemoria();
+    const tematica = TEMATICAS.find((t) => t.id === "explicador");
+    if (!tematica) throw new Error("falta la temática de prueba");
+    const sinSaldo: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          type: "error",
+          error: {
+            type: "invalid_request_error",
+            message:
+              "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+          },
+        }),
+        { status: 400, headers: { "content-type": "application/json" } },
+      );
+    await expect(
+      generarGuion(
+        db,
+        {
+          tematica,
+          tema: { titulo: "Un proceso de prueba", contexto: "Contexto.", urlFuente: "" },
+          producto: null,
+          estructura: ["gancho", "demo", "cierre"],
+          recientes: [],
+          instruccionesExtra: "",
+        },
+        { modelo: "claude-sonnet-5", apiKey: "clave-de-prueba", fetch: sinSaldo },
+      ),
+    ).rejects.toThrow("La cuenta de Anthropic se quedó sin saldo");
+    expect(await problemaAbiertoDeIA(db)).not.toBeNull();
   });
 });

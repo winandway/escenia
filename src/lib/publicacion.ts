@@ -19,6 +19,7 @@ import { nombreDeRotulo } from "@compartido/portada";
 import { buscarTematica } from "@compartido/tematicas";
 import { guionPorId } from "./consultas";
 import type { BaseDatos } from "./db";
+import { conEstadoIA } from "./ia-estado";
 import { anotarGasto, autorizarGasto } from "./presupuesto";
 
 const ESTIMADO_USD = 0.05;
@@ -96,14 +97,16 @@ export async function generarPublicacion(
   await autorizarGasto(db, ESTIMADO_USD);
 
   const cliente = new Anthropic({ apiKey, fetch: opciones.fetch, maxRetries: 2 });
-  const respuesta = await cliente.messages.parse({
-    model: modelo,
-    max_tokens: 4000,
-    thinking: { type: "disabled" },
-    system: instruccionesPublicacion(),
-    messages: [{ role: "user", content: mensajePublicacion(guion, tematica, shorts) }],
-    output_config: { format: zodOutputFormat(esquemaPublicacionDeLaIA) },
-  });
+  const respuesta = await conEstadoIA(db, () =>
+    cliente.messages.parse({
+      model: modelo,
+      max_tokens: 4000,
+      thinking: { type: "disabled" },
+      system: instruccionesPublicacion(),
+      messages: [{ role: "user", content: mensajePublicacion(guion, tematica, shorts) }],
+      output_config: { format: zodOutputFormat(esquemaPublicacionDeLaIA) },
+    }),
+  );
   await anotarGasto(
     db,
     "claude",

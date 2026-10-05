@@ -158,6 +158,27 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   única comprobación válida es la fuente (el nombre en la dirección o un texto
   visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
 
+## C-IA-SALDO-1 — Si la cuenta de la IA se queda sin saldo, el canario lo dice (5 oct 2026)
+
+- **Qué se rompió y cómo se veía:** al pedir un guion, la API respondió «Your
+  credit balance is too low to access the Anthropic API». El panel mostraba ese
+  texto en inglés y el canario seguía diciendo `anthropic: ok`, porque solo
+  miraba que la clave existiera.
+- **Causa real:** la cuenta de Anthropic del panel es prepago (así lo manda la
+  regla de cuentas) y se le acabó el saldo. Eso lo arregla solo Richard,
+  recargando en la consola de Anthropic → Plans & Billing.
+- **Qué se hizo:** `src/lib/ia-estado.ts`. Cada pedido a la IA (guion y textos de
+  YouTube) pasa por `conEstadoIA`: si falla por la cuenta (sin saldo, clave
+  inválida, sin permiso), queda anotado en `ajustes.ia_ultimo_error` y el panel
+  recibe una frase clara en español. El canario (`/datos/salud`) pone
+  `anthropic: error` con esa frase. El primer pedido que salga bien lo borra.
+  Un error pasajero (red, saturación) no anota nada.
+- **Cómo se comprueba:** `pruebas/generador.test.ts` (bloque C-IA-SALDO-1). En
+  vivo: `/datos/salud` → `anthropic`.
+- **Comprobado en rojo:** sin reconocer el mensaje de saldo, fallan las pruebas.
+- **Qué NO tocar:** el canario no hace pedidos de prueba a la IA (gastaría en
+  cada mirada); se entera por los pedidos de verdad.
+
 ## C-GUION-2 — El guion se le pide a la IA por streaming (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** desde el panel no se podía escribir ningún

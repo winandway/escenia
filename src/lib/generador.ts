@@ -4,6 +4,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { esquemaGuionGenerado, type GuionGenerado } from "@compartido/guion";
 import { asegurarModelo, costoTokensUsd, MODELOS_PERMITIDOS } from "@compartido/modelos";
 import type { BaseDatos } from "./db";
+import { conEstadoIA } from "./ia-estado";
 import { anotarGasto, autorizarGasto } from "./presupuesto";
 import { instruccionesSistema, mensajeUsuario, type EntradaGuion } from "./prompt";
 
@@ -32,16 +33,18 @@ export async function generarGuion(
   // pedido de una sola vez («Streaming is required for operations that may take longer than 10
   // minutes») y no se podía escribir ningún guion. `finalMessage()` junta todo y deja el guion
   // ya validado en `parsed_output`, igual que antes.
-  const respuesta = await cliente.messages
-    .stream({
-      model: modelo,
-      max_tokens: MAX_TOKENS_GUION,
-      thinking: { type: "disabled" },
-      system: instruccionesSistema(),
-      messages: [{ role: "user", content: mensajeUsuario(entrada) }],
-      output_config: { format: zodOutputFormat(esquemaGuionGenerado) },
-    })
-    .finalMessage();
+  const respuesta = await conEstadoIA(db, () =>
+    cliente.messages
+      .stream({
+        model: modelo,
+        max_tokens: MAX_TOKENS_GUION,
+        thinking: { type: "disabled" },
+        system: instruccionesSistema(),
+        messages: [{ role: "user", content: mensajeUsuario(entrada) }],
+        output_config: { format: zodOutputFormat(esquemaGuionGenerado) },
+      })
+      .finalMessage(),
+  );
 
   const costoUsd = costoTokensUsd(modelo, respuesta.usage.input_tokens, respuesta.usage.output_tokens);
   await anotarGasto(db, "claude", `guion: ${entrada.tema.titulo}`, costoUsd);

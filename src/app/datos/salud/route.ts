@@ -2,6 +2,7 @@
 import { contexto } from "@/lib/entorno";
 import { latidoEstacion } from "@/lib/consultas";
 import { estacionViva } from "@/lib/estacion-estado";
+import { problemaAbiertoDeIA } from "@/lib/ia-estado";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,10 @@ export async function GET() {
       detalle = e instanceof Error ? e.message : String(e);
     }
     piezas.almacen = bucket ? "ok" : "error";
-    piezas.anthropic = env.ANTHROPIC_API_KEY ? "ok" : "apagado";
+    // Con clave, pero el último pedido falló por la cuenta (sin saldo, clave revocada): en rojo (C-IA-SALDO-1).
+    const problemaIA = env.ANTHROPIC_API_KEY ? await problemaAbiertoDeIA(db) : null;
+    piezas.anthropic = !env.ANTHROPIC_API_KEY ? "apagado" : problemaIA ? "error" : "ok";
+    if (problemaIA) detalle = detalle || problemaIA.mensaje;
     piezas.turnstile = env.TURNSTILE_SECRET_KEY ? "ok" : "apagado";
     try {
       // La tabla del calendario y su columna `enlace` existen (si faltan, no se aplicó la migración).
