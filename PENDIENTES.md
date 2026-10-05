@@ -38,6 +38,8 @@
 - [x] Presentador: el fondo verde se encuentra donde esté y se borra sin comerse la ropa; el principio y el final mudos se cortan solos (5 oct 2026, con la primera grabación real de Richard). Candado C-CROMA-1.
 - [x] Los nombres de sus productos salen bien escritos aunque la transcripción los escriba mal («Billon» → «Beellon»; 5 oct 2026). Candado C-NOMBRES-1.
 - [ ] Nombres propios: juntar los de dos palabras («Ya Dominios», «QR Bot»), pasarle la lista a la transcripción y que Richard agregue nombres desde el panel.
+- [x] Miniaturas de un video con presentador: sale Richard recortado de su grabación, con fondo nuevo, palabra tachada y marcas en pastillas (5 oct 2026). Candado C-PORTADA-2.
+- [ ] Miniaturas: que Richard elija en el panel el momento suyo que va en la portada y cambie el texto.
 - [ ] Presentador: cortar pausas y frases repetidas del MEDIO de la grabación antes de armar.
 - [ ] Shorts de un video corto (menos de dos minutos): hoy sale UN vertical con el video entero (108 s en el guion 12). Decidir con Richard si prefiere dos o tres piezas de 30 a 60 segundos.
 - [ ] Presentador: quitar el fondo sin croma (recorte de personas de macOS, cuadro por cuadro).

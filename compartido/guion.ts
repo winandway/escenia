@@ -192,9 +192,12 @@ export const esquemaTextoPortada = z.object({
   grande: z.string().trim().max(40).default(""),
   linea: z.string().trim().max(60).default(""),
   remate: z.string().trim().max(60).default(""),
+  // Hasta tres marcas o productos que la gente reconoce y de los que habla el video («ChatGPT»,
+  // «Gemini»): salen en pastillas blancas debajo del titular.
+  marcas: z.array(z.string().trim().max(24)).max(3).default([]),
 });
 // Si la IA no manda el texto de una miniatura, no se rechaza el trabajo: esa pieza queda sin portada.
-const SIN_PORTADA = { persona: "", grande: "", linea: "", remate: "" };
+const SIN_PORTADA = { persona: "", grande: "", linea: "", remate: "", marcas: [] };
 export const esquemaPublicacionGenerada = z.object({
   titulo: z.string().trim().min(10).max(100),
   descripcion: z.string().trim().min(40).max(4500),

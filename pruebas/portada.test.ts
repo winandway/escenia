@@ -1,20 +1,23 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { esquemaPublicacionGenerada } from "@compartido/guion";
+import { esquemaPublicacionDeLaIA, esquemaPublicacionGenerada } from "@compartido/guion";
 import {
   candidatasDePortada,
   CARA_EN_PORTADA,
   clavePieza,
   encuadre,
+  instantesDeMuestra,
   MEDIDAS_PORTADA,
+  mejorCuadroDePresentador,
   miniaturasPorPieza,
   nombreDeRotulo,
   recorteSirve,
   textoDePortada,
   type FotoRotulada,
 } from "@compartido/portada";
-import { esquemaPortada, letraQueCabe, partesDelRemate } from "../estacion/src/remotion/props";
+import { instruccionesPublicacion } from "@/lib/publicacion";
+import { esquemaPortada, letraQueCabe, partesDeLinea, partesDelRemate } from "../estacion/src/remotion/props";
 
 const raiz = path.join(__dirname, "..");
 const fila = (clave: string, meta: object = {}) => ({ tipo: "miniatura", clave, meta: JSON.stringify(meta) });
@@ -184,5 +187,95 @@ describe("portada de impacto: en el panel y en la plantilla", () => {
   it("al terminar un video, la Estación arma sola las miniaturas con los textos que manda el panel", () => {
     const estacion = readFileSync(path.join(raiz, "estacion/src/estacion.ts"), "utf8");
     expect(estacion).toContain("armarPortadas(producidoEn, trabajo.guion_id, textos)");
+  });
+});
+
+describe("portada con presentador y diseño nuevo (C-PORTADA-2)", () => {
+  const cuadro = (seg: number, ancho: number, caras = 1, altoCara = 0.2) => ({
+    seg,
+    recorte: {
+      ancho,
+      alto: 1000,
+      cobertura: 0.8,
+      caras: Array.from({ length: caras }, () => ({ x: 0.3, y: 0.08, ancho: 0.3, alto: altoCara })),
+    },
+  });
+
+  it("de los cuadros del presentador se elige el de gesto más abierto, con su cara a la vista", () => {
+    // Caso real del 5 oct 2026: las portadas del primer video de Richard salieron SIN él, solo
+    // letras sobre un fondo morado. Ahora la persona de la portada es él, sacado de su grabación.
+    const elegido = mejorCuadroDePresentador([
+      cuadro(10, 560), // los brazos pegados al cuerpo
+      cuadro(40, 720), // una mano levantada: la figura sale más ancha
+      cuadro(70, 800, 0), // el gesto más abierto, pero no se le ve la cara (se dio vuelta)
+      cuadro(90, 700, 1, 0.05), // la cara, demasiado chica
+    ]);
+    expect(elegido?.seg).toBe(40);
+    expect(mejorCuadroDePresentador([cuadro(5, 600, 0)])).toBeNull();
+    expect(mejorCuadroDePresentador([])).toBeNull();
+  });
+
+  it("la portada de un Short no repite el momento de la portada del video largo", () => {
+    const candidatos = [cuadro(40, 720), cuadro(41, 715), cuadro(72, 690)];
+    expect(mejorCuadroDePresentador(candidatos, [40])?.seg).toBe(72);
+    // Si no hay otro momento, se repite antes que dejar la portada sin persona.
+    expect(mejorCuadroDePresentador([cuadro(40, 720)], [40])?.seg).toBe(40);
+  });
+
+  it("los cuadros candidatos salen repartidos por la pieza, sin el arranque ni el final", () => {
+    const instantes = instantesDeMuestra(0, 103_000);
+    expect(instantes).toHaveLength(14);
+    expect(instantes[0]).toBeGreaterThan(1);
+    expect(instantes.at(-1)).toBeLessThan(101.5);
+    expect([...instantes].sort((a, b) => a - b)).toEqual(instantes);
+    // Un Short que arranca a mitad del video se muestrea dentro de su tramo.
+    for (const t of instantesDeMuestra(60_000, 90_000)) {
+      expect(t).toBeGreaterThan(61);
+      expect(t).toBeLessThan(88.5);
+    }
+    expect(instantesDeMuestra(0, 1500)).toHaveLength(1);
+  });
+
+  it("una palabra entre virgulillas sale tachada, y las marcas no cuentan como letras", () => {
+    expect(partesDeLinea("LA IA ~GRATIS~")).toEqual([
+      { texto: "LA", marcada: false, tachada: false },
+      { texto: "IA", marcada: false, tachada: false },
+      { texto: "GRATIS", marcada: false, tachada: true },
+    ]);
+    expect(partesDeLinea("~ SUELTA")[0]).toEqual({ texto: "~", marcada: false, tachada: false });
+    // «LA IA ~GRATIS~» son 12 letras: cabe en la línea (15) y no se le corta la palabra tachada.
+    expect(textoDePortada({ linea: "la ia ~gratis~" }).linea).toBe("LA IA ~GRATIS~");
+    expect(letraQueCabe("LA IA ~GRATIS~", 624, 400)).toBe(letraQueCabe("LA IA GRATIS", 624, 400));
+    // «SE ACABÓ» (dos palabras cortas) entra entero en lo grande.
+    expect(textoDePortada({ grande: "se acabó" }).grande).toBe("SE ACABÓ");
+  });
+
+  it("la portada admite hasta tres marcas y la IA sabe pedirlas, tachar una palabra y no escribir raro", () => {
+    expect(esquemaPortada.parse({ chips: ["ChatGPT", "Gemini"] }).chips).toEqual(["ChatGPT", "Gemini"]);
+    expect(esquemaPortada.safeParse({ chips: ["a", "b", "c", "d"] }).success).toBe(false);
+    const reglas = instruccionesPublicacion();
+    expect(reglas).toContain("`marcas`");
+    expect(reglas).toContain("~GRATIS~");
+    expect(reglas).toContain("TACHADA");
+    // El texto que motivó el cambio («CERO IA GRATIS») queda como ejemplo de lo que NO se escribe.
+    expect(reglas).toContain("«CERO IA GRATIS» no se entiende");
+    // Si la IA no manda marcas, la publicación no se rechaza.
+    const cruda = esquemaPublicacionDeLaIA.parse({
+      titulo: "ChatGPT y Gemini ya no son gratis",
+      descripcion: "Lo que cambia esta semana en la inteligencia artificial gratis y qué puedes hacer.",
+      etiquetas: Array.from({ length: 10 }, (_, k) => `etiqueta ${k}`),
+      portada: { grande: "SE ACABÓ", linea: "LA IA ~GRATIS~", remate: "*PAGAS* O VES ANUNCIOS" },
+      shorts: [],
+    });
+    expect(cruda.portada.marcas).toEqual([]);
+  });
+
+  it("el fondo de rayos sobre morado no vuelve", () => {
+    const portada = readFileSync(path.join(raiz, "estacion/src/remotion/Portada.tsx"), "utf8");
+    expect(portada).not.toContain("repeating-conic-gradient");
+    const colores = readFileSync(path.join(raiz, "estacion/src/portadas.ts"), "utf8");
+    expect(colores).not.toContain("#6d28d9");
+    // Y en un video con presentador, la persona de la portada es él.
+    expect(colores).toContain("mejorCuadroDePresentador(candidatos, instantesUsados)");
   });
 });

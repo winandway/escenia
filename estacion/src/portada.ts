@@ -70,6 +70,11 @@ async function principal() {
     cifra: opcion("--cifra") ?? "",
     linea: opcion("--linea") ?? "",
     remate: opcion("--remate") ?? "",
+    chips: (opcion("--chips") ?? "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .slice(0, 3),
     fondo: [opcion("--color") ?? "#d00000", opcion("--color-oscuro") ?? "#14000a"],
     acento: opcion("--acento") ?? "#ffd60a",
   };

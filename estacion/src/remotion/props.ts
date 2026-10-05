@@ -220,10 +220,29 @@ export const esquemaPortada = z.object({
   linea: z.string().default(""), // lo que cuenta («NOMINACIONES»)
   // El golpe, en una caja de color. Lo que va entre asteriscos sale en el color de acento («*CERO* PREMIOS»).
   remate: z.string().default(""),
+  // Hasta tres nombres que la gente reconoce (las marcas de las que habla el video: «ChatGPT»,
+  // «Gemini»), en pastillas blancas debajo del titular.
+  chips: z.array(z.string()).max(3).default([]),
+  // El color de la luz de atrás de la persona y el color del fondo.
   fondo: z.tuple([z.string(), z.string()]).default(["#d00000", "#14000a"]),
   acento: z.string().default("#ffd60a"),
 });
 export type PropsPortada = z.infer<typeof esquemaPortada>;
+
+/**
+ * Una línea de la portada, palabra por palabra: la que viene entre virgulillas («~GRATIS~») va
+ * TACHADA con una raya roja, y la que viene entre asteriscos («*CERO*»), en el color de acento.
+ */
+export function partesDeLinea(texto: string): { texto: string; marcada: boolean; tachada: boolean }[] {
+  return texto
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => {
+      const tachada = w.length > 2 && w.startsWith("~") && w.endsWith("~");
+      const marcada = w.length > 2 && w.startsWith("*") && w.endsWith("*");
+      return { texto: tachada || marcada ? w.slice(1, -1) : w, marcada, tachada };
+    });
+}
 
 /** El remate, palabra por palabra: la que viene entre asteriscos («*CERO*») va en el color de acento. */
 export function partesDelRemate(remate: string): { texto: string; marcada: boolean }[] {
@@ -238,7 +257,7 @@ export function partesDelRemate(remate: string): { texto: string; marcada: boole
 
 /** El tamaño de letra más grande con el que un texto cabe en un ancho (letra condensada, en mayúsculas). */
 export function letraQueCabe(texto: string, ancho: number, maximo: number): number {
-  const letras = Math.max(1, texto.replace(/\*/g, "").length);
+  const letras = Math.max(1, texto.replace(/[*~]/g, "").length);
   return Math.round(Math.min(maximo, ancho / (letras * 0.52)));
 }
 

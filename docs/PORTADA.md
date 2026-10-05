@@ -38,6 +38,37 @@ Reglas: cinco o seis palabras en total; nada de frases; el cero se escribe
 «CERO» (el número se confunde con la letra O); lo que dice la miniatura tiene
 que ser **algo que esa pieza cuenta**. Cada Short lleva un texto distinto.
 
+## El diseño de hoy (rehecho el 5 oct 2026)
+
+Richard, al ver las dos miniaturas de su primer video con el formato Presentador
+(solo letras sobre rayos morados, y él no aparecía): _«tienen un fondo feo… no
+es un diseño decente, no es serio, no es de enganche, no es para un viral. La
+miniatura conforma el 60 o 70 % de que la gente le dé clic»_.
+
+- **El fondo** ya no son rayos sobre morado. Es casi negro, con un **panel
+  inclinado de color** detrás de la persona (azul eléctrico en Full Código, rojo
+  en Caprichoso TV), una trama de puntos, el filo del panel en el color de
+  acento y una **luz fuerte** detrás de la cabeza. Sin persona, el panel y la
+  luz siguen ahí: nunca queda un fondo vacío.
+- **En un video con presentador, la persona de la portada es Richard**, sacado
+  de su propia grabación ya sin fondo. Se miran catorce momentos de la pieza y
+  se elige el de **gesto más abierto** (una mano levantada, un dedo señalando)
+  entre los que tienen su cara a la vista; el Short no repite el momento del
+  video largo. Para elegirlo a mano: `cuadroSeg` (los segundos) en
+  `portadas.json`.
+- **Una palabra TACHADA**: en la línea del medio, la palabra entre virgulillas
+  sale con una raya roja encima («LA IA ~GRATIS~»). Sirve cuando el golpe es que
+  algo se termina, se prohíbe o se pierde.
+- **Las marcas en pastillas**: hasta tres nombres que la gente reconoce
+  («ChatGPT», «Gemini») en pastillas blancas debajo del titular. La IA las manda
+  en `marcas`; a mano, `chips` en `portadas.json`.
+- **El texto tiene que sonar como lo diría una persona.** El primer intento de
+  la IA fue «CERO / IA GRATIS», que no se entiende; ahora se le pide un titular
+  que se lea de corrido («SE ACABÓ / LA IA GRATIS / PAGAS O VES ANUNCIOS») y lo
+  grande puede ser dos palabras cortas.
+- Los colores por canal están en `COLORES` (`estacion/src/portadas.ts`); el
+  dibujo, en `estacion/src/remotion/Portada.tsx`. Candado C-PORTADA-2.
+
 ## Cómo salen solas
 
 1. Al terminar un video, el panel escribe los textos de YouTube. Con ellos

@@ -276,6 +276,35 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   no dejar que el navegador mande la clave del almacén; no volver a ponerle
   reintentos automáticos al pedido del plan; no convertir «Quitar» en un borrado.
 
+## C-PORTADA-2 — La miniatura de un video con presentador lleva a Richard, y el fondo de rayos morados no vuelve (5 oct 2026)
+
+- **Qué se rompió y cómo se veía:** las dos miniaturas del primer video de
+  Richard (guion 12) salieron **vacías**: «CERO / IA GRATIS / PAGAS O VES
+  ANUNCIOS» sobre rayos morados, sin ninguna persona. Sus palabras: «no es un
+  diseño serio, no es de enganche… si no hay una miniatura que valga la pena,
+  todo el trabajo estará perdido».
+- **Causa real:** la portada buscaba a la persona entre las fotos con rótulo del
+  video, y un video de Neón con presentador no tiene ninguna. A nadie se le
+  ocurrió que la persona era él. El diseño «sin persona» era solo el fondo.
+- **Qué se hizo:** en un video con presentador sin fondo, la persona de la
+  portada sale de su grabación (`mejorCuadroDePresentador` e
+  `instantesDeMuestra` en `compartido/portada.ts`; el recorte y la cara, con el
+  mismo motor de macOS de siempre). Fondo nuevo, palabra tachada, marcas en
+  pastillas y reglas nuevas para el texto que escribe la IA. Todo en
+  [PORTADA.md](PORTADA.md), sección «El diseño de hoy».
+- **Lo que vigila (`pruebas/portada.test.ts`):** se elige el cuadro de gesto más
+  abierto con la cara a la vista; el Short no repite el momento del largo; la
+  palabra tachada; las marcas (hasta tres) y que la IA sabe pedirlas; que
+  «CERO IA GRATIS» queda como ejemplo de lo que no se escribe; que el fondo de
+  rayos y el morado no vuelven.
+- **Comprobado en rojo** el 5 oct 2026: siete fallos metidos a propósito.
+- **Comprobado a la vista:** las dos miniaturas del guion 12, a tamaño completo
+  y a tamaño de lista de YouTube (336 puntos de ancho): se leen la cara, «SE
+  ACABÓ» y el remate.
+- **Qué NO tocar:** no volver a `repeating-conic-gradient` ni al morado de
+  fondo; no dejar una portada sin persona si el video tiene presentador.
+- **Qué falta:** que Richard elija el momento y cambie el texto desde el panel.
+
 ## C-NOMBRES-1 — El producto de Richard sale bien escrito aunque la transcripción lo escriba «como suena» (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** en su primera grabación dijo «Beellon.com» y

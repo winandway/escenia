@@ -21,6 +21,7 @@ const portadaVacia: PropsPortada = {
   cifra: "",
   linea: "",
   remate: "",
+  chips: [],
   fondo: ["#d00000", "#14000a"],
   acento: "#ffd60a",
 };

@@ -7,9 +7,12 @@
 //   npx tsx src/portadas.ts 27 --guion 8                  → todas, con los textos de out/t27/portadas.json
 //   npx tsx src/portadas.ts 27 --guion 8 --solo short-2   → solo esa pieza
 // Sin --guion no se suben: quedan en out/t<n>/portada-*.png para mirarlas.
+import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { renderStill, selectComposition } from "@remotion/renderer";
 import { z } from "zod";
 import { esquemaPublicacionGenerada } from "@compartido/guion";
@@ -17,6 +20,8 @@ import { textosMiniatura } from "@compartido/miniatura";
 import {
   candidatasDePortada,
   encuadre,
+  instantesDeMuestra,
+  mejorCuadroDePresentador,
   recorteSirve,
   textoDePortada,
   type FormatoPortada,
@@ -31,16 +36,28 @@ import type { ResultadoProduccion } from "./produccion";
 import { esquemaPropsVideo, type PropsPortada, type PropsVideo } from "./remotion/props";
 import { empaquetar } from "./render";
 
+/**
+ * Lo que lleva la portada de una pieza. Además del texto: `chips` (hasta tres marcas que la gente
+ * reconoce, en pastillas) y `cuadroSeg` (en un video con presentador, el instante exacto de su
+ * grabación que se quiere en la portada; sin decirlo, se elige solo el de gesto más abierto).
+ */
+export type TextoDePieza = Partial<TextoPortada> & { chips?: string[]; cuadroSeg?: number };
 /** Los textos de las portadas de un video: el del largo y el de cada Short (por su número). */
 export type TextosDePortadas = {
-  largo?: Partial<TextoPortada>;
-  shorts?: Record<string, Partial<TextoPortada>>;
+  largo?: TextoDePieza;
+  shorts?: Record<string, TextoDePieza>;
 };
 export type PortadaHecha = { pieza: "largo" | "short"; indice: number; ruta: string; persona: string | null };
 
-/** Colores de la portada según la marca del canal (Full Código lleva los suyos). */
+const exec = promisify(execFile);
+
+/**
+ * Colores de la portada según la marca del canal: la luz de atrás, el fondo y el acento.
+ * Full Código: luz azul eléctrico sobre casi negro y amarillo en lo que grita. (El morado con
+ * rayos de antes se retiró el 5 oct 2026: «no es un diseño serio».)
+ */
 const COLORES: Record<string, Pick<PropsPortada, "fondo" | "acento">> = {
-  "full-codigo": { fondo: ["#6d28d9", "#0b0616"], acento: "#10f08c" },
+  "full-codigo": { fondo: ["#1d5cff", "#04060d"], acento: "#ffd60a" },
 };
 const COLORES_BASE: Pick<PropsPortada, "fondo" | "acento"> = {
   fondo: ["#d00000", "#14000a"],
@@ -72,6 +89,21 @@ export async function renderizarPortada(
       pieza: subir.pieza,
       indice: subir.indice,
     });
+}
+
+/**
+ * Dónde va el presentador en la portada. En horizontal, un poco más cerca que una foto de
+ * archivo: es su cara la que trae el clic. En vertical, más lejos y más abajo: tienen que caber
+ * la cabeza, los hombros y la mano que levanta, y la gorra no puede quedar debajo del texto.
+ */
+function sitioDelPresentador(
+  formato: FormatoPortada,
+  recorte: Recorte,
+  cara: NonNullable<Recorte["caras"][number]>,
+): { izquierda: number; arriba: number; ancho: number; alto: number } {
+  if (formato === "horizontal") return encuadre(formato, recorte, cara, 1.12);
+  const sitio = encuadre(formato, recorte, cara, 0.8);
+  return { ...sitio, arriba: sitio.arriba + 90 };
 }
 
 /** Las fotos con rótulo del video (las únicas de las que se sabe de quién son) y en qué escena salen. */
@@ -128,7 +160,16 @@ export async function armarPortadas(
     formato: FormatoPortada;
     escenas: { inicio: number; fin: number };
     texto: TextoPortada;
+    chips: string[];
+    cuadroSeg: number | null;
   };
+  const extras = (t: TextoDePieza | undefined) => ({
+    chips: (t?.chips ?? [])
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .slice(0, 3),
+    cuadroSeg: typeof t?.cuadroSeg === "number" && t.cuadroSeg >= 0 ? t.cuadroSeg : null,
+  });
   const piezas: Pieza[] = [
     {
       clave: "largo",
@@ -137,6 +178,7 @@ export async function armarPortadas(
       formato: "horizontal" as const,
       escenas: { inicio: 0, fin: props.escenas.length - 1 },
       texto: textoDePortada(textos.largo ?? {}),
+      ...extras(textos.largo),
     },
     ...resultado.shorts.map((s) => ({
       clave: `short-${s.indice}`,
@@ -145,6 +187,7 @@ export async function armarPortadas(
       formato: "vertical" as const,
       escenas: { inicio: s.escenaInicio, fin: s.escenaFin },
       texto: textoDePortada(textos.shorts?.[String(s.indice)] ?? {}),
+      ...extras(textos.shorts?.[String(s.indice)]),
     })),
   ].filter((p) => (!solo || solo.has(p.clave)) && (p.texto.grande || p.texto.linea || p.texto.remate));
 
@@ -163,7 +206,74 @@ export async function armarPortadas(
   };
   const usadas = new Set<string>();
   const armadas: { pieza: Pieza; props: PropsPortada; persona: string | null }[] = [];
+  // Formato Presentador: la persona de la portada es Richard, sacado de su grabación ya sin fondo.
+  const presentador = props.presentador?.transparente ? props.presentador : null;
+  const instantesUsados: number[] = [];
+  const cuadroDelPresentador = async (seg: number) => {
+    const png = `portada/pres-${Math.round(seg * 1000)}.png`;
+    const destino = path.join(carpetas.publica, png);
+    if (!existsSync(destino))
+      await exec("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        // Con este decodificador se conserva la transparencia del video.
+        "-c:v",
+        "libvpx-vp9",
+        "-ss",
+        seg.toFixed(2),
+        "-i",
+        path.join(carpetas.publica, presentador?.ruta ?? ""),
+        "-frames:v",
+        "1",
+        "-pix_fmt",
+        "rgba",
+        destino,
+      ]);
+    const recortado = `portada/rec-pres-${Math.round(seg * 1000)}.png`;
+    const recorte = await recortar(destino, path.join(carpetas.publica, recortado));
+    return { seg, ruta: recortado, recorte };
+  };
   for (const pieza of piezas) {
+    const base = {
+      formato: pieza.formato,
+      objeto: null,
+      cifra: pieza.texto.grande,
+      linea: pieza.texto.linea,
+      remate: pieza.texto.remate,
+      chips: pieza.chips,
+      ...colores,
+    };
+    if (presentador) {
+      const desdeMs = props.escenas[pieza.escenas.inicio]?.inicioMs ?? 0;
+      const hastaMs = props.escenas[pieza.escenas.fin]?.finMs ?? props.duracionMs;
+      const instantes = pieza.cuadroSeg !== null ? [pieza.cuadroSeg] : instantesDeMuestra(desdeMs, hastaMs);
+      const candidatos = [];
+      for (const seg of instantes) {
+        const c = await cuadroDelPresentador(seg).catch(() => null);
+        if (c) candidatos.push(c);
+      }
+      const elegido = mejorCuadroDePresentador(candidatos, instantesUsados);
+      const cara = elegido?.recorte.caras[0];
+      if (elegido && cara) {
+        instantesUsados.push(elegido.seg);
+        armadas.push({
+          pieza,
+          persona: "presentador",
+          props: {
+            ...base,
+            etiqueta: "",
+            fondoFoto: null,
+            sujeto: { ruta: elegido.ruta, ...sitioDelPresentador(pieza.formato, elegido.recorte, cara) },
+          },
+        });
+        console.log(`  portada ${pieza.clave}: el presentador, en el segundo ${elegido.seg} de su grabación`);
+        continue;
+      }
+      console.warn(
+        `  portada ${pieza.clave}: no se encontró un cuadro del presentador con la cara a la vista`,
+      );
+    }
     const candidatas = candidatasDePortada(rotuladas, pieza.escenas, pieza.texto.persona, protagonista);
     const buenas: { ruta: string; nombre: string; recorte: Recorte }[] = [];
     for (const c of candidatas.slice(0, 10)) {
@@ -173,14 +283,6 @@ export async function armarPortadas(
     // Se prefiere una foto que no esté ya en otra portada del mismo video.
     const elegida = buenas.find((b) => !usadas.has(b.ruta)) ?? buenas[0];
     const cara = elegida?.recorte.caras[0];
-    const base = {
-      formato: pieza.formato,
-      objeto: null,
-      cifra: pieza.texto.grande,
-      linea: pieza.texto.linea,
-      remate: pieza.texto.remate,
-      ...colores,
-    };
     if (elegida && cara) {
       usadas.add(elegida.ruta);
       armadas.push({
@@ -238,11 +340,13 @@ export function textosDeLaPublicacion(respuesta: unknown): TextosDePortadas | nu
   const parseo = z.object({ publicacion: esquemaPublicacionGenerada }).safeParse(respuesta);
   if (!parseo.success) return null;
   const { portada, shorts } = parseo.data.publicacion;
+  // Las marcas que nombró la IA salen como pastillas en la portada.
+  const dePieza = (p: NonNullable<typeof portada>): TextoDePieza => ({ ...p, chips: p.marcas });
   const deShorts = Object.fromEntries(
-    shorts.flatMap((s) => (s.portada ? [[String(s.indice), s.portada] as const] : [])),
+    shorts.flatMap((s) => (s.portada ? [[String(s.indice), dePieza(s.portada)] as const] : [])),
   );
   if (!portada && Object.keys(deShorts).length === 0) return null;
-  return { largo: portada, shorts: deShorts };
+  return { largo: portada ? dePieza(portada) : undefined, shorts: deShorts };
 }
 
 /** Guarda los textos junto al trabajo: sirven para volver a armar las portadas a mano. */

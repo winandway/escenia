@@ -23,7 +23,8 @@ function recortarPalabras(texto: string, maximo: number): string {
     .replace(/\s+/g, " ")
     .replace(/[.,;:!¡¿?…\s]+$/u, "")
     .trim();
-  const letras = (s: string) => s.replace(/\*/g, "").length;
+  // Tampoco cuentan las virgulillas que marcan una palabra TACHADA («IA ~GRATIS~»).
+  const letras = (s: string) => s.replace(/[*~]/g, "").length;
   if (letras(limpio) <= maximo) return limpio;
   const palabras = limpio.split(" ");
   while (palabras.length > 1 && letras(palabras.join(" ")) > maximo) palabras.pop();
@@ -106,6 +107,36 @@ export function recorteSirve(r: Recorte): boolean {
   if (r.caras.length !== 1 || !cara) return false;
   if (r.cobertura < 0.06 || r.cobertura > 0.86) return false;
   return cara.alto * r.alto >= 90;
+}
+
+/**
+ * Formato Presentador: la persona de la portada es Richard, sacado de su propia grabación (ya
+ * sin fondo). De varios cuadros, se queda con el de gesto más abierto —una mano levantada, un
+ * dedo señalando: la figura sale más ancha— entre los que tienen su cara bien a la vista, y que
+ * no sea el mismo momento de otra portada del video (`usados`, en segundos).
+ */
+export function mejorCuadroDePresentador<T extends { seg: number; recorte: Recorte }>(
+  candidatos: T[],
+  usados: number[] = [],
+): T | null {
+  const validos = candidatos.filter((c) => {
+    const cara = c.recorte.caras[0];
+    return c.recorte.caras.length === 1 && cara !== undefined && cara.alto * c.recorte.alto >= 90;
+  });
+  const libres = validos.filter((c) => usados.every((u) => Math.abs(u - c.seg) >= 3));
+  const gesto = (c: T) => c.recorte.ancho / c.recorte.alto;
+  return [...(libres.length ? libres : validos)].sort((a, b) => gesto(b) - gesto(a))[0] ?? null;
+}
+
+/** Los instantes (en segundos) de donde se sacan los cuadros candidatos de un tramo del video. */
+export function instantesDeMuestra(desdeMs: number, hastaMs: number, cuantos = 14): number[] {
+  const desde = desdeMs / 1000 + 1;
+  const hasta = Math.max(desde, hastaMs / 1000 - 1.5);
+  if (hasta - desde < 0.5) return [Math.round(desde * 10) / 10];
+  return Array.from(
+    { length: cuantos },
+    (_, k) => Math.round((desde + ((hasta - desde) * (k + 0.5)) / cuantos) * 10) / 10,
+  );
 }
 
 /** Dónde queda la cara en cada formato (en puntos de la portada). Deja sitio arriba para el pelo o la gorra. */
