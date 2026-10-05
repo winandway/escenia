@@ -16,7 +16,8 @@ import {
   marcarSubida,
   otraVersion,
 } from "@/lib/grabaciones";
-import { mensajeDePlan } from "@/lib/plan-grabacion";
+import { mensajeDePlan, planSinInventos } from "@/lib/plan-grabacion";
+import { esquemaGuionGenerado } from "@compartido/guion";
 import { esquemaPropsVideo } from "../estacion/src/remotion/props";
 
 type PlanoDePrueba = {
@@ -122,6 +123,64 @@ describe("formato «Neón con personajes»: diagramas de neón y las personas di
     escenas[0]!.planos[0]!.sigue = true;
     expect(dejarSoloFiguras(escenas)).toBe(0);
     expect(escenas[0]?.planos[0]?.sigue).toBe(false);
+  });
+
+  it("ningún texto en pantalla sale con un relleno entre corchetes de la IA", () => {
+    // Caso real del 5 oct 2026, primera prueba en vivo: debajo del titular salió «[opinión del editor]».
+    const plan = esquemaGuionGenerado.parse({
+      titulo: "Frenar a tiempo vale más",
+      gancho: "Sam Altman frenó el modelo.",
+      escenas: [
+        {
+          parte: "gancho",
+          narracion: "Sam Altman frenó el modelo un día antes del evento.",
+          visual: {
+            tipo: "stock",
+            titular: "El freno",
+            planos: [
+              { frase: "Sam Altman frenó", tipo: "foto", busqueda: "Sam Altman", texto: "Sam Altman" },
+              { frase: "un día antes", tipo: "dato", texto: "Un día antes [dato]" },
+            ],
+          },
+        },
+        {
+          parte: "contexto",
+          narracion: "El evento se hizo igual, con más de veinte lanzamientos.",
+          visual: { tipo: "texto", titular: "El evento" },
+        },
+        {
+          parte: "cierre",
+          narracion: "Para mí, frenar a tiempo vale más que lanzar primero.",
+          visual: {
+            tipo: "diagrama",
+            titular: "[opinión del editor]",
+            cuerpo: "[opinión del editor]",
+            diagrama: {
+              seccion: "Decisión",
+              nodos: [
+                { id: "a", icono: "listo", etiqueta: "Frenar", nota: "[a tiempo]", frase: "frenar a tiempo" },
+              ],
+              flechas: [],
+              formula: "frenar [opinión del editor]",
+            },
+          },
+        },
+      ],
+    });
+    const limpio = planSinInventos(plan);
+    expect(JSON.stringify(limpio)).not.toContain("opinión del editor");
+    // Ningún texto entre corchetes en lo que se ve («[dato]», «[a tiempo]»).
+    expect(JSON.stringify(limpio.escenas.map((e) => e.visual))).not.toMatch(/\[[a-záéíóúñ ]+\]/i);
+    const cierre = limpio.escenas[2]?.visual;
+    // El diagrama no se queda sin título: toma el de su sección.
+    expect(cierre?.titular).toBe("Decisión");
+    expect(cierre?.cuerpo).toBe("");
+    expect(cierre?.diagrama?.formula).toBe("frenar");
+    expect(limpio.escenas[0]?.visual.planos?.[1]?.texto).toBe("Un día antes");
+    // Y a la IA se le dice antes, para que no lo escriba.
+    expect(mensajeDePlan({ transcripcion: "hola", formato: "mixto", titulo: "" })).toContain(
+      "NO escribas «[opinión del editor]»",
+    );
   });
 
   it("la plantilla del video conoce los mismos formatos que el panel", () => {

@@ -303,6 +303,22 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   formulario; el plan le explica a la IA cuándo va persona y cuándo diagrama, y
   que una empresa no es una persona; en una escena de personas solo queda lo
   dibujado; la plantilla conoce los mismos formatos que el panel.
+- **Comprobado en rojo** el 5 oct 2026: diez fallos metidos a propósito, uno por
+  uno; todos tumbaron su prueba.
+- **Comprobado en vivo** el 5 oct 2026, versión `3495bcc`: la grabación sintética
+  (el muñeco sobre verde diciendo el texto de Sam Altman) subida con el formato
+  nuevo. La IA armó cuatro escenas: dos con la persona dibujada y sus datos, y
+  dos diagramas. Video largo, un Short, textos y miniaturas en cuatro minutos
+  (guion 11, trabajo 32). Se revisaron los cuadros.
+- **Lo que salió mal en esa prueba y ya está arreglado:** debajo de un titular
+  apareció escrito «[opinión del editor]». Es el relleno que las reglas
+  generales del guion le piden a la IA para la escena de opinión; en una
+  grabación no hay nada que rellenar. Ahora a la IA se le dice que no lo
+  escriba, y `planSinInventos` quita cualquier texto entre corchetes de lo que
+  se ve en pantalla (y si un diagrama se queda sin título, toma el de su sección).
+- **De paso** (también le sirve al Cómic): la tilde de un titular en mayúsculas
+  («PASÓ», «FRENÓ») se cortaba, porque el degradado solo pinta dentro de la caja
+  de la línea; y con presentador el titular tocaba la marca del canal.
 - **Qué NO tocar:** no volver a poner un CHECK sobre `formato`; no importar
   `@compartido` con código (solo tipos) desde `estacion/src/remotion/`; no dejar
   pasar fotos reales en un video de neón.

@@ -39,13 +39,28 @@ export function mensajeDePlan(e: EntradaPlan): string {
     "- Cada `frase` (de un plano o de un objeto) son 2 a 5 palabras LITERALES y seguidas de la narración de ESA escena: es el instante en que entra la imagen. Tómala tal como está transcrita, aunque esté mal dicha.",
     `- ${REGLAS_POR_FORMATO[e.formato]}`,
     "- Solo se dibuja o se rotula lo que él nombra de verdad. No agregues datos, cifras ni nombres que no estén en la transcripción.",
+    "- La opinión ya la dijo él, en cámara: NO escribas «[opinión del editor]» ni ningún texto entre corchetes en ningún campo. Si en un tramo opina, el texto en pantalla resume lo que dijo con sus palabras.",
     "- `titulo`: un título para YouTube de lo que cuenta, máximo 70 letras. `gancho`: su primera frase. `hechos_a_verificar`: vacío (lo dijo él). `descripcion_youtube` y `etiquetas`: vacíos (se escriben al terminar el video). `musica`: un ritmo con bombo y bajo, constante, que no compita con su voz («driving kick and bass beat, dark pulse»).",
   ]
     .filter(Boolean)
     .join("\n\n");
 }
 
-/** En un plan no hay opinión aparte ni respiros: si la IA los puso, se dejan como escenas normales. */
+/** Lo que la IA deja «para que lo llene el editor»: en un plan no hay nada que llenar. */
+const RELLENO = /\[[^\]]*\]/g;
+const sinRelleno = (texto: string | undefined) =>
+  texto === undefined
+    ? undefined
+    : texto
+        .replace(RELLENO, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
+/**
+ * En un plan no hay opinión aparte ni respiros: si la IA los puso, se dejan como escenas normales.
+ * Y ningún texto en pantalla lleva un relleno entre corchetes («[opinión del editor]»): salió así
+ * en la primera prueba en vivo del formato mixto, escrito debajo del titular.
+ */
 export function planSinInventos(guion: GuionGenerado): GuionGenerado {
   return {
     ...guion,
@@ -56,6 +71,24 @@ export function planSinInventos(guion: GuionGenerado): GuionGenerado {
         ...e,
         parte: e.parte === "opinion" || e.parte === "interludio" || e.parte === "cta" ? "contexto" : e.parte,
         duracion_seg: undefined,
+        visual: {
+          ...e.visual,
+          // Un diagrama no se queda sin título: si era puro relleno, va el nombre de su sección.
+          titular: sinRelleno(e.visual.titular) || e.visual.diagrama?.seccion || undefined,
+          cuerpo: sinRelleno(e.visual.cuerpo),
+          texto_en_pantalla: sinRelleno(e.visual.texto_en_pantalla),
+          planos: e.visual.planos?.map((pl) => ({ ...pl, texto: sinRelleno(pl.texto) })),
+          diagrama: e.visual.diagrama
+            ? {
+                ...e.visual.diagrama,
+                formula: sinRelleno(e.visual.diagrama.formula) ?? "",
+                nodos: e.visual.diagrama.nodos.map((n) => ({
+                  ...n,
+                  nota: sinRelleno(n.nota) ?? "",
+                })),
+              }
+            : undefined,
+        },
       })),
   };
 }
