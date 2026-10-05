@@ -158,6 +158,30 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   única comprobación válida es la fuente (el nombre en la dirección o un texto
   visible en la propia imagen). Una foto con rótulo y sin fuente clara se cambia.
 
+## C-GUION-2 — El guion se le pide a la IA por streaming (5 oct 2026)
+
+- **Qué se rompió y cómo se veía:** desde el panel no se podía escribir ningún
+  guion. La respuesta era: «Streaming is required for operations that may take
+  longer than 10 minutes». Nadie lo había visto porque desde el 2 de octubre no
+  se había pedido un guion nuevo (el de Prince Royce se rehízo como versión).
+- **Causa real:** el 2 de octubre se subió el tope de salida a 30.000 tokens para
+  que cupieran los planos (C-RITMO-1). Con un tope tan alto, la librería de
+  Anthropic se niega a hacer el pedido de una sola vez: calcula que podría pasar
+  de diez minutos y exige streaming (el corte está en unos 21.333 tokens).
+- **Qué se hizo:** `generarGuion` (`src/lib/generador.ts`) pide el guion con
+  `cliente.messages.stream(…).finalMessage()`. El guion llega igual, validado en
+  `parsed_output`. El tope quedó como `MAX_TOKENS_GUION`.
+- **Cómo se comprueba:** `pruebas/generador.test.ts` simula la respuesta por
+  eventos y exige que el pedido salga con `stream: true`. En vivo: crear un
+  guion (panel, o `scripts/crear-guion-remoto.ts`) y que quede en borrador.
+- **Comprobado en rojo:** al volver a `messages.parse`, la prueba falla con el
+  mismo mensaje que salió en producción.
+- **Qué NO tocar:** no volver a `messages.parse` / `messages.create` sin
+  streaming mientras el tope pase de 21.000. Si algún otro pedido a la IA sube
+  su tope por encima de eso, también va por streaming.
+- **Lección:** un cambio en lo que se le pide a la IA se prueba pidiendo un
+  guion de verdad antes de darlo por bueno; compilar no alcanza.
+
 ## C-AUDITORIA-1 — La compuerta audita lo que se publica; lo de desarrollo se mira aparte (5 oct 2026)
 
 - **Qué pasó:** el 5 oct 2026 la auditoría de dependencias se puso en rojo sola,

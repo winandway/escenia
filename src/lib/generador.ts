@@ -12,6 +12,10 @@ const ESTIMADO_GUION_USD = 0.15;
 
 export type ResultadoGeneracion = { guion: GuionGenerado; modelo: string; costoUsd: number };
 
+// Un guion largo (biografías) pasa de 8 000 tokens, y con los planos de cada escena (C-RITMO-1)
+// casi se duplica; sin razonamiento interno, para que todo el presupuesto vaya al JSON del guion.
+export const MAX_TOKENS_GUION = 30000;
+
 export async function generarGuion(
   db: BaseDatos,
   entrada: EntradaGuion,
@@ -24,17 +28,20 @@ export async function generarGuion(
   await autorizarGasto(db, ESTIMADO_GUION_USD);
 
   const cliente = new Anthropic({ apiKey: opciones.apiKey, fetch: opciones.fetch, maxRetries: 2 });
-  const respuesta = await cliente.messages.parse({
-    model: modelo,
-    // Un guion largo (biografías) pasa de 8 000 tokens, y con los planos de
-    // cada escena (C-RITMO-1) casi se duplica; sin razonamiento interno, para
-    // que todo el presupuesto vaya al JSON del guion.
-    max_tokens: 30000,
-    thinking: { type: "disabled" },
-    system: instruccionesSistema(),
-    messages: [{ role: "user", content: mensajeUsuario(entrada) }],
-    output_config: { format: zodOutputFormat(esquemaGuionGenerado) },
-  });
+  // Por STREAMING, siempre (C-GUION-2): con un tope de salida tan alto, el SDK se niega a hacer el
+  // pedido de una sola vez («Streaming is required for operations that may take longer than 10
+  // minutes») y no se podía escribir ningún guion. `finalMessage()` junta todo y deja el guion
+  // ya validado en `parsed_output`, igual que antes.
+  const respuesta = await cliente.messages
+    .stream({
+      model: modelo,
+      max_tokens: MAX_TOKENS_GUION,
+      thinking: { type: "disabled" },
+      system: instruccionesSistema(),
+      messages: [{ role: "user", content: mensajeUsuario(entrada) }],
+      output_config: { format: zodOutputFormat(esquemaGuionGenerado) },
+    })
+    .finalMessage();
 
   const costoUsd = costoTokensUsd(modelo, respuesta.usage.input_tokens, respuesta.usage.output_tokens);
   await anotarGasto(db, "claude", `guion: ${entrada.tema.titulo}`, costoUsd);
