@@ -68,7 +68,10 @@ export const PlanosDeEscena: React.FC<{
         // Se queda debajo mientras entra el siguiente, para que el corte no deje ver el fondo.
         // Una imagen del cliente (sin fondo) no: dos logos montados se ven como un fantasma, y
         // debajo siempre está el fondo de neón de la escena.
-        const dur = Math.max(1, termina - desde + (siguiente && plano.tipo !== "imagen" ? ENTRADA : 0));
+        const dur = Math.max(
+          1,
+          termina - desde + (siguiente ? (plano.tipo === "imagen" ? Math.round(ENTRADA / 3) : ENTRADA) : 0),
+        );
         const n = indiceEscena * 7 + k;
         const sonido = cortes.length ? (cortes[n % cortes.length] ?? null) : null;
         return (
