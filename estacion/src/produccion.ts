@@ -334,7 +334,10 @@ export async function producir(
       parte: e.parte,
       inicioMs: tramo.inicioMs,
       finMs: tramo.finMs,
-      textoEnPantalla: limpiarRotulo(e.visual.texto_en_pantalla),
+      // En neón, una escena de planos (personas, imágenes del cliente) lleva su título arriba.
+      textoEnPantalla:
+        limpiarRotulo(e.visual.texto_en_pantalla) ||
+        (esDeNeon(estilo) && !esDiagrama ? limpiarRotulo(e.visual.titular) : ""),
       estilo: estiloEscena,
       clip: c ? { ruta: c.ruta, duracionSeg: c.duracionSeg } : null,
       foto,
