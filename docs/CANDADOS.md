@@ -344,6 +344,30 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   reemplaza por la del cliente, que es lo que se quiere. No «arreglar» el texto del
   cliente en el plan: se lee tal cual lo mandó.
 
+## C-CANCION-1 — El formato Canción: él entero con su fondo real, un boceto a lápiz por verso, la letra en el pecho (6 oct 2026)
+
+- **Qué se agregó:** el quinto formato, **Canción** (`cancion`), para Caprichoso TV: Richard
+  sube su video cantando (menú Grabaciones, con el nombre de la canción), y sale un video
+  vertical con su toma entera y su audio en vivo, un papel arriba donde se dibuja a lápiz
+  cada verso, y la letra palabra por palabra sobre su pecho. Guía: [CANCION.md](CANCION.md).
+- **Lo que no puede pasar, y lo que lo vigila (`pruebas/formato-cancion.test.ts`):**
+  - No se le quita el fondo ni se le pone música ni efectos del motor: en `produccion.ts`
+    con `cancion` no hay `prepararMusica`, los `sfx` van vacíos, no se buscan clips ni fotos
+    (`sinFondo`), y en `grabaciones.ts` no se detecta croma y la imagen va a 1920 de alto.
+  - Él sale entero todo el tiempo (`momentosDeCancion`: un solo momento «completo»).
+  - El plan pide un dibujo «ia» por verso (6 a 18 palabras), sin planos, fotos ni diagramas,
+    con la letra copiada, y `musica` en «none» (`mensajeDePlan` con `cancion`).
+  - Cada boceto lleva el estilo a lápiz sobre papel viejo, sin texto ni color
+    (`promptDeBoceto`), y el nombre de la canción no se antepone al prompt como si fuera
+    una persona.
+  - Sale solo en vertical (`formato: "9x16"` en el resultado; la Estación sube ese formato),
+    sin Shorts ni miniatura aparte.
+- **Comprobado en rojo** el 6 oct 2026: sin el estilo en el prompt y sin el formato en la
+  lista, la prueba falla.
+- **Qué NO tocar:** no «mejorar» su audio (ni tempo, ni pausas): la imagen tiene que seguir
+  calzando con la boca. No volver a poner el papel más abajo del tercio de arriba: le tapa la
+  cara.
+
 ## C-PORTADA-3 — La palabra tachada o fuerte de la miniatura nunca se recorta (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** la miniatura del segundo comercial de Andreea

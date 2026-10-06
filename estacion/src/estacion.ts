@@ -68,6 +68,8 @@ async function unaVuelta(): Promise<boolean> {
       // Comercial de un cliente: sus imágenes, su idioma, sin marca de canal, sin cierre y sin Shorts.
       const comercial = trabajo.comercial;
       const imagenes = comercial ? await materialDeComercial(comercial, (texto) => avisar(texto, 3)) : [];
+      // Formato Canción: sale solo en vertical, sin Shorts.
+      const cancion = trabajo.grabacion?.formato === "cancion";
       r = await producir(
         `t${trabajo.id}`,
         trabajo.contenido,
@@ -82,7 +84,11 @@ async function unaVuelta(): Promise<boolean> {
         // En una grabación o un comercial, el diseño es el que Richard eligió.
         trabajo.grabacion?.formato ?? comercial?.formato ?? estiloDeTematica(trabajo.tematica_id),
         material,
-        comercial ? { idioma: comercial.idioma, sinShorts: true, imagenes } : {},
+        comercial
+          ? { idioma: comercial.idioma, sinShorts: true, imagenes }
+          : cancion
+            ? { sinShorts: true }
+            : {},
       );
       await guardarProduccion(trabajo.id, huella, r);
       if (r.costoVozUsd > 0)
@@ -92,7 +98,7 @@ async function unaVuelta(): Promise<boolean> {
     let ultimoPct = 0;
     await panel.subirVideo(
       trabajo.guion_id,
-      "16x9",
+      r.formato,
       r.rutaMp4,
       { duracion_seg: r.duracionSeg, voz_de_prueba: r.vozDePrueba },
       (pct) => {
@@ -122,7 +128,7 @@ async function unaVuelta(): Promise<boolean> {
     });
     await panel.hecho(trabajo.id, [
       {
-        formato: "16x9",
+        formato: r.formato,
         ruta_local: r.rutaMp4,
         bytes: r.bytes,
         duracion_seg: r.duracionSeg,
@@ -160,6 +166,9 @@ async function unaVuelta(): Promise<boolean> {
         // Con los textos llegan los de las miniaturas: se arma la del largo y la de cada Short.
         const textos = textosDeLaPublicacion(respuesta);
         if (!textos) return console.warn("  (el panel no mandó los textos de las miniaturas)");
+        // Una canción sale solo en vertical: su miniatura es el propio video, no se arma aparte.
+        if (r.formato === "9x16")
+          return console.log("  Miniaturas: no aplican a un video vertical de canción.");
         await guardarTextos(producidoEn, textos);
         const hechas = await armarPortadas(producidoEn, trabajo.guion_id, textos);
         console.log(`  Miniaturas: ${hechas.length} armadas y subidas al panel.`);

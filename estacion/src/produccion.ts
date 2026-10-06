@@ -39,6 +39,8 @@ export type ShortProducido = {
 
 export type ResultadoProduccion = {
   rutaMp4: string;
+  /** Una canción sale solo en vertical; todo lo demás, en 16:9 (y sus Shorts aparte). */
+  formato: "16x9" | "9x16";
   rutaMiniatura: string | null;
   shorts: ShortProducido[];
   bytes: number;
@@ -143,6 +145,9 @@ export async function producir(
   opciones: { idioma?: "es" | "en"; sinShorts?: boolean; imagenes?: ImagenLocal[] } = {},
 ): Promise<ResultadoProduccion> {
   const comercial = (opciones.imagenes?.length ?? 0) > 0;
+  // Formato Canción (docs/CANCION.md): su audio en vivo tal cual, sin música ni efectos del
+  // motor, sin clips ni fotos de internet; un boceto a lápiz por verso, y sale solo en vertical.
+  const cancion = estilo === "cancion";
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
   const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
@@ -165,7 +170,9 @@ export async function producir(
   await cp(voz.rutaMp3, path.join(carpetaPublica, "voz.mp3"));
   const rutaSubtitulos = path.join(carpetaTrabajo, "subtitulos.json");
   await writeFile(rutaSubtitulos, JSON.stringify({ palabras: voz.palabras, tramos: voz.tramos }, null, 2));
-  const sfx = await prepararSfx(carpetaPublica);
+  const sfx: PropsVideo["sfx"] = cancion
+    ? { whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] }
+    : await prepararSfx(carpetaPublica);
   const marcaVideo = await prepararMarca(marca, canal, carpetaPublica);
   if (marca)
     await avisar(
@@ -175,12 +182,14 @@ export async function producir(
 
   await avisar("eligiendo la música de fondo", 34);
   const creditos: string[] = [];
-  const musica = await prepararMusica(guion.musica, carpetaPublica);
+  const musica = cancion ? null : await prepararMusica(guion.musica, carpetaPublica);
   if (musica) creditos.push(musica.credito);
   await avisar(
-    musica
-      ? `música: ${musica.archivo}`
-      : "música: ninguna (no hay pista que encaje en estacion/recursos/musica-local)",
+    cancion
+      ? "música: la tuya, en vivo (sin pista del motor)"
+      : musica
+        ? `música: ${musica.archivo}`
+        : "música: ninguna (no hay pista que encaje en estacion/recursos/musica-local)",
     34,
   );
 
@@ -219,7 +228,7 @@ export async function producir(
     const sinImagenes = estilo === "neon" || esDiagrama;
     // Neón con personajes: la escena que no es diagrama tampoco lleva foto ni clip de fondo (va
     // sobre el neón); lo único que busca son las fotos de las personas, para dibujarlas.
-    const sinFondo = sinImagenes || esDeNeon(estilo);
+    const sinFondo = sinImagenes || esDeNeon(estilo) || cancion;
     // Toda escena lleva clip: primero la búsqueda de la IA, luego las de reserva por parte.
     const busquedas = [e.visual.busqueda ?? "", ...(reservas[e.parte] ?? reservas.contexto ?? [])];
     let foto: PropsVideo["escenas"][number]["foto"] = null;
@@ -243,8 +252,9 @@ export async function producir(
     const anioEscena: number | null =
       anioDe(`${e.visual.fecha ?? ""} ${e.visual.texto_en_pantalla ?? ""} ${e.narracion}`) ?? ultimoAnio;
     if (anioEscena !== null) ultimoAnio = anioEscena;
-    if (e.visual.tipo === "ia" && imagenesActivas() && !sinFondo) {
-      const persona = (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
+    if (e.visual.tipo === "ia" && imagenesActivas() && (!sinFondo || cancion)) {
+      // En una canción el título es el nombre de la canción, no una persona: no se antepone nada.
+      const persona = cancion ? "" : (guion.titulo.split(/[:—-]/)[0] ?? "").trim();
       const prompts = (e.visual.cuadros?.map((c) => c.prompt_imagen) ?? [])
         .concat(e.visual.cuadros?.length ? [] : e.visual.prompt_imagen ? [e.visual.prompt_imagen] : [])
         .filter(Boolean);
@@ -259,15 +269,17 @@ export async function producir(
         const lote = conPersona.slice(k, k + 3);
         const resultados = await Promise.all(
           lote.map((pr) => {
-            const ref = elegirReferencia(referencias, anioDe(pr) ?? anioEscena, pr);
+            const ref = cancion ? null : elegirReferencia(referencias, anioDe(pr) ?? anioEscena, pr);
             const credito = referencias.find((f) => f.ruta === ref?.ruta)?.credito;
             if (credito) creditosReferencia.add(credito);
-            return generarImagen(pr, carpetaPublica, { blancoYNegro: epoca, referencia: ref?.ruta }).catch(
-              (err) => {
-                console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
-                return null;
-              },
-            );
+            return generarImagen(pr, carpetaPublica, {
+              blancoYNegro: epoca && !cancion,
+              referencia: ref?.ruta,
+              boceto: cancion,
+            }).catch((err) => {
+              console.warn(`Imagen IA falló: ${err instanceof Error ? err.message : err}`);
+              return null;
+            });
           }),
         );
         for (const img of resultados) {
@@ -411,7 +423,7 @@ export async function producir(
   const turno = { n: 0 };
   for (const [i, escena] of escenas.entries()) {
     // En neón no se rellena con fotos ni clips: el diagrama se mueve solo (pulsos, flechas, objetos).
-    if (esDeNeon(estilo) || escena.diagrama) continue;
+    if (esDeNeon(estilo) || escena.diagrama || cancion) continue;
     const delGuion = guion.escenas.filter((_, k) => voz.tramos[k])[i];
     escena.planos = await rellenarPlanos({
       escena,
@@ -430,7 +442,9 @@ export async function producir(
   const totalPlanos = escenas.reduce((n, e) => n + e.planos.length + (e.diagrama?.nodos.length ?? 0), 0);
   // Una lámina de neón (la opinión) no cambia de imagen, pero tampoco está quieta: no cuenta.
   // Se guarda el número real de cada escena para que el aviso señale la correcta.
-  const vigiladas = escenas.map((e, i) => ({ e, i })).filter(({ e }) => !esDeNeon(estilo) || e.diagrama);
+  const vigiladas = escenas
+    .map((e, i) => ({ e, i }))
+    .filter(({ e }) => !cancion && (!esDeNeon(estilo) || e.diagrama));
   const quietos = tramosQuietos(
     vigiladas.map(({ e }) => ({
       inicioMs: e.inicioMs,
@@ -512,27 +526,36 @@ export async function producir(
   };
   await writeFile(path.join(carpetaTrabajo, "props.json"), JSON.stringify(props, null, 2));
 
-  await avisar("armando la miniatura y el video (16:9)", 40);
+  await avisar(cancion ? "armando tu video vertical (9:16)" : "armando la miniatura y el video (16:9)", 40);
   const serveUrl = await empaquetar(carpetaPublica);
-  // Miniatura del largo: se usa en el cierre de los shorts (y luego en YouTube).
-  let rutaMiniatura: string | null = path.join(carpetaTrabajo, "miniatura.png");
-  try {
-    await renderizarMiniatura(props, serveUrl, rutaMiniatura);
-    const png = await readFile(rutaMiniatura);
-    props.cierre = {
-      canalNombre: canal?.nombre ?? "",
-      canalUsuario: canal?.usuario ?? "",
-      miniatura: `data:image/png;base64,${png.toString("base64")}`,
-    };
-  } catch (err) {
-    console.warn(`Miniatura falló: ${err instanceof Error ? err.message : err}`);
-    rutaMiniatura = null;
+  // Miniatura del largo: se usa en el cierre de los shorts (y luego en YouTube). Una canción
+  // sale solo en vertical y no lleva.
+  const rutaMiniaturaPrevista = path.join(carpetaTrabajo, "miniatura.png");
+  let rutaMiniatura: string | null = cancion ? null : rutaMiniaturaPrevista;
+  if (cancion) {
     props.cierre = { canalNombre: canal?.nombre ?? "", canalUsuario: canal?.usuario ?? "", miniatura: null };
-  }
-  const rutaMp4 = path.join(carpetaTrabajo, "video-16x9.mp4");
+  } else
+    try {
+      await renderizarMiniatura(props, serveUrl, rutaMiniaturaPrevista);
+      const png = await readFile(rutaMiniaturaPrevista);
+      props.cierre = {
+        canalNombre: canal?.nombre ?? "",
+        canalUsuario: canal?.usuario ?? "",
+        miniatura: `data:image/png;base64,${png.toString("base64")}`,
+      };
+    } catch (err) {
+      console.warn(`Miniatura falló: ${err instanceof Error ? err.message : err}`);
+      rutaMiniatura = null;
+      props.cierre = {
+        canalNombre: canal?.nombre ?? "",
+        canalUsuario: canal?.usuario ?? "",
+        miniatura: null,
+      };
+    }
+  const rutaMp4 = path.join(carpetaTrabajo, cancion ? "video-9x16.mp4" : "video-16x9.mp4");
   let ultimo = 40;
   const r = await renderizar(
-    plantilla,
+    cancion ? "Cancion" : plantilla,
     props,
     carpetaPublica,
     rutaMp4,
@@ -540,14 +563,14 @@ export async function producir(
       const pct = 40 + Math.round(p * 40);
       if (pct >= ultimo + 5) {
         ultimo = pct;
-        void avisar(`armando el video (16:9) ${Math.round(p * 100)}%`, pct);
+        void avisar(`armando el video (${cancion ? "9:16" : "16:9"}) ${Math.round(p * 100)}%`, pct);
       }
     },
     serveUrl,
   );
 
   // Shorts 9:16: el mismo video en trozos, cada uno con su título y su cierre. (Un comercial no lleva.)
-  const plan = opciones.sinShorts ? [] : planificarShorts(paraShorts);
+  const plan = opciones.sinShorts || cancion ? [] : planificarShorts(paraShorts);
   const shorts: ShortProducido[] = [];
   for (const [k, ventana] of plan.entries()) {
     const base = 80 + Math.round((k / plan.length) * 17);
@@ -578,6 +601,7 @@ export async function producir(
 
   return {
     rutaMp4,
+    formato: cancion ? "9x16" : "16x9",
     rutaMiniatura,
     shorts,
     bytes: r.bytes,

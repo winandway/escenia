@@ -10,6 +10,7 @@ import {
   type PropsVideo,
 } from "./props";
 import { Miniatura } from "./Miniatura";
+import { Cancion } from "./Cancion";
 import { TechExplainer } from "./TechExplainer";
 
 const portadaVacia: PropsPortada = {
@@ -115,6 +116,18 @@ export const Root: React.FC = () => (
       width={1080}
       height={1920}
       durationInFrames={1}
+    />
+    {/* Formato Canción: Richard cantando con su fondo real y un boceto a lápiz por verso (vertical). */}
+    <Composition
+      id="Cancion"
+      component={Cancion}
+      schema={esquemaPropsVideo}
+      defaultProps={{ ...vacio, estilo: "cancion" }}
+      fps={FPS}
+      width={1080}
+      height={1920}
+      durationInFrames={duracionEnFrames(vacio.duracionMs)}
+      calculateMetadata={({ props }) => ({ durationInFrames: framesDe(props) })}
     />
     <Composition
       id="TechExplainerShort"

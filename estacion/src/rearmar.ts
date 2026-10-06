@@ -59,7 +59,8 @@ async function principal() {
   const props: PropsVideo = esquemaPropsVideo.parse(
     JSON.parse(await readFile(path.join(carpetaTrabajo, "props.json"), "utf8")),
   );
-  const plantilla = props.tema === "documental" ? "MiniDocumental" : "TechExplainer";
+  const plantilla =
+    props.estilo === "cancion" ? "Cancion" : props.tema === "documental" ? "MiniDocumental" : "TechExplainer";
   const datosCierre = props.cierre;
   props.ventana = null;
   props.cierre = null;

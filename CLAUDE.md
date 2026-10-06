@@ -13,6 +13,7 @@
 - Ritmo del video (cambios de imagen por frase, sonido en cada corte, pausas de la voz) y biblioteca de sonidos: [docs/RITMO.md](docs/RITMO.md).
 - **Los formatos y sus nombres** (Documental, Cómic, Neón, Neón con personajes, Presentador) y qué dice YouTube de las caras reales: [docs/FORMATOS.md](docs/FORMATOS.md).
 - Formato Presentador (Richard grabado, encima de los gráficos): [docs/PRESENTADOR.md](docs/PRESENTADOR.md).
+- Formato Canción (Richard cantando con su fondo real, un boceto a lápiz por verso arriba y la letra en el pecho; solo vertical): [docs/CANCION.md](docs/CANCION.md).
 - Comerciales (el video publicitario de un cliente con sus logos y capturas) y la biblioteca de Imágenes: [docs/COMERCIALES.md](docs/COMERCIALES.md).
 - Estilos de video (clásico, ilustrado con las personas dibujadas, y neón con diagramas): [docs/ESTILOS.md](docs/ESTILOS.md).
 - Portadas de impacto (la miniatura llamativa del video largo y la de cada Short; salen solas): [docs/PORTADA.md](docs/PORTADA.md).
@@ -39,7 +40,7 @@
 
 - **Cada temática tiene su estilo** ([docs/ESTILOS.md](docs/ESTILOS.md)): tecnología y noticias de IA van **ilustradas** (las personas dibujadas), «Así funciona» va en **neón** (diagramas), y las biografías siguen en el clásico. El diagrama del guion NO lleva campos opcionales: la IA admite 24 en total (C-ESTILOS-1).
 
-- **Antes de hacer un video se confirma el formato por su nombre** (Documental, Cómic, Neón, Neón con personajes, y si va con Presentador). Lo pidió Richard el 5 oct 2026. Si ya lo dijo, no se pregunta.
+- **Antes de hacer un video se confirma el formato por su nombre** (Documental, Cómic, Neón, Neón con personajes, Canción, y si va con Presentador). Lo pidió Richard el 5 oct 2026. Si ya lo dijo, no se pregunta.
 
 - **El tema de cada video se acuerda primero con Richard.** No se crea un guion, un borrador ni un video «de muestra» en el panel con un tema que él no eligió. Un tema vale si es información importante, que la gente quiera compartir, y si dentro se puede vender un producto suyo. Lo que él dice «para poner un ejemplo» es un ejemplo de la forma, no un tema. Para probar una función se usa material sintético en la Mac y, si pasa por el panel, se saca de sus listas al terminar. (Dictado el 5 oct 2026 al leer el guion 9.)
 

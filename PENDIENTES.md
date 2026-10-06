@@ -43,6 +43,7 @@
 - [x] Biblioteca de Imágenes (carpetas, muchos archivos de una vez, PDF partido en páginas) y menú Comerciales: el video publicitario de un cliente con su texto, nuestra voz y sus imágenes, en Neón con personajes, sin marca ni Shorts (5 oct 2026). Candados C-IMAGENES-1 y C-COMERCIAL-1.
 - [x] Menú del panel rediseñado: botones por grupos, el activo encendido y la luz de la Mac (5 oct 2026).
 - [ ] Comerciales: versión vertical para redes; ver y corregir el plan antes de armar; elegir la miniatura.
+- [ ] Canción: la pista limpia alineada debajo de su voz; elegir un trozo (de tal verso a tal verso) para un Short; una casilla para pegar la letra; bocetos animados trazo a trazo. Guía docs/CANCION.md.
 - [ ] Comerciales: en un diagrama de paquetes un objeto puede quedarse 6 o 7 s encendido mientras la voz lo describe (el de «Standard» en el guion 15); meterle un plano «dato» o una captura entre objeto y objeto cuando la descripción pase de 5 s.
 - [ ] Miniaturas: que Richard elija en el panel el momento suyo que va en la portada y cambie el texto.
 - [ ] Presentador: cortar pausas y frases repetidas del MEDIO de la grabación antes de armar.

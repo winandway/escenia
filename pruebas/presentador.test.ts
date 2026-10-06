@@ -284,6 +284,7 @@ describe("presentador: en el video y en los nombres", () => {
       ilustrado: "Cómic",
       neon: "Neón",
       mixto: "Neón con personajes",
+      cancion: "Canción",
     });
   });
 });

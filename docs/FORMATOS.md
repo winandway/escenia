@@ -9,15 +9,16 @@ formato** quiere, por su nombre. Si él ya lo dijo, no se pregunta.
 
 ## Los que ya existen
 
-| Nombre                  | Cómo se ve                                                                                                     | Para qué                                                 | Estilo en el código |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- |
-| **Documental**          | Voz que narra; fotos y clips reales a pantalla llena que cambian cada 3 segundos; cifras en grande             | Biografías, historias de artistas                        | `clasico`           |
-| **Cómic**               | Las personas salen dibujadas, recortadas, sobre fondo de cómic; los datos caen como titulares                  | Noticias de tecnología e inteligencia artificial         | `ilustrado`         |
-| **Neón**                | Sin fotos: diagramas de neón que se encienden cuando la voz nombra cada cosa                                   | Explicar cómo funciona algo (un software, un proceso)    | `neon`              |
-| **Neón con personajes** | Diagramas de neón y, cuando se nombra a una persona, sale dibujada sobre el mismo fondo de neón, con sus datos | Tecnología con protagonistas: la noticia y cómo funciona | `mixto`             |
-| **Presentador**         | Richard, grabado de verdad, encima de cualquiera de los cuatro; sale en grande y se va a la esquina            | Todo lo anterior, con su cara y su voz real              | (modo aparte)       |
+| Nombre                  | Cómo se ve                                                                                                                    | Para qué                                                 | Estilo en el código |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- |
+| **Documental**          | Voz que narra; fotos y clips reales a pantalla llena que cambian cada 3 segundos; cifras en grande                            | Biografías, historias de artistas                        | `clasico`           |
+| **Cómic**               | Las personas salen dibujadas, recortadas, sobre fondo de cómic; los datos caen como titulares                                 | Noticias de tecnología e inteligencia artificial         | `ilustrado`         |
+| **Neón**                | Sin fotos: diagramas de neón que se encienden cuando la voz nombra cada cosa                                                  | Explicar cómo funciona algo (un software, un proceso)    | `neon`              |
+| **Neón con personajes** | Diagramas de neón y, cuando se nombra a una persona, sale dibujada sobre el mismo fondo de neón, con sus datos                | Tecnología con protagonistas: la noticia y cómo funciona | `mixto`             |
+| **Canción**             | Richard cantando, entero y con su fondo real; arriba, en un papel viejo, un boceto a lápiz por verso; la letra sobre su pecho | Sus canciones en Caprichoso TV (vertical)                | `cancion`           |
+| **Presentador**         | Richard, grabado de verdad, encima de cualquiera de los cuatro; sale en grande y se va a la esquina                           | Todo lo anterior, con su cara y su voz real              | (modo aparte)       |
 
-El Presentador no reemplaza a los otros: **se suma**. Hay «Presentador con
+La Canción es un formato de grabación propia (solo vertical): guía [CANCION.md](CANCION.md). El Presentador no reemplaza a los otros: **se suma**. Hay «Presentador con
 Neón», «Presentador con Cómic» y «Presentador con Documental». Guía:
 [PRESENTADOR.md](PRESENTADOR.md). Los estilos: [ESTILOS.md](ESTILOS.md).
 

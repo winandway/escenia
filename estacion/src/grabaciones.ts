@@ -7,6 +7,7 @@
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { momentosDeCancion } from "@compartido/cancion";
 import { extensionDeVideo } from "@compartido/grabaciones";
 import type { Guion } from "@compartido/guion";
 import {
@@ -81,7 +82,9 @@ export async function montarPresentador(
   voz: Awaited<ReturnType<typeof vozDeGrabacion>>,
   clave: string,
   avisar: (texto: string) => unknown,
-  opciones: { sinCroma?: boolean } = {},
+  // `cancion`: formato Canción (docs/CANCION.md): su fondo real se queda, él sale entero todo el
+  // tiempo y la imagen va a la resolución del video vertical.
+  opciones: { sinCroma?: boolean; cancion?: boolean } = {},
 ): Promise<Material> {
   const { medidas, t } = voz;
   // Solo se usa el trozo en el que habla: lo de antes y lo de después (él acercándose a la cámara
@@ -98,7 +101,8 @@ export async function montarPresentador(
     palabras,
     duracionMs,
   );
-  const croma = opciones.sinCroma ? null : await detectarCroma(entrada, medidas.duracionSeg);
+  const croma =
+    opciones.sinCroma || opciones.cancion ? null : await detectarCroma(entrada, medidas.duracionSeg);
   let video: { ruta: string; ancho: number; alto: number; transparente: boolean };
   if (croma) {
     await avisar(`quitando el fondo verde de tu grabación (${croma.color})`);
@@ -107,18 +111,24 @@ export async function montarPresentador(
       corte,
     });
     video = { ruta: "presentador.webm", ...r, transparente: true };
+  } else if (opciones.cancion) {
+    await avisar("tu grabación va entera, con tu fondo real");
+    const r = await prepararVentana(entrada, path.join(carpetaPublica, "presentador.mp4"), 1920, corte);
+    video = { ruta: "presentador.mp4", ...r, transparente: false };
   } else {
     await avisar("tu grabación no tiene fondo de croma: va en una ventana");
     const r = await prepararVentana(entrada, path.join(carpetaPublica, "presentador.mp4"), 1080, corte);
     video = { ruta: "presentador.mp4", ...r, transparente: false };
   }
-  const momentos = momentosDelPresentador(
-    guion.escenas.map((e, i) => ({
-      parte: e.parte,
-      inicioMs: tramos[i]?.inicioMs ?? 0,
-      finMs: tramos[i]?.finMs ?? duracionMs,
-    })),
-  );
+  const momentos = opciones.cancion
+    ? momentosDeCancion()
+    : momentosDelPresentador(
+        guion.escenas.map((e, i) => ({
+          parte: e.parte,
+          inicioMs: tramos[i]?.inicioMs ?? 0,
+          finMs: tramos[i]?.finMs ?? duracionMs,
+        })),
+      );
   return {
     voz: {
       rutaMp3: rutaVoz,
@@ -134,7 +144,7 @@ export async function montarPresentador(
 
 /** Lo que necesita la producción de un trabajo que salió de una grabación del panel. */
 export async function materialDeGrabacion(
-  g: { id: number; archivo: string; bytes: number },
+  g: { id: number; archivo: string; bytes: number; formato?: string },
   guion: Guion,
   clave: string,
   avisar: (texto: string) => unknown,
@@ -142,7 +152,7 @@ export async function materialDeGrabacion(
   const entrada = await asegurarArchivo(g, avisar);
   await avisar("preparando tu voz");
   const voz = await vozDeGrabacion(entrada, carpetaDe(g.id));
-  return montarPresentador(entrada, guion, voz, clave, avisar);
+  return montarPresentador(entrada, guion, voz, clave, avisar, { cancion: g.formato === "cancion" });
 }
 
 /**

@@ -10,7 +10,9 @@ export type Canal = "canal-ia" | "caprichoso-tv";
 // "neon": no hay fotos ni clips; todo se explica con diagramas de neón (cómo funciona algo).
 // "mixto": neón CON personajes: diagramas de neón y, cuando se nombra a una persona, sale dibujada
 // sobre el mismo fondo de neón (pedido por Richard el 5 oct 2026 para sus grabaciones).
-export const ESTILOS_VIDEO = ["clasico", "ilustrado", "neon", "mixto"] as const;
+// "cancion": Richard CANTA, con su fondo real, y encima de su cabeza un dibujo a lápiz por verso
+// (pedido el 6 oct 2026 para Caprichoso TV: su canción «Voy recorriendo caminos»).
+export const ESTILOS_VIDEO = ["clasico", "ilustrado", "neon", "mixto", "cancion"] as const;
 export type EstiloVideo = (typeof ESTILOS_VIDEO)[number];
 
 /**
@@ -22,7 +24,11 @@ export const NOMBRE_FORMATO: Record<EstiloVideo, string> = {
   ilustrado: "Cómic",
   neon: "Neón",
   mixto: "Neón con personajes",
+  cancion: "Canción",
 };
+
+/** El formato Canción: él cantando, su fondo real, un boceto a lápiz por verso; sale solo en vertical. */
+export const esCancion = (estilo: EstiloVideo): boolean => estilo === "cancion";
 
 /** Los formatos sin fotos ni clips reales: todo lo que se ve es dibujado (diagramas, figuras). */
 export const esDeNeon = (estilo: EstiloVideo): boolean => estilo === "neon" || estilo === "mixto";

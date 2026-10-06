@@ -23,6 +23,7 @@ const QUE_VA_DETRAS = {
   mixto: "diagramas de neón y, cuando nombras a una persona, sale dibujada",
   ilustrado: "las personas que nombras, dibujadas, con titulares",
   clasico: "fotos y videos reales de lo que vas nombrando",
+  cancion: "cantas con tu fondo real y, sobre tu cabeza, un dibujo a lápiz que sigue la letra",
 } as const;
 
 // El que más se usa con una grabación va primero; un formato nuevo sin sitio propio cae al final.
@@ -152,7 +153,7 @@ export function FormularioGrabacion() {
 
         <div>
           <label htmlFor="tema" className="etiqueta">
-            De qué hablas en el video
+            De qué hablas en el video (si cantas, el nombre de la canción)
           </label>
           <textarea
             id="tema"

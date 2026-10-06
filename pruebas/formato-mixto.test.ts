@@ -42,7 +42,7 @@ describe("formato «Neón con personajes»: diagramas de neón y las personas di
   });
 
   it("es el cuarto formato, con su nombre, y cada formato dice si es de neón y si dibuja personas", () => {
-    expect([...ESTILOS_VIDEO]).toEqual(["clasico", "ilustrado", "neon", "mixto"]);
+    expect([...ESTILOS_VIDEO]).toEqual(["clasico", "ilustrado", "neon", "mixto", "cancion"]);
     expect(NOMBRE_FORMATO.mixto).toBe("Neón con personajes");
     for (const f of ESTILOS_VIDEO) expect(NOMBRE_FORMATO[f].length).toBeGreaterThan(3);
     const tabla = Object.fromEntries(ESTILOS_VIDEO.map((f) => [f, [esDeNeon(f), dibujaPersonas(f)]]));
@@ -51,6 +51,7 @@ describe("formato «Neón con personajes»: diagramas de neón y las personas di
       ilustrado: [false, true],
       neon: [true, false],
       mixto: [true, true],
+      cancion: [false, false],
     });
   });
 

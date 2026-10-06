@@ -15,6 +15,7 @@ import {
   MODELO_IMAGEN_POR_DEFECTO,
   type ModeloImagen,
 } from "@compartido/modelos";
+import { promptDeBoceto } from "@compartido/cancion";
 import { config } from "./config";
 
 const exec = promisify(execFile);
@@ -114,12 +115,15 @@ export function imagenesActivas(): boolean {
 export async function generarImagen(
   prompt: string,
   carpetaPublica: string,
-  opciones: { vertical?: boolean; blancoYNegro?: boolean; referencia?: string } = {},
+  // `boceto`: formato Canción, un dibujo a lápiz sobre papel viejo en vez de una fotografía.
+  opciones: { vertical?: boolean; blancoYNegro?: boolean; referencia?: string; boceto?: boolean } = {},
 ): Promise<ImagenIA | null> {
   if (!config.FAL_KEY) return null;
   const referencia = opciones.referencia ? await referenciaEnBase64(opciones.referencia) : null;
   const modelo = asegurarModeloImagen(referencia ? MODELO_IMAGEN_CON_REFERENCIA : MODELO_IMAGEN_POR_DEFECTO);
-  const promptFinal = `${referencia ? CON_REFERENCIA : ""}${prompt.trim()}. ${opciones.blancoYNegro ? "black and white vintage photograph look, " : ""}${ESTILO_BASE}`;
+  const promptFinal = opciones.boceto
+    ? promptDeBoceto(prompt)
+    : `${referencia ? CON_REFERENCIA : ""}${prompt.trim()}. ${opciones.blancoYNegro ? "black and white vintage photograph look, " : ""}${ESTILO_BASE}`;
   const tam = opciones.vertical ? { width: 1152, height: 2048 } : { width: 2048, height: 1152 };
 
   const carpeta = path.join(config.CARPETA_CLIPS, "ia");
