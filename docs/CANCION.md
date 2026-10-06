@@ -88,7 +88,16 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /r
   carretera (`movimiento: "avance"`). Los demás, un acercamiento lento. Que el muñequito o el carro
   se muevan DE VERDAD necesita un modelo de video (ver abajo).
 
-## Animar los bocetos de verdad (pendiente de que Richard autorice el gasto)
+## Próximo plan (lo dejó Richard el 6 oct 2026, para que no se olvide)
+
+1. **Escenas animadas de verdad.** Al armar el video, dos o tres escenas cortas (las más
+   importantes: el coro, por ejemplo) pasan por Wan 2.2 en fal.ai (quince centavos por clip de
+   cinco segundos; autorizado ese día con ese modelo y esa cantidad). Tope de 3 clips por video en
+   el código. Los demás bocetos siguen con movimiento de cámara.
+2. **Karaoke.** Suena su pista (la de Sonidos), la letra va saliendo palabra por palabra y arriba
+   corre el video de bocetos, para que la gente cante encima. Él no sale en cámara.
+
+## Animar los bocetos de verdad (precios leídos el 6 oct 2026)
 
 Hacer que el carro recorra el camino o que el muñequito camine es pasar el boceto por un modelo
 de imagen a video. Precios leídos en fal.ai el 6 oct 2026:
@@ -100,10 +109,9 @@ de imagen a video. Precios leídos en fal.ai el 6 oct 2026:
 | Kling 2.5 Turbo estándar     | 21 centavos por 5 s, 4,2 por segundo más | el de mejor movimiento        |
 
 La regla global manda: un modelo que pasa de 5 centavos por pieza solo se enciende con la
-autorización escrita de Richard y con su tope. Propuesta: Wan 2.2 a 15 centavos, SOLO en las
-escenas marcadas «avance» (una o dos por canción: 15 a 30 centavos por video), con tope de 3
-clips por video en el código y dentro del tope diario. Sin su «sí», los bocetos siguen quietos
-con movimiento de cámara.
+autorización escrita de Richard y con su tope. El 6 oct 2026 autorizó Wan 2.2 a 15 centavos
+para dos o tres escenas por canción (las más importantes), con tope de 3 clips por video en el
+código y dentro del tope diario. Hasta que se construya, los bocetos siguen con movimiento de cámara.
 
 ## Lo que pasa por dentro
 
