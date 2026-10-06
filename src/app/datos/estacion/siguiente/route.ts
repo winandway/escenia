@@ -3,11 +3,10 @@
 import { z } from "zod";
 import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
-import { devolverTrabajosPerdidos, tocarLatido } from "@/lib/estacion-estado";
+import { devolverTrabajosPerdidos, guionValido, tocarLatido } from "@/lib/estacion-estado";
 import { guionPorId, productoPorId, type FilaTrabajo, ajuste } from "@/lib/consultas";
 import { carpetasDe, comercialDeGuion } from "@/lib/comerciales";
 import { grabacionDeGuion } from "@/lib/grabaciones";
-import { esquemaGuion } from "@compartido/guion";
 import { CANALES, clavesDeCanal } from "@compartido/canales";
 import { buscarTematica } from "@compartido/tematicas";
 
@@ -47,7 +46,17 @@ export async function POST(req: Request) {
     );
     return Response.json({ trabajo: null });
   }
-  const contenido = esquemaGuion.parse(JSON.parse(guion.contenido));
+  const valido = guionValido(guion.contenido);
+  if (!valido.guion) {
+    // Un guion que no pasa el esquema no puede producirse: el trabajo queda en error con el motivo
+    // (antes la ruta tumbaba con un 500 y el trabajo se quedaba «tomado» para siempre).
+    await db.ejecutar(
+      "UPDATE trabajos SET estado = 'error', error = ?, actualizado_en = datetime('now') WHERE id = ?",
+      [valido.error, pendiente.id],
+    );
+    return Response.json({ trabajo: null });
+  }
+  const contenido = valido.guion;
   const producto = guion.producto_id ? await productoPorId(db, guion.producto_id) : null;
   const tematica = buscarTematica(guion.tematica_id);
   const canalId = tematica?.canal ?? "canal-ia";

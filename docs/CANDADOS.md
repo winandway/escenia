@@ -358,6 +358,12 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   trabajos sembrados (tomado sin paso hace 5 min, tomado con avance hace 5 min, tomado hace 3 h,
   tomado sin paso hace 1 min): vuelven el primero y el tercero.
 - **Comprobado en rojo** el 6 oct 2026: sin la regla de los 3 minutos la prueba falla.
+  - Segundo tropiezo del mismo día: un prompt corregido a mano con 423 letras (tope 400) hizo
+    que `esquemaGuion.parse` reventara en la ruta `siguiente` DESPUÉS de marcar el trabajo
+    como tomado (500 al panel, trabajo colgado). Ahora `guionValido` devuelve el motivo y el
+    trabajo queda en «error» con él; la fila sigue. Prueba: un prompt de 423 letras da el
+    motivo con su ruta (`escenas.1.visual.prompt_imagen`). Y los scripts que corrigen un guion
+    a mano validan el guion entero con `esquemaGuion` antes de guardarlo.
 - **Qué NO tocar:** no bajar los 3 minutos: la Estación tarda hasta un minuto en bajar una
   grabación antes de su primer aviso de avance; con menos se devolverían trabajos vivos.
 

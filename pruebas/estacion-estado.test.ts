@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { devolverTrabajosPerdidos, estacionViva, tocarLatido } from "@/lib/estacion-estado";
+import { devolverTrabajosPerdidos, estacionViva, guionValido, tocarLatido } from "@/lib/estacion-estado";
 import { latidoEstacion } from "@/lib/consultas";
 import { baseEnMemoria } from "./base-memoria";
 
@@ -56,5 +56,26 @@ describe("trabajos que la Estación tomó y abandonó (C-ESTACION-2)", () => {
       "4:tomado",
     ]);
     expect(estados[0]?.paso).toBe("reintento tras corte");
+  });
+});
+
+describe("un guion que no pasa el esquema no tumba la fila (C-ESTACION-2)", () => {
+  const base = {
+    titulo: "Prueba",
+    gancho: "Un gancho de prueba.",
+    escenas: [
+      { parte: "gancho", narracion: "Uno.", visual: { tipo: "ia", prompt_imagen: "a road" } },
+      { parte: "contexto", narracion: "Dos.", visual: { tipo: "ia", prompt_imagen: "a car" } },
+      { parte: "cierre", narracion: "Tres.", visual: { tipo: "ia", prompt_imagen: "a crown" } },
+    ],
+  };
+  it("dice el motivo en vez de reventar: un prompt de más de 400 letras", () => {
+    expect(guionValido(JSON.stringify(base)).guion?.escenas).toHaveLength(3);
+    const largo = structuredClone(base);
+    largo.escenas[1]!.visual.prompt_imagen = "x".repeat(423);
+    const r = guionValido(JSON.stringify(largo));
+    expect(r.guion).toBeNull();
+    expect(r.error).toContain("escenas.1.visual.prompt_imagen");
+    expect(guionValido("esto no es json").error).toContain("El guion no pasa la validación");
   });
 });

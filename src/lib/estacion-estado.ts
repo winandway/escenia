@@ -1,4 +1,5 @@
 // La Estación se considera viva si dio señal en los últimos 2 minutos.
+import { esquemaGuion, type Guion } from "@compartido/guion";
 import type { BaseDatos } from "./db";
 
 export const LATIDO_MAX_MS = 2 * 60_000;
@@ -40,4 +41,29 @@ export async function devolverTrabajosPerdidos(db: BaseDatos): Promise<number> {
             OR (paso = 'tomado' AND tomado_en < datetime('now', '-3 minutes')))`,
   );
   return r.cambios;
+}
+
+/**
+ * El contenido de un guion, ya validado, o el motivo por el que no sirve (C-ESTACION-2): un guion
+ * corregido a mano con un prompt de 423 letras (tope 400) tumbó la ruta `siguiente` con un 500
+ * después de marcar el trabajo como tomado (6 oct 2026); ahora el trabajo queda en error, con el
+ * motivo, y la fila sigue.
+ */
+export function guionValido(
+  contenido: string,
+): { guion: Guion; error: null } | { guion: null; error: string } {
+  try {
+    return { guion: esquemaGuion.parse(JSON.parse(contenido)), error: null };
+  } catch (e) {
+    const motivo =
+      e instanceof Error && "issues" in e && Array.isArray((e as { issues: unknown[] }).issues)
+        ? (e as { issues: { path: (string | number)[]; message: string }[] }).issues
+            .slice(0, 3)
+            .map((i) => `${i.path.join(".")}: ${i.message}`)
+            .join("; ")
+        : e instanceof Error
+          ? e.message
+          : String(e);
+    return { guion: null, error: `El guion no pasa la validación: ${motivo}`.slice(0, 900) };
+  }
 }
