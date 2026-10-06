@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { ALTO_DEL_BOCETO, ESTILO_LAPIZ, momentosDeCancion, promptDeBoceto } from "@compartido/cancion";
+import {
+  ALTO_DEL_BOCETO,
+  arribaDeLaLetra,
+  bajadaDelVideo,
+  caraDeLaToma,
+  ESTILO_LAPIZ,
+  momentosDeCancion,
+  promptDeBoceto,
+} from "@compartido/cancion";
 import { esquemaGrabacionNueva } from "@compartido/grabaciones";
 import { dibujaPersonas, esCancion, esDeNeon, ESTILOS_VIDEO, NOMBRE_FORMATO } from "@compartido/tematicas";
 import { mensajeDePlan } from "@/lib/plan-grabacion";
@@ -61,5 +69,35 @@ describe("formato «Canción»: Richard canta con su fondo real y un boceto a l�
     // El papel ocupa un tercio de arriba: encima de su cabeza, nunca sobre su cara.
     expect(ALTO_DEL_BOCETO).toBeGreaterThan(0.25);
     expect(ALTO_DEL_BOCETO).toBeLessThan(0.4);
+  });
+
+  it("el video se baja justo hasta que la cabeza queda debajo del papel, y la letra va bajo el mentón, nunca sobre la cara", () => {
+    // Cuadros de la toma real del 6 oct 2026: la cara (recuadro) sube y baja mientras canta.
+    const cara = caraDeLaToma([
+      [{ cy: 0.4396, h: 0.2188 }],
+      [{ cy: 0.3942, h: 0.1426 }],
+      [{ cy: 0.338, h: 0.1651 }],
+      [],
+    ]);
+    expect(cara).not.toBeNull();
+    // La cabeza llega más arriba en el cuadro donde la cara está más alta (gorra incluida).
+    expect(cara?.arriba).toBeCloseTo(0.338 - 0.1651 / 2 - 0.1651 * 0.75, 3);
+    // El mentón más bajo, en el cuadro de la cara más grande.
+    expect(cara?.abajo).toBeCloseTo(0.4396 + 0.2188 / 2, 3);
+    const bajada = bajadaDelVideo(cara);
+    // Se baja lo que falta para que la cabeza quede bajo el papel, con un pelo de aire.
+    expect(bajada).toBeCloseTo(ALTO_DEL_BOCETO + 0.01 - (cara?.arriba ?? 0), 3);
+    expect((cara?.arriba ?? 0) + bajada).toBeGreaterThanOrEqual(ALTO_DEL_BOCETO);
+    // La letra empieza debajo del mentón bajado y no se va al fondo (YouTube tapa lo de abajo).
+    const letra = arribaDeLaLetra(cara, bajada);
+    expect(letra).toBeGreaterThan((cara?.abajo ?? 0) + bajada);
+    expect(letra).toBeLessThanOrEqual(0.8);
+    // Una cabeza ya muy abajo no mueve el video; una muy arriba nunca lo baja más que el papel.
+    expect(bajadaDelVideo({ arriba: 0.5, abajo: 0.7 })).toBe(0);
+    expect(bajadaDelVideo({ arriba: 0, abajo: 0.3 })).toBe(ALTO_DEL_BOCETO);
+    // Sin cara detectada, se baja un poco por si acaso y la letra va a media pantalla.
+    expect(bajadaDelVideo(null)).toBe(0.1);
+    expect(arribaDeLaLetra(null, 0.1)).toBeCloseTo(0.625, 3);
+    expect(caraDeLaToma([[], []])).toBeNull();
   });
 });

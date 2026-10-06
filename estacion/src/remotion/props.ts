@@ -171,6 +171,9 @@ export const esquemaPropsVideo = z.object({
       momentos: z
         .array(z.object({ inicioMs: z.number(), modo: z.enum(["completo", "esquina"]) }))
         .default([]),
+      // Formato Canción: hasta dónde llega su cabeza y su mentón (fracciones del alto), para bajar
+      // el video justo lo necesario y poner la letra sobre el pecho.
+      cara: z.object({ arriba: z.number(), abajo: z.number() }).nullable().default(null),
     })
     .nullable()
     .default(null),

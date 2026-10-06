@@ -364,9 +364,14 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
     sin Shorts ni miniatura aparte.
 - **Comprobado en rojo** el 6 oct 2026: sin el estilo en el prompt y sin el formato en la
   lista, la prueba falla.
+  - El cuadre (pedido el 6 oct 2026 al ver el primer video): el papel va de borde a borde y
+    bien cuadrado; el video se baja justo hasta que la cabeza queda bajo el papel
+    (`bajadaDelVideo` con la cara medida en seis cuadros, `caraDeLaToma`), y la letra va
+    debajo del mentón y nunca más abajo del 80 % (`arribaDeLaLetra`). La plantilla repite
+    esas cuentas (no puede importar de fuera); la prueba las fija.
 - **Qué NO tocar:** no «mejorar» su audio (ni tempo, ni pausas): la imagen tiene que seguir
-  calzando con la boca. No volver a poner el papel más abajo del tercio de arriba: le tapa la
-  cara.
+  calzando con la boca. No volver a torcer ni achicar el papel, ni dejar que tape la cara: si
+  la cabeza llega muy arriba, se baja el video, no se achica el papel.
 
 ## C-PORTADA-3 — La palabra tachada o fuerte de la miniatura nunca se recorta (5 oct 2026)
 

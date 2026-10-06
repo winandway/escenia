@@ -7,7 +7,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
-import { elegirEnfoque, parsearCaras, type Enfoque } from "@compartido/enfoque";
+import { elegirEnfoque, parsearCaras, type Cara, type Enfoque } from "@compartido/enfoque";
 import { enSerie } from "./serie";
 import { config } from "./config";
 
@@ -71,6 +71,23 @@ async function enfoquesSinFila(rutas: string[]): Promise<Map<string, Enfoque | n
     for (const r of pendientes) if (!resultado.has(r)) resultado.set(r, null);
     await mkdir(path.dirname(archivoCache), { recursive: true });
     await writeFile(archivoCache, JSON.stringify(cache));
+  }
+  return resultado;
+}
+
+/**
+ * Las caras (recuadros, en fracciones) que se ven en cada imagen, sin elegir ninguna y sin
+ * caché: lo usa el formato Canción para saber hasta dónde llega la cabeza de Richard en su toma.
+ */
+export async function carasDe(rutas: string[]): Promise<Map<string, Cara[]>> {
+  const resultado = new Map<string, Cara[]>();
+  if (rutas.length === 0) return resultado;
+  const detector = await asegurarDetector();
+  if (!detector) return resultado;
+  const { stdout } = await exec(detector, rutas, { maxBuffer: 16 * 1024 * 1024 });
+  for (const linea of stdout.split("\n").filter(Boolean)) {
+    const { ruta, caras } = parsearCaras(linea);
+    resultado.set(ruta, caras);
   }
   return resultado;
 }

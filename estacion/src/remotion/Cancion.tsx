@@ -31,6 +31,12 @@ const { fontFamily: manuscrita } = loadCaveat("normal", {
 
 /** Lo mismo que ALTO_DEL_BOCETO en compartido/cancion.ts (la plantilla no puede importar de fuera). */
 const ALTO_DEL_BOCETO = 0.3;
+/** Copia de bajadaDelVideo / arribaDeLaLetra (compartido/cancion.ts); una prueba comprueba que den lo mismo. */
+type Cara = { arriba: number; abajo: number } | null;
+const bajadaDelVideo = (cara: Cara, altoPapel = ALTO_DEL_BOCETO) =>
+  cara ? Math.max(0, Math.min(altoPapel, altoPapel + 0.01 - cara.arriba)) : Math.min(altoPapel, 0.1);
+const arribaDeLaLetra = (cara: Cara, bajada: number) =>
+  Math.min(0.8, Math.max(0.56, (cara?.abajo ?? 0.5) + bajada + 0.025));
 const PAPEL = "#efe3c6";
 const TINTA = "#2b2118";
 const AMARILLO = "#ffd60a";
@@ -63,13 +69,13 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
       ? pages.find((pg) => tMs >= pg.startMs && tMs < pg.startMs + pg.durationMs)
       : undefined;
 
-  // El papel: arriba, un poco torcido, con sombra, como pegado encima del video.
-  const papel = {
-    left: Math.round(width * 0.045),
-    top: Math.round(height * 0.028),
-    ancho: Math.round(width * 0.91),
-    alto: Math.round(height * ALTO_DEL_BOCETO),
-  };
+  // El papel: arriba, de borde a borde y bien cuadrado (sin torcer), como una franja.
+  const papel = { left: 0, top: 0, ancho: width, alto: Math.round(height * ALTO_DEL_BOCETO) };
+  // El video se baja justo lo necesario para que su cabeza quede debajo del papel; se pierde un
+  // poco del cuerpo por abajo, nunca la cara. La letra va debajo del mentón, sobre el pecho.
+  const cara = presentador?.cara ?? null;
+  const bajada = Math.round(height * bajadaDelVideo(cara));
+  const arribaLetra = Math.round(height * arribaDeLaLetra(cara, bajadaDelVideo(cara)));
   const conTitulo = tMs < TITULO_MS;
   const finCanal = p.duracionMs;
   const conCanal = tMs >= finCanal - CANAL_MS;
@@ -78,7 +84,7 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
     <OffthreadVideo
       src={staticFile(presentador?.ruta ?? "")}
       muted
-      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      style={{ position: "absolute", left: 0, top: bajada, width, height, objectFit: "cover" }}
     />
   );
 
@@ -97,14 +103,12 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
           top: papel.top,
           width: papel.ancho,
           height: papel.alto,
-          transform: "rotate(-1.4deg)",
-          borderRadius: 14,
           overflow: "hidden",
           backgroundColor: PAPEL,
           backgroundImage:
             "radial-gradient(ellipse at 20% 30%, rgba(120,90,40,.18) 0%, transparent 55%), radial-gradient(ellipse at 85% 80%, rgba(120,90,40,.22) 0%, transparent 50%), linear-gradient(180deg, rgba(255,255,255,.25) 0%, rgba(0,0,0,.06) 100%)",
-          boxShadow: "0 22px 50px rgba(0,0,0,.55), inset 0 0 60px rgba(90,60,20,.18)",
-          border: "3px solid rgba(60,40,15,.25)",
+          boxShadow: "0 14px 40px rgba(0,0,0,.55), inset 0 0 60px rgba(90,60,20,.18)",
+          borderBottom: "4px solid rgba(60,40,15,.35)",
         }}
       >
         {p.escenas.map((e, i) => {
@@ -199,18 +203,17 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
 
       {/* La letra, palabra por palabra, sobre su pecho: la que se canta salta en amarillo. */}
       {pagina && (
-        <AbsoluteFill
-          style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: Math.round(height * 0.6) }}
-        >
+        <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: arribaLetra }}>
           <div
             style={{
-              maxWidth: "88%",
+              maxWidth: "90%",
               textAlign: "center",
-              fontSize: 74,
+              fontSize: 76,
               fontWeight: 900,
-              lineHeight: 1.18,
+              lineHeight: 1.12,
+              textTransform: "uppercase",
               color: "#fff",
-              WebkitTextStroke: "11px #000",
+              WebkitTextStroke: "12px #000",
               paintOrder: "stroke fill",
               textShadow: "0 6px 26px rgba(0,0,0,.85)",
             }}

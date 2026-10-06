@@ -4,10 +4,12 @@
 //     al panel. El panel guarda el guion y lo manda a producir.
 //  2) `materialDeGrabacion`: cuando llega ese trabajo, prepara su voz y su imagen (sin
 //     fondo, si se grabó con croma) para que la producción de siempre las use.
+import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { momentosDeCancion } from "@compartido/cancion";
+import { promisify } from "node:util";
+import { caraDeLaToma, momentosDeCancion, type CaraDelPresentador } from "@compartido/cancion";
 import { extensionDeVideo } from "@compartido/grabaciones";
 import type { Guion } from "@compartido/guion";
 import {
@@ -25,10 +27,13 @@ import {
   quitarCroma,
   recortarVoz,
 } from "./croma";
+import { carasDe } from "./enfoque";
 import { panel } from "./panel";
 import type { producir } from "./produccion";
 import { transcribir } from "./transcribir";
 import { nivelar } from "./voz";
+
+const exec = promisify(execFile);
 
 type Material = NonNullable<Parameters<typeof producir>[9]>;
 
@@ -120,6 +125,16 @@ export async function montarPresentador(
     const r = await prepararVentana(entrada, path.join(carpetaPublica, "presentador.mp4"), 1080, corte);
     video = { ruta: "presentador.mp4", ...r, transparente: false };
   }
+  // Canción: dónde llega su cabeza en toda la toma, para bajar el video justo debajo del papel.
+  const cara = opciones.cancion
+    ? await caraDelPresentador(path.join(carpetaPublica, video.ruta), duracionMs / 1000, carpetaPublica)
+    : null;
+  if (opciones.cancion)
+    await avisar(
+      cara
+        ? `tu cabeza llega hasta el ${Math.round(cara.arriba * 100)}% de arriba: el video se baja justo debajo del papel`
+        : "no se encontró tu cara en la toma: el video se baja un poco por si acaso",
+    );
   const momentos = opciones.cancion
     ? momentosDeCancion()
     : momentosDelPresentador(
@@ -138,8 +153,38 @@ export async function montarPresentador(
       vozDePrueba: false,
       costoUsd: t.costoUsd,
     },
-    presentador: { ...video, momentos },
+    presentador: { ...video, momentos, cara },
   };
+}
+
+/** Seis cuadros repartidos por la toma, pasados por el detector de caras de la Mac. */
+async function caraDelPresentador(
+  rutaVideo: string,
+  duracionSeg: number,
+  carpeta: string,
+): Promise<CaraDelPresentador | null> {
+  const cuadros: string[] = [];
+  for (let k = 1; k <= 6; k++) {
+    const seg = (duracionSeg * k) / 7;
+    const salida = path.join(carpeta, `cara-${k}.jpg`);
+    await exec("ffmpeg", [
+      "-v",
+      "error",
+      "-y",
+      "-ss",
+      seg.toFixed(2),
+      "-i",
+      rutaVideo,
+      "-frames:v",
+      "1",
+      "-vf",
+      "scale=540:-2",
+      salida,
+    ]);
+    cuadros.push(salida);
+  }
+  const caras = await carasDe(cuadros);
+  return caraDeLaToma(cuadros.map((c) => caras.get(c) ?? []));
 }
 
 /** Lo que necesita la producción de un trabajo que salió de una grabación del panel. */

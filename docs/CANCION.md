@@ -12,9 +12,9 @@
 
 ```
 ┌──────────────────────────────┐
-│  ┌────────────────────────┐  │  ← papel viejo, un poco torcido: el boceto a lápiz
-│  │   (boceto del verso)   │  │    de lo que dice ESE verso; cambia con cada verso,
-│  └────────────────────────┘  │    «dibujándose» de izquierda a derecha
+│██████████████████████████████│  ← papel viejo de borde a borde (30 % de alto): el boceto
+│██████ (boceto del verso) ████│    a lápiz de lo que dice ESE verso; cambia con cada
+│██████████████████████████████│    verso, «dibujándose» de izquierda a derecha
 │                              │
 │         (su cara)            │  ← él, entero, con su fondo real (la puerta, la calle)
 │                              │
@@ -24,6 +24,12 @@
 └──────────────────────────────┘
 ```
 
+- **El papel va de borde a borde arriba, bien cuadrado** (el 30 % de alto), y **el video se baja**
+  justo hasta que su cabeza queda debajo del papel: se pierde un poco del cuerpo por abajo y
+  nunca se tapa la cara. Cuánto bajarlo lo decide el detector de caras de la Mac mirando seis
+  cuadros de la toma (`caraDeLaToma`, `bajadaDelVideo`). La letra va debajo del mentón, sobre el
+  pecho, grande y en mayúsculas como en los demás verticales (`arribaDeLaLetra`). Lo pidió
+  Richard el 6 oct 2026 al ver el primer video: el papel chico y torcido no le gustó.
 - **Vertical** (1080×1920), para Shorts, Reels y TikTok. No sale en 16:9 ni se parte en Shorts.
 - **Su audio tal cual**: la voz en vivo, el ambiente y, si cantó con la pista sonando en un
   parlante, la pista. El motor **no** pone música ni efectos de corte.
