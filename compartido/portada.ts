@@ -41,6 +41,27 @@ function recortarPalabras(texto: string, maximo: number): string {
   return palabras.join(" ");
 }
 
+/**
+ * La miniatura de una CANCIÓN lleva el nombre de la canción partido en dos, EN ORDEN de lectura:
+ * lo que cabe en la línea grande (9 letras) arriba y el resto (16 letras) debajo, con la última
+ * palabra resaltada: «DE CERO / A *REINA*». La IA lo ponía al revés («REINA / DE CERO A», 6 oct
+ * 2026) y así no se entiende. Si el nombre no cabe partido así, se dejan los textos de la IA.
+ */
+export function tituloDeCancionEnDosLineas(titulo: string): { grande: string; linea: string } | null {
+  const palabras = titulo.replace(/[«»"]/g, "").trim().toUpperCase().split(/\s+/).filter(Boolean);
+  if (palabras.length < 2) return null;
+  let corte = 0;
+  while (corte < palabras.length - 1 && palabras.slice(0, corte + 1).join(" ").length <= 9) corte++;
+  // La línea grande no termina en una palabrita de enlace («A», «DE», «Y»): esa va con lo que sigue.
+  while (corte > 1 && (palabras[corte - 1] ?? "").length <= 2) corte--;
+  const grande = palabras.slice(0, corte).join(" ");
+  const resto = palabras.slice(corte);
+  if (!grande || resto.length === 0 || resto.join(" ").length > 16) return null;
+  const ultima = resto[resto.length - 1] ?? "";
+  const linea = [...resto.slice(0, -1), `*${ultima}*`].join(" ");
+  return { grande, linea };
+}
+
 /** Deja el texto listo para la portada: mayúsculas, sin puntos finales y del largo que se lee en chiquito. */
 export function textoDePortada(t: Partial<TextoPortada>): TextoPortada {
   return {

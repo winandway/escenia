@@ -25,6 +25,7 @@ import {
   mejorCuadroDePresentador,
   recorteSirve,
   textoDePortada,
+  tituloDeCancionEnDosLineas,
   type FormatoPortada,
   type FotoRotulada,
   type Recorte,
@@ -180,7 +181,11 @@ export async function armarPortadas(
       indice: 0,
       formato: cancion ? ("vertical" as const) : ("horizontal" as const),
       escenas: { inicio: 0, fin: props.escenas.length - 1 },
-      texto: textoDePortada(textos.largo ?? {}),
+      // Una canción: el nombre partido en orden de lectura manda sobre lo que escribió la IA.
+      texto: textoDePortada({
+        ...(textos.largo ?? {}),
+        ...(cancion ? (tituloDeCancionEnDosLineas(props.titulo) ?? {}) : {}),
+      }),
       ...extras(textos.largo),
     },
     ...resultado.shorts.map((s) => ({

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { esquemaGuion } from "@compartido/guion";
+import { textoDePortada, tituloDeCancionEnDosLineas } from "@compartido/portada";
 import { mensajePublicacion } from "@/lib/publicacion";
 import {
   ALTO_DEL_BOCETO,
@@ -172,5 +173,24 @@ describe("formato «Canción»: Richard canta con su fondo real y un boceto a l�
     expect(m).toContain("Bachata en vivo con letra");
     expect(m).toContain("VERTICAL");
     expect(mensajePublicacion(guion, "Caprichoso TV", [], "es")).not.toContain("ES UNA CANCIÓN");
+  });
+
+  it("la miniatura de una canción lleva el nombre partido en orden de lectura, nunca al revés", () => {
+    expect(tituloDeCancionEnDosLineas("De cero a reina")).toEqual({ grande: "DE CERO", linea: "A *REINA*" });
+    expect(tituloDeCancionEnDosLineas("«De Cero a Reina»")).toEqual({
+      grande: "DE CERO",
+      linea: "A *REINA*",
+    });
+    // Lo que no cabe partido así se queda con el texto de la IA.
+    expect(tituloDeCancionEnDosLineas("Voy recorriendo caminos")).toBeNull();
+    expect(tituloDeCancionEnDosLineas("Reina")).toBeNull();
+    // Y pasa por el recorte de la portada sin perder nada.
+    const t = textoDePortada({
+      grande: "REINA",
+      linea: "DE CERO A",
+      ...tituloDeCancionEnDosLineas("De cero a reina"),
+    });
+    expect(t.grande).toBe("DE CERO");
+    expect(t.linea).toBe("A *REINA*");
   });
 });
