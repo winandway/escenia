@@ -344,6 +344,28 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   reemplaza por la del cliente, que es lo que se quiere. No «arreglar» el texto del
   cliente en el plan: se lee tal cual lo mandó.
 
+## C-PORTADA-3 — La palabra tachada o fuerte de la miniatura nunca se recorta (5 oct 2026)
+
+- **Qué se rompió y cómo se veía:** la miniatura del segundo comercial de Andreea
+  (guion 15) decía «REAL SITE / NOT JUST A / LIVE WORKING LINK»: la segunda línea
+  sin sentido. La IA escribió «NOT JUST A ~TEMPLATE~» (19 letras, tope 16) y el
+  recorte por palabras tiró la última, que era justo la tachada, el golpe.
+- **La causa real:** `recortarPalabras` (`compartido/portada.ts`) quitaba palabras
+  por el final hasta caber, sin mirar cuál era la marcada.
+- **Qué se hizo:** la palabra marcada (fuerte entre asteriscos o tachada entre
+  virgulillas) nunca se quita. Se recorta solo el relleno que viene después de ella;
+  si aun así no cabe, la línea va entera y la plantilla la hace más chica
+  (`letraQueCabe` ya garantiza que quepa en el ancho). Sin palabra marcada, se sigue
+  recortando por el final como antes.
+- **Cómo se comprueba:** `pruebas/portada.test.ts`, prueba C-PORTADA-3: «not just a
+  ~template~» sale entera; «~gratis~ para siempre jamás» queda en «~GRATIS~ PARA»;
+  sin marca se recorta por el final.
+- **Comprobado en rojo** el 5 oct 2026: con el recorte viejo la prueba falla.
+- **Comprobado en vivo** el 5 oct 2026: la miniatura del guion 15 se rehizo a mano
+  con «NOT A ~TEMPLATE~» (`portadas.ts 40 --guion 15`) y quedó en el panel.
+- **Qué NO tocar:** no subir los topes de letras para «que quepa»: la miniatura se lee
+  en chiquito y las líneas cortas son la receta. Si la IA se pasa, manda esta regla.
+
 ## C-PORTADA-2 — La miniatura de un video con presentador lleva a Richard, y el fondo de rayos morados no vuelve (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** las dos miniaturas del primer video de

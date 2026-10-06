@@ -27,7 +27,17 @@ function recortarPalabras(texto: string, maximo: number): string {
   const letras = (s: string) => s.replace(/[*~]/g, "").length;
   if (letras(limpio) <= maximo) return limpio;
   const palabras = limpio.split(" ");
-  while (palabras.length > 1 && letras(palabras.join(" ")) > maximo) palabras.pop();
+  // La palabra marcada (la fuerte entre asteriscos o la tachada entre virgulillas) es el golpe
+  // de la línea y NUNCA se recorta: el 5 oct 2026 «NOT JUST A ~TEMPLATE~» quedó en «NOT JUST A».
+  // Se quitan las de relleno que vienen después de ella; si aun así no cabe, va entera y más chica.
+  let ultimaMarcada = -1;
+  palabras.forEach((w, k) => {
+    if (/^[*~].+[*~]$/.test(w)) ultimaMarcada = k;
+  });
+  while (palabras.length > 1 && letras(palabras.join(" ")) > maximo) {
+    if (palabras.length - 1 <= ultimaMarcada) break;
+    palabras.pop();
+  }
   return palabras.join(" ");
 }
 

@@ -52,6 +52,18 @@ describe("portada de impacto: el texto", () => {
     expect(textoDePortada({ remate: "siempre *encendidos*" }).remate).toBe("SIEMPRE *ENCENDIDOS*");
   });
 
+  it("la palabra tachada o fuerte nunca se recorta: si no cabe, la línea va entera (C-PORTADA-3)", () => {
+    // Antes «NOT JUST A ~TEMPLATE~» (19 letras, tope 16) quedaba en «NOT JUST A»: sin el golpe.
+    expect(textoDePortada({ linea: "not just a ~template~" }).linea).toBe("NOT JUST A ~TEMPLATE~");
+    // El relleno que viene después de la palabra marcada sí se recorta.
+    expect(textoDePortada({ linea: "~gratis~ para siempre jamás" }).linea).toBe("~GRATIS~ PARA");
+    expect(textoDePortada({ remate: "*cero* premios en toda su carrera" }).remate).toBe(
+      "*CERO* PREMIOS EN TODA",
+    );
+    // Sin palabra marcada, se sigue recortando por el final.
+    expect(textoDePortada({ linea: "la inteligencia artificial gratis" }).linea).toBe("LA INTELIGENCIA");
+  });
+
   it("una palabra larga se achica para caber; una cifra corta va al máximo", () => {
     expect(letraQueCabe("15", 580, 286)).toBe(286);
     expect(letraQueCabe("NOMINACIONES", 610, 104)).toBeLessThan(104);

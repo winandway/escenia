@@ -130,6 +130,9 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/portada.ts 27 --foto 
 
 Se miran TODAS (una hoja con las verticales juntas ayuda):
 
+- La palabra tachada o la fuerte tiene que estar en la miniatura: si la IA escribe una
+  línea más larga que el tope, el recorte quita el relleno, nunca esa palabra; y si no
+  cabe, la línea va entera y más chica (candado C-PORTADA-3).
 - La foto es de quien dice la etiqueta. Sale de una foto con rótulo del video,
   que ya se cotejó con su fuente (C-IMAGEN-6): la IA no reconoce a nadie por la cara.
 - El recorte no trae letras, logos ni el nombre de otra persona.
