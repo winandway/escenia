@@ -16,6 +16,7 @@ import { armarDiagrama, numerarDiagramas } from "@compartido/diagrama";
 import { planificarShorts, type EscenaParaShort } from "@compartido/shorts";
 import { dibujaPersonas, esDeNeon, type EstiloVideo } from "@compartido/tematicas";
 import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
+import { artistaDelCanal } from "@compartido/cancion";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_DOCUMENTAL, RESERVA_POR_PARTE } from "./visuales";
 import { enfoquesDe } from "./enfoque";
@@ -514,6 +515,7 @@ export async function producir(
     vozDePrueba: voz.vozDePrueba,
     tema: plantilla === "MiniDocumental" ? "documental" : "tech",
     idioma: opciones.idioma ?? "es",
+    artista: cancion ? artistaDelCanal(canal) : "",
     estilo,
     sfx,
     musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg, nivel: 1 } : null,

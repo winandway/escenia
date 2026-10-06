@@ -26,6 +26,18 @@ export function promptDeBoceto(escena: string): string {
   return `${limpia}. ${tieneLetrero(limpia) ? ESTILO_LAPIZ_CON_LETRERO : ESTILO_LAPIZ}`;
 }
 
+/**
+ * El nombre artístico que va chiquito en la esquina del papel al arrancar (el canal va al final).
+ * Richard canta como «Grupo Kprichoso» en Caprichoso TV (6 oct 2026): son dos cosas distintas.
+ */
+export function artistaDelCanal(canal: { nombre: string; usuario: string } | null): string {
+  if (!canal) return "";
+  return /caprichoso/i.test(`${canal.nombre} ${canal.usuario}`) ? "Grupo Kprichoso" : "";
+}
+
+/** Cuánto dura el rótulo chiquito de la esquina (nombre de la canción y artista) al arrancar. */
+export const ROTULO_INICIO_MS = 5000;
+
 /** En una canción él sale entero todo el tiempo: ni esquina ni ventana. */
 export const momentosDeCancion = (): MomentoPresentador[] => [{ inicioMs: 0, modo: "completo" }];
 

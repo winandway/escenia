@@ -121,6 +121,8 @@ export const esquemaPropsVideo = z.object({
   tema: z.enum(["tech", "documental"]).default("tech"),
   // El idioma de lo que se lee en pantalla que pone la plantilla («Paso 2 de 4» / «Step 2 of 4»).
   idioma: z.enum(["es", "en"]).default("es"),
+  // Formato Canción: el nombre artístico, chiquito en la esquina del papel al arrancar.
+  artista: z.string().default(""),
   // El diseño del video (docs/ESTILOS.md). "clasico": fotos y clips a pantalla llena.
   // "ilustrado": las personas salen dibujadas sobre fondo de cómic. "neon": diagramas de neón.
   // "mixto": neón con personajes (diagramas, y las personas que se nombran, dibujadas sobre el neón).

@@ -89,6 +89,17 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /r
   pide decir dónde va cada mano y «exactly two hands». Si se cuela una de más, se corrige el prompt
   de esa escena en el guion y se vuelve a producir: los demás bocetos no cambian (están guardados
   por prompt).
+- **Desde el primer cuadro, una caricatura (6 oct 2026).** Nada de tres segundos con el nombre de la
+  canción en el papel: «puras letras al principio matan el video». El primer boceto entra de golpe
+  en el cuadro cero; el nombre de la canción y el artista («Grupo Kprichoso», su nombre artístico)
+  van chiquitos en la esquina del papel durante cinco segundos; el canal («Caprichoso TV») va al
+  final, en el aviso de suscribirse. Son dos cosas distintas: el artista al principio, el canal al
+  final.
+- **Creatividad literal (6 oct 2026, «De Cero a Reina»).** Si la letra dice que alguien era feo, se
+  dibuja feo de verdad; si habla del cuerpo (curvas, figura), se rompe el estilo de palitos en esa
+  escena con una muñeca con curvas (figura de reloj de arena, pelo grande) en el mismo lápiz, y en
+  el «después» se la vuelve a dibujar así para que se vea el cambio. Lo dibujó Richard a mano para
+  explicarlo.
 - **Nada de zoom (PROHIBIDO, 6 oct 2026).** El boceto se queda quieto: ni acercamiento lento ni
   cámara que avance. Richard: «el zoom se come la imagen y rompe la gracia: la gente se queda
   mirando la caricatura como está diseñada». Lo único que se mueve es el barrido de entrada que

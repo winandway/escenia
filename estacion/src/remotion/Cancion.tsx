@@ -40,8 +40,8 @@ const arribaDeLaLetra = (cara: Cara, bajada: number) =>
 const PAPEL = "#efe3c6";
 const TINTA = "#2b2118";
 const AMARILLO = "#ffd60a";
-/** Cuánto dura el título de la canción en el papel antes del primer boceto. */
-const TITULO_MS = 2600;
+/** Lo mismo que ROTULO_INICIO_MS (compartido/cancion.ts): el rótulo chiquito de la esquina al arrancar. */
+const ROTULO_MS = 5000;
 const ENTRADA = 16; // cuadros que tarda un boceto en «dibujarse» (barrido de izquierda a derecha)
 
 const msAFrame = (ms: number) => Math.round((ms / 1000) * FPS);
@@ -74,9 +74,9 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
   const cara = presentador?.cara ?? null;
   const bajada = Math.round(height * bajadaDelVideo(cara));
   const arribaLetra = Math.round(height * arribaDeLaLetra(cara, bajadaDelVideo(cara)));
-  const conTitulo = tMs < TITULO_MS;
+  const conRotulo = tMs < ROTULO_MS;
   const ultima = [...p.escenas].reverse().find((e) => e.fotos[0] ?? e.foto);
-  const ultimaDesdeMs = ultima ? Math.max(ultima.inicioMs, TITULO_MS) : null;
+  const ultimaDesdeMs = ultima ? ultima.inicioMs : null;
 
   const video = (
     <OffthreadVideo
@@ -114,11 +114,9 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
           if (!foto) return null;
           // El boceto entra cuando empieza su verso (nunca antes de que se vaya el título) y
           // se queda hasta que entra el siguiente.
-          const desde = Math.max(msAFrame(e.inicioMs), msAFrame(TITULO_MS));
+          const desde = msAFrame(e.inicioMs);
           const siguiente = p.escenas.slice(i + 1).find((x) => x.fotos[0] ?? x.foto);
-          const hasta = siguiente
-            ? Math.max(msAFrame(siguiente.inicioMs), msAFrame(TITULO_MS)) + ENTRADA
-            : durationInFrames;
+          const hasta = siguiente ? msAFrame(siguiente.inicioMs) + ENTRADA : durationInFrames;
           if (hasta <= desde) return null;
           return (
             <Sequence
@@ -128,56 +126,38 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
               name={`boceto ${i + 1}`}
               layout="none"
             >
-              <Boceto ruta={foto.ruta} />
+              <Boceto ruta={foto.ruta} inmediato={i === 0} />
             </Sequence>
           );
         })}
 
-        {/* El título de la canción, a mano, mientras arranca. */}
-        {conTitulo && (
-          <AbsoluteFill
+        {/* Al arrancar, el nombre de la canción y el artista, chiquitos en la esquina del papel:
+            el primer cuadro ya es una caricatura (Richard, 6 oct 2026: «puras letras tres
+            segundos matan el video»). El canal va al final, en el aviso de suscribirse. */}
+        {conRotulo && (
+          <div
             style={{
-              justifyContent: "center",
-              alignItems: "center",
-              opacity: interpolate(tMs, [0, 300, TITULO_MS - 400, TITULO_MS], [0, 1, 1, 0], {
+              position: "absolute",
+              left: 34,
+              top: 22,
+              fontFamily: manuscrita,
+              color: TINTA,
+              lineHeight: 1.05,
+              opacity: interpolate(tMs, [0, 250, ROTULO_MS - 600, ROTULO_MS], [0, 1, 1, 0], {
                 extrapolateLeft: "clamp",
                 extrapolateRight: "clamp",
               }),
-              padding: "0 60px",
-              textAlign: "center",
+              textShadow: "0 0 14px rgba(239,227,198,.95), 0 0 24px rgba(239,227,198,.9)",
             }}
           >
-            <div
-              style={{
-                fontFamily: manuscrita,
-                fontWeight: 700,
-                fontSize: 92,
-                color: TINTA,
-                lineHeight: 1.05,
-              }}
-            >
-              «{p.titulo}»
-            </div>
-            {p.cierre?.canalNombre && (
-              <div
-                style={{
-                  fontFamily: manuscrita,
-                  fontWeight: 600,
-                  fontSize: 46,
-                  color: TINTA,
-                  marginTop: 18,
-                  opacity: 0.8,
-                }}
-              >
-                {p.cierre.canalNombre}
-              </div>
-            )}
-          </AbsoluteFill>
+            <div style={{ fontSize: 46, fontWeight: 700 }}>«{p.titulo}»</div>
+            {p.artista && <div style={{ fontSize: 36, fontWeight: 600, opacity: 0.85 }}>{p.artista}</div>}
+          </div>
         )}
 
         {/* La última escena deja la mitad derecha del papel en blanco: ahí va el aviso de suscribirse,
             dibujado a mano (un botón, la campanita y una flecha). */}
-        {ultimaDesdeMs !== null && tMs >= ultimaDesdeMs && !conTitulo && (
+        {ultimaDesdeMs !== null && tMs >= ultimaDesdeMs && (
           <AvisoSuscribete
             canal={p.cierre?.canalNombre ?? ""}
             entrada={interpolate(tMs, [ultimaDesdeMs + 400, ultimaDesdeMs + 1100], [0, 1], {
@@ -237,12 +217,15 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
 };
 
 /** Un boceto que se «dibuja» de izquierda a derecha y respira con un acercamiento lento. */
-const Boceto: React.FC<{ ruta: string }> = ({ ruta }) => {
+const Boceto: React.FC<{ ruta: string; inmediato?: boolean }> = ({ ruta, inmediato = false }) => {
   const frame = useCurrentFrame();
-  const barrido = interpolate(frame, [0, ENTRADA], [100, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // El primer boceto del video entra de golpe: el primer cuadro ya tiene que ser una caricatura.
+  const barrido = inmediato
+    ? 0
+    : interpolate(frame, [0, ENTRADA], [100, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
   // El boceto se queda QUIETO: nada de zoom ni de cámara que avance. Richard lo prohibió el
   // 6 oct 2026: el acercamiento se come el dibujo y rompe la gracia de la caricatura. Lo único
   // que se mueve es el barrido de entrada, que lo «dibuja» de izquierda a derecha.

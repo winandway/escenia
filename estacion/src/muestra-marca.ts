@@ -115,6 +115,7 @@ async function principal() {
     vozDePrueba: false,
     tema: "tech",
     idioma: "es",
+    artista: "",
     estilo: "clasico",
     sfx: { whoosh: [], pop: null, riser: null, ding: null, boom: null, corte: [] },
     musica: null,

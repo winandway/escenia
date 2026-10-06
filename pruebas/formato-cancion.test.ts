@@ -6,6 +6,8 @@ import { mensajePublicacion } from "@/lib/publicacion";
 import {
   ALTO_DEL_BOCETO,
   arribaDeLaLetra,
+  artistaDelCanal,
+  ROTULO_INICIO_MS,
   bajadaDelVideo,
   caraDeLaToma,
   ESTILO_LAPIZ,
@@ -39,6 +41,9 @@ describe("formato «Canción»: Richard canta con su fondo real y un boceto a l�
     });
     expect(g.formato).toBe("cancion");
   });
+
+  const mensajePlanCancion = () =>
+    mensajeDePlan({ transcripcion: "Ella era fea, muy fea.", formato: "cancion", titulo: "De cero a reina" });
 
   it("el plan de una canción pide un dibujo «ia» por verso, sin planos, fotos ni diagramas, y la letra copiada", () => {
     const m = mensajeDePlan({
@@ -125,6 +130,19 @@ describe("formato «Canción»: Richard canta con su fondo real y un boceto a l�
     expect(boceto).not.toMatch(/scale\(|translate\(|transform:/);
     // Lo único que se anima es el barrido de entrada.
     expect(boceto).toContain("clipPath");
+  });
+
+  it("arranca con una caricatura desde el primer cuadro: nada de título de tres segundos; el nombre y el artista van chiquitos en la esquina", () => {
+    const fuente = readFileSync(path.resolve(__dirname, "../estacion/src/remotion/Cancion.tsx"), "utf8");
+    expect(fuente).not.toContain("TITULO_MS");
+    expect(fuente).toContain(`const ROTULO_MS = ${ROTULO_INICIO_MS};`);
+    expect(fuente).toContain("inmediato={i === 0}");
+    expect(artistaDelCanal({ nombre: "Caprichoso TV", usuario: "@CaprichosoTV" })).toBe("Grupo Kprichoso");
+    expect(artistaDelCanal({ nombre: "Full Código", usuario: "@FullCodigo" })).toBe("");
+    expect(artistaDelCanal(null)).toBe("");
+    const m = mensajePlanCancion();
+    expect(m).toContain("FEO de verdad");
+    expect(m).toContain("hourglass figure");
   });
 
   it("el título y la miniatura de una canción se piden como los de un video musical", () => {
