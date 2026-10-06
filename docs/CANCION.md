@@ -79,6 +79,10 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /r
 - **El aviso de suscribirse.** La última escena deja la mitad derecha del papel en blanco, y ahí
   va, dibujado a mano, «¿Te gustó?», el botón «Suscríbete» con su campanita, el nombre del canal
   y una flecha (`AvisoSuscribete` en la plantilla).
+- **Dos manos.** Un boceto salió con tres manos (una en el pecho, una abierta y otra suelta). El plan
+  pide decir dónde va cada mano y «exactly two hands». Si se cuela una de más, se corrige el prompt
+  de esa escena en el guion y se vuelve a producir: los demás bocetos no cambian (están guardados
+  por prompt).
 - **Movimiento.** Un boceto que habla de un camino o de un carro «avanza»: la cámara entra hacia
   el fondo del dibujo durante todo el verso, con un balanceo chiquito, como si se fuera por la
   carretera (`movimiento: "avance"`). Los demás, un acercamiento lento. Que el muñequito o el carro
