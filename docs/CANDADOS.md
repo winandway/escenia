@@ -309,6 +309,41 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Qué NO tocar:** no volver a permitir «foto» en un comercial; el formato de un
   comercial se valida en el código (la tabla no lleva CHECK sobre `formato`).
 
+## C-COMERCIAL-2 — La voz de un comercial lee el texto del cliente una vez, entero y en orden (5 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en el segundo comercial de Andreea Blidar (gig
+  de páginas web, guion 15, trabajo 39) la voz decía **dos veces** «an AI-powered
+  online store»: la IA, al repartir el texto en escenas, repitió el final de la
+  escena 5 como escena 6 entera. De paso, la captura del punto de venta seguía en
+  pantalla mientras la voz ya hablaba de la tienda con IA, y un plano «dato» decía
+  «Live in minutes», una promesa que el texto del cliente no hace.
+- **La causa real:** el plan del comercial confiaba en que la IA copiara el texto
+  («`narracion` NO se escribe: se COPIA»), pero nada lo comprobaba. Una frase
+  repetida pasa el esquema sin problema, y la voz lee lo que llega.
+- **Qué se hizo:** `alinearNarracion` en `src/lib/plan-comercial.ts`, que
+  `planComercialLimpio` aplica cuando recibe el texto del cliente (`generador.ts`
+  se lo pasa). Recorre el texto original palabra por palabra y vuelve a pegar cada
+  escena a su trozo: una escena que **repite** lo ya dicho sale (sus planos pasan a
+  la anterior, así la imagen entra donde la voz nombra la cosa); lo que la IA **se
+  saltó** se devuelve a la escena anterior; una escena **reescrita** sale y su texto
+  lo recoge la siguiente; si la primera no arranca con la primera palabra, lo que
+  falta se le pone delante. Garantía: las narraciones juntas son exactamente el
+  texto del cliente. El aviso «tramos quietos» de la Estación señalaba el número de
+  escena del filtro (solo diagramas en neón), no el real: ahora guarda el índice
+  original (`produccion.ts`).
+- **Cómo se comprueba:** `pruebas/comerciales.test.ts`, bloque C-COMERCIAL-2:
+  escena repetida fuera y sus imágenes en la anterior; texto saltado o reescrito
+  vuelve palabra por palabra; primera escena incompleta; y sin texto no se toca
+  nada (las grabaciones no pasan por aquí).
+- **Comprobado en rojo** el 5 oct 2026: con la alineación apagada fallan las cuatro.
+- **Comprobado en vivo** el 5 oct 2026: el guion 15 se corrigió a mano en la base
+  (escena repetida fuera, capturas ancladas a su frase, «Goes live» en vez de «Live
+  in minutes») y se volvió a producir con «Reintentar» desde la Mac.
+- **Qué NO tocar:** la alineación es por palabras exactas (sin quitar puntuación ni
+  mayúsculas): así una frase con una coma distinta cuenta como reescrita y se
+  reemplaza por la del cliente, que es lo que se quiere. No «arreglar» el texto del
+  cliente en el plan: se lee tal cual lo mandó.
+
 ## C-PORTADA-2 — La miniatura de un video con presentador lleva a Richard, y el fondo de rayos morados no vuelve (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** las dos miniaturas del primer video de

@@ -47,27 +47,110 @@ export function mensajeDePlanComercial(e: EntradaPlanComercial): string {
     .join("\n\n");
 }
 
-/** Lo que no cabe en un comercial se limpia después de la IA (mismo criterio que el plan de una grabación). */
-export function planComercialLimpio(guion: GuionGenerado): GuionGenerado {
+const palabrasDe = (t: string) => t.trim().split(/\s+/).filter(Boolean);
+
+/** Dónde empieza la secuencia `sub` dentro de `en` (buscando desde `desde`), o -1 si no está entera. */
+function indiceDe(en: string[], sub: string[], desde = 0): number {
+  if (sub.length === 0) return -1;
+  for (let i = desde; i + sub.length <= en.length; i++) {
+    let k = 0;
+    while (k < sub.length && en[i + k] === sub[k]) k++;
+    if (k === sub.length) return i;
+  }
+  return -1;
+}
+
+type EscenaConPlanos = {
+  narracion: string;
+  visual: { planos?: GuionGenerado["escenas"][number]["visual"]["planos"] };
+};
+
+/**
+ * C-COMERCIAL-2: la voz lee el texto del cliente UNA vez, entero y en orden. La IA tiene
+ * que copiarlo, pero a veces repite una frase en dos escenas (el 5 oct 2026 dijo dos veces
+ * «an AI-powered online store»), se salta palabras o cambia una. Aquí se vuelve a pegar
+ * cada escena al texto original: lo repetido sale (sus planos pasan a la escena anterior),
+ * lo saltado se devuelve a la escena anterior, y lo que cambió se reemplaza por lo que
+ * escribió el cliente. Al final, las narraciones juntas son exactamente su texto.
+ */
+export function alinearNarracion<E extends EscenaConPlanos>(escenas: E[], texto: string): E[] {
+  const todas = palabrasDe(texto);
+  if (todas.length === 0 || escenas.length === 0) return escenas;
+  const salida: E[] = [];
+  let planosSueltos: NonNullable<E["visual"]["planos"]> = [];
+  let pos = 0;
+  const cuantasSiguen = (propias: string[]) => {
+    let m = 0;
+    while (m < propias.length && pos + m < todas.length && todas[pos + m] === propias[m]) m++;
+    return m;
+  };
+  const apartar = (e: E) => {
+    const planos = e.visual.planos ?? [];
+    const ultima = salida.at(-1);
+    if (ultima) ultima.visual.planos = [...(ultima.visual.planos ?? []), ...planos];
+    else planosSueltos = [...planosSueltos, ...planos];
+  };
+  for (const e of escenas) {
+    let propias = palabrasDe(e.narracion);
+    let m = cuantasSiguen(propias);
+    if (m === 0) {
+      // Repite algo ya dicho (o viene vacía): fuera; lo que quería mostrar se queda en la anterior.
+      if (propias.length === 0 || indiceDe(todas.slice(0, pos), propias) !== -1) {
+        apartar(e);
+        continue;
+      }
+      // ¿Se saltó un trozo? Lo que falta se devuelve a la escena anterior (o a esta, si es la primera).
+      const j = indiceDe(todas, propias.slice(0, Math.min(3, propias.length)), pos);
+      if (j === -1) {
+        // Ni sigue el texto ni repite: lo reescribió. Fuera; el texto que le tocaba lo recoge la siguiente.
+        apartar(e);
+        continue;
+      }
+      const faltante = todas.slice(pos, j);
+      const ultima = salida.at(-1);
+      if (ultima) ultima.narracion = [ultima.narracion, ...faltante].join(" ");
+      else propias = [...faltante, ...propias];
+      pos = j - (ultima ? 0 : faltante.length);
+      m = cuantasSiguen(propias);
+    }
+    const narracion = todas.slice(pos, pos + m).join(" ");
+    pos += m;
+    const planos = [...planosSueltos, ...(e.visual.planos ?? [])];
+    planosSueltos = [];
+    salida.push({ ...e, narracion, visual: { ...e.visual, planos } });
+  }
+  if (salida.length === 0) return escenas;
+  const ultima = salida.at(-1);
+  if (ultima && pos < todas.length) ultima.narracion = [ultima.narracion, ...todas.slice(pos)].join(" ");
+  return salida;
+}
+
+/**
+ * Lo que no cabe en un comercial se limpia después de la IA (mismo criterio que el plan de
+ * una grabación). Con `textoDelCliente`, además, las escenas se vuelven a pegar a su texto
+ * (C-COMERCIAL-2): nada repetido, nada saltado, nada reescrito.
+ */
+export function planComercialLimpio(guion: GuionGenerado, textoDelCliente = ""): GuionGenerado {
+  const escenas = guion.escenas
+    .filter((e) => e.narracion.trim().length > 0)
+    .map((e) => ({
+      ...e,
+      parte: e.parte === "opinion" || e.parte === "interludio" || e.parte === "cta" ? "contexto" : e.parte,
+      duracion_seg: undefined,
+      visual: {
+        ...e.visual,
+        // Fotos de internet y clips: fuera. Imágenes que no están en la lista: también (se buscan
+        // por parecido en la Mac, pero una inventada no entra).
+        planos: e.visual.planos?.filter(
+          (p) => p.tipo === "dato" || (p.tipo === "imagen" && Boolean(p.archivo)),
+        ),
+      },
+    }));
   return {
     ...guion,
     hechos_a_verificar: [],
     descripcion_youtube: "",
     etiquetas: [],
-    escenas: guion.escenas
-      .filter((e) => e.narracion.trim().length > 0)
-      .map((e) => ({
-        ...e,
-        parte: e.parte === "opinion" || e.parte === "interludio" || e.parte === "cta" ? "contexto" : e.parte,
-        duracion_seg: undefined,
-        visual: {
-          ...e.visual,
-          // Fotos de internet y clips: fuera. Imágenes que no están en la lista: también (se buscan
-          // por parecido en la Mac, pero una inventada no entra).
-          planos: e.visual.planos?.filter(
-            (p) => p.tipo === "dato" || (p.tipo === "imagen" && Boolean(p.archivo)),
-          ),
-        },
-      })),
+    escenas: textoDelCliente.trim() ? alinearNarracion(escenas, textoDelCliente) : escenas,
   };
 }

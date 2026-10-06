@@ -5,8 +5,7 @@
 - 👤 Ver su primer video con el formato Presentador (guion 12, «ChatGPT y Gemini ya no son gratis»), decir qué le cambiaría y probarlo en los otros formatos con el botón «Probar en…» → con su opinión se afina el diseño (tamaño en la esquina, cuánto rato sale en grande).
 - 👤 Decir si le gustan los nombres de los formatos (Documental, Cómic, Neón, Presentador) y cuál de las ideas nuevas quiere primero (Pizarra, Pantalla, Ranking, Versus, Línea de tiempo): docs/FORMATOS.md.
 
-- 👤 Pasar COMPLETO el texto del segundo gig de Andreea (el de páginas web): en la captura llegó cortado en «loads fast and…» → con eso se arma el segundo video igual que el primero.
-- 👤 Ver el comercial de Andreea (menú Comerciales → «Ver y descargar el video») y oír la voz en inglés → se ajusta lo que diga.
+- 👤 Ver los dos comerciales de Andreea (menú Comerciales → «Ver y descargar el video»: el de logos y el de páginas web) y oír la voz en inglés → se ajusta lo que diga y se le mandan a ella.
 - 👤 Conversar y elegir los temas de los próximos videos (información importante, que la gente comparta, y con un producto suyo para vender dentro) → recién con el tema acordado se escribe un guion. El borrador del guion 9 se rechazó el 5 oct 2026: era un ejemplo improvisado, no un tema.
 - 👤 Probar el estilo ilustrado: crear en https://escenia.sitios.dev/nuevo un video de «Novedades de IA» con una noticia → las personas salen dibujadas.
 
@@ -44,6 +43,7 @@
 - [x] Biblioteca de Imágenes (carpetas, muchos archivos de una vez, PDF partido en páginas) y menú Comerciales: el video publicitario de un cliente con su texto, nuestra voz y sus imágenes, en Neón con personajes, sin marca ni Shorts (5 oct 2026). Candados C-IMAGENES-1 y C-COMERCIAL-1.
 - [x] Menú del panel rediseñado: botones por grupos, el activo encendido y la luz de la Mac (5 oct 2026).
 - [ ] Comerciales: versión vertical para redes; ver y corregir el plan antes de armar; elegir la miniatura.
+- [ ] Comerciales: en un diagrama de paquetes un objeto puede quedarse 6 o 7 s encendido mientras la voz lo describe (el de «Standard» en el guion 15); meterle un plano «dato» o una captura entre objeto y objeto cuando la descripción pase de 5 s.
 - [ ] Miniaturas: que Richard elija en el panel el momento suyo que va en la portada y cambie el texto.
 - [ ] Presentador: cortar pausas y frases repetidas del MEDIO de la grabación antes de armar.
 - [ ] Shorts de un video corto (menos de dos minutos): hoy sale UN vertical con el video entero (108 s en el guion 12). Decidir con Richard si prefiere dos o tres piezas de 30 a 60 segundos.

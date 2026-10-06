@@ -428,17 +428,17 @@ export async function producir(
   }
   // Cada plano es una imagen nueva; en un diagrama, cada objeto que se enciende también.
   const totalPlanos = escenas.reduce((n, e) => n + e.planos.length + (e.diagrama?.nodos.length ?? 0), 0);
+  // Una lámina de neón (la opinión) no cambia de imagen, pero tampoco está quieta: no cuenta.
+  // Se guarda el número real de cada escena para que el aviso señale la correcta.
+  const vigiladas = escenas.map((e, i) => ({ e, i })).filter(({ e }) => !esDeNeon(estilo) || e.diagrama);
   const quietos = tramosQuietos(
-    escenas
-      // Una lámina de neón (la opinión) no cambia de imagen, pero tampoco está quieta: no cuenta.
-      .filter((e) => !esDeNeon(estilo) || e.diagrama)
-      .map((e) => ({
-        inicioMs: e.inicioMs,
-        finMs: e.finMs,
-        // En un diagrama, cada objeto que se enciende es un cambio de imagen.
-        cambios: [...e.planos.map((p) => p.inicioMs), ...(e.diagrama?.nodos.map((n) => n.entraMs) ?? [])],
-      })),
-  );
+    vigiladas.map(({ e }) => ({
+      inicioMs: e.inicioMs,
+      finMs: e.finMs,
+      // En un diagrama, cada objeto que se enciende es un cambio de imagen.
+      cambios: [...e.planos.map((p) => p.inicioMs), ...(e.diagrama?.nodos.map((n) => n.entraMs) ?? [])],
+    })),
+  ).map((q) => ({ ...q, escena: vigiladas[q.escena]?.i ?? q.escena }));
   await avisar(
     `ritmo visual: ${totalPlanos + escenas.length} imágenes en ${Math.round(voz.duracionMs / 1000)} s` +
       (quietos.length ? ` · OJO: ${quietos.length} tramo(s) quietos de más de 6 s` : ""),

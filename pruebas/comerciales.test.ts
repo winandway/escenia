@@ -339,6 +339,91 @@ describe("comerciales: el video publicitario de un cliente (C-COMERCIAL-1)", () 
   });
 });
 
+describe("comerciales: la voz lee el texto del cliente una vez, entero y en orden (C-COMERCIAL-2)", () => {
+  const juntas = (g: { escenas: { narracion: string }[] }) =>
+    g.escenas
+      .map((e) => e.narracion)
+      .join(" ")
+      .split(/\s+/);
+  const DOS_LOGOS = {
+    parte: "demo",
+    narracion:
+      "I'm Andreea, a brand designer, and here on Fiverr I create clean, modern logos for small businesses, startups and online stores.",
+    visual: {
+      tipo: "stock",
+      titular: "Clean, modern logos",
+      planos: [{ frase: "clean, modern logos", tipo: "imagen", archivo: "01 Dame Mexico.png", texto: "" }],
+    },
+  };
+
+  it("una escena que repite lo ya dicho sale del plan, y sus imágenes pasan a la escena anterior", () => {
+    const crudo = esquemaGuionGenerado.parse({
+      ...PLAN,
+      escenas: [
+        PLAN.escenas[0],
+        DOS_LOGOS,
+        {
+          parte: "demo",
+          narracion: "startups and online stores.",
+          visual: {
+            tipo: "stock",
+            titular: "Online stores",
+            planos: [{ frase: "online stores", tipo: "imagen", archivo: "02 Tienda.png", texto: "" }],
+          },
+        },
+        PLAN.escenas[2],
+      ],
+    });
+    const limpio = planComercialLimpio(crudo, TEXTO);
+    expect(limpio.escenas).toHaveLength(3);
+    expect(juntas(limpio)).toEqual(TEXTO.split(/\s+/));
+    expect(limpio.escenas[1]?.visual.planos?.map((p) => p.archivo)).toEqual([
+      "01 Dame Mexico.png",
+      "02 Tienda.png",
+    ]);
+  });
+
+  it("lo que la IA se saltó o reescribió vuelve a ser el texto del cliente, palabra por palabra", () => {
+    const crudo = esquemaGuionGenerado.parse({
+      ...PLAN,
+      escenas: [
+        PLAN.escenas[0],
+        // Se come «for small businesses, startups and online stores.»
+        {
+          parte: "contexto",
+          narracion: "I'm Andreea, a brand designer, and here on Fiverr I create clean, modern logos.",
+          visual: { tipo: "texto", titular: "Clean, modern logos" },
+        },
+        // Reescrita: «Each» en vez de «Every».
+        {
+          parte: "cierre",
+          narracion: "Each concept is original.",
+          visual: { tipo: "texto", titular: "Original" },
+        },
+      ],
+    });
+    const limpio = planComercialLimpio(crudo, TEXTO);
+    expect(juntas(limpio)).toEqual(TEXTO.split(/\s+/));
+    expect(limpio.escenas[1]?.narracion).toMatch(/online stores\. Every concept is original\.$/);
+  });
+
+  it("si la primera escena no arranca con la primera palabra, lo que falta se le pone delante", () => {
+    const crudo = esquemaGuionGenerado.parse({
+      ...PLAN,
+      escenas: [{ ...PLAN.escenas[0], narracion: "Let's make it count." }, DOS_LOGOS, PLAN.escenas[2]],
+    });
+    const limpio = planComercialLimpio(crudo, TEXTO);
+    expect(juntas(limpio)).toEqual(TEXTO.split(/\s+/));
+    expect(limpio.escenas[0]?.narracion).toMatch(/^Your logo is/);
+  });
+
+  it("sin el texto del cliente no se alinea nada (ese paso es solo de los comerciales)", () => {
+    const crudo = esquemaGuionGenerado.parse({ ...PLAN, escenas: [PLAN.escenas[0], DOS_LOGOS, DOS_LOGOS] });
+    expect(planComercialLimpio(crudo).escenas).toHaveLength(3);
+    expect(planComercialLimpio(crudo, TEXTO).escenas).toHaveLength(2);
+  });
+});
+
 describe("comerciales: lo que se ve y se lee va en el idioma del cliente", () => {
   it("los textos de YouTube y la miniatura se piden en inglés, sin «suscríbete»", () => {
     const m = mensajePublicacion(PLAN, "Comercial (video publicitario de un cliente)", [], "en");

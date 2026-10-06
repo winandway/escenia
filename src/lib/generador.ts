@@ -72,7 +72,7 @@ export async function generarPlanComercial(
     },
     opciones,
   );
-  return { ...r, guion: planComercialLimpio(r.guion) };
+  return { ...r, guion: planComercialLimpio(r.guion, entrada.narracion) };
 }
 
 /** Pide un guion a la IA (por streaming, con el formato simple) y lo devuelve limpio y validado. */

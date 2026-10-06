@@ -48,6 +48,10 @@ panel /comerciales ──▶ tabla `comerciales` (subida)
   «imagen» con el `archivo` exacto de la lista, 2 a 5 por escena, y planos «dato»)
   o un diagrama de neón. Nunca «foto» ni «stock». Todo lo que se lee en pantalla va
   en el idioma del texto.
+- **El texto se lee una sola vez** (`alinearNarracion`, candado C-COMERCIAL-2):
+  después de la IA, cada escena se vuelve a pegar al texto del cliente palabra por
+  palabra. Una escena repetida sale (sus imágenes pasan a la anterior), lo saltado
+  se devuelve, lo reescrito se reemplaza. Las narraciones juntas son el texto exacto.
 - **El plano «imagen»** (`compartido/guion.ts`): `archivo` es el nombre de la lista.
   En la Mac se busca por parecido (`buscarImagenPorNombre`: sin mayúsculas, tildes
   ni extensión); una que no está, no entra.
@@ -78,6 +82,9 @@ panel /comerciales ──▶ tabla `comerciales` (subida)
 4. Que no salga la marca del canal ni el cierre de «suscríbete».
 5. El nombre del cliente y de sus productos bien escritos (la voz y los subtítulos
    salen del texto escrito, no de una transcripción: aquí no hay ese riesgo).
+6. Que la voz **no repita ninguna frase** ni prometa nada que el texto no diga: se
+   leen los subtítulos de corrido (`out/t<n>/subtitulos.json`) y se mira cada plano
+   «dato» (una cifra o una frase que el cliente escribió, no una invención).
 
 ## Lo que falta
 
