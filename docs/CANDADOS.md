@@ -369,6 +369,13 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
     (`bajadaDelVideo` con la cara medida en seis cuadros, `caraDeLaToma`), y la letra va
     debajo del mentón y nunca más abajo del 80 % (`arribaDeLaLetra`). La plantilla repite
     esas cuentas (no puede importar de fuera); la prueba las fija.
+  - Lo que corrigió Richard al ver el primer video (6 oct 2026): «te dejo volar» no se dibuja
+    con alas (parecía que ella se murió: maleta, avión, bus); su muñequito lleva la gorra con
+    la bandera de Estados Unidos en la mitad de las escenas; la última escena deja la mitad
+    derecha del papel en blanco para el aviso de suscribirse (`AvisoSuscribete`); y el boceto
+    de un camino o un carro «avanza» con la cámara (`movimiento: "avance"`, se marca en
+    `produccion.ts` por las palabras del prompt). Animar de verdad necesita un modelo de video
+    (15 a 21 centavos por clip): bloqueado hasta que él lo autorice por escrito (ver la guía).
 - **Qué NO tocar:** no «mejorar» su audio (ni tempo, ni pausas): la imagen tiene que seguir
   calzando con la boca. No volver a torcer ni achicar el papel, ni dejar que tape la cara: si
   la cabeza llega muy arriba, se baja el video, no se achica el papel.

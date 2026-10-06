@@ -69,6 +69,38 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /r
   gesto): el que ya vio el video una vez vuelve a mirar.
 - **Cerrar con el canal escrito a mano**, como una firma, no con una pantalla negra.
 
+## Lo que Richard corrigió al ver el primer video (6 oct 2026) y quedó como regla
+
+- **Nada de alas.** «Te dejo volar» salió como un angelito, como si ella se hubiera muerto. Irse,
+  dejar ir, volar o decir adiós se dibuja con una maleta, un avión, un helicóptero, un bus o un
+  carro alejándose; nunca alas, ángeles ni fantasmas. (Regla en el plan.)
+- **Su gorra.** El muñequito que lo representa a él lleva, en más o menos una de cada dos escenas,
+  la gorra con la bandera de Estados Unidos. (Regla en el plan.)
+- **El aviso de suscribirse.** La última escena deja la mitad derecha del papel en blanco, y ahí
+  va, dibujado a mano, «¿Te gustó?», el botón «Suscríbete» con su campanita, el nombre del canal
+  y una flecha (`AvisoSuscribete` en la plantilla).
+- **Movimiento.** Un boceto que habla de un camino o de un carro «avanza»: la cámara entra hacia
+  el fondo del dibujo durante todo el verso, con un balanceo chiquito, como si se fuera por la
+  carretera (`movimiento: "avance"`). Los demás, un acercamiento lento. Que el muñequito o el carro
+  se muevan DE VERDAD necesita un modelo de video (ver abajo).
+
+## Animar los bocetos de verdad (pendiente de que Richard autorice el gasto)
+
+Hacer que el carro recorra el camino o que el muñequito camine es pasar el boceto por un modelo
+de imagen a video. Precios leídos en fal.ai el 6 oct 2026:
+
+| Modelo                       | Precio                                   | Qué da                        |
+| ---------------------------- | ---------------------------------------- | ----------------------------- |
+| Wan 2.2 (5B), imagen a video | 15 centavos por video                    | hasta 5 s, 720p, 24 cuadros/s |
+| LTX Video 13B destilado      | 4 centavos por segundo (8 con detalle)   | 5 s ≈ 20 centavos             |
+| Kling 2.5 Turbo estándar     | 21 centavos por 5 s, 4,2 por segundo más | el de mejor movimiento        |
+
+La regla global manda: un modelo que pasa de 5 centavos por pieza solo se enciende con la
+autorización escrita de Richard y con su tope. Propuesta: Wan 2.2 a 15 centavos, SOLO en las
+escenas marcadas «avance» (una o dos por canción: 15 a 30 centavos por video), con tope de 3
+clips por video en el código y dentro del tope diario. Sin su «sí», los bocetos siguen quietos
+con movimiento de cámara.
+
 ## Lo que pasa por dentro
 
 ```

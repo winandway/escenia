@@ -42,8 +42,6 @@ const TINTA = "#2b2118";
 const AMARILLO = "#ffd60a";
 /** Cuánto dura el título de la canción en el papel antes del primer boceto. */
 const TITULO_MS = 2600;
-/** Cuánto antes del final aparece el nombre del canal en el papel. */
-const CANAL_MS = 4500;
 const ENTRADA = 16; // cuadros que tarda un boceto en «dibujarse» (barrido de izquierda a derecha)
 
 const msAFrame = (ms: number) => Math.round((ms / 1000) * FPS);
@@ -77,8 +75,8 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
   const bajada = Math.round(height * bajadaDelVideo(cara));
   const arribaLetra = Math.round(height * arribaDeLaLetra(cara, bajadaDelVideo(cara)));
   const conTitulo = tMs < TITULO_MS;
-  const finCanal = p.duracionMs;
-  const conCanal = tMs >= finCanal - CANAL_MS;
+  const ultima = [...p.escenas].reverse().find((e) => e.fotos[0] ?? e.foto);
+  const ultimaDesdeMs = ultima ? Math.max(ultima.inicioMs, TITULO_MS) : null;
 
   const video = (
     <OffthreadVideo
@@ -130,7 +128,7 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
               name={`boceto ${i + 1}`}
               layout="none"
             >
-              <Boceto ruta={foto.ruta} durFrames={hasta - desde} />
+              <Boceto ruta={foto.ruta} durFrames={hasta - desde} avance={e.movimiento === "avance"} />
             </Sequence>
           );
         })}
@@ -177,27 +175,19 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
           </AbsoluteFill>
         )}
 
-        {/* Al final, el canal escrito a mano en una esquina del papel. */}
-        {conCanal && !conTitulo && p.cierre?.canalNombre && (
-          <div
-            style={{
-              position: "absolute",
-              right: 34,
-              bottom: 22,
-              fontFamily: manuscrita,
-              fontWeight: 700,
-              fontSize: 54,
-              color: TINTA,
-              transform: "rotate(-2deg)",
-              opacity: interpolate(tMs, [finCanal - CANAL_MS, finCanal - CANAL_MS + 500], [0, 1], {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-              }),
-              textShadow: "0 0 18px rgba(239,227,198,.95), 0 0 30px rgba(239,227,198,.9)",
-            }}
-          >
-            {p.cierre.canalNombre} · Suscríbete
-          </div>
+        {/* La última escena deja la mitad derecha del papel en blanco: ahí va el aviso de suscribirse,
+            dibujado a mano (un botón, la campanita y una flecha). */}
+        {ultimaDesdeMs !== null && tMs >= ultimaDesdeMs && !conTitulo && (
+          <AvisoSuscribete
+            canal={p.cierre?.canalNombre ?? ""}
+            entrada={interpolate(tMs, [ultimaDesdeMs + 400, ultimaDesdeMs + 1100], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            })}
+            frame={frame}
+            ancho={papel.ancho}
+            alto={papel.alto}
+          />
         )}
       </div>
 
@@ -247,13 +237,22 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
 };
 
 /** Un boceto que se «dibuja» de izquierda a derecha y respira con un acercamiento lento. */
-const Boceto: React.FC<{ ruta: string; durFrames: number }> = ({ ruta, durFrames }) => {
+const Boceto: React.FC<{ ruta: string; durFrames: number; avance: boolean }> = ({
+  ruta,
+  durFrames,
+  avance,
+}) => {
   const frame = useCurrentFrame();
   const barrido = interpolate(frame, [0, ENTRADA], [100, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const zoom = interpolate(frame, [0, Math.max(1, durFrames)], [1.02, 1.1], { extrapolateRight: "clamp" });
+  // «Avance»: la cámara entra hacia el fondo del dibujo sin parar (como si el carro fuera por la
+  // carretera), con un balanceo chiquito; lo normal es un acercamiento lento.
+  const zoom = avance
+    ? interpolate(frame, [0, Math.max(1, durFrames)], [1, 1.38], { extrapolateRight: "clamp" })
+    : interpolate(frame, [0, Math.max(1, durFrames)], [1.02, 1.1], { extrapolateRight: "clamp" });
+  const balanceo = avance ? Math.sin(frame / 9) * 3 : 0;
   return (
     <AbsoluteFill style={{ clipPath: `inset(0 ${barrido}% 0 0)` }}>
       <Img
@@ -262,7 +261,8 @@ const Boceto: React.FC<{ ruta: string; durFrames: number }> = ({ ruta, durFrames
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          transform: `scale(${zoom})`,
+          transform: `translateY(${balanceo}px) scale(${zoom})`,
+          transformOrigin: avance ? "50% 42%" : "50% 50%",
           // Se funde con el papel: lo claro del dibujo deja ver el papel, lo oscuro queda como tinta.
           mixBlendMode: "multiply",
           filter: "contrast(1.08) sepia(0.25)",
@@ -283,5 +283,100 @@ const Boceto: React.FC<{ ruta: string; durFrames: number }> = ({ ruta, durFrames
         />
       )}
     </AbsoluteFill>
+  );
+};
+
+/** «Suscríbete», dibujado a mano sobre la mitad derecha del papel: botón, campanita y flecha. */
+const AvisoSuscribete: React.FC<{
+  canal: string;
+  entrada: number;
+  frame: number;
+  ancho: number;
+  alto: number;
+}> = ({ canal, entrada, frame, ancho, alto }) => {
+  const tiembla = Math.sin(frame / 7) * 0.6;
+  const salto = Math.abs(Math.sin(frame / 11)) * 6;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: ancho * 0.52,
+        top: 0,
+        width: ancho * 0.46,
+        height: alto,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: entrada,
+        transform: `rotate(${-2 + tiembla}deg) scale(${0.9 + entrada * 0.1})`,
+        color: TINTA,
+        fontFamily: manuscrita,
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: Math.round(alto * 0.14), fontWeight: 700, lineHeight: 1 }}>¿Te gustó?</div>
+      {/* El botón, como lo dibujaría uno con lápiz: borde doble, un poco chueco. */}
+      <div
+        style={{
+          marginTop: Math.round(alto * 0.05),
+          padding: `${Math.round(alto * 0.03)}px ${Math.round(alto * 0.09)}px`,
+          border: `5px solid ${TINTA}`,
+          borderRadius: "48% 52% 50% 50% / 55% 45% 55% 45%",
+          boxShadow: `3px 3px 0 ${TINTA}, inset 0 0 0 3px ${PAPEL}, inset 0 0 0 5px ${TINTA}`,
+          backgroundColor: "rgba(43,33,24,.08)",
+          fontSize: Math.round(alto * 0.17),
+          fontWeight: 700,
+          lineHeight: 1,
+          transform: `translateY(${-salto}px)`,
+          display: "flex",
+          alignItems: "center",
+          gap: Math.round(alto * 0.04),
+        }}
+      >
+        {/* La campanita, en trazo. */}
+        <svg width={Math.round(alto * 0.16)} height={Math.round(alto * 0.16)} viewBox="0 0 48 48" fill="none">
+          <path
+            d="M24 6c-7 0-12 5-12 12v9l-5 7h34l-5-7v-9c0-7-5-12-12-12z"
+            stroke={TINTA}
+            strokeWidth="3.5"
+            strokeLinejoin="round"
+            fill="rgba(43,33,24,.12)"
+          />
+          <path d="M19 38c1 3 3 4 5 4s4-1 5-4" stroke={TINTA} strokeWidth="3.5" strokeLinecap="round" />
+          <path d="M24 3v4" stroke={TINTA} strokeWidth="3.5" strokeLinecap="round" />
+        </svg>
+        Suscríbete
+      </div>
+      {canal && (
+        <div
+          style={{
+            marginTop: Math.round(alto * 0.05),
+            fontSize: Math.round(alto * 0.11),
+            fontWeight: 600,
+            opacity: 0.85,
+          }}
+        >
+          {canal}
+        </div>
+      )}
+      {/* Una flecha a lápiz que apunta al botón. */}
+      <svg
+        width={Math.round(alto * 0.3)}
+        height={Math.round(alto * 0.2)}
+        viewBox="0 0 120 80"
+        fill="none"
+        style={{ position: "absolute", left: -Math.round(alto * 0.12), top: Math.round(alto * 0.1) }}
+      >
+        <path d="M8 70 C 30 20, 70 10, 108 30" stroke={TINTA} strokeWidth="4" strokeLinecap="round" />
+        <path
+          d="M94 20 L 108 30 L 92 40"
+          stroke={TINTA}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
   );
 };
