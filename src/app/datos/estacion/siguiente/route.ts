@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
-import { tocarLatido } from "@/lib/estacion-estado";
+import { devolverTrabajosPerdidos, tocarLatido } from "@/lib/estacion-estado";
 import { guionPorId, productoPorId, type FilaTrabajo, ajuste } from "@/lib/consultas";
 import { carpetasDe, comercialDeGuion } from "@/lib/comerciales";
 import { grabacionDeGuion } from "@/lib/grabaciones";
@@ -24,11 +24,8 @@ export async function POST(req: Request) {
 
   await tocarLatido(db, cuerpo.data.version);
 
-  // Un trabajo «tomado» hace más de 2 horas se considera perdido y vuelve a la cola.
-  await db.ejecutar(
-    `UPDATE trabajos SET estado = 'pendiente', paso = 'reintento tras corte', tomado_en = NULL
-     WHERE estado = 'tomado' AND tomado_en < datetime('now', '-2 hours')`,
-  );
+  // Un trabajo «tomado» hace más de 2 horas, o tomado y sin arrancar en 3 minutos, vuelve a la cola.
+  await devolverTrabajosPerdidos(db);
 
   const pendiente = await db.uno<FilaTrabajo>(
     "SELECT * FROM trabajos WHERE estado = 'pendiente' ORDER BY id ASC LIMIT 1",

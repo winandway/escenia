@@ -344,6 +344,23 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   reemplaza por la del cliente, que es lo que se quiere. No «arreglar» el texto del
   cliente en el plan: se lee tal cual lo mandó.
 
+## C-ESTACION-2 — Un trabajo que la Estación toma y abandona vuelve a la fila en 3 minutos (6 oct 2026)
+
+- **Qué se rompió y cómo se veía:** el trabajo 49 («De Cero a Reina») quedó «tomado» con
+  paso «tomado» y sin avance: la Estación lo tomó justo cuando se la reinició. El siguiente
+  de la fila (el 50) pasó por delante y el 49 se iba a quedar colgado dos horas.
+- **La causa real:** la ruta `siguiente` solo devolvía a la fila los trabajos tomados hace
+  más de 2 horas; uno recién tomado y abandonado no entraba en esa regla.
+- **Qué se hizo:** `devolverTrabajosPerdidos` en `src/lib/estacion-estado.ts`: vuelve a
+  «pendiente» el tomado hace más de 2 horas y también el que se quedó en «tomado» sin dar un
+  paso en 3 minutos. La ruta `siguiente` la llama en cada vuelta.
+- **Cómo se comprueba:** `pruebas/estacion-estado.test.ts`, bloque C-ESTACION-2: cuatro
+  trabajos sembrados (tomado sin paso hace 5 min, tomado con avance hace 5 min, tomado hace 3 h,
+  tomado sin paso hace 1 min): vuelven el primero y el tercero.
+- **Comprobado en rojo** el 6 oct 2026: sin la regla de los 3 minutos la prueba falla.
+- **Qué NO tocar:** no bajar los 3 minutos: la Estación tarda hasta un minuto en bajar una
+  grabación antes de su primer aviso de avance; con menos se devolverían trabajos vivos.
+
 ## C-CANCION-1 — El formato Canción: él entero con su fondo real, un boceto a lápiz por verso, la letra en el pecho (6 oct 2026)
 
 - **Qué se agregó:** el quinto formato, **Canción** (`cancion`), para Caprichoso TV: Richard
