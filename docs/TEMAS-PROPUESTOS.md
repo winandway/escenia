@@ -143,3 +143,66 @@ El texto (unas 210 palabras, cerca de un minuto y medio hablando):
 Formato recomendado: **Neón** (y después «Probar en Documental» con la misma
 grabación, para comparar). Para esta primera prueba se graba de corrido, en una
 sola toma: todavía no se cortan solas las frases repetidas.
+
+## 6 oct 2026 — tres temas de música para una historia narrada (3 a 5 minutos, varios Shorts)
+
+Richard pidió una historia de música, narrada con la voz neuronal, que pueda hacerse viral y
+dé para tres o más Shorts; él elige entre tres. Buscado el 6 oct 2026 (nada de memoria).
+
+### A. Shakira convirtió Madrid en su casa: 13 noches, 50 mil personas cada una
+
+- Residencia en el «Estadio Shakira» de Villaverde, Madrid: 13 fechas llenas, más de 50 000
+  personas por noche, del 18 de septiembre al 12 de octubre de 2026 (cierra el Día de la
+  Hispanidad). Invitados: Dua Lipa (3 de octubre, cantaron «Antología»), Laura Pausini, Alejandro
+  Sanz, Manuel Turizo. El show con Dua Lipa por Prime Video llegó a un pico de 10 millones de
+  personas, cerca del récord de la plataforma: 11,2 millones del cierre de la residencia de Bad
+  Bunny en Puerto Rico (septiembre de 2025). Fuente: Semana,
+  https://semana.com/jet-set/articulo/shakira-convirtio-madrid-en-su-casa-asi-ha-sido-la-historica-residencia-que-cerrara-este-12-de-octubre/202617
+- Por qué viral: cierra en seis días, cifras enormes, Shakira mueve a todo el público latino de
+  EE. UU. Shorts naturales: las 50 mil por noche; la noche de Dua Lipa; los invitados; el récord
+  contra Bad Bunny.
+- Formato propuesto: Documental (fotos reales de Shakira, Dua Lipa, el estadio), ritmo CapCut.
+
+### B. La guerra de los Latin Grammy 2026: borraron a Romeo y a Royce, y Tainy explotó
+
+- Nominaciones del 16 de septiembre. El disco sorpresa de Prince Royce con Romeo Santos,
+  «Better Late Than Never» (noviembre de 2025), quedó fuera de las 60 categorías; Royce denunció
+  que ninguno de los cinco discos nominados a Mejor Álbum de Merengue y/o Bachata es de bachata.
+  El productor Tainy publicó su propia lista de discos que merecían estar. La nominación de
+  Karol G en Mejor Canción Regional Mexicana dividió las redes. Fuentes: Infobae,
+  https://www.infobae.com/colombia/2026/09/27/el-debate-en-las-nominaciones-de-los-latin-grammy-2026-polemicas-y-preguntas-de-cara-al-futuro/
+  ; KCH FM, https://kchcomunicacion.com/2026/09/27/latin-grammy-2026-las-polemicas-que-marcaron-las-nominaciones/
+  ; Billboard (lista de sorpresas y olvidados, de pago),
+  https://www.billboard.com/lists/2026-latin-grammy-nominations-snubs-surprises/
+- Por qué viral: es la continuación del video de Prince Royce que ya funcionó en Caprichoso TV;
+  pelea, nombres grandes, y la gala viene. Shorts: Royce y Romeo borrados; «bachata sin bachata»;
+  la lista de Tainy; Karol G en regional mexicano.
+- Formato propuesto: Neón con personajes (los artistas dibujados sobre el neón, cifras en
+  grande) o Documental.
+
+### C. La canción que rompió el récord de «Despacito»: «DTMF», 70 semanas en el número uno
+
+- «DtMF» de Bad Bunny superó el 28 de abril de 2026 el récord de «Despacito» (Luis Fonsi, Daddy
+  Yankee y Justin Bieber) de más semanas en el número uno de Hot Latin Songs, con 57 semanas, y
+  al 28 de julio de 2026 iba por 70 semanas (récord que sigue creciendo). Es su tercera canción
+  con al menos 20 semanas en el número uno, algo que nadie había hecho en los 39 años de la lista
+  («Dákiti», 27 semanas en 2020-21; «Me porto bonito», 20 en 2022). Solo en 2026 lleva 31
+  semanas arriba, más 2 de «Baile Inolvidable»; Karol G, 7 («Bby Wow» 6, «Ahí» con Drake 1); al
+  3 de octubre el número uno es «Para Que Seas Feliz» de Ricardo Montaner. El cierre de su
+  residencia en Puerto Rico (septiembre de 2025) tiene el récord de Prime Video: 11,2 millones.
+  Fuentes: Billboard, https://www.billboard.com/music/chart-beat/bad-bunny-dtmf-breaks-record-despacito-hot-latin-songs-1236232812/
+  ; Billboard Argentina, https://billboard.ar/espanol/bad-bunny-establece-nuevo-record-en-hot-latin-songs-con-dtmf/
+  ; Billboard Charts en X (70 semanas), https://x.com/billboardcharts/status/2082125177672884421
+  ; Wikipedia (números uno de 2026), https://en.wikipedia.org/wiki/List_of_Billboard_Hot_Latin_Songs_and_Latin_Airplay_number_ones_of_2026
+  ; Semana (récord de Prime Video), enlace de arriba. Pendiente de verificar antes de escribir:
+  el conteo exacto de semanas a la fecha y qué más hizo en 2026.
+- Por qué viral: el récord de «Despacito» era intocable, y lo tumbó una canción sin coro
+  pegajoso de radio; cifras enormes, el artista más grande del momento, y el remate de que un
+  veterano como Montaner le quitó el número uno esta semana. Shorts: las 70 semanas; «Despacito»
+  destronado; Karol G persiguiendo; Montaner.
+- Formato propuesto: Cómic (las personas dibujadas) con cifras en grande.
+
+Otra opción, si se quiere algo con fecha: los Billboard Latinos del 22 de octubre en Miami, con
+Peso Pluma a la cabeza (17 nominaciones), Tito Double P (15), Fuerza Regida (12), Karol G (9),
+Prince Royce (8) y Bad Bunny (7): «el regional mexicano se tomó los Billboard». Fuente: El
+Heraldo, https://www.elheraldo.co/entretenimiento/2026/10/06/ruben-blades-lenny-tavarez-tito-nieves-y-grupo-duelo-se-suman-a-los-billboard-latinos/
