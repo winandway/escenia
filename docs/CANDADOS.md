@@ -295,7 +295,17 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
     (`textoParaLaVoz`); en español siguen las cifras en letras y la H muda.
   - Un comercial da **un** guion aunque el plan se pida dos veces; sale sin canal, sin
     marca y sin Shorts (`producir` con `sinShorts` y `canal`/`marca` nulos).
-- **Comprobado en rojo** el 5 oct 2026 (ver la lista en el commit).
+- **Comprobado en rojo** el 5 oct 2026: diez fallos metidos a propósito, uno por uno.
+- **Comprobado en vivo** el 5 oct 2026 con el material real de Andreea Blidar (16 logos
+  PNG, un PDF de 19 capturas, el texto en inglés de su gig de logos): subida desde la
+  Mac con `subir-imagenes.ts` y `pedir-comercial.ts`, plan de la IA con 11 imágenes y
+  2 diagramas, video de 58 segundos con la voz femenina en inglés, miniatura con su logo.
+  Lo que salió mal en la primera pasada y se arregló en la segunda: «Paso 2 de 4» en
+  español dentro del video en inglés (ahora `idioma` en las props de la plantilla); la
+  voz frenada con la regla de letras por segundo del español; la portada oscura del PDF
+  ofrecida como captura (`paginaVacia`); la miniatura en español y sin el logo del
+  cliente (`mensajePublicacion` con idioma y `logoDelCliente`); dos logos montados al
+  cambiar de plano; las escenas de imágenes sin su título.
 - **Qué NO tocar:** no volver a permitir «foto» en un comercial; el formato de un
   comercial se valida en el código (la tabla no lleva CHECK sobre `formato`).
 
