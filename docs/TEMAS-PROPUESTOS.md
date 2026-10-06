@@ -282,3 +282,5 @@ Caprichoso TV.
 **Qué se dibuja (Cómic):** Shakira, Dua Lipa, Laura Pausini, Alejandro Sanz, Manuel Turizo,
 Maluma, Beéle y Dani Martín, cada uno a partir de una foto real con fuente; el estadio y el parque
 con fotos reales; las cifras en grande (50 000; 13; 650 000; 150 000; 10 millones).
+
+El 6 oct 2026 Richard aprobó la propuesta («Dale, de una. Trabajamos full con eso»). Quedó como guion 18 (borrador, temática nueva `historias-musica`, Cómic), con el texto y los planos escritos a mano: 10 escenas, 560 palabras, 35 cambios de imagen.
