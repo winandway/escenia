@@ -21,4 +21,4 @@ export function promptDeBoceto(escena: string): string {
 export const momentosDeCancion = (): MomentoPresentador[] => [{ inicioMs: 0, modo: "completo" }];
 
 /** Cuánto papel ocupa el boceto arriba (fracción del alto del video vertical). */
-export const ALTO_DEL_BOCETO = 0.34;
+export const ALTO_DEL_BOCETO = 0.3;

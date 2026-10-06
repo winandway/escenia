@@ -30,7 +30,7 @@ const { fontFamily: manuscrita } = loadCaveat("normal", {
 });
 
 /** Lo mismo que ALTO_DEL_BOCETO en compartido/cancion.ts (la plantilla no puede importar de fuera). */
-const ALTO_DEL_BOCETO = 0.34;
+const ALTO_DEL_BOCETO = 0.3;
 const PAPEL = "#efe3c6";
 const TINTA = "#2b2118";
 const AMARILLO = "#ffd60a";
