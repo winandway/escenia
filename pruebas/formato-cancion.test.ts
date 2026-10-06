@@ -172,6 +172,7 @@ describe("formato «Canción»: Richard canta con su fondo real y un boceto a l�
     expect(m).toContain("ES UNA CANCIÓN");
     expect(m).toContain("Bachata en vivo con letra");
     expect(m).toContain("VERTICAL");
+    expect(m).toContain("FIGURA que va dibujada a color");
     expect(mensajePublicacion(guion, "Caprichoso TV", [], "es")).not.toContain("ES UNA CANCIÓN");
   });
 

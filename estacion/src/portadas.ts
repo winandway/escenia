@@ -32,6 +32,7 @@ import {
   type TextoPortada,
 } from "@compartido/portada";
 import { config } from "./config";
+import { generarImagen } from "./imagenes";
 import { panel } from "./panel";
 import { recortar } from "./recorte";
 import type { ResultadoProduccion } from "./produccion";
@@ -253,6 +254,23 @@ export async function armarPortadas(
       logo: null,
       ...colores,
     };
+    // Canción: la figura de la miniatura es un dibujo a color de lo que describe la IA (una reina
+    // linda, una pareja), recortado; no la cara de Richard sacada del video.
+    const figura = cancion ? await figuraDePortada(pieza.texto.persona, carpetas.publica, numero) : null;
+    if (figura) {
+      armadas.push({
+        pieza,
+        persona: "figura",
+        props: {
+          ...base,
+          etiqueta: "",
+          fondoFoto: null,
+          sujeto: { ruta: figura.ruta, ...sitioDelPresentador(pieza.formato, figura.recorte, figura.cara) },
+        },
+      });
+      console.log(`  portada ${pieza.clave}: la figura dibujada («${pieza.texto.persona.slice(0, 60)}»)`);
+      continue;
+    }
     if (presentador) {
       const desdeMs = props.escenas[pieza.escenas.inicio]?.inicioMs ?? 0;
       const hastaMs = props.escenas[pieza.escenas.fin]?.finMs ?? props.duracionMs;
@@ -343,6 +361,34 @@ export async function armarPortadas(
     }
   }
   return hechas;
+}
+
+/**
+ * La figura de la miniatura de una canción: la descripción que escribió la IA («a beautiful Latina
+ * queen with a golden crown…») se dibuja a color, se recorta con el motor de la Mac y se devuelve
+ * con su cara (si el detector no la ve, se asume en el tercio de arriba). `null` si no hay
+ * descripción (o es «presentador») o si no se pudo dibujar: entonces va lo de siempre.
+ */
+async function figuraDePortada(
+  descripcion: string,
+  carpetaPublica: string,
+  trabajo: number,
+): Promise<{ ruta: string; recorte: Recorte; cara: Recorte["caras"][number] } | null> {
+  const texto = descripcion.trim();
+  if (!texto || texto === "presentador" || texto.split(/\s+/).length < 3) return null;
+  try {
+    const img = await generarImagen(texto, carpetaPublica, { caricatura: true, vertical: true });
+    if (!img) return null;
+    if (img.costoUsd > 0)
+      await panel.gasto(trabajo, "fal.ai", "figura de la miniatura", img.costoUsd).catch(() => {});
+    const recortado = "portada/rec-figura.png";
+    const recorte = await recortar(path.join(carpetaPublica, img.ruta), path.join(carpetaPublica, recortado));
+    const cara = recorte.caras[0] ?? { x: 0.33, y: 0.06, ancho: 0.34, alto: 0.3 };
+    return { ruta: recortado, recorte, cara };
+  } catch (e) {
+    console.warn(`  (no se pudo dibujar la figura de la miniatura: ${e instanceof Error ? e.message : e})`);
+    return null;
+  }
 }
 
 /** Los textos de las miniaturas que vienen en la respuesta del panel al escribir los textos de YouTube. */

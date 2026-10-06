@@ -24,6 +24,10 @@ export type ImagenIA = { ruta: string; ancho: number; alto: number; credito: str
 
 // Fotografía realista, no ilustración: Richard vio las «pinturas» y parecían
 // caricaturas (26 sep 2026). Candado C-IMAGEN-2.
+// La figura de la miniatura de una canción (una reina linda, una pareja): caricatura a color sobre
+// fondo liso, para recortarla y ponerla en la portada (Richard, 6 oct 2026: «no mi cara, una reina linda»).
+const FIGURA_DE_PORTADA =
+  "bold colorful cartoon illustration in a modern digital style, clean dark outlines, vibrant saturated colors, soft cel shading, the character centered and seen from the waist up, whole head with space above the hair, on a plain solid dark navy blue background and nothing else, no text, no letters, no logos, no watermark";
 const ESTILO_BASE =
   "photorealistic documentary photograph, natural skin texture, cinematic lighting, subtle film grain, no text, no captions, no watermark, no logos";
 // Con foto de referencia: se le exige al modelo conservar la cara de la persona real.
@@ -116,14 +120,23 @@ export async function generarImagen(
   prompt: string,
   carpetaPublica: string,
   // `boceto`: formato Canción, un dibujo a lápiz sobre papel viejo en vez de una fotografía.
-  opciones: { vertical?: boolean; blancoYNegro?: boolean; referencia?: string; boceto?: boolean } = {},
+  opciones: {
+    vertical?: boolean;
+    blancoYNegro?: boolean;
+    referencia?: string;
+    boceto?: boolean;
+    /** La figura a color de una miniatura (se recorta después). */
+    caricatura?: boolean;
+  } = {},
 ): Promise<ImagenIA | null> {
   if (!config.FAL_KEY) return null;
   const referencia = opciones.referencia ? await referenciaEnBase64(opciones.referencia) : null;
   const modelo = asegurarModeloImagen(referencia ? MODELO_IMAGEN_CON_REFERENCIA : MODELO_IMAGEN_POR_DEFECTO);
   const promptFinal = opciones.boceto
     ? promptDeBoceto(prompt)
-    : `${referencia ? CON_REFERENCIA : ""}${prompt.trim()}. ${opciones.blancoYNegro ? "black and white vintage photograph look, " : ""}${ESTILO_BASE}`;
+    : opciones.caricatura
+      ? `${prompt.trim()}. ${FIGURA_DE_PORTADA}`
+      : `${referencia ? CON_REFERENCIA : ""}${prompt.trim()}. ${opciones.blancoYNegro ? "black and white vintage photograph look, " : ""}${ESTILO_BASE}`;
   const tam = opciones.vertical ? { width: 1152, height: 2048 } : { width: 2048, height: 1152 };
 
   const carpeta = path.join(config.CARPETA_CLIPS, "ia");

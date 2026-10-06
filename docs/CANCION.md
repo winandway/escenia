@@ -105,9 +105,12 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /r
   mirando la caricatura como está diseñada». Lo único que se mueve es el barrido de entrada que
   lo «dibuja». Candado: la prueba lee la plantilla y no admite `scale`, `zoom` ni `translate` en
   el boceto. Que el muñequito o el carro se muevan DE VERDAD es el próximo plan (modelo de video).
-- **Miniatura y título.** Una canción lleva UNA miniatura, vertical, con él recortado de su propio
-  video (el motor de la Mac le quita el fondo a un cuadro con la cara a la vista) y texto de video
-  musical: una o dos palabras de la letra en grande, el nombre de la canción y el género. El título
+- **Miniatura y título.** Una canción lleva UNA miniatura, vertical. La figura es un DIBUJO A COLOR
+  de lo que describe la IA a partir de la canción (una reina linda con corona, una pareja en un
+  carro), recortado y puesto como protagonista: Richard no quiso su cara sacada del video («está
+  fea», 6 oct 2026). Si no se pudo dibujar, va su cara recortada como antes. El nombre de la
+  canción se parte en el código en orden de lectura («DE CERO / A _REINA_»), y el género en la
+  franja. El título
   de YouTube también va como el de un video musical («Voy Recorriendo Caminos – Bachata en vivo con
   letra»), no como el de una charla (`mensajePublicacion` con `cancion`).
 
