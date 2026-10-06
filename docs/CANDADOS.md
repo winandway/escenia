@@ -344,6 +344,25 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   reemplaza por la del cliente, que es lo que se quiere. No «arreglar» el texto del
   cliente en el plan: se lee tal cual lo mandó.
 
+## C-ESTILOS-2 — El estilo de un trabajo lo manda el panel, no la lista local de la Estación (6 oct 2026)
+
+- **Qué se rompió y cómo se veía:** la primera historia de música en Cómic (guion 18, Shakira)
+  salió en clásico, con fotos reales en vez de las personas dibujadas. La temática nueva
+  `historias-musica` (estilo ilustrado) se publicó en el panel, pero la Estación llevaba horas
+  corriendo con el código anterior: no la conocía y cayó al estilo por defecto.
+- **La causa real:** la Estación decidía el estilo con `estiloDeTematica` de SU copia de la
+  lista de temáticas; una temática nueva exige reiniciarla, y nadie lo hizo.
+- **Qué se hizo:** la ruta `siguiente` del panel manda `estilo` con cada trabajo, y la Estación
+  usa `estiloDelTrabajo` (`compartido/tematicas`): el formato de una grabación o un comercial
+  manda; después, el estilo del panel; y solo si el panel es viejo, la lista local. Además
+  avisa en el registro cuando no conoce la temática («reiníciala»).
+- **Cómo se comprueba:** `pruebas/estilos.test.ts`: una temática desconocida con estilo del
+  panel sale en ese estilo; sin estilo del panel, la lista local; el formato de Richard manda.
+- **Comprobado en vivo** el 6 oct 2026: se reinició la Estación y se volvió a producir el
+  guion 18 (trabajo 55) en Cómic.
+- **Qué NO tocar:** al agregar una temática, igual se reinicia la Estación cuando esté quieta
+  (para los prompts y reglas locales); el estilo ya no depende de eso.
+
 ## C-ESTACION-2 — Un trabajo que la Estación toma y abandona vuelve a la fila en 3 minutos (6 oct 2026)
 
 - **Qué se rompió y cómo se veía:** el trabajo 49 («De Cero a Reina») quedó «tomado» con

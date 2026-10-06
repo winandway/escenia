@@ -8,7 +8,7 @@ import { guionPorId, productoPorId, type FilaTrabajo, ajuste } from "@/lib/consu
 import { carpetasDe, comercialDeGuion } from "@/lib/comerciales";
 import { grabacionDeGuion } from "@/lib/grabaciones";
 import { CANALES, clavesDeCanal } from "@compartido/canales";
-import { buscarTematica } from "@compartido/tematicas";
+import { buscarTematica, estiloDeTematica } from "@compartido/tematicas";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +76,8 @@ export async function POST(req: Request) {
       tipo: pendiente.tipo,
       tematica_id: guion.tematica_id,
       plantilla: tematica?.plantilla ?? "TechExplainer",
+      // El estilo lo decide el panel: la Estación no tiene que conocer la temática (C-ESTILOS-2).
+      estilo: estiloDeTematica(guion.tematica_id),
       contenido,
       producto: producto ? { nombre: producto.nombre, url: producto.url } : null,
       canal,

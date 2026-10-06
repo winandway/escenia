@@ -11,7 +11,7 @@ import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
 import { sincronizarSonidos } from "./sonidos";
 import { marcaDeCanal } from "@compartido/marcas";
-import { buscarTematica, estiloDeTematica } from "@compartido/tematicas";
+import { buscarTematica, estiloDelTrabajo } from "@compartido/tematicas";
 
 const ESPERA_MS = 30_000;
 const ESPERA_ERROR_MS = 60_000;
@@ -20,6 +20,10 @@ async function unaVuelta(): Promise<boolean> {
   const trabajo = await panel.siguiente();
   if (!trabajo) return false;
   console.log(`[${hora()}] Trabajo #${trabajo.id}: «${trabajo.contenido.titulo}»`);
+  if (!buscarTematica(trabajo.tematica_id))
+    console.warn(
+      `  (esta Estación no conoce la temática «${trabajo.tematica_id}»: produce con el estilo que manda el panel; reiníciala para traer el código nuevo)`,
+    );
   let ultimo = { paso: "tomado", progreso: 0 };
   const avisar = (paso: string, progreso: number) => {
     console.log(`  ${progreso}% ${paso}`);
@@ -82,7 +86,7 @@ async function unaVuelta(): Promise<boolean> {
         comercial ? null : marcaDeCanal(buscarTematica(trabajo.tematica_id)?.canal),
         // Y la temática, su diseño: clásico, con las personas dibujadas o con diagramas de neón.
         // En una grabación o un comercial, el diseño es el que Richard eligió.
-        trabajo.grabacion?.formato ?? comercial?.formato ?? estiloDeTematica(trabajo.tematica_id),
+        estiloDelTrabajo({ ...trabajo, comercial }),
         material,
         comercial
           ? { idioma: comercial.idioma, sinShorts: true, imagenes }

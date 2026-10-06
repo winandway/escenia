@@ -17,6 +17,8 @@ const esquemaTrabajo = z.object({
       tipo: z.string(),
       tematica_id: z.string(),
       plantilla: z.enum(["TechExplainer", "MiniDocumental"]),
+      // El estilo que decide el panel (paneles viejos no lo mandan: se cae a la lista local).
+      estilo: z.enum(ESTILOS_VIDEO).optional(),
       contenido: esquemaGuion,
       producto: z.object({ nombre: z.string(), url: z.string() }).nullable(),
       canal: z.object({ nombre: z.string(), usuario: z.string() }).nullable().default(null),

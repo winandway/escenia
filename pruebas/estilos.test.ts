@@ -14,7 +14,7 @@ import {
   type FiguraDePlano,
 } from "@compartido/ilustrado";
 import type { PalabraConTiempo } from "@compartido/planos";
-import { ESTILOS_VIDEO, estiloDeTematica, TEMATICAS } from "@compartido/tematicas";
+import { estiloDelTrabajo, estiloDeTematica, ESTILOS_VIDEO, TEMATICAS } from "@compartido/tematicas";
 import { instruccionesSistema } from "@/lib/prompt";
 import { sitiosDeNodos } from "../estacion/src/remotion/diagrama-sitios";
 import { NOMBRES_DE_ICONOS } from "../estacion/src/remotion/IconosNeon";
@@ -625,10 +625,25 @@ describe("estilos: cada temática con su diseño", () => {
 
   it("la Estación produce cada video con el diseño de su temática", () => {
     const estacion = readFileSync(path.join(raiz, "estacion/src/estacion.ts"), "utf8");
-    expect(estacion).toContain("estiloDeTematica(trabajo.tematica_id)");
+    expect(estacion).toContain("estiloDelTrabajo({ ...trabajo, comercial })");
     const produccion = readFileSync(path.join(raiz, "estacion/src/produccion.ts"), "utf8");
     // Las personas se dibujan en el Cómic y en el Neón con personajes.
     expect(produccion).toContain("if (dibujaPersonas(estilo)");
     expect(produccion).toContain("numerarDiagramas(");
+  });
+
+  it("el estilo del trabajo lo manda el panel; el formato de una grabación o un comercial va por delante (C-ESTILOS-2)", () => {
+    // Una temática que esta Estación no conoce: vale lo que diga el panel, no «clásico» por defecto.
+    expect(estiloDelTrabajo({ tematica_id: "una-tematica-nueva", estilo: "ilustrado" })).toBe("ilustrado");
+    // Un panel viejo que no manda estilo: la lista local.
+    expect(estiloDelTrabajo({ tematica_id: "explicador" })).toBe("neon");
+    expect(estiloDelTrabajo({ tematica_id: "una-tematica-nueva" })).toBe("clasico");
+    // Lo que eligió Richard manda sobre todo.
+    expect(
+      estiloDelTrabajo({ tematica_id: "biografias", estilo: "clasico", grabacion: { formato: "cancion" } }),
+    ).toBe("cancion");
+    expect(
+      estiloDelTrabajo({ tematica_id: "comercial", estilo: "clasico", comercial: { formato: "mixto" } }),
+    ).toBe("mixto");
   });
 });

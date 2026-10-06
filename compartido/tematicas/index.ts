@@ -30,6 +30,21 @@ export const NOMBRE_FORMATO: Record<EstiloVideo, string> = {
 /** El formato Canción: él cantando, su fondo real, un boceto a lápiz por verso; sale solo en vertical. */
 export const esCancion = (estilo: EstiloVideo): boolean => estilo === "cancion";
 
+/**
+ * El estilo con el que se produce un trabajo (C-ESTILOS-2): el formato que eligió Richard en una
+ * grabación o un comercial manda; si no, el estilo que manda el PANEL con el trabajo (así una
+ * temática nueva no depende de que la Estación se haya reiniciado con el código nuevo: el 6 oct
+ * 2026 «historias-musica» salió en clásico por eso); y solo al final, la lista local.
+ */
+export function estiloDelTrabajo(t: {
+  tematica_id: string;
+  estilo?: EstiloVideo | null;
+  grabacion?: { formato: EstiloVideo } | null;
+  comercial?: { formato: EstiloVideo } | null;
+}): EstiloVideo {
+  return t.grabacion?.formato ?? t.comercial?.formato ?? t.estilo ?? estiloDeTematica(t.tematica_id);
+}
+
 /** Los formatos sin fotos ni clips reales: todo lo que se ve es dibujado (diagramas, figuras). */
 export const esDeNeon = (estilo: EstiloVideo): boolean => estilo === "neon" || estilo === "mixto";
 /** Los formatos donde las personas con rótulo salen dibujadas. */
