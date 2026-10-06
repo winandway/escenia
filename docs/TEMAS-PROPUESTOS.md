@@ -206,3 +206,79 @@ Otra opción, si se quiere algo con fecha: los Billboard Latinos del 22 de octub
 Peso Pluma a la cabeza (17 nominaciones), Tito Double P (15), Fuerza Regida (12), Karol G (9),
 Prince Royce (8) y Bad Bunny (7): «el regional mexicano se tomó los Billboard». Fuente: El
 Heraldo, https://www.elheraldo.co/entretenimiento/2026/10/06/ruben-blades-lenny-tavarez-tito-nieves-y-grupo-duelo-se-suman-a-los-billboard-latinos/
+
+## 6 oct 2026 — elegido: Shakira, trece noches en Madrid (formato Cómic). La propuesta
+
+Richard eligió el tema A y pidió la historia «rompedora», motivadora para los artistas, contada
+como algo increíble, con detalles. Formato: **Cómic** (las personas dibujadas), bien llamativo.
+Voz neuronal. De 4 a 5 minutos, con 4 Shorts.
+
+### Datos verificados el 6 oct 2026 (solo estos entran en el guion)
+
+- Gira «Las Mujeres Ya No Lloran World Tour». Residencia en el «Estadio Shakira», dentro de
+  Iberdrola Music, en Villaverde, Madrid. Capacidad de más de 50 000 personas por noche.
+  Fuentes: Diez Minutos,
+  https://www.diezminutos.es/famosos-corazon/famosos-extranjeros/a73777199/macondo-park-estadio-shakira-conciertos-madrid/
+  ; Moncloa, https://www.moncloa.com/2026/09/21/shakira-madrid-concierto-macondo-park-3434685/
+- 12 conciertos del 18 de septiembre al 11 de octubre (viernes, sábados y domingos en dos
+  bloques), y un concierto final añadido por la demanda: el lunes 12 de octubre, Día de la
+  Hispanidad: 13 en total. Invitados anunciados para el cierre: Maluma, Beéle y Dani Martín.
+  Entradas del final a la venta desde el 6 de octubre. Fuentes: Infobae,
+  https://www.infobae.com/espana/cultura/2026/10/06/shakira-celebrara-un-ultimo-concierto-en-madrid-el-12-de-octubre-estos-seran-los-amigos-de-su-gran-despedida/
+  ; El Debate, https://www.eldebate.com/espana/madrid/20261005/shakira-anuncia-ultimo-concierto-madrid-lunes-12-octubre-dia-hispanidad_466189.html
+  ; El Diario de Madrid, https://www.eldiariodemadrid.es/articulo/madrid/shakira-concierto-madrid-12-octubre-entradas-macondo-park/20261005143845143368.html
+- Macondo Park: unos 150 000 metros cuadrados, hasta ocho pabellones temáticos (música,
+  gastronomía, moda, literatura, arte y cine), inspirado en Gabriel García Márquez, con el lema
+  «Es latina» en la entrada; música en vivo de Amaia, Nathy Peluso y Guitarricadelafuente, food
+  trucks. Abre a las 12:00, el estadio a las 20:00, el show a las 20:30 y cierra a la 1:00.
+  Fuentes: Diez Minutos y Moncloa (arriba).
+- 3 de octubre, octavo concierto: Dua Lipa salió por sorpresa y cantaron «Antología» en
+  acústico; se transmitió en vivo por Amazon Music, Prime Video y Twitch. Fuentes: UnoTV,
+  https://www.unotv.com/entretenimiento/shakira-y-dua-lipa-sorprenden-al-cantar-antologia-juntas-en-madrid/
+  ; Vanguardia, https://www.vanguardia.com/entretenimiento/tendencias/2026/10/03/dua-lipa-sorprende-junto-a-shakira-en-madrid-con-un-duo-inedito-de-antologia/
+  ; Billboard dice que fijó un récord de transmisión en Amazon Music (artículo de pago),
+  https://www.billboard.com/music/latin/shakira-madrid-concert-livestream-amazon-music-record-1236353979/
+- Según Semana, ese show llegó a un pico de 10 millones de personas, cerca del récord de la
+  plataforma, 11,2 millones, del cierre de la residencia de Bad Bunny en Puerto Rico en
+  septiembre de 2025; y entre los invitados estuvieron Laura Pausini, Alejandro Sanz y Manuel
+  Turizo. Fuente: Semana,
+  https://semana.com/jet-set/articulo/shakira-convirtio-madrid-en-su-casa-asi-ha-sido-la-historica-residencia-que-cerrara-este-12-de-octubre/202617
+- Cuenta propia (aritmética, se dice como tal): 13 noches por 50 000 personas son más de
+  650 000 personas.
+
+### La propuesta (como se le leyó a Richard)
+
+**Título de trabajo:** «Shakira llenó un estadio trece noches seguidas: lo que nadie te cuenta».
+
+**El ángulo:** no es un video de fan. Es un video de escala: lo que significa de verdad llenar
+un estadio una noche, y lo que significa hacerlo trece veces seguidas en una ciudad que no es la
+tuya, en un estadio que lleva tu nombre, con un parque entero construido alrededor. Contado para
+que cualquier artista que lo vea entienda que eso no es suerte, es trabajo acumulado, y que su
+primera noche con cien personas es el mismo camino.
+
+**Cómo arranca (los primeros tres segundos):** «Llenar un estadio una noche es un milagro.
+Shakira lo acaba de hacer trece noches seguidas.»
+
+**Las partes (cada una es un Short):**
+
+1. **El tamaño del milagro.** Cincuenta mil personas cada noche. Trece noches. Más de
+   seiscientas cincuenta mil personas, en un estadio con su nombre. Y la última noche la
+   agregaron porque la gente seguía pidiendo entradas.
+2. **No es un concierto, es una ciudad.** Macondo Park: ciento cincuenta mil metros cuadrados,
+   ocho pabellones de música, comida, moda, literatura, arte y cine, inspirado en García Márquez,
+   con el lema «Es latina» en la puerta. Abre al mediodía, cierra a la una de la mañana: doce
+   horas por día, trece días.
+3. **La noche que el mundo entero se conectó.** El 3 de octubre salió Dua Lipa, cantaron
+   «Antología» a guitarra, y se transmitió en vivo por Amazon Music, Prime Video y Twitch;
+   Semana habla de un pico de diez millones de personas, a un paso del récord de Bad Bunny.
+   Y los amigos: Pausini, Sanz, Turizo; y para el cierre, Maluma, Beéle y Dani Martín.
+4. **El mensaje.** La gira se llama «Las mujeres ya no lloran». De un dolor público salió la
+   gira más grande de su vida. Para el artista que está empezando: nadie llena trece noches de
+   golpe; se llena una sala de cien, luego de mil, y un día una ciudad te presta su nombre.
+
+**Cierre:** una pregunta para los comentarios («¿Cuántas noches llenarías tú?») y suscríbete a
+Caprichoso TV.
+
+**Qué se dibuja (Cómic):** Shakira, Dua Lipa, Laura Pausini, Alejandro Sanz, Manuel Turizo,
+Maluma, Beéle y Dani Martín, cada uno a partir de una foto real con fuente; el estadio y el parque
+con fotos reales; las cifras en grande (50 000; 13; 650 000; 150 000; 10 millones).
