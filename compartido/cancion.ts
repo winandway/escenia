@@ -11,10 +11,19 @@ import type { MomentoPresentador } from "./presentador";
 export const ESTILO_LAPIZ =
   "Hand-drawn pencil sketch on aged, slightly crumpled old paper with coffee stains: simple, cute stick figures with round heads and expressive poses, loose graphite and charcoal strokes, light cross-hatching, monochrome sepia and dark gray on cream paper, minimal composition with plenty of empty paper, storybook feel. No text, no letters, no numbers, no logos, no watermark, no photo-realism, no color.";
 
+/** El único texto que puede llevar un boceto: un letrero escrito tal cual, cuando la letra nombra un negocio o un lugar. */
+export const tieneLetrero = (escena: string): boolean => /reads\s+"[^"]{2,40}"/i.test(escena);
+
+/** La misma receta a lápiz, pero dejando escribir el letrero (y nada más). */
+const ESTILO_LAPIZ_CON_LETRERO = ESTILO_LAPIZ.replace(
+  "No text, no letters, no numbers, no logos, no watermark,",
+  "The only text in the picture is the sign, hand-lettered neatly and spelled exactly as given; no other letters, numbers, logos or watermark,",
+);
+
 /** El prompt completo de un boceto: la escena que pidió la IA más el estilo a lápiz. */
 export function promptDeBoceto(escena: string): string {
   const limpia = escena.trim().replace(/[.\s]+$/u, "");
-  return `${limpia}. ${ESTILO_LAPIZ}`;
+  return `${limpia}. ${tieneLetrero(limpia) ? ESTILO_LAPIZ_CON_LETRERO : ESTILO_LAPIZ}`;
 }
 
 /** En una canción él sale entero todo el tiempo: ni esquina ni ventana. */

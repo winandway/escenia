@@ -11,6 +11,7 @@ import {
   ESTILO_LAPIZ,
   momentosDeCancion,
   promptDeBoceto,
+  tieneLetrero,
 } from "@compartido/cancion";
 import { esquemaGrabacionNueva } from "@compartido/grabaciones";
 import { dibujaPersonas, esCancion, esDeNeon, ESTILOS_VIDEO, NOMBRE_FORMATO } from "@compartido/tematicas";
@@ -69,6 +70,15 @@ describe("formato «Canción»: Richard canta con su fondo real y un boceto a l�
     expect(ESTILO_LAPIZ).toMatch(/pencil sketch/i);
     expect(ESTILO_LAPIZ).toMatch(/No text/i);
     expect(ESTILO_LAPIZ).toMatch(/no color/i);
+    // Un letrero escrito entre comillas es el único texto que se deja dibujar (Estética Pilar, 6 oct 2026).
+    const conLetrero = promptDeBoceto(
+      'a small shop with a sign that reads "Estética Pilar", a small Spanish flag',
+    );
+    expect(tieneLetrero(conLetrero)).toBe(true);
+    expect(conLetrero).toContain('reads "Estética Pilar"');
+    expect(conLetrero).not.toMatch(/No text, no letters/);
+    expect(conLetrero).toMatch(/spelled exactly as given/);
+    expect(tieneLetrero("a road seen through a windshield")).toBe(false);
     expect(momentosDeCancion()).toEqual([{ inicioMs: 0, modo: "completo" }]);
     // El papel ocupa un tercio de arriba: encima de su cabeza, nunca sobre su cara.
     expect(ALTO_DEL_BOCETO).toBeGreaterThan(0.25);

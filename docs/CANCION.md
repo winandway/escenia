@@ -79,6 +79,12 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /r
 - **El aviso de suscribirse.** La última escena deja la mitad derecha del papel en blanco, y ahí
   va, dibujado a mano, «¿Te gustó?», el botón «Suscríbete» con su campanita, el nombre del canal
   y una flecha (`AvisoSuscribete` en la plantilla).
+- **Letreros y banderas (6 oct 2026, «De Cero a Reina»).** Si la letra nombra un negocio o un
+  lugar («Estética Pilar», en Madrid), el boceto lo dibuja con su letrero escrito tal cual (es el
+  único texto que se permite: `tieneLetrero` deja pasar lo que va entre comillas tras «reads») y
+  con su bandera («a small Spanish flag»). Y la gorra con la bandera de Estados Unidos solo va
+  cuando la canción habla de él en primera persona: en una historia sobre otra persona nadie la
+  lleva (el novio de la canción salió con la gorra de Richard).
 - **Dos manos.** Un boceto salió con tres manos (una en el pecho, una abierta y otra suelta). El plan
   pide decir dónde va cada mano y «exactly two hands». Si se cuela una de más, se corrige el prompt
   de esa escena en el guion y se vuelve a producir: los demás bocetos no cambian (están guardados
