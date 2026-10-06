@@ -276,6 +276,29 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   no dejar que el navegador mande la clave del almacén; no volver a ponerle
   reintentos automáticos al pedido del plan; no convertir «Quitar» en un borrado.
 
+## C-IMAGENES-1 y C-COMERCIAL-1 — La biblioteca de imágenes y el comercial de un cliente (5 oct 2026)
+
+- **Qué se agregó:** el menú **Imágenes** (carpetas con logos, capturas y PDF, muchos
+  archivos de una vez) y el menú **Comerciales** (un video publicitario con el texto
+  del cliente, nuestra voz, sus imágenes, en español o inglés). Guía:
+  [COMERCIALES.md](COMERCIALES.md).
+- **Lo que no puede pasar, y lo que lo vigila (`pruebas/comerciales.test.ts`):**
+  - En el video de un cliente **no entra una foto de internet**: el plan prohíbe
+    «foto» y «stock», `planComercialLimpio` los quita si la IA los pone igual, y en la
+    producción `dejarSoloFiguras` deja solo las imágenes del cliente y los datos.
+  - Una imagen que la IA pide y **no existe** no entra (`buscarImagenPorNombre`
+    devuelve `null`); una que escribe distinto («pro in shop horizontal») sí se
+    encuentra.
+  - El **mismo nombre** en la misma carpeta reemplaza al anterior (se aparta, no se
+    borra); «Quitar» no borra nada.
+  - En **inglés** la voz recibe el texto tal cual: «100» y «here» no se tocan
+    (`textoParaLaVoz`); en español siguen las cifras en letras y la H muda.
+  - Un comercial da **un** guion aunque el plan se pida dos veces; sale sin canal, sin
+    marca y sin Shorts (`producir` con `sinShorts` y `canal`/`marca` nulos).
+- **Comprobado en rojo** el 5 oct 2026 (ver la lista en el commit).
+- **Qué NO tocar:** no volver a permitir «foto» en un comercial; el formato de un
+  comercial se valida en el código (la tabla no lleva CHECK sobre `formato`).
+
 ## C-PORTADA-2 — La miniatura de un video con presentador lleva a Richard, y el fondo de rayos morados no vuelve (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** las dos miniaturas del primer video de

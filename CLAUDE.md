@@ -13,6 +13,7 @@
 - Ritmo del video (cambios de imagen por frase, sonido en cada corte, pausas de la voz) y biblioteca de sonidos: [docs/RITMO.md](docs/RITMO.md).
 - **Los formatos y sus nombres** (Documental, Cómic, Neón, Neón con personajes, Presentador) y qué dice YouTube de las caras reales: [docs/FORMATOS.md](docs/FORMATOS.md).
 - Formato Presentador (Richard grabado, encima de los gráficos): [docs/PRESENTADOR.md](docs/PRESENTADOR.md).
+- Comerciales (el video publicitario de un cliente con sus logos y capturas) y la biblioteca de Imágenes: [docs/COMERCIALES.md](docs/COMERCIALES.md).
 - Estilos de video (clásico, ilustrado con las personas dibujadas, y neón con diagramas): [docs/ESTILOS.md](docs/ESTILOS.md).
 - Portadas de impacto (la miniatura llamativa del video largo y la de cada Short; salen solas): [docs/PORTADA.md](docs/PORTADA.md).
 - La marca de cada canal en el video (Full Código) y el separador de canales: [docs/MARCA.md](docs/MARCA.md).
@@ -27,6 +28,7 @@
 - Publicación: YaDominios Cloud, sitio `escenia` → https://escenia.sitios.dev, **en vivo desde el 25 sep 2026**, conectado a `winandway/escenia` rama `yapanel-build`. Cuenta de YaDominios: torplanet1@gmail.com, plan Galaxia (de pago; no pasar a «sistema»). Variables y secretos SOLO se cargan en el panel (tarjeta del sitio → Variables de entorno).
 - El token de la base (para consultarla desde fuera por HTTP) vive en `estacion/.env` como `YAPANEL_DB_TOKEN`, fuera de git. El panel publicado NO lo usa: habla con `env.DB` directo.
 - Base y archivos: `env.DB` / `env.BUCKET` de ese sitio. **Sin Supabase.**
+- Las imágenes de los clientes (menú «Imágenes») viven en `env.BUCKET` bajo `imagenes/` y la Estación las baja a `estacion/cache/imagenes/`.
 - Las grabaciones que Richard sube desde el panel (menú «Grabaciones») viven en `env.BUCKET` bajo `grabaciones/` y la Estación las baja a `estacion/cache/grabaciones/`.
 - Los MP4 se quedan en la Mac; nunca suben a la nube. La Estación corre siempre en la Mac como LaunchAgent `com.windoce.escenia-estacion` (ver docs/ESTACION.md).
 - Losupe es OTRO proyecto: solo se lee su feed público, jamás su base ni su repo.

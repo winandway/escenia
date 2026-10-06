@@ -4,7 +4,7 @@
 export type FiguraDePlano = { ruta: string; ancho: number; alto: number };
 
 type PlanoConFigura = {
-  tipo: "foto" | "clip" | "dato";
+  tipo: "foto" | "clip" | "dato" | "imagen";
   foto: { ruta: string } | null;
   texto: string;
   figura: FiguraDePlano | null;
@@ -70,11 +70,15 @@ export function repartirFiguras(
  * romperían el fondo de neón, así que se quitan: ese tramo se queda con la lámina de neón.
  * Devuelve cuántos planos se quitaron.
  */
-export function dejarSoloFiguras(escenas: { planos: PlanoConFigura[] }[]): number {
+export function dejarSoloFiguras(
+  escenas: { planos: PlanoConFigura[] }[],
+  /** Qué otros planos se conservan además de los que tienen figura (en un comercial, las imágenes del cliente y los datos). */
+  conservar: (plano: PlanoConFigura) => boolean = () => false,
+): number {
   let quitados = 0;
   for (const escena of escenas) {
     const antes = escena.planos.length;
-    escena.planos = escena.planos.filter((p) => p.figura);
+    escena.planos = escena.planos.filter((p) => p.figura || conservar(p));
     quitados += antes - escena.planos.length;
     // Si se fue el plano que traía la figura, el que queda primero es el que la hace entrar.
     const primero = escena.planos[0];

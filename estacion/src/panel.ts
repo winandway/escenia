@@ -25,9 +25,48 @@ const esquemaTrabajo = z.object({
         .object({ id: z.number(), formato: z.enum(ESTILOS_VIDEO), archivo: z.string(), bytes: z.number() })
         .nullable()
         .default(null),
+      // Comercial de un cliente: sin marca ni Shorts, con sus imágenes y en su idioma.
+      comercial: z
+        .object({
+          id: z.number(),
+          idioma: z.enum(["es", "en"]),
+          carpetas: z.array(z.string()),
+          formato: z.enum(ESTILOS_VIDEO),
+        })
+        .nullable()
+        .default(null),
     })
     .nullable(),
 });
+
+const esquemaComercial = z.object({
+  comercial: z
+    .object({
+      id: z.number(),
+      nombre: z.string(),
+      narracion: z.string(),
+      idioma: z.enum(["es", "en"]),
+      voz: z.enum(["richard", "femenina"]),
+      instrucciones: z.string(),
+      carpetas: z.array(z.string()),
+      formato: z.enum(ESTILOS_VIDEO),
+    })
+    .nullable(),
+});
+export type ComercialDelPanel = NonNullable<z.infer<typeof esquemaComercial>["comercial"]>;
+
+const esquemaImagenes = z.object({
+  imagenes: z.array(
+    z.object({
+      id: z.number(),
+      carpeta: z.string(),
+      nombre: z.string(),
+      tipo: z.enum(["imagen", "pdf"]),
+      bytes: z.number(),
+    }),
+  ),
+});
+export type ImagenDelPanel = z.infer<typeof esquemaImagenes>["imagenes"][number];
 
 const esquemaGrabacion = z.object({
   grabacion: z
@@ -129,6 +168,47 @@ export const panel = {
   /** Formato Presentador: de la transcripción de una grabación, el plan de lo que va detrás de Richard. */
   plan: (transcripcion: string, formato: string, titulo = "") =>
     llamar("/datos/estacion/plan", { transcripcion, formato, titulo }),
+  /** La biblioteca de imágenes (unas carpetas, o todas). */
+  async imagenes(carpetas: string[]): Promise<ImagenDelPanel[]> {
+    return esquemaImagenes.parse(await llamar("/datos/estacion/imagenes", { carpetas })).imagenes;
+  },
+  async bajarImagen(id: number): Promise<Buffer> {
+    return conReintentos(async () => {
+      const r = await fetch(`${config.PANEL_URL}/datos/estacion/imagenes/${id}`, {
+        headers: { authorization: `Bearer ${config.ESTACION_SECRETO}` },
+        signal: AbortSignal.timeout(180_000),
+      });
+      if (!r.ok)
+        throw new ErrorDelPanel(`El panel respondió ${r.status} al bajar la imagen ${id}.`, r.status);
+      return Buffer.from(await r.arrayBuffer());
+    });
+  },
+  /** Sube una imagen (o un PDF) a una carpeta de la biblioteca, desde la Mac. */
+  subirImagen: (ruta: Buffer, carpeta: string, nombre: string, extension: string) =>
+    llamar(`/datos/imagenes?${new URLSearchParams({ carpeta, nombre, extension })}`, null, {
+      crudo: ruta,
+      contentType: "application/octet-stream",
+    }) as Promise<{ id: number }>,
+  /** Pide un comercial desde la Mac (lo mismo que el formulario del panel). */
+  pedirComercial: (datos: unknown) => llamar("/datos/comerciales", datos) as Promise<{ id: number }>,
+  /** ¿Hay un comercial por armar? Si hay, queda tomado. */
+  async comercialSiguiente(): Promise<ComercialDelPanel | null> {
+    return esquemaComercial.parse(await llamar("/datos/estacion/comerciales/siguiente", {})).comercial;
+  },
+  avanceComercial: (id: number, paso: string) =>
+    llamar(`/datos/estacion/comerciales/${id}`, { accion: "avance", paso }),
+  errorComercial: (id: number, error: string) =>
+    llamar(`/datos/estacion/comerciales/${id}`, { accion: "error", error: error.slice(0, 2000) }),
+  /** Con las imágenes que hay en la Mac, el panel arma el plan, guarda el guion y lo manda a producir. */
+  planDeComercial: (
+    id: number,
+    imagenes: { nombre: string; transparente: boolean; ancho: number; alto: number }[],
+  ) =>
+    llamar(
+      `/datos/estacion/comerciales/${id}`,
+      { accion: "plan", imagenes },
+      { esperaMs: 420_000, unSoloIntento: true },
+    ) as Promise<{ guion_id: number; trabajo_id: number }>,
   /** ¿Richard subió una grabación desde el panel? Si hay, queda tomada. */
   async grabacionSiguiente(): Promise<GrabacionDelPanel | null> {
     return esquemaGrabacion.parse(await llamar("/datos/estacion/grabaciones/siguiente", {})).grabacion;

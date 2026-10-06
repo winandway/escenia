@@ -23,8 +23,9 @@ export const esquemaFoto = z.object({
 // (tiempo del video largo) y dura hasta el siguiente plano o el fin de la escena.
 export const esquemaPlanoVideo = z.object({
   inicioMs: z.number(),
-  // foto: imagen con movimiento · clip: video de ambiente · dato: cifra o frase corta en grande.
-  tipo: z.enum(["foto", "clip", "dato"]),
+  // foto: imagen con movimiento · clip: video de ambiente · dato: cifra o frase corta en grande ·
+  // imagen: un archivo del cliente (logo o captura) sobre el fondo de neón.
+  tipo: z.enum(["foto", "clip", "dato", "imagen"]),
   foto: esquemaFoto.nullable().default(null),
   clip: z.object({ ruta: z.string(), duracionSeg: z.number() }).nullable().default(null),
   // En «dato», lo que se lee en grande. En «foto», el nombre que se rotula (o vacío).
@@ -34,6 +35,8 @@ export const esquemaPlanoVideo = z.object({
   figura: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }).nullable().default(null),
   // La figura ya estaba en pantalla en el plano anterior: no vuelve a entrar, solo cambia el titular.
   sigue: z.boolean().default(false),
+  // En «imagen»: un logo o figura sin fondo (flota) o una captura (va en una tarjeta).
+  transparente: z.boolean().default(false),
 });
 
 // Estilo neón: una escena explicada con un diagrama. Cada elemento entra cuando la voz lo nombra.

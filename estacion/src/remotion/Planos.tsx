@@ -16,7 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import type { ColoresNeon } from "./Diagrama";
+import { FondoNeon, type ColoresNeon } from "./Diagrama";
 import { posicionObjeto } from "./enfoque";
 import { figuraALaDerecha, PlanoIlustrado } from "./Ilustrado";
 import { usePresentador } from "./Presentador";
@@ -161,18 +161,30 @@ const PlanoVista: React.FC<{
       {plano.tipo === "foto" && plano.foto && (
         <FotoPlano foto={plano.foto} n={n} durFrames={durFrames} vertical={vertical} />
       )}
+      {plano.tipo === "imagen" && plano.foto && (
+        <ImagenPlano
+          foto={plano.foto}
+          transparente={plano.transparente}
+          n={n}
+          durFrames={durFrames}
+          vertical={vertical}
+          luz={neon?.luz ?? acento}
+          conEntrada={conEntrada}
+        />
+      )}
       {plano.tipo === "clip" && plano.clip && <ClipPlano clip={plano.clip} durFrames={durFrames} />}
       {plano.tipo === "dato" && (
         <DatoPlano
           texto={plano.texto}
-          acento={acento}
+          acento={neon ? neon.luz : acento}
           fuente={fuente}
           colores={colores}
           vertical={vertical}
           conEntrada={conEntrada}
+          neon={neon}
         />
       )}
-      {plano.tipo !== "dato" && (
+      {plano.tipo !== "dato" && plano.tipo !== "imagen" && (
         <AbsoluteFill
           style={{
             background:
@@ -292,6 +304,102 @@ const ClipPlano: React.FC<{ clip: NonNullable<Plano["clip"]>; durFrames: number 
   );
 };
 
+/**
+ * La imagen de un cliente (comerciales): un logo sin fondo flota en el centro con un halo; una
+ * captura va en una tarjeta con borde, inclinada apenas, y si es más alta que ancha se recorre
+ * hacia arriba, como quien baja por la página. Va encima del fondo de neón de la escena.
+ */
+const ImagenPlano: React.FC<{
+  foto: NonNullable<Plano["foto"]>;
+  transparente: boolean;
+  n: number;
+  durFrames: number;
+  vertical: boolean;
+  luz: string;
+  conEntrada: boolean;
+}> = ({ foto, transparente, n, durFrames, vertical, luz, conEntrada }) => {
+  const frame = useCurrentFrame();
+  const { fps, width, height } = useVideoConfig();
+  const entra = conEntrada ? spring({ frame, fps, config: { damping: 13, stiffness: 150, mass: 0.9 } }) : 1;
+  const t = interpolate(frame, [0, Math.max(1, durFrames)], [0, 1], { extrapolateRight: "clamp" });
+  const flota = Math.sin((frame + n * 23) / 24) * (vertical ? 9 : 7);
+  // El espacio que le toca: debajo del título de la escena, dejando aire a los lados.
+  const caja = vertical
+    ? { ancho: width * 0.86, alto: height * 0.5, arriba: height * 0.26 }
+    : { ancho: width * 0.74, alto: height * 0.62, arriba: height * 0.2 };
+  const forma = foto.ancho / foto.alto;
+  if (transparente) {
+    const alto = Math.min(caja.alto * 0.9, (caja.ancho * 0.9) / forma);
+    const ancho = alto * forma;
+    return (
+      <AbsoluteFill>
+        {/* Un halo del color de la luz detrás del logo, para que no quede pegado al fondo. */}
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse ${Math.round(ancho * 0.75)}px ${Math.round(alto * 0.9)}px at 50% ${caja.arriba + caja.alto / 2}px, ${luz}44 0%, transparent 70%)`,
+            opacity: entra,
+          }}
+        />
+        <Img
+          src={staticFile(foto.ruta)}
+          style={{
+            position: "absolute",
+            left: (width - ancho) / 2,
+            top: caja.arriba + (caja.alto - alto) / 2 + flota,
+            width: ancho,
+            height: alto,
+            maxWidth: "none",
+            objectFit: "contain",
+            transform: `scale(${0.72 + Math.min(1.06, entra) * 0.28}) rotate(${(n % 2 === 0 ? -1 : 1) * (1 - t) * 1.6}deg)`,
+            opacity: Math.min(1, entra * 1.6),
+            filter: `drop-shadow(0 0 2px rgba(255,255,255,.55)) drop-shadow(0 0 28px ${luz}99) drop-shadow(0 24px 40px rgba(0,0,0,.6))`,
+          }}
+        />
+      </AbsoluteFill>
+    );
+  }
+  // Una captura: tarjeta con borde. Si es alta (una página entera), se recorre hacia arriba.
+  const ancho = Math.min(caja.ancho, caja.alto * forma);
+  const alto = Math.min(caja.alto, ancho / forma);
+  const alta = forma < (vertical ? 0.7 : 1.1);
+  const desplazamiento = alta
+    ? interpolate(t, [0.1, 0.95], [0, 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : 50;
+  const giro = (n % 2 === 0 ? -1 : 1) * (vertical ? 0 : 4) * (1 - t * 0.5);
+  return (
+    <AbsoluteFill style={{ perspective: 1600 }}>
+      <div
+        style={{
+          position: "absolute",
+          left: (width - ancho) / 2,
+          top: caja.arriba + (caja.alto - alto) / 2 + flota * 0.6,
+          width: ancho,
+          height: alta ? caja.alto : alto,
+          overflow: "hidden",
+          borderRadius: vertical ? 22 : 18,
+          border: `2px solid rgba(255,255,255,.22)`,
+          boxShadow: `0 0 0 1px rgba(0,0,0,.6), 0 0 44px ${luz}55, 0 30px 60px rgba(0,0,0,.65)`,
+          backgroundColor: "#0b1020",
+          transform: `rotateY(${giro}deg) scale(${0.84 + Math.min(1.04, entra) * 0.16})`,
+          transformOrigin: "50% 50%",
+          opacity: Math.min(1, entra * 1.6),
+        }}
+      >
+        <Img
+          src={staticFile(foto.ruta)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: alta ? "cover" : "cover",
+            objectPosition: `50% ${desplazamiento}%`,
+            transform: alta ? "none" : `scale(${1 + t * 0.04})`,
+          }}
+        />
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 /** Una cifra o una frase corta que salta en grande: los números van en el color del canal. */
 const DatoPlano: React.FC<{
   texto: string;
@@ -300,7 +408,9 @@ const DatoPlano: React.FC<{
   colores: readonly [string, string];
   vertical: boolean;
   conEntrada: boolean;
-}> = ({ texto, acento, fuente, colores, vertical, conEntrada }) => {
+  /** Sobre un video de neón, el dato va encima del fondo de neón y no de un color del canal. */
+  neon?: ColoresNeon | null;
+}> = ({ texto, acento, fuente, colores, vertical, conEntrada, neon = null }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const palabras = texto.split(/\s+/).filter(Boolean);
@@ -320,12 +430,15 @@ const DatoPlano: React.FC<{
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(circle at 50% 42%, ${colores[1]} 0%, ${colores[0]} 62%, #000 100%)`,
+        background: neon
+          ? "transparent"
+          : `radial-gradient(circle at 50% 42%, ${colores[1]} 0%, ${colores[0]} 62%, #000 100%)`,
         justifyContent: "center",
         alignItems: "center",
         padding: vertical ? "0 60px 260px" : "0 140px 60px",
       }}
     >
+      {neon && <FondoNeon colores={neon} />}
       <div
         style={{
           textAlign: "center",

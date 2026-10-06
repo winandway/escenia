@@ -1,7 +1,11 @@
 // Planos (C-RITMO-1): trae la imagen de cada cambio dentro de una escena y
 // rellena los tramos donde nada cambiaría, para que el video no se quede en una
 // sola imagen mientras la voz habla medio minuto.
+import { copyFile, mkdir } from "node:fs/promises";
+import path from "node:path";
 import type { Plano } from "@compartido/guion";
+import { buscarImagenPorNombre } from "@compartido/imagenes";
+import type { ImagenLocal } from "./comerciales";
 import { rellenarHuecos, tiemposDePlanos, type PalabraConTiempo } from "@compartido/planos";
 import { buscarFoto } from "./fotos";
 import type { PropsVideo } from "./remotion/props";
@@ -12,7 +16,7 @@ export type PlanoVideo = EscenaVideo["planos"][number];
 type FotoVideo = NonNullable<EscenaVideo["foto"]>;
 
 /** Un plano nace sin figura dibujada: el estilo ilustrado se la pone después (ilustrado.ts). */
-const SIN_FIGURA = { figura: null, sigue: false } as const;
+const SIN_FIGURA = { figura: null, sigue: false, transparente: false } as const;
 
 /** De a cuántas imágenes se piden a la vez (internet aguanta, y el trabajo no se eterniza). */
 const A_LA_VEZ = 3;
@@ -24,6 +28,8 @@ export async function resolverPlanos(args: {
   finMs: number;
   carpetaPublica: string;
   alCredito: (credito: string) => void;
+  /** Comerciales: las imágenes del cliente que puede pedir un plano «imagen». */
+  imagenes?: ImagenLocal[];
 }): Promise<{ planos: PlanoVideo[]; sinFrase: number; sinImagen: number }> {
   const { tiempos, sinFrase } = tiemposDePlanos(
     args.planos.map((p) => p.frase),
@@ -46,12 +52,32 @@ export async function resolverPlanos(args: {
 async function unPlano(
   plano: Plano,
   inicioMs: number,
-  args: { carpetaPublica: string; alCredito: (credito: string) => void },
+  args: { carpetaPublica: string; alCredito: (credito: string) => void; imagenes?: ImagenLocal[] },
 ): Promise<PlanoVideo | null> {
   const texto = (plano.texto ?? "").trim();
   if (plano.tipo === "dato") {
     // Un dato sin texto no tiene nada que mostrar.
     return texto ? { inicioMs, tipo: "dato", foto: null, clip: null, texto, ...SIN_FIGURA } : null;
+  }
+  if (plano.tipo === "imagen") {
+    // La imagen del cliente, por su nombre; se copia a la carpeta pública del trabajo.
+    const elegida = buscarImagenPorNombre(plano.archivo ?? "", args.imagenes ?? []);
+    if (!elegida) {
+      console.warn(`  plano «${plano.archivo ?? ""}»: no hay una imagen con ese nombre en la carpeta`);
+      return null;
+    }
+    const ruta = `imagenes/${path.basename(elegida.ruta)}`;
+    await mkdir(path.join(args.carpetaPublica, "imagenes"), { recursive: true });
+    await copyFile(elegida.ruta, path.join(args.carpetaPublica, ruta));
+    return {
+      inicioMs,
+      tipo: "imagen",
+      foto: { ruta, ancho: elegida.ancho, alto: elegida.alto, enfoque: null },
+      clip: null,
+      texto,
+      ...SIN_FIGURA,
+      transparente: elegida.transparente,
+    };
   }
   const busqueda = (plano.busqueda ?? "").trim();
   if (!busqueda) return null;

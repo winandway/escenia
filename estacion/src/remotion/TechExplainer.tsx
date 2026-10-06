@@ -472,17 +472,13 @@ const EscenaVista: React.FC<{
       <AbsoluteFill style={{ opacity: opacidad }}>
         <LaminaNeon
           etiqueta={
-            escena.parte === "opinion"
-              ? "Mi opinión"
-              : escena.parte === "cta"
-                ? "Pruébalo"
-                : conPersonas
-                  ? "Quién es quién"
-                  : "En resumen"
+            escena.parte === "opinion" ? "Mi opinión" : escena.parte === "cta" ? "Pruébalo" : "En resumen"
           }
           texto={escena.textoEnPantalla || escena.recorte?.titular || ""}
           vertical={vertical}
           colores={neon}
+          // Con planos (personas dibujadas, imágenes del cliente), el centro es de ellos.
+          compacta={conPersonas}
         />
         {conPersonas && (
           <PlanosDeEscena

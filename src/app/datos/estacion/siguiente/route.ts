@@ -5,6 +5,7 @@ import { contexto } from "@/lib/entorno";
 import { estacionAutorizada, respuestaNoAutorizada } from "@/lib/estacion-auth";
 import { tocarLatido } from "@/lib/estacion-estado";
 import { guionPorId, productoPorId, type FilaTrabajo, ajuste } from "@/lib/consultas";
+import { carpetasDe, comercialDeGuion } from "@/lib/comerciales";
 import { grabacionDeGuion } from "@/lib/grabaciones";
 import { esquemaGuion } from "@compartido/guion";
 import { CANALES, clavesDeCanal } from "@compartido/canales";
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
   };
 
   const grabacion = await grabacionDeGuion(db, guion.id);
+  const comercial = await comercialDeGuion(db, guion.id);
 
   return Response.json({
     trabajo: {
@@ -74,6 +76,15 @@ export async function POST(req: Request) {
       // Formato Presentador: este guion salió de una grabación de Richard (va él en cámara).
       grabacion: grabacion
         ? { id: grabacion.id, formato: grabacion.formato, archivo: grabacion.archivo, bytes: grabacion.bytes }
+        : null,
+      // Comercial de un cliente: sin marca de canal ni Shorts, con sus imágenes y en su idioma.
+      comercial: comercial
+        ? {
+            id: comercial.id,
+            idioma: comercial.idioma,
+            carpetas: carpetasDe(comercial),
+            formato: comercial.formato,
+          }
         : null,
     },
   });

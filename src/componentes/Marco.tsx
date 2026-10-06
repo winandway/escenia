@@ -1,38 +1,32 @@
-import Link from "next/link";
 import { salir } from "@/app/entrar/acciones";
-
-const ENLACES = [
-  { href: "/", texto: "Guiones" },
-  { href: "/nuevo", texto: "Nuevo video" },
-  { href: "/grabaciones", texto: "Grabaciones" },
-  { href: "/calendario", texto: "Calendario" },
-  { href: "/sonidos", texto: "Sonidos" },
-  { href: "/trabajos", texto: "Estación" },
-  { href: "/ajustes", texto: "Ajustes" },
-] as const;
+import { latidoEstacion } from "@/lib/consultas";
+import { contexto } from "@/lib/entorno";
+import { estacionViva } from "@/lib/estacion-estado";
+import { BarraSuperior } from "./BarraSuperior";
 
 /** Encabezado + pie de todas las pantallas del panel (ya con sesión). */
-export function Marco({ children, titulo }: { children: React.ReactNode; titulo?: string }) {
+export async function Marco({ children, titulo }: { children: React.ReactNode; titulo?: string }) {
+  // Si la Mac está viva se ve en la barra, al lado de «Estación» (y si la base no responde, no se dice nada).
+  const macEncendida = await contexto()
+    .then(({ db }) => latidoEstacion(db))
+    .then((latido) => estacionViva(latido))
+    .catch(() => null);
   return (
     <>
-      <header className="border-b border-neutral-800">
-        <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-sm">
-          <Link href="/" className="mr-2 font-semibold text-amber-400">
-            Escenia
-          </Link>
-          {ENLACES.map((e) => (
-            <Link key={e.href} href={e.href} className="text-neutral-300 hover:text-white">
-              {e.texto}
-            </Link>
-          ))}
-          <form action={salir} className="ml-auto">
-            <button type="submit" className="text-neutral-400 hover:text-white">
+      <BarraSuperior
+        macEncendida={macEncendida}
+        salir={
+          <form action={salir}>
+            <button
+              type="submit"
+              className="rounded-md px-2.5 py-1.5 text-sm text-neutral-400 hover:bg-neutral-800/80 hover:text-white"
+            >
               Cerrar sesión
             </button>
           </form>
-        </nav>
-      </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+        }
+      />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         {titulo && <h1 className="mb-5 text-2xl font-semibold">{titulo}</h1>}
         {children}
       </main>

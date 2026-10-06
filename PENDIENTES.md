@@ -39,6 +39,9 @@
 - [x] Los nombres de sus productos salen bien escritos aunque la transcripción los escriba mal («Billon» → «Beellon»; 5 oct 2026). Candado C-NOMBRES-1.
 - [ ] Nombres propios: juntar los de dos palabras («Ya Dominios», «QR Bot»), pasarle la lista a la transcripción y que Richard agregue nombres desde el panel.
 - [x] Miniaturas de un video con presentador: sale Richard recortado de su grabación, con fondo nuevo, palabra tachada y marcas en pastillas (5 oct 2026). Candado C-PORTADA-2.
+- [x] Biblioteca de Imágenes (carpetas, muchos archivos de una vez, PDF partido en páginas) y menú Comerciales: el video publicitario de un cliente con su texto, nuestra voz y sus imágenes, en Neón con personajes, sin marca ni Shorts (5 oct 2026). Candados C-IMAGENES-1 y C-COMERCIAL-1.
+- [x] Menú del panel rediseñado: botones por grupos, el activo encendido y la luz de la Mac (5 oct 2026).
+- [ ] Comerciales: versión vertical para redes; ver y corregir el plan antes de armar; elegir la miniatura.
 - [ ] Miniaturas: que Richard elija en el panel el momento suyo que va en la portada y cambie el texto.
 - [ ] Presentador: cortar pausas y frases repetidas del MEDIO de la grabación antes de armar.
 - [ ] Shorts de un video corto (menos de dos minutos): hoy sale UN vertical con el video entero (108 s en el guion 12). Decidir con Richard si prefiere dos o tres piezas de 30 a 60 segundos.

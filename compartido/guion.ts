@@ -40,7 +40,8 @@ export const ETIQUETA_VOZ: Record<Voz, string> = { richard: "Mi voz", femenina: 
 // se está diciendo: la voz nombra a alguien y sale su foto; dice una cifra y la
 // cifra salta en grande. Sin planos, una escena de 30 segundos es una sola
 // imagen quieta, y la gente se va (C-RITMO-1).
-export const TIPOS_PLANO = ["foto", "stock", "dato"] as const;
+// imagen: un archivo de la biblioteca de imágenes (un logo, una captura) que mandó el cliente.
+export const TIPOS_PLANO = ["foto", "stock", "dato", "imagen"] as const;
 export const PLANOS_POR_ESCENA = 16;
 export const esquemaPlano = z.object({
   // De 2 a 6 palabras LITERALES de la narración: el plano entra cuando la voz las dice.
@@ -52,6 +53,8 @@ export const esquemaPlano = z.object({
   foto_de: z.enum(["persona", "lugar"]).optional(),
   // En «dato», lo que se lee en grande («15 nominaciones»). En «foto», el nombre que se rotula («Shakira»).
   texto: z.string().trim().max(60).optional(),
+  // En «imagen», el nombre del archivo de la biblioteca, tal como está en la lista.
+  archivo: z.string().trim().max(160).optional(),
 });
 export type Plano = z.infer<typeof esquemaPlano>;
 

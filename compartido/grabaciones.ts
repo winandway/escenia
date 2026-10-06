@@ -80,8 +80,8 @@ export function avisoDeGrabacion(g: MarchaDeGrabacion, macEncendida = true): Avi
     case "subida":
       return {
         texto: macEncendida
-          ? "Ya subió. La Mac la toma en menos de un minuto."
-          : "Ya subió. Se queda esperando hasta que la Mac vuelva.",
+          ? "Recibido. La Mac lo toma en menos de un minuto."
+          : "Recibido. Se queda esperando hasta que la Mac vuelva.",
         tono: "espera",
         enCurso: true,
       };

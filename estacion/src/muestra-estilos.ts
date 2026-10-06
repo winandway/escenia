@@ -239,6 +239,7 @@ function muestraIlustrado(
     clip: null,
     texto,
     figura: null,
+    transparente: false,
     sigue: false,
     ...extra,
   });

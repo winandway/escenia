@@ -8,6 +8,7 @@ import type { BaseDatos } from "./db";
 import { conEstadoIA } from "./ia-estado";
 import { anotarGasto, autorizarGasto } from "./presupuesto";
 import { mensajeDePlan, planSinInventos, type EntradaPlan } from "./plan-grabacion";
+import { mensajeDePlanComercial, planComercialLimpio, type EntradaPlanComercial } from "./plan-comercial";
 import { instruccionesSistema, mensajeUsuario, type EntradaGuion } from "./prompt";
 
 // Un guion con sus planos suele costar 5–10 centavos; se reserva un poco más por seguridad.
@@ -54,6 +55,24 @@ export async function generarPlan(
     opciones,
   );
   return { ...r, guion: planSinInventos(r.guion) };
+}
+
+/** Comerciales: el plan visual de un video publicitario con las imágenes del cliente (docs/COMERCIALES.md). */
+export async function generarPlanComercial(
+  db: BaseDatos,
+  entrada: EntradaPlanComercial,
+  opciones: { modelo: string; apiKey: string; fetch?: typeof fetch },
+): Promise<ResultadoGeneracion> {
+  const r = await pedirGuion(
+    db,
+    {
+      sistema: instruccionesSistema(),
+      usuario: mensajeDePlanComercial(entrada),
+      detalle: `plan de comercial: ${entrada.nombre}`,
+    },
+    opciones,
+  );
+  return { ...r, guion: planComercialLimpio(r.guion) };
 }
 
 /** Pide un guion a la IA (por streaming, con el formato simple) y lo devuelve limpio y validado. */

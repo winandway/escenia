@@ -76,3 +76,19 @@ export function paraLaVoz(texto: string): string {
     })
     .join("");
 }
+
+/**
+ * Lo que se le manda a la voz y lo que se muestra en los subtítulos, según el idioma. En español,
+ * las cifras van en letras (la voz lee mal «1925») y a la voz se le quita la H muda. En inglés no se
+ * toca nada: «100», «here» y «how» están bien como están (C-COMERCIAL-1).
+ */
+export function textoParaLaVoz(
+  texto: string,
+  idioma: "es" | "en",
+  enLetras: (t: string) => string,
+): { subtitulos: string; voz: string } {
+  const limpio = texto.trim();
+  if (idioma !== "es") return { subtitulos: limpio, voz: limpio };
+  const subtitulos = enLetras(limpio);
+  return { subtitulos, voz: paraLaVoz(subtitulos) };
+}

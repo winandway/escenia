@@ -2,6 +2,7 @@
 import { contexto } from "@/lib/entorno";
 import { latidoEstacion } from "@/lib/consultas";
 import { estacionViva } from "@/lib/estacion-estado";
+import { comercialesAtascados } from "@/lib/comerciales";
 import { grabacionesAtascadas } from "@/lib/grabaciones";
 import { problemaAbiertoDeIA } from "@/lib/ia-estado";
 
@@ -47,6 +48,21 @@ export async function GET() {
       piezas.estacion = estacionViva(latido) ? "ok" : "apagado";
     } catch {
       piezas.estacion = "error";
+    }
+    try {
+      // La biblioteca de imágenes y los comerciales existen (C-IMAGENES-1, C-COMERCIAL-1).
+      await db.uno("SELECT COUNT(carpeta) AS n FROM imagenes");
+      piezas.imagenes = "ok";
+      const atascados = await comercialesAtascados(db);
+      const atasco = atascados > 0 && piezas.estacion === "ok";
+      piezas.comerciales = atasco ? "error" : "ok";
+      if (atasco)
+        detalle =
+          detalle || `Hay ${atascados} comercial(es) esperando hace más de tres horas con la Mac encendida.`;
+    } catch (e) {
+      piezas.imagenes = piezas.imagenes ?? "error";
+      piezas.comerciales = "error";
+      detalle = detalle || (e instanceof Error ? e.message : String(e));
     }
     try {
       // Las grabaciones de Richard (C-GRABACIONES-1): la tabla existe y, con la Mac encendida,

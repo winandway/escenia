@@ -211,3 +211,36 @@ CREATE TABLE IF NOT EXISTS grabaciones (
 );
 -- (En vivo el índice viejo `grabaciones_estado` quedó en `grabaciones_v1`: ver scripts/migrar-grabaciones-formato.ts.)
 CREATE INDEX IF NOT EXISTS grabaciones_por_estado ON grabaciones(estado, id);
+
+-- Biblioteca de imágenes (C-IMAGENES-1): logos, capturas y PDF que manda un cliente, por carpetas.
+CREATE TABLE IF NOT EXISTS imagenes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  carpeta TEXT NOT NULL,                -- la carpeta que eligió Richard (el cliente o el trabajo)
+  nombre TEXT NOT NULL,                 -- el nombre del archivo tal como lo subió
+  clave TEXT NOT NULL,                  -- dónde está en el almacén (BUCKET)
+  tipo TEXT NOT NULL DEFAULT 'imagen',  -- imagen | pdf (se valida en el código)
+  bytes INTEGER NOT NULL DEFAULT 0,
+  activo INTEGER NOT NULL DEFAULT 1,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS imagenes_carpeta ON imagenes(carpeta, activo, id);
+
+-- Comerciales (C-COMERCIAL-1): un video publicitario con el material de un cliente. La Estación
+-- lo atiende como una grabación: pide el plan, nace su guion (aprobado) y su trabajo.
+CREATE TABLE IF NOT EXISTS comerciales (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT NOT NULL,
+  narracion TEXT NOT NULL,              -- el texto que lee la voz, tal cual
+  idioma TEXT NOT NULL DEFAULT 'es',
+  voz TEXT NOT NULL DEFAULT 'femenina',
+  instrucciones TEXT NOT NULL DEFAULT '',
+  carpetas TEXT NOT NULL DEFAULT '[]',  -- JSON: las carpetas de imágenes que se usan
+  formato TEXT NOT NULL DEFAULT 'mixto',
+  estado TEXT NOT NULL DEFAULT 'subida' CHECK (estado IN ('subida','tomada','planeada','error','quitada')),
+  paso TEXT NOT NULL DEFAULT '',
+  error TEXT NOT NULL DEFAULT '',
+  guion_id INTEGER REFERENCES guiones(id),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS comerciales_por_estado ON comerciales(estado, id);

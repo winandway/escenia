@@ -239,6 +239,23 @@ export const TEMATICAS: Tematica[] = [
     cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
     reglas: ["La narración es lo que Richard dijo en la grabación: no se reescribe."],
   },
+  // Comerciales: videos publicitarios con el material de un cliente (docs/COMERCIALES.md). No se
+  // eligen en «Nuevo video»: nacen en el menú Comerciales. Sin marca de canal ni Shorts.
+  {
+    id: "comercial",
+    nombre: "Comercial (video publicitario de un cliente)",
+    canal: "canal-ia",
+    activa: false,
+    tono: "publicitario, claro y directo, en el idioma del texto del cliente",
+    duracionObjetivo: { largo: 70, short: 0 },
+    plantilla: "TechExplainer",
+    ctaProductos: [],
+    estructuras: [["gancho", "contexto", "dato", "cierre"]],
+    bibliotecaEtiquetas: [],
+    densidadRecursos: "alta",
+    cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
+    reglas: ["La narración es el texto del cliente: no se reescribe. Solo salen sus imágenes."],
+  },
   {
     id: "presentador-tv",
     nombre: "Presentador (grabación propia)",

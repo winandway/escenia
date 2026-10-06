@@ -3,6 +3,7 @@
 // los subtítulos.
 import { config } from "./config";
 import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEntregada } from "./entrega";
+import { atenderComercial, materialDeComercial } from "./comerciales";
 import { atenderGrabacion, materialDeGrabacion } from "./grabaciones";
 import { panel } from "./panel";
 import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas";
@@ -64,20 +65,24 @@ async function unaVuelta(): Promise<boolean> {
             avisar(texto, 3),
           )
         : null;
+      // Comercial de un cliente: sus imágenes, su idioma, sin marca de canal, sin cierre y sin Shorts.
+      const comercial = trabajo.comercial;
+      const imagenes = comercial ? await materialDeComercial(comercial, (texto) => avisar(texto, 3)) : [];
       r = await producir(
         `t${trabajo.id}`,
         trabajo.contenido,
-        trabajo.producto,
+        comercial ? null : trabajo.producto,
         avisar,
         trabajo.plantilla,
         (servicio, detalle, costo) => panel.gasto(trabajo.id, servicio, detalle, costo).catch(() => {}),
-        trabajo.canal,
+        comercial ? null : trabajo.canal,
         // El canal de la temática decide la marca del video (logo, colores, cierre).
-        marcaDeCanal(buscarTematica(trabajo.tematica_id)?.canal),
+        comercial ? null : marcaDeCanal(buscarTematica(trabajo.tematica_id)?.canal),
         // Y la temática, su diseño: clásico, con las personas dibujadas o con diagramas de neón.
-        // En una grabación, el diseño de atrás es el que Richard eligió al subirla.
-        trabajo.grabacion?.formato ?? estiloDeTematica(trabajo.tematica_id),
+        // En una grabación o un comercial, el diseño es el que Richard eligió.
+        trabajo.grabacion?.formato ?? comercial?.formato ?? estiloDeTematica(trabajo.tematica_id),
         material,
+        comercial ? { idioma: comercial.idioma, sinShorts: true, imagenes } : {},
       );
       await guardarProduccion(trabajo.id, huella, r);
       if (r.costoVozUsd > 0)
@@ -194,7 +199,7 @@ async function principal() {
     let espera = ESPERA_MS;
     try {
       // Primero los videos ya aprobados; si no hay, las grabaciones que Richard subió.
-      const hubo = (await unaVuelta()) || (await atenderGrabacion());
+      const hubo = (await unaVuelta()) || (await atenderGrabacion()) || (await atenderComercial());
       if (hubo) espera = 1000;
     } catch (e) {
       console.error(`[${hora()}] No se pudo hablar con el panel:`, e instanceof Error ? e.message : e);

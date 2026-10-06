@@ -14,7 +14,7 @@ import {
 import type { Voz } from "@compartido/guion";
 import { emparejarConLetras, numerosEnLetras } from "@compartido/numeros";
 import { cortesDePausas, tiempoTrasCortes, trozosQueQuedan, type Silencio } from "@compartido/pausas";
-import { paraLaVoz } from "@compartido/pronunciacion";
+import { textoParaLaVoz } from "@compartido/pronunciacion";
 import { escalarAlineacion, factorDeRitmo } from "@compartido/ritmo";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
 import { elegirIdDeVoz } from "@compartido/voces";
@@ -40,6 +40,8 @@ export async function generarVoz(
   carpeta: string,
   avisar: (paso: string, progreso: number) => Promise<unknown>,
   narrador: Voz = "richard",
+  /** En inglés no se tocan las cifras ni la H: esos arreglos son del español (C-COMERCIAL-1). */
+  idioma: "es" | "en" = "es",
 ): Promise<ResultadoVoz> {
   await mkdir(carpeta, { recursive: true });
   const usaElevenLabs = Boolean(config.ELEVENLABS_API_KEY);
@@ -61,10 +63,11 @@ export async function generarVoz(
   const idsAnteriores: string[] = [];
   // Cifras → letras antes de nada (la voz lee mal «1925»); vale para el texto
   // que se manda y para los subtítulos, que así muestran lo que se dice.
-  const textos = piezas.map((p) => numerosEnLetras(p.texto.trim()));
+  const preparados = piezas.map((p) => textoParaLaVoz(p.texto, idioma, numerosEnLetras));
+  const textos = preparados.map((t) => t.subtitulos);
   // Lo que se manda a la voz lleva además la ortografía «fonética» (sin H muda);
   // los subtítulos conservan la palabra tal cual (C-VOZ-3).
-  const textosVoz = textos.map((t) => paraLaVoz(t));
+  const textosVoz = preparados.map((t) => t.voz);
 
   for (let i = 0; i < piezas.length; i++) {
     const pieza = piezas[i] ?? { texto: "" };

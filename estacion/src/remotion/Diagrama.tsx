@@ -686,11 +686,42 @@ export const LaminaNeon: React.FC<{
   texto: string;
   vertical: boolean;
   colores: ColoresNeon;
-}> = ({ etiqueta, texto, vertical, colores }) => {
+  /** Compacta: solo el fondo y el título arriba, chico; el centro queda libre para los planos. */
+  compacta?: boolean;
+}> = ({ etiqueta, texto, vertical, colores, compacta = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const entra = spring({ frame: frame - 4, fps, config: { damping: 15, stiffness: 140 } });
   const barras = vertical ? 26 : 40;
+  if (compacta)
+    return (
+      <AbsoluteFill>
+        <FondoNeon colores={colores} />
+        {texto && (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: vertical ? 150 : 56,
+              textAlign: "center",
+              fontFamily: inter,
+              fontWeight: 800,
+              fontSize: vertical ? 58 : 50,
+              lineHeight: 1.1,
+              letterSpacing: -1,
+              color: "#f4f1ff",
+              textShadow: `0 0 26px ${colores.objeto}88`,
+              opacity: entra,
+              transform: `translateY(${(1 - entra) * -18}px)`,
+              padding: "0 80px",
+            }}
+          >
+            {texto}
+          </div>
+        )}
+      </AbsoluteFill>
+    );
   return (
     <AbsoluteFill>
       <FondoNeon colores={colores} />

@@ -55,6 +55,7 @@ export const esquemaGuionDeLaIA = z.object({
             busqueda: z.string(),
             foto_de: z.string(),
             texto: z.string(),
+            archivo: z.string(),
           }),
         ),
         diagrama: z.object({
@@ -147,6 +148,7 @@ export function tipoVisualValido(valor: string): (typeof TIPOS_VISUAL)[number] {
 /** El tipo de un plano: «clip», «video» o cualquier otra cosa es un clip de ambiente. */
 export function tipoDePlanoValido(valor: string): (typeof TIPOS_PLANO)[number] {
   const pedido = sinTildes(valor);
+  if (pedido.includes("logo") || pedido.includes("captura") || pedido.includes("archivo")) return "imagen";
   return TIPOS_PLANO.find((t) => t === pedido) ?? (pedido.includes("cifra") ? "dato" : "stock");
 }
 
@@ -190,6 +192,7 @@ export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
         busqueda: texto(p.busqueda, 80),
         foto_de: sinTildes(p.foto_de) === "lugar" ? ("lugar" as const) : undefined,
         texto: texto(p.texto, 60),
+        archivo: texto(p.archivo, 160),
       }))
       .filter((p) => p.frase.length >= 2)
       .slice(0, PLANOS_POR_ESCENA);

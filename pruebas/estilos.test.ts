@@ -156,14 +156,23 @@ describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
                 busqueda: "Sam Altman 2025",
                 foto_de: "persona",
                 texto: "Sam Altman",
+                archivo: "",
               },
-              { frase: "", tipo: "dato", busqueda: "", foto_de: "persona", texto: "sin frase: se quita" },
+              {
+                frase: "",
+                tipo: "dato",
+                busqueda: "",
+                foto_de: "persona",
+                texto: "sin frase: se quita",
+                archivo: "",
+              },
               {
                 frase: "el modelo",
                 tipo: "dato",
                 busqueda: "",
                 foto_de: "persona",
                 texto: "x".repeat(20) + " " + "palabra ".repeat(12),
+                archivo: "",
               },
             ],
           }),
@@ -215,7 +224,14 @@ describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
             tipo: "diagrama",
             titular: "La venta: quién hace qué",
             planos: [
-              { frase: "El cliente compra", tipo: "stock", busqueda: "shop", foto_de: "persona", texto: "" },
+              {
+                frase: "El cliente compra",
+                tipo: "stock",
+                busqueda: "shop",
+                foto_de: "persona",
+                texto: "",
+                archivo: "",
+              },
             ],
             diagrama: {
               seccion: "Ventas",
@@ -319,8 +335,22 @@ describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
             foto_de: "",
             busqueda: "shop counter",
             planos: [
-              { frase: "Cada vez que", tipo: "clip", busqueda: "shop counter", foto_de: "", texto: "" },
-              { frase: "cuatro cosas", tipo: "dato", busqueda: "", foto_de: "LUGAR", texto: "4 cosas" },
+              {
+                frase: "Cada vez que",
+                tipo: "clip",
+                busqueda: "shop counter",
+                foto_de: "",
+                texto: "",
+                archivo: "",
+              },
+              {
+                frase: "cuatro cosas",
+                tipo: "dato",
+                busqueda: "",
+                foto_de: "LUGAR",
+                texto: "4 cosas",
+                archivo: "",
+              },
             ],
           }),
         },
@@ -598,7 +628,7 @@ describe("estilos: cada temática con su diseño", () => {
     expect(estacion).toContain("estiloDeTematica(trabajo.tematica_id)");
     const produccion = readFileSync(path.join(raiz, "estacion/src/produccion.ts"), "utf8");
     // Las personas se dibujan en el Cómic y en el Neón con personajes.
-    expect(produccion).toContain("if (dibujaPersonas(estilo))");
+    expect(produccion).toContain("if (dibujaPersonas(estilo)");
     expect(produccion).toContain("numerarDiagramas(");
   });
 });

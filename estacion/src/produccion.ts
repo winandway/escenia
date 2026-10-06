@@ -9,6 +9,7 @@ import { anioDe, elegirReferencia, ES_INFANCIA } from "@compartido/referencias";
 import { config } from "./config";
 import type { PropsVideo } from "./remotion/props";
 import { dejarSoloFiguras } from "@compartido/ilustrado";
+import type { ImagenLocal } from "./comerciales";
 import { ilustrarPlanos } from "./ilustrado";
 import { empaquetar, renderizar, renderizarMiniatura } from "./render";
 import { armarDiagrama, numerarDiagramas } from "@compartido/diagrama";
@@ -138,7 +139,10 @@ export async function producir(
   estilo: EstiloVideo = "clasico",
   // Formato Presentador: la voz y la imagen vienen de una grabación de Richard, no del generador.
   grabacion: { voz: ResultadoVoz; presentador: NonNullable<PropsVideo["presentador"]> } | null = null,
+  // Comerciales (docs/COMERCIALES.md): el idioma del texto, sin Shorts, y las imágenes del cliente.
+  opciones: { idioma?: "es" | "en"; sinShorts?: boolean; imagenes?: ImagenLocal[] } = {},
 ): Promise<ResultadoProduccion> {
+  const comercial = (opciones.imagenes?.length ?? 0) > 0;
   const carpetaTrabajo = path.join(config.CARPETA_SALIDA, clave);
   // Carpeta pública SOLO de este trabajo: voz + clips + sfx que usa. Se empaqueta con ella.
   const carpetaPublica = path.join(config.CARPETA_PUBLICA, clave);
@@ -156,6 +160,7 @@ export async function producir(
       carpetaTrabajo,
       avisar,
       guion.voz,
+      opciones.idioma ?? "es",
     ));
   await cp(voz.rutaMp3, path.join(carpetaPublica, "voz.mp3"));
   const rutaSubtitulos = path.join(carpetaTrabajo, "subtitulos.json");
@@ -344,8 +349,12 @@ export async function producir(
     const escenaLista = escenas[escenas.length - 1];
     if (escenaLista && e.visual.planos?.length && !sinImagenes) {
       const r = await resolverPlanos({
-        // En neón con personajes no entran clips: solo las personas (para dibujarlas) y sus datos.
-        planos: esDeNeon(estilo) ? e.visual.planos.filter((p) => p.tipo !== "stock") : e.visual.planos,
+        // En neón con personajes no entran clips: solo las personas (para dibujarlas), sus datos y
+        // las imágenes del cliente. En un comercial tampoco entran fotos de internet.
+        planos: esDeNeon(estilo)
+          ? e.visual.planos.filter((p) => p.tipo !== "stock" && (!comercial || p.tipo !== "foto"))
+          : e.visual.planos,
+        imagenes: opciones.imagenes,
         palabras: palabrasDeEscena,
         inicioMs: tramo.inicioMs,
         finMs: tramo.finMs,
@@ -450,7 +459,7 @@ export async function producir(
   for (const f of todasLasFotos) f.enfoque = enfoques.get(path.join(carpetaPublica, f.ruta)) ?? null;
 
   // Estilo ilustrado: las personas con rótulo salen dibujadas (docs/ESTILOS.md).
-  if (dibujaPersonas(estilo)) {
+  if (dibujaPersonas(estilo) && !comercial) {
     await avisar("dibujando a las personas del video", 39);
     const r = await ilustrarPlanos(
       escenas,
@@ -467,10 +476,15 @@ export async function producir(
       39,
     );
     // Neón con personajes: lo que no se pudo dibujar no sale (una foto real rompería el neón).
+    // En un comercial se quedan además las imágenes del cliente y los datos.
     if (esDeNeon(estilo)) {
-      const quitados = dejarSoloFiguras(escenas);
+      const quitados = dejarSoloFiguras(escenas, (p) => p.tipo === "imagen");
       if (quitados) console.warn(`  neón con personajes: ${quitados} plano(s) sin dibujo se quitaron`);
     }
+  } else if (comercial) {
+    // Comercial: en pantalla solo las imágenes del cliente y los datos; nada de fotos de internet.
+    const quitados = dejarSoloFiguras(escenas, (p) => p.tipo === "imagen" || p.tipo === "dato");
+    if (quitados) console.warn(`  comercial: ${quitados} plano(s) que no eran del cliente se quitaron`);
   }
 
   const props: PropsVideo = {
@@ -528,8 +542,8 @@ export async function producir(
     serveUrl,
   );
 
-  // Shorts 9:16: el mismo video en trozos, cada uno con su título y su cierre.
-  const plan = planificarShorts(paraShorts);
+  // Shorts 9:16: el mismo video en trozos, cada uno con su título y su cierre. (Un comercial no lleva.)
+  const plan = opciones.sinShorts ? [] : planificarShorts(paraShorts);
   const shorts: ShortProducido[] = [];
   for (const [k, ventana] of plan.entries()) {
     const base = 80 + Math.round((k / plan.length) * 17);

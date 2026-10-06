@@ -39,5 +39,7 @@ export const config = {
   CARPETA_CLIPS: path.resolve(process.cwd(), "cache/clips"),
   // Las grabaciones que Richard sube desde el panel (formato Presentador) se bajan aquí.
   CARPETA_GRABACIONES: path.resolve(process.cwd(), "cache/grabaciones"),
+  // La biblioteca de imágenes del panel (logos, capturas, PDF de los clientes), por carpetas.
+  CARPETA_IMAGENES: path.resolve(process.cwd(), "cache/imagenes"),
   VERSION: "0.1.0",
 };
