@@ -171,12 +171,14 @@ export async function armarPortadas(
       .slice(0, 3),
     cuadroSeg: typeof t?.cuadroSeg === "number" && t.cuadroSeg >= 0 ? t.cuadroSeg : null,
   });
+  // Formato Canción: el video es vertical y no tiene Shorts; su única miniatura es vertical.
+  const cancion = props.estilo === "cancion";
   const piezas: Pieza[] = [
     {
       clave: "largo",
       pieza: "largo" as const,
       indice: 0,
-      formato: "horizontal" as const,
+      formato: cancion ? ("vertical" as const) : ("horizontal" as const),
       escenas: { inicio: 0, fin: props.escenas.length - 1 },
       texto: textoDePortada(textos.largo ?? {}),
       ...extras(textos.largo),
@@ -207,8 +209,10 @@ export async function armarPortadas(
   };
   const usadas = new Set<string>();
   const armadas: { pieza: Pieza; props: PropsPortada; persona: string | null }[] = [];
-  // Formato Presentador: la persona de la portada es Richard, sacado de su grabación ya sin fondo.
-  const presentador = props.presentador?.transparente ? props.presentador : null;
+  // Formato Presentador: la persona de la portada es Richard, sacado de su grabación. Si llegó
+  // sin fondo (croma), el cuadro ya viene transparente; si no (una canción, con su fondo real),
+  // se recorta con el motor de la Mac, igual que una foto.
+  const presentador = props.presentador;
   const instantesUsados: number[] = [];
   const cuadroDelPresentador = async (seg: number) => {
     const png = `portada/pres-${Math.round(seg * 1000)}.png`;
@@ -218,17 +222,15 @@ export async function armarPortadas(
         "-y",
         "-v",
         "error",
-        // Con este decodificador se conserva la transparencia del video.
-        "-c:v",
-        "libvpx-vp9",
+        // Con este decodificador se conserva la transparencia del video (solo si la tiene).
+        ...(presentador?.transparente ? ["-c:v", "libvpx-vp9"] : []),
         "-ss",
         seg.toFixed(2),
         "-i",
         path.join(carpetas.publica, presentador?.ruta ?? ""),
         "-frames:v",
         "1",
-        "-pix_fmt",
-        "rgba",
+        ...(presentador?.transparente ? ["-pix_fmt", "rgba"] : []),
         destino,
       ]);
     const recortado = `portada/rec-pres-${Math.round(seg * 1000)}.png`;

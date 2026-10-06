@@ -166,9 +166,6 @@ async function unaVuelta(): Promise<boolean> {
         // Con los textos llegan los de las miniaturas: se arma la del largo y la de cada Short.
         const textos = textosDeLaPublicacion(respuesta);
         if (!textos) return console.warn("  (el panel no mandó los textos de las miniaturas)");
-        // Una canción sale solo en vertical: su miniatura es el propio video, no se arma aparte.
-        if (r.formato === "9x16")
-          return console.log("  Miniaturas: no aplican a un video vertical de canción.");
         await guardarTextos(producidoEn, textos);
         const hechas = await armarPortadas(producidoEn, trabajo.guion_id, textos);
         console.log(`  Miniaturas: ${hechas.length} armadas y subidas al panel.`);

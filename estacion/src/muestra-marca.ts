@@ -57,7 +57,6 @@ async function principal() {
     fondoFoto: null,
     planos: [],
     diagrama: null,
-    movimiento: "normal",
     ...extra,
   });
   // Medidas reales de la foto (con `sips`, que trae la Mac), para que el recorte sea el de verdad.

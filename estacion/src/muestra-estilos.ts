@@ -60,7 +60,6 @@ const escenaBase = (parte: string, inicioMs: number, finMs: number, extra: Parti
   fondoFoto: null,
   planos: [],
   diagrama: null,
-  movimiento: "normal",
   ...extra,
 });
 

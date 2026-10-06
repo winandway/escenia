@@ -83,10 +83,16 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/subir-grabacion.ts /r
   pide decir dónde va cada mano y «exactly two hands». Si se cuela una de más, se corrige el prompt
   de esa escena en el guion y se vuelve a producir: los demás bocetos no cambian (están guardados
   por prompt).
-- **Movimiento.** Un boceto que habla de un camino o de un carro «avanza»: la cámara entra hacia
-  el fondo del dibujo durante todo el verso, con un balanceo chiquito, como si se fuera por la
-  carretera (`movimiento: "avance"`). Los demás, un acercamiento lento. Que el muñequito o el carro
-  se muevan DE VERDAD necesita un modelo de video (ver abajo).
+- **Nada de zoom (PROHIBIDO, 6 oct 2026).** El boceto se queda quieto: ni acercamiento lento ni
+  cámara que avance. Richard: «el zoom se come la imagen y rompe la gracia: la gente se queda
+  mirando la caricatura como está diseñada». Lo único que se mueve es el barrido de entrada que
+  lo «dibuja». Candado: la prueba lee la plantilla y no admite `scale`, `zoom` ni `translate` en
+  el boceto. Que el muñequito o el carro se muevan DE VERDAD es el próximo plan (modelo de video).
+- **Miniatura y título.** Una canción lleva UNA miniatura, vertical, con él recortado de su propio
+  video (el motor de la Mac le quita el fondo a un cuadro con la cara a la vista) y texto de video
+  musical: una o dos palabras de la letra en grande, el nombre de la canción y el género. El título
+  de YouTube también va como el de un video musical («Voy Recorriendo Caminos – Bachata en vivo con
+  letra»), no como el de una charla (`mensajePublicacion` con `cancion`).
 
 ## Próximo plan (lo dejó Richard el 6 oct 2026, para que no se olvide)
 

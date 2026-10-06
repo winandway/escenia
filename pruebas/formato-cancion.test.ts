@@ -1,4 +1,8 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { esquemaGuion } from "@compartido/guion";
+import { mensajePublicacion } from "@/lib/publicacion";
 import {
   ALTO_DEL_BOCETO,
   arribaDeLaLetra,
@@ -99,5 +103,46 @@ describe("formato «Canción»: Richard canta con su fondo real y un boceto a l�
     expect(bajadaDelVideo(null)).toBe(0.1);
     expect(arribaDeLaLetra(null, 0.1)).toBeCloseTo(0.625, 3);
     expect(caraDeLaToma([[], []])).toBeNull();
+  });
+
+  it("el boceto se queda quieto: nada de zoom ni de cámara que avance (lo prohibió Richard el 6 oct 2026)", () => {
+    const fuente = readFileSync(path.resolve(__dirname, "../estacion/src/remotion/Cancion.tsx"), "utf8");
+    const desde = fuente.indexOf("const Boceto");
+    const hasta = fuente.indexOf("const AvisoSuscribete");
+    expect(desde).toBeGreaterThan(0);
+    const boceto = fuente.slice(desde, hasta);
+    // Ni escala, ni desplazamiento, ni ninguna transformación: el dibujo no se toca.
+    expect(boceto).not.toMatch(/scale\(|translate\(|transform:/);
+    // Lo único que se anima es el barrido de entrada.
+    expect(boceto).toContain("clipPath");
+  });
+
+  it("el título y la miniatura de una canción se piden como los de un video musical", () => {
+    const guion = esquemaGuion.parse({
+      titulo: "Voy recorriendo caminos",
+      gancho: "Voy recorriendo caminos que no tienen final.",
+      escenas: [
+        {
+          parte: "gancho",
+          narracion: "Voy recorriendo caminos que no tienen final.",
+          visual: { tipo: "texto", titular: "x" },
+        },
+        {
+          parte: "contexto",
+          narracion: "Y ella a mi lado sin miedo me vuelve a abrazar.",
+          visual: { tipo: "texto", titular: "z" },
+        },
+        {
+          parte: "cierre",
+          narracion: "Pero si dudas, te dejo volar.",
+          visual: { tipo: "texto", titular: "y" },
+        },
+      ],
+    });
+    const m = mensajePublicacion(guion, "Caprichoso TV", [], "es", true);
+    expect(m).toContain("ES UNA CANCIÓN");
+    expect(m).toContain("Bachata en vivo con letra");
+    expect(m).toContain("VERTICAL");
+    expect(mensajePublicacion(guion, "Caprichoso TV", [], "es")).not.toContain("ES UNA CANCIÓN");
   });
 });

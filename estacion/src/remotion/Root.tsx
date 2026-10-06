@@ -48,7 +48,6 @@ const vacio: PropsVideo = {
       fondoFoto: null,
       planos: [],
       diagrama: null,
-      movimiento: "normal",
     },
   ],
   producto: null,

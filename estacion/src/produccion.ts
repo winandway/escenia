@@ -356,14 +356,6 @@ export async function producir(
       fotos,
       recorte,
       interludio: e.parte === "interludio",
-      // En una canción, el boceto de un camino o un carro «avanza» (la cámara entra hacia el fondo).
-      movimiento:
-        cancion &&
-        /\b(road|highway|windshield|driving|drives|car|truck|train|path|journey)\b/i.test(
-          e.visual.prompt_imagen ?? "",
-        )
-          ? "avance"
-          : "normal",
       fondoFoto,
       planos: [],
       diagrama,

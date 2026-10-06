@@ -375,7 +375,12 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
     derecha del papel en blanco para el aviso de suscribirse (`AvisoSuscribete`); y el boceto
     de un camino o un carro «avanza» con la cámara (`movimiento: "avance"`, se marca en
     `produccion.ts` por las palabras del prompt). Animar de verdad necesita un modelo de video
-    (15 a 21 centavos por clip): bloqueado hasta que él lo autorice por escrito (ver la guía).
+    (15 a 21 centavos por clip): autorizado el 6 oct 2026 para dos o tres escenas (próximo plan).
+  - **El zoom del boceto quedó PROHIBIDO** (6 oct 2026, tras ver la cuarta versión): «se come la
+    imagen y rompe la gracia de la caricatura». El boceto se queda quieto; la prueba lee la
+    plantilla y no admite `scale`, `zoom` ni `translate` en el componente del boceto.
+  - La canción lleva su miniatura vertical, con él recortado de su propio video (sin croma, con
+    el motor de la Mac), y título y miniatura de video musical (`mensajePublicacion` con `cancion`).
 - **Qué NO tocar:** no «mejorar» su audio (ni tempo, ni pausas): la imagen tiene que seguir
   calzando con la boca. No volver a torcer ni achicar el papel, ni dejar que tape la cara: si
   la cabeza llega muy arriba, se baja el video, no se achica el papel.

@@ -17,6 +17,7 @@ import {
 import { asegurarModelo, costoTokensUsd, MODELO_POR_DEFECTO } from "@compartido/modelos";
 import { nombreDeRotulo } from "@compartido/portada";
 import { comercialDeGuion } from "./comerciales";
+import { grabacionDeGuion } from "./grabaciones";
 import { buscarTematica } from "@compartido/tematicas";
 import { guionPorId } from "./consultas";
 import type { BaseDatos } from "./db";
@@ -46,6 +47,8 @@ export function mensajePublicacion(
   shorts: ShortPublicado[],
   /** El idioma del video: en un comercial en inglés, los títulos y la miniatura van en inglés. */
   idioma: "es" | "en" = "es",
+  /** Formato Canción: el guion es la LETRA que él canta; título y miniatura, como los de un video musical. */
+  cancion = false,
 ): string {
   const escenas = guion.escenas
     .map((e, i) => `${i + 1}. [${e.parte}] ${e.narracion.trim() || "(sin voz: respiro musical)"}`)
@@ -73,6 +76,9 @@ export function mensajePublicacion(
     idioma === "en"
       ? "IDIOMA: este video es en INGLÉS y es para un cliente. TODO lo que escribas (título, descripción, títulos de shorts, texto de la miniatura, marcas y palabras clave) va en inglés natural de Estados Unidos; las listas `etiquetas` y `etiquetas_ingles` van las dos en inglés. Nada de «suscríbete» ni de canal: no es un video de YouTube de Richard."
       : "";
+  const deCancion = cancion
+    ? "ES UNA CANCIÓN: el artista del canal se grabó CANTANDO su propia canción, en vivo, con la letra en pantalla (el guion de abajo es la LETRA, con algún error de transcripción). No es una charla ni una biografía. Estas reglas mandan sobre las generales. `titulo`: como el de un video musical: el nombre de la canción con mayúsculas iniciales, el género (bachata, salsa…) y un gancho corto sacado de la letra o del momento («en vivo», «estreno», «con letra»), por ejemplo «Voy Recorriendo Caminos – Bachata en vivo con letra»; nunca «el presentador», «el dueño del canal» ni «un hombre canta». `descripcion`: de qué habla la canción, que la canta el artista del canal en vivo con la letra en pantalla, y al final la LETRA completa, verso por verso. `portada` (la miniatura, VERTICAL): `grande` = una o dos palabras de la letra que peguen («CAMINOS», «TE DEJO VOLAR»), `linea` = el nombre de la canción o un verso corto, `remate` = el género y el momento con la palabra fuerte entre asteriscos («*BACHATA* EN VIVO»); `marcas`: el género («Bachata»); `persona`: «presentador». Palabras clave: el género, «letra», «lyric video», «canción nueva», «música latina», el nombre de la canción y del canal."
+    : "";
   const lista = shorts.length
     ? shorts
         .map(
@@ -83,6 +89,7 @@ export function mensajePublicacion(
     : "- (este video no tiene shorts)";
   return [
     enIngles,
+    deCancion,
     `TEMÁTICA: ${tematica}`,
     `TÍTULO DE TRABAJO DEL GUION: ${guion.titulo}`,
     `GANCHO: ${guion.gancho}`,
@@ -107,6 +114,8 @@ export async function generarPublicacion(
   const tematica = buscarTematica(fila.tematica_id)?.nombre ?? fila.tematica_id;
   // Un comercial va en el idioma del cliente.
   const comercial = await comercialDeGuion(db, guionId);
+  // Una canción (grabación con formato Canción) lleva título y miniatura de video musical.
+  const cancion = (await grabacionDeGuion(db, guionId))?.formato === "cancion";
   const modelo = asegurarModelo(MODELO_POR_DEFECTO);
   await autorizarGasto(db, ESTIMADO_USD);
 
@@ -118,7 +127,10 @@ export async function generarPublicacion(
       thinking: { type: "disabled" },
       system: instruccionesPublicacion(),
       messages: [
-        { role: "user", content: mensajePublicacion(guion, tematica, shorts, comercial?.idioma ?? "es") },
+        {
+          role: "user",
+          content: mensajePublicacion(guion, tematica, shorts, comercial?.idioma ?? "es", cancion),
+        },
       ],
       output_config: { format: zodOutputFormat(esquemaPublicacionDeLaIA) },
     }),

@@ -97,9 +97,6 @@ export const esquemaEscenaVideo = z.object({
   // Los cambios de imagen de la escena, en orden. Vacío = la escena es una sola imagen.
   planos: z.array(esquemaPlanoVideo).default([]),
   diagrama: esquemaDiagramaVideo.nullable().default(null),
-  // Formato Canción: cómo se mueve el boceto. "avance": la cámara entra hacia el fondo, como si se
-  // fuera por la carretera (el verso habla de un camino o de un carro); "normal": acercamiento lento.
-  movimiento: z.enum(["normal", "avance"]).default("normal"),
 });
 
 export const esquemaSfx = z.object({

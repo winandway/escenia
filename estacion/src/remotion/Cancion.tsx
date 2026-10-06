@@ -128,7 +128,7 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
               name={`boceto ${i + 1}`}
               layout="none"
             >
-              <Boceto ruta={foto.ruta} durFrames={hasta - desde} avance={e.movimiento === "avance"} />
+              <Boceto ruta={foto.ruta} />
             </Sequence>
           );
         })}
@@ -237,22 +237,15 @@ export const Cancion: React.FC<PropsVideo> = (p) => {
 };
 
 /** Un boceto que se «dibuja» de izquierda a derecha y respira con un acercamiento lento. */
-const Boceto: React.FC<{ ruta: string; durFrames: number; avance: boolean }> = ({
-  ruta,
-  durFrames,
-  avance,
-}) => {
+const Boceto: React.FC<{ ruta: string }> = ({ ruta }) => {
   const frame = useCurrentFrame();
   const barrido = interpolate(frame, [0, ENTRADA], [100, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  // «Avance»: la cámara entra hacia el fondo del dibujo sin parar (como si el carro fuera por la
-  // carretera), con un balanceo chiquito; lo normal es un acercamiento lento.
-  const zoom = avance
-    ? interpolate(frame, [0, Math.max(1, durFrames)], [1, 1.38], { extrapolateRight: "clamp" })
-    : interpolate(frame, [0, Math.max(1, durFrames)], [1.02, 1.1], { extrapolateRight: "clamp" });
-  const balanceo = avance ? Math.sin(frame / 9) * 3 : 0;
+  // El boceto se queda QUIETO: nada de zoom ni de cámara que avance. Richard lo prohibió el
+  // 6 oct 2026: el acercamiento se come el dibujo y rompe la gracia de la caricatura. Lo único
+  // que se mueve es el barrido de entrada, que lo «dibuja» de izquierda a derecha.
   return (
     <AbsoluteFill style={{ clipPath: `inset(0 ${barrido}% 0 0)` }}>
       <Img
@@ -261,8 +254,6 @@ const Boceto: React.FC<{ ruta: string; durFrames: number; avance: boolean }> = (
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          transform: `translateY(${balanceo}px) scale(${zoom})`,
-          transformOrigin: avance ? "50% 42%" : "50% 50%",
           // Se funde con el papel: lo claro del dibujo deja ver el papel, lo oscuro queda como tinta.
           mixBlendMode: "multiply",
           filter: "contrast(1.08) sepia(0.25)",
