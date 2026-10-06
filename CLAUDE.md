@@ -47,7 +47,7 @@
 - Windoce es una sola persona (Richard). Remotion se usa con la licencia gratis (≤3 personas); no volver a preguntarlo.
 
 - Nada se publica sin aprobación de Richard; «Aprobar» exige su opinión escrita (≥ 40 letras).
-- Dos canales: **Full Código** (@FullCodigo, tecnología e IA; id interno `canal-ia`, con marca propia en el video) y **Caprichoso TV** (biografías). Richard sube y programa los videos él mismo.
+- Dos canales: **Full Código** (@FullCodigo, tecnología e IA; id interno `canal-ia`, con marca propia en el video) y **Caprichoso TV** (biografías, historias de música en Cómic con la temática `historias-musica`, y sus canciones en formato Canción). Richard sube y programa los videos él mismo.
 - `scripts/aprobar-remoto.ts` aprueba un guion desde la Mac (con opinión escrita, igual que el panel): solo cuando Richard lo ordena de forma explícita.
 - Temas, prompts finos y spots viven en la base, no en el código (el repo es público).
 - Rutas de backend en `/datos/*`, nunca `/api/*`.
