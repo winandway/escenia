@@ -21,6 +21,7 @@ import {
   candidatasDePortada,
   encuadre,
   instantesDeMuestra,
+  logoDelCliente,
   mejorCuadroDePresentador,
   recorteSirve,
   textoDePortada,
@@ -242,6 +243,7 @@ export async function armarPortadas(
       linea: pieza.texto.linea,
       remate: pieza.texto.remate,
       chips: pieza.chips,
+      logo: null,
       ...colores,
     };
     if (presentador) {
@@ -307,6 +309,7 @@ export async function armarPortadas(
           ...base,
           etiqueta: "",
           sujeto: null,
+          logo: logoDelCliente(props, pieza.escenas.inicio, pieza.escenas.fin),
           fondoFoto: fotoDeFondo(props, pieza.escenas.inicio, pieza.escenas.fin),
         },
       });

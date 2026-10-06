@@ -451,7 +451,19 @@ export const DiagramaNeon: React.FC<{
   /** Sonido de cada objeto que entra y de cada flecha. */
   sonidoNodo: string | null;
   sonidoFlecha: string | null;
-}> = ({ diagrama, desdeMs, durFrames, inicioMs, finMs, vertical, colores, sonidoNodo, sonidoFlecha }) => {
+  idioma?: "es" | "en";
+}> = ({
+  diagrama,
+  desdeMs,
+  durFrames,
+  inicioMs,
+  finMs,
+  vertical,
+  colores,
+  sonidoNodo,
+  sonidoFlecha,
+  idioma = "es",
+}) => {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const tMs = desdeMs + (frame / FPS) * 1000;
@@ -470,8 +482,10 @@ export const DiagramaNeon: React.FC<{
   const total = diagrama.nodos.length;
   const estado =
     total > 1 && activo >= 0
-      ? `Paso ${activo + 1} de ${total}`
-      : (diagrama.secciones[diagrama.seccion] ?? "En vivo");
+      ? idioma === "en"
+        ? `Step ${activo + 1} of ${total}`
+        : `Paso ${activo + 1} de ${total}`
+      : (diagrama.secciones[diagrama.seccion] ?? (idioma === "en" ? "Live" : "En vivo"));
 
   return (
     <AbsoluteFill>

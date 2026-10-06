@@ -119,6 +119,8 @@ export const esquemaPropsVideo = z.object({
   vozDePrueba: z.boolean().default(false),
   // "tech": explicador de tecnología. "documental": biografías, más pausado y con serif.
   tema: z.enum(["tech", "documental"]).default("tech"),
+  // El idioma de lo que se lee en pantalla que pone la plantilla («Paso 2 de 4» / «Step 2 of 4»).
+  idioma: z.enum(["es", "en"]).default("es"),
   // El diseño del video (docs/ESTILOS.md). "clasico": fotos y clips a pantalla llena.
   // "ilustrado": las personas salen dibujadas sobre fondo de cómic. "neon": diagramas de neón.
   // "mixto": neón con personajes (diagramas, y las personas que se nombran, dibujadas sobre el neón).
@@ -223,6 +225,8 @@ export const esquemaPortada = z.object({
   linea: z.string().default(""), // lo que cuenta («NOMINACIONES»)
   // El golpe, en una caja de color. Lo que va entre asteriscos sale en el color de acento («*CERO* PREMIOS»).
   remate: z.string().default(""),
+  // Comerciales: el logo del cliente (PNG sin fondo), grande, donde iría la persona.
+  logo: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }).nullable().default(null),
   // Hasta tres nombres que la gente reconoce (las marcas de las que habla el video: «ChatGPT»,
   // «Gemini»), en pastillas blancas debajo del titular.
   chips: z.array(z.string()).max(3).default([]),

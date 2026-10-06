@@ -173,6 +173,7 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
                   desdeMs={Math.max(e.inicioMs, inicioVentanaMs)}
                   cortes={p.sfx.corte.length ? p.sfx.corte : whooshes}
                   neon={neon ? coloresNeon : null}
+                  idioma={p.idioma}
                 />
                 {whoosh && !primera && <Audio src={staticFile(whoosh)} volume={0.4} />}
               </Sequence>
@@ -426,6 +427,7 @@ const EscenaVista: React.FC<{
   cortes: string[];
   /** Video de estilo neón: los colores del neón (y ninguna foto ni clip). */
   neon: ColoresNeon | null;
+  idioma: "es" | "en";
 }> = ({
   escena,
   indice,
@@ -443,6 +445,7 @@ const EscenaVista: React.FC<{
   desdeMs,
   cortes,
   neon,
+  idioma,
 }) => {
   const frame = useCurrentFrame();
   const opacidad = fundir ? interpolate(frame, [0, TRANSICION], [0, 1], { extrapolateRight: "clamp" }) : 1;
@@ -460,6 +463,7 @@ const EscenaVista: React.FC<{
           colores={neon ?? NEON}
           sonidoNodo={pop ?? cortes[0] ?? null}
           sonidoFlecha={whoosh ?? cortes[1] ?? null}
+          idioma={idioma}
         />
       </AbsoluteFill>
     );

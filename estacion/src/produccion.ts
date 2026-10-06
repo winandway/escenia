@@ -496,6 +496,7 @@ export async function producir(
     producto,
     vozDePrueba: voz.vozDePrueba,
     tema: plantilla === "MiniDocumental" ? "documental" : "tech",
+    idioma: opciones.idioma ?? "es",
     estilo,
     sfx,
     musica: musica ? { ruta: musica.ruta, duracionSeg: musica.duracionSeg, nivel: 1 } : null,

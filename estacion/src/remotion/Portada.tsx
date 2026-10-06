@@ -291,6 +291,20 @@ export const Portada: React.FC<PropsPortada> = (p) => {
       )}
       <AbsoluteFill style={{ background: f.sombra }} />
 
+      {/* Comerciales: el logo del cliente, grande, donde iría la persona, con borde blanco y luz. */}
+      {!p.sujeto && p.logo && (
+        <Img
+          src={staticFile(p.logo.ruta)}
+          style={{
+            position: "absolute",
+            ...(vertical
+              ? { left: 90, top: 1080, width: 900, height: 620 }
+              : { left: 690, top: 120, width: 540, height: 460 }),
+            objectFit: "contain",
+            filter: `${borde(vertical ? 7 : 6, "#fff")} drop-shadow(0 0 30px ${p.fondo[0]}) drop-shadow(0 18px 40px rgba(0,0,0,.75))`,
+          }}
+        />
+      )}
       {/* La persona: recortada, grande, con borde blanco. Quien arma la portada ya calculó dónde va. */}
       {p.sujeto && (
         <Img

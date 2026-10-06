@@ -213,3 +213,29 @@ export function miniaturasPorPieza(
 /** Clave de una pieza del calendario o del panel: «largo» o «short-3». */
 export const clavePieza = (pieza: "largo" | "short", indice: number) =>
   pieza === "short" ? `short-${indice}` : "largo";
+
+/**
+ * Comerciales: el logo del cliente para la portada. El último logo sin fondo que sale en la pieza
+ * (el video cierra con la marca del cliente); si no hay, nada.
+ */
+export function logoDelCliente(
+  props: {
+    escenas: {
+      planos: {
+        tipo: string;
+        transparente?: boolean;
+        foto: { ruta: string; ancho: number; alto: number } | null;
+      }[];
+    }[];
+  },
+  inicio: number,
+  fin: number,
+): { ruta: string; ancho: number; alto: number } | null {
+  const logos = props.escenas
+    .slice(inicio, fin + 1)
+    .flatMap((e) =>
+      e.planos.filter((p) => p.tipo === "imagen" && p.transparente && p.foto).map((p) => p.foto),
+    );
+  const elegido = logos[logos.length - 1] ?? null;
+  return elegido ? { ruta: elegido.ruta, ancho: elegido.ancho, alto: elegido.alto } : null;
+}

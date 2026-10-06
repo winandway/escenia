@@ -70,6 +70,7 @@ async function principal() {
     cifra: opcion("--cifra") ?? "",
     linea: opcion("--linea") ?? "",
     remate: opcion("--remate") ?? "",
+    logo: null,
     chips: (opcion("--chips") ?? "")
       .split(",")
       .map((c) => c.trim())

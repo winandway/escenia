@@ -10,6 +10,7 @@ import {
   extensionDeImagen,
   nombreDeCarpeta,
 } from "@compartido/imagenes";
+import { logoDelCliente } from "@compartido/portada";
 import { textoParaLaVoz } from "@compartido/pronunciacion";
 import { buscarTematica } from "@compartido/tematicas";
 import {
@@ -31,7 +32,8 @@ import {
   quitarImagen,
 } from "@/lib/imagenes";
 import { mensajeDePlanComercial, planComercialLimpio } from "@/lib/plan-comercial";
-import { esquemaPlanoVideo } from "../estacion/src/remotion/props";
+import { mensajePublicacion } from "@/lib/publicacion";
+import { esquemaPlanoVideo, esquemaPropsVideo } from "../estacion/src/remotion/props";
 
 const TEXTO =
   "Your logo is the first thing your customers see. Let's make it count. I'm Andreea, a brand designer, and here on Fiverr I create clean, modern logos for small businesses, startups and online stores. Every concept is original.";
@@ -334,5 +336,59 @@ describe("comerciales: el video publicitario de un cliente (C-COMERCIAL-1)", () 
     const es = textoParaLaVoz("tiene 100 hoteles en La Habana", "es", enLetras);
     expect(es.subtitulos).toBe("tiene cien hoteles en La Habana");
     expect(es.voz).not.toContain("Habana");
+  });
+});
+
+describe("comerciales: lo que se ve y se lee va en el idioma del cliente", () => {
+  it("los textos de YouTube y la miniatura se piden en inglés, sin «suscríbete»", () => {
+    const m = mensajePublicacion(PLAN, "Comercial (video publicitario de un cliente)", [], "en");
+    expect(m).toContain("este video es en INGLÉS");
+    expect(m).toContain("Nada de «suscríbete»");
+    expect(mensajePublicacion(PLAN, "Biografía de artista", [])).not.toContain("INGLÉS");
+  });
+
+  it("la plantilla sabe el idioma del video (por defecto español) y la miniatura lleva el logo del cliente", () => {
+    const base = esquemaPropsVideo.parse({
+      titulo: "x",
+      audio: "voz.mp3",
+      duracionMs: 1000,
+      palabras: [],
+      escenas: [],
+      producto: null,
+    });
+    expect(base.idioma).toBe("es");
+    const plano = (ruta: string, transparente: boolean) => ({
+      inicioMs: 0,
+      tipo: "imagen",
+      foto: { ruta, ancho: 300, alto: 100, enfoque: null },
+      transparente,
+    });
+    const props = esquemaPropsVideo.parse({
+      ...base,
+      idioma: "en",
+      escenas: [
+        {
+          parte: "gancho",
+          inicioMs: 0,
+          finMs: 5000,
+          estilo: "clip",
+          clip: null,
+          planos: [plano("imagenes/a.png", true)],
+        },
+        {
+          parte: "cierre",
+          inicioMs: 5000,
+          finMs: 9000,
+          estilo: "clip",
+          clip: null,
+          planos: [plano("imagenes/captura.png", false), plano("imagenes/marca.png", true)],
+        },
+      ],
+    });
+    expect(props.idioma).toBe("en");
+    // El último logo sin fondo (el video cierra con la marca del cliente); una captura no sirve de logo.
+    expect(logoDelCliente(props, 0, 1)?.ruta).toBe("imagenes/marca.png");
+    expect(logoDelCliente(props, 0, 0)?.ruta).toBe("imagenes/a.png");
+    expect(logoDelCliente({ ...props, escenas: [] }, 0, 0)).toBeNull();
   });
 });

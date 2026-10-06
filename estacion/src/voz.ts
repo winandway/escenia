@@ -106,7 +106,8 @@ export async function generarVoz(
         console.log(`  pausas escena ${i + 1}: -${apretada.quitadoSeg.toFixed(1)} s`);
       // Ritmo parejo (C-VOZ-4): cada generación lee a su velocidad; se lleva
       // toda pieza al mismo ritmo (sin cambiar el tono) y se reescalan los tiempos.
-      const factor = factorDeRitmo(textoVoz, (await duracionMs(rutaPieza)) / 1000);
+      // (La medida de letras por segundo es del español: en inglés la voz se deja como sale.)
+      const factor = idioma === "es" ? factorDeRitmo(textoVoz, (await duracionMs(rutaPieza)) / 1000) : 1;
       if (Math.abs(factor - 1) > 0.03) {
         await cambiarTempo(rutaPieza, factor);
         alineacion = escalarAlineacion(alineacion, factor);

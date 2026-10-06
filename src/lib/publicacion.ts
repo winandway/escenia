@@ -16,6 +16,7 @@ import {
 } from "@compartido/guion";
 import { asegurarModelo, costoTokensUsd, MODELO_POR_DEFECTO } from "@compartido/modelos";
 import { nombreDeRotulo } from "@compartido/portada";
+import { comercialDeGuion } from "./comerciales";
 import { buscarTematica } from "@compartido/tematicas";
 import { guionPorId } from "./consultas";
 import type { BaseDatos } from "./db";
@@ -39,7 +40,13 @@ export function instruccionesPublicacion(): string {
   ].join("\n");
 }
 
-export function mensajePublicacion(guion: Guion, tematica: string, shorts: ShortPublicado[]): string {
+export function mensajePublicacion(
+  guion: Guion,
+  tematica: string,
+  shorts: ShortPublicado[],
+  /** El idioma del video: en un comercial en inglés, los títulos y la miniatura van en inglés. */
+  idioma: "es" | "en" = "es",
+): string {
   const escenas = guion.escenas
     .map((e, i) => `${i + 1}. [${e.parte}] ${e.narracion.trim() || "(sin voz: respiro musical)"}`)
     .join("\n");
@@ -62,6 +69,10 @@ export function mensajePublicacion(guion: Guion, tematica: string, shorts: Short
       .filter(Boolean);
     return [...new Set(nombres)].join(", ") || "(ninguna)";
   };
+  const enIngles =
+    idioma === "en"
+      ? "IDIOMA: este video es en INGLÉS y es para un cliente. TODO lo que escribas (título, descripción, títulos de shorts, texto de la miniatura, marcas y palabras clave) va en inglés natural de Estados Unidos; las listas `etiquetas` y `etiquetas_ingles` van las dos en inglés. Nada de «suscríbete» ni de canal: no es un video de YouTube de Richard."
+      : "";
   const lista = shorts.length
     ? shorts
         .map(
@@ -71,6 +82,7 @@ export function mensajePublicacion(guion: Guion, tematica: string, shorts: Short
         .join("\n")
     : "- (este video no tiene shorts)";
   return [
+    enIngles,
     `TEMÁTICA: ${tematica}`,
     `TÍTULO DE TRABAJO DEL GUION: ${guion.titulo}`,
     `GANCHO: ${guion.gancho}`,
@@ -93,6 +105,8 @@ export async function generarPublicacion(
   if (!fila) throw new Error("Ese guion no existe.");
   const guion = esquemaGuion.parse(JSON.parse(fila.contenido));
   const tematica = buscarTematica(fila.tematica_id)?.nombre ?? fila.tematica_id;
+  // Un comercial va en el idioma del cliente.
+  const comercial = await comercialDeGuion(db, guionId);
   const modelo = asegurarModelo(MODELO_POR_DEFECTO);
   await autorizarGasto(db, ESTIMADO_USD);
 
@@ -103,7 +117,9 @@ export async function generarPublicacion(
       max_tokens: 4000,
       thinking: { type: "disabled" },
       system: instruccionesPublicacion(),
-      messages: [{ role: "user", content: mensajePublicacion(guion, tematica, shorts) }],
+      messages: [
+        { role: "user", content: mensajePublicacion(guion, tematica, shorts, comercial?.idioma ?? "es") },
+      ],
       output_config: { format: zodOutputFormat(esquemaPublicacionDeLaIA) },
     }),
   );

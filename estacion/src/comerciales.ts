@@ -28,6 +28,23 @@ export type ImagenLocal = {
 
 const seguro = (nombre: string) => nombre.replace(/[^\w.() -]+/g, "_");
 
+/**
+ * ¿Es una página casi vacía (una portada oscura, una hoja en blanco)? Se mira el cuadro en
+ * chiquito: si todos sus puntos se parecen, no hay captura que mostrar.
+ */
+async function paginaVacia(ruta: string): Promise<boolean> {
+  const { stdout } = await exec(
+    "ffmpeg",
+    ["-v", "error", "-i", ruta, "-vf", "scale=32:18", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+    { encoding: "buffer", maxBuffer: 1024 * 1024 },
+  );
+  const puntos = [...stdout];
+  if (puntos.length === 0) return false;
+  const media = puntos.reduce((s, v) => s + v, 0) / puntos.length;
+  const desvio = Math.sqrt(puntos.reduce((s, v) => s + (v - media) ** 2, 0) / puntos.length);
+  return desvio < 14;
+}
+
 /** Medidas de una imagen y si tiene fondo transparente (lo dice el propio archivo). */
 async function medir(ruta: string): Promise<{ ancho: number; alto: number; transparente: boolean }> {
   const { stdout } = await exec("sips", ["-g", "pixelWidth", "-g", "pixelHeight", "-g", "hasAlpha", ruta]);
@@ -130,6 +147,8 @@ async function imagenesDe(i: ImagenDelPanel, destino: string): Promise<ImagenLoc
   const sinExt = i.nombre.replace(/\.pdf$/i, "");
   const salida: ImagenLocal[] = [];
   for (const [k, ruta] of paginas.entries()) {
+    // La portada oscura del PDF o una hoja vacía no son capturas: no se ofrecen.
+    if (await paginaVacia(ruta)) continue;
     const m = await medir(ruta);
     salida.push({ nombre: `${sinExt} p${k + 1}`, carpeta: i.carpeta, ruta, ...m, transparente: false });
   }
