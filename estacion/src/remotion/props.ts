@@ -209,9 +209,13 @@ export const esquemaPortada = z.object({
       arriba: z.number(),
       ancho: z.number(),
       alto: z.number(),
+      // En espejo: la misma foto se ve distinta cuando ya se usó en otra pieza del video.
+      espejo: z.boolean().default(false),
     })
     .nullable()
     .default(null),
+  // La trama del panel de color: puntos, líneas o rejilla; cada pieza del video lleva una distinta.
+  trama: z.enum(["puntos", "lineas", "rejilla"]).default("puntos"),
   // Sin persona que recortar: una foto del video a pantalla completa, oscurecida detrás del texto.
   fondoFoto: z.string().nullable().default(null),
   // Un objeto recortado (un trofeo, un disco), si va tachado con la señal de prohibido, y cuánto de
@@ -243,29 +247,46 @@ export const esquemaPortada = z.object({
 export type PropsPortada = z.infer<typeof esquemaPortada>;
 
 /**
- * Una línea de la portada, palabra por palabra: la que viene entre virgulillas («~GRATIS~») va
- * TACHADA con una raya roja, y la que viene entre asteriscos («*CERO*»), en el color de acento.
+ * Las palabras de una línea con sus marcas: «*CERO*» va en el color de acento (marcada) y
+ * «~GRATIS~» sale tachada. La marca puede abarcar varias palabras («*SIN SOLTAR* EL»): el 6 oct
+ * 2026 una así salió con los asteriscos a la vista en una miniatura.
  */
-export function partesDeLinea(texto: string): { texto: string; marcada: boolean; tachada: boolean }[] {
+function partesConMarcas(texto: string): { texto: string; marcada: boolean; tachada: boolean }[] {
+  let abierta: "*" | "~" | null = null;
   return texto
     .split(/\s+/)
     .filter(Boolean)
     .map((w) => {
-      const tachada = w.length > 2 && w.startsWith("~") && w.endsWith("~");
-      const marcada = w.length > 2 && w.startsWith("*") && w.endsWith("*");
-      return { texto: tachada || marcada ? w.slice(1, -1) : w, marcada, tachada };
+      let t = w;
+      let marcada = false;
+      let tachada = false;
+      const abre = t.startsWith("*") ? "*" : t.startsWith("~") ? "~" : null;
+      if (abierta) {
+        if (abierta === "*") marcada = true;
+        else tachada = true;
+        if (t.endsWith(abierta) && t.length > 1) {
+          t = t.slice(0, -1);
+          abierta = null;
+        }
+      } else if (abre && t.length > 1) {
+        t = t.slice(1);
+        if (t.endsWith(abre) && t.length > 1) t = t.slice(0, -1);
+        else abierta = abre;
+        if (abre === "*") marcada = true;
+        else tachada = true;
+      }
+      return { texto: t, marcada, tachada };
     });
 }
 
-/** El remate, palabra por palabra: la que viene entre asteriscos («*CERO*») va en el color de acento. */
+/** La línea del medio, palabra por palabra: marcada («*X*») o tachada («~X~»), también en grupos. */
+export function partesDeLinea(texto: string): { texto: string; marcada: boolean; tachada: boolean }[] {
+  return partesConMarcas(texto);
+}
+
+/** El remate, palabra por palabra: lo que va entre asteriscos («*CERO* PREMIOS», «*SIN SOLTAR* EL») va en el color de acento. */
 export function partesDelRemate(remate: string): { texto: string; marcada: boolean }[] {
-  return remate
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => {
-      const marcada = w.length > 2 && w.startsWith("*") && w.endsWith("*");
-      return { texto: marcada ? w.slice(1, -1) : w, marcada };
-    });
+  return partesConMarcas(remate).map(({ texto, marcada }) => ({ texto, marcada }));
 }
 
 /** El tamaño de letra más grande con el que un texto cabe en un ancho (letra condensada, en mayúsculas). */

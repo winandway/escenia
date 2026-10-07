@@ -20,16 +20,18 @@ import { textosMiniatura } from "@compartido/miniatura";
 import {
   candidatasDePortada,
   encuadre,
+  type FormatoPortada,
+  type FotoRotulada,
   instantesDeMuestra,
   logoDelCliente,
   mejorCuadroDePresentador,
+  paletaDePieza,
+  type Recorte,
   recorteSirve,
   textoDePortada,
-  tituloDeCancionEnDosLineas,
-  type FormatoPortada,
-  type FotoRotulada,
-  type Recorte,
   type TextoPortada,
+  tituloDeCancionEnDosLineas,
+  tramaDePieza,
 } from "@compartido/portada";
 import { config } from "./config";
 import { generarImagen } from "./imagenes";
@@ -252,7 +254,9 @@ export async function armarPortadas(
       remate: pieza.texto.remate,
       chips: pieza.chips,
       logo: null,
-      ...colores,
+      // Cada pieza con su color y su trama, para que no se parezcan entre sí (C-PORTADA-4).
+      ...paletaDePieza(colores, pieza.indice),
+      trama: tramaDePieza(pieza.indice),
     };
     // Canción: la figura de la miniatura es un dibujo a color de lo que describe la IA (una reina
     // linda, una pareja), recortado; no la cara de Richard sacada del video.
@@ -265,7 +269,11 @@ export async function armarPortadas(
           ...base,
           etiqueta: "",
           fondoFoto: null,
-          sujeto: { ruta: figura.ruta, ...sitioDelPresentador(pieza.formato, figura.recorte, figura.cara) },
+          sujeto: {
+            ruta: figura.ruta,
+            ...sitioDelPresentador(pieza.formato, figura.recorte, figura.cara),
+            espejo: false,
+          },
         },
       });
       console.log(`  portada ${pieza.clave}: la figura dibujada («${pieza.texto.persona.slice(0, 60)}»)`);
@@ -291,7 +299,11 @@ export async function armarPortadas(
             ...base,
             etiqueta: "",
             fondoFoto: null,
-            sujeto: { ruta: elegido.ruta, ...sitioDelPresentador(pieza.formato, elegido.recorte, cara) },
+            sujeto: {
+              ruta: elegido.ruta,
+              ...sitioDelPresentador(pieza.formato, elegido.recorte, cara),
+              espejo: false,
+            },
           },
         });
         console.log(`  portada ${pieza.clave}: el presentador, en el segundo ${elegido.seg} de su grabación`);
@@ -309,6 +321,8 @@ export async function armarPortadas(
     }
     // Se prefiere una foto que no esté ya en otra portada del mismo video.
     const elegida = buenas.find((b) => !usadas.has(b.ruta)) ?? buenas[0];
+    // Si no quedó otra foto de la persona, la misma va en espejo: se ve distinta de un vistazo.
+    const repetida = elegida ? usadas.has(elegida.ruta) : false;
     const cara = elegida?.recorte.caras[0];
     if (elegida && cara) {
       usadas.add(elegida.ruta);
@@ -322,6 +336,7 @@ export async function armarPortadas(
           sujeto: {
             ruta: `portada/rec-${path.basename(elegida.ruta, path.extname(elegida.ruta))}.png`,
             ...encuadre(pieza.formato, elegida.recorte, cara),
+            espejo: repetida,
           },
         },
       });

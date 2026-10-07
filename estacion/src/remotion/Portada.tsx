@@ -253,8 +253,21 @@ export const Portada: React.FC<PropsPortada> = (p) => {
       <AbsoluteFill
         style={{
           clipPath: f.panel,
-          backgroundImage: "radial-gradient(circle, rgba(255,255,255,.34) 1.6px, transparent 2.2px)",
-          backgroundSize: vertical ? "30px 30px" : "22px 22px",
+          ...(p.trama === "lineas"
+            ? {
+                backgroundImage:
+                  "repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 2px, transparent 2px 18px)",
+              }
+            : p.trama === "rejilla"
+              ? {
+                  backgroundImage:
+                    "linear-gradient(rgba(255,255,255,.18) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(255,255,255,.18) 1.5px, transparent 1.5px)",
+                  backgroundSize: vertical ? "40px 40px" : "30px 30px",
+                }
+              : {
+                  backgroundImage: "radial-gradient(circle, rgba(255,255,255,.34) 1.6px, transparent 2.2px)",
+                  backgroundSize: vertical ? "30px 30px" : "22px 22px",
+                }),
           maskImage: "linear-gradient(180deg, #000 0%, transparent 78%)",
           WebkitMaskImage: "linear-gradient(180deg, #000 0%, transparent 78%)",
         }}
@@ -316,6 +329,7 @@ export const Portada: React.FC<PropsPortada> = (p) => {
             width: p.sujeto.ancho,
             height: p.sujeto.alto,
             maxWidth: "none",
+            transform: p.sujeto.espejo ? "scaleX(-1)" : undefined,
             filter: `${borde(f.borde, "#fff")} drop-shadow(0 0 ${vertical ? 46 : 34}px ${p.fondo[0]}) drop-shadow(0 18px 40px rgba(0,0,0,.75))`,
           }}
         />

@@ -26,6 +26,7 @@ const portadaVacia: PropsPortada = {
   logo: null,
   fondo: ["#d00000", "#14000a"],
   acento: "#ffd60a",
+  trama: "puntos",
 };
 
 const vacio: PropsVideo = {

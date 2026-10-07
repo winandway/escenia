@@ -427,6 +427,27 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   calzando con la boca. No volver a torcer ni achicar el papel, ni dejar que tape la cara: si
   la cabeza llega muy arriba, se baja el video, no se achica el papel.
 
+## C-PORTADA-4 — Cada miniatura de un mismo video se ve distinta, y el panel muestra la más nueva (6 oct 2026)
+
+- **Qué se rompió y cómo se veía:** las cuatro miniaturas de la historia de Shakira (guion 18)
+  salieron con el mismo diseño rojo y la misma foto; Richard: «la gente cree que esa ya la
+  vio». Además, el panel seguía mostrando la miniatura vieja de un Short después de rehacerla, y
+  en una salió «_SIN SOLTAR_ EL» con los asteriscos a la vista.
+- **Las causas:** los colores y la trama eran fijos por canal; la misma foto se elegía cuando no
+  había otra; `miniaturasPorPieza` se quedaba con la PRIMERA miniatura subida de cada pieza; y
+  las marcas de color solo se entendían palabra por palabra, no en grupos («_SIN SOLTAR_»).
+- **Qué se hizo:** `paletaDePieza` y `tramaDePieza` (`compartido/portada.ts`): el largo con
+  los colores del canal y cada Short con otra paleta (azul, morado, verde azulado, naranja) y
+  otra trama (puntos, líneas, rejilla); si la persona no tiene otra foto, la misma va en espejo
+  (`sujeto.espejo`). `miniaturasPorPieza` se queda con la más nueva. `partesDeLinea` y
+  `partesDelRemate` entienden marcas de varias palabras, y el recorte no parte una marca.
+- **Cómo se comprueba:** `pruebas/portada.test.ts`, prueba C-PORTADA-4: cuatro paletas
+  distintas, tramas que rotan, «_SIN SOLTAR_ EL» sin asteriscos, el recorte respeta la marca,
+  y la miniatura nueva le gana a la vieja.
+- **Comprobado en vivo** el 6 oct 2026: las cuatro miniaturas del guion 18 rehechas y subidas.
+- **Qué NO tocar:** el largo conserva los colores del canal (la marca manda); las variantes son
+  para los Shorts.
+
 ## C-PORTADA-3 — La palabra tachada o fuerte de la miniatura nunca se recorta (5 oct 2026)
 
 - **Qué se rompió y cómo se veía:** la miniatura del segundo comercial de Andreea

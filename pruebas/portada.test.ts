@@ -12,6 +12,8 @@ import {
   mejorCuadroDePresentador,
   miniaturasPorPieza,
   nombreDeRotulo,
+  paletaDePieza,
+  tramaDePieza,
   recorteSirve,
   textoDePortada,
   type FotoRotulada,
@@ -292,5 +294,35 @@ describe("portada con presentador y diseño nuevo (C-PORTADA-2)", () => {
     expect(colores).not.toContain("#6d28d9");
     // Y en un video con presentador, la persona de la portada es él.
     expect(colores).toContain("mejorCuadroDePresentador(candidatos, instantesUsados)");
+  });
+
+  it("cada pieza del mismo video sale con otro color y otra trama; una marca de varias palabras no deja asteriscos (C-PORTADA-4)", () => {
+    const base = { fondo: ["#d00000", "#14000a"] as [string, string], acento: "#ffd60a" };
+    expect(paletaDePieza(base, 0)).toEqual(base);
+    const fondos = [0, 1, 2, 3].map((i) => paletaDePieza(base, i).fondo[0]);
+    expect(new Set(fondos).size).toBe(4);
+    expect([0, 1, 2, 3].map(tramaDePieza)).toEqual(["puntos", "lineas", "rejilla", "puntos"]);
+    // «*SIN SOLTAR* EL»: las dos palabras marcadas, sin asteriscos a la vista.
+    expect(partesDelRemate("*SIN SOLTAR* EL")).toEqual([
+      { texto: "SIN", marcada: true },
+      { texto: "SOLTAR", marcada: true },
+      { texto: "EL", marcada: false },
+    ]);
+    expect(partesDelRemate("*CERO* PREMIOS").map((w) => w.texto)).toEqual(["CERO", "PREMIOS"]);
+    expect(partesDeLinea("~YA NO~ GRATIS").map((w) => [w.texto, w.tachada])).toEqual([
+      ["YA", true],
+      ["NO", true],
+      ["GRATIS", false],
+    ]);
+    // Al recortar, una marca de varias palabras no se parte por la mitad.
+    expect(textoDePortada({ remate: "muy largo de verdad *sin soltar*" }).remate).toBe(
+      "MUY LARGO DE VERDAD *SIN SOLTAR*",
+    );
+    // En el panel gana la miniatura más nueva de cada pieza (una rehecha reemplaza a la vieja).
+    const m = miniaturasPorPieza([
+      fila("short-3-vieja.png", { portada: true, pieza: "short", indice: 3 }),
+      fila("short-3-nueva.png", { portada: true, pieza: "short", indice: 3 }),
+    ]);
+    expect(m[clavePieza("short", 3)]).toBe("short-3-nueva.png");
   });
 });

@@ -126,6 +126,14 @@ cd /Users/windocellc/Motor-Escenia/estacion && npx tsx src/portada.ts 27 --foto 
 | `--acento`                  | El color de lo enorme (por defecto, amarillo)                                              |
 | `--guion 8`                 | La sube al panel                                                                           |
 
+## Cada pieza, distinta (6 oct 2026)
+
+Las miniaturas de un mismo video no se parecen entre sí: el largo lleva los colores del canal y
+cada Short una paleta y una trama distintas (azul con líneas, morado con rejilla, verde azulado
+con puntos, naranja); si no hay otra foto de la persona, la misma va en espejo. Si la gente ve el
+mismo diseño cuatro veces, cree que ya lo vio. Y en el panel gana siempre la miniatura más nueva
+de cada pieza: rehacer una la reemplaza. Candado C-PORTADA-4.
+
 ## Qué revisar antes de avisar
 
 Se miran TODAS (una hoja con las verticales juntas ayuda):

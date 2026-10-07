@@ -34,7 +34,8 @@ function recortarPalabras(texto: string, maximo: number): string {
   // Se quitan las de relleno que vienen después de ella; si aun así no cabe, va entera y más chica.
   let ultimaMarcada = -1;
   palabras.forEach((w, k) => {
-    if (/^[*~].+[*~]$/.test(w)) ultimaMarcada = k;
+    // Una palabra marcada sola («*CERO*») o la que cierra una marca de varias («SOLTAR*»).
+    if (/^[*~].+[*~]$/.test(w) || /[*~]$/.test(w)) ultimaMarcada = k;
   });
   while (palabras.length > 1 && letras(palabras.join(" ")) > maximo) {
     if (palabras.length - 1 <= ultimaMarcada) break;
@@ -244,10 +245,36 @@ export function miniaturasPorPieza(
     if (f.tipo !== "miniatura") continue;
     const p = piezaDeMeta(f.meta);
     const destino = p.portada ? impacto : automatica;
-    if (!(p.clave in destino)) destino[p.clave] = f.clave;
+    // La más nueva de cada pieza gana (las filas llegan de la más vieja a la más nueva): una
+    // miniatura rehecha reemplaza a la anterior en el panel (6 oct 2026: se seguía viendo la vieja).
+    destino[p.clave] = f.clave;
   }
   return { ...automatica, ...impacto };
 }
+
+/**
+ * Cada pieza de un mismo video sale con un color de fondo y una trama distintos (C-PORTADA-4):
+ * Richard, 6 oct 2026: «si todas se ven iguales, la gente cree que esa ya la vio». El largo
+ * lleva los colores del canal; cada Short, una variante.
+ */
+export const PALETAS_DE_PIEZA: { fondo: [string, string]; acento: string }[] = [
+  { fondo: ["#1d4ed8", "#050a1e"], acento: "#ffd60a" },
+  { fondo: ["#7c3aed", "#0b0415"], acento: "#fbbf24" },
+  { fondo: ["#0f766e", "#02110f"], acento: "#fde047" },
+  { fondo: ["#ea580c", "#1a0a02"], acento: "#fef08a" },
+];
+export function paletaDePieza<T extends { fondo: [string, string]; acento: string }>(
+  base: T,
+  indice: number,
+): T {
+  if (indice <= 0) return base;
+  const v = PALETAS_DE_PIEZA[(indice - 1) % PALETAS_DE_PIEZA.length];
+  return v ? { ...base, ...v } : base;
+}
+export const TRAMAS = ["puntos", "lineas", "rejilla"] as const;
+export type Trama = (typeof TRAMAS)[number];
+export const tramaDePieza = (indice: number): Trama =>
+  TRAMAS[Math.max(0, indice) % TRAMAS.length] ?? "puntos";
 
 /** Clave de una pieza del calendario o del panel: «largo» o «short-3». */
 export const clavePieza = (pieza: "largo" | "short", indice: number) =>
