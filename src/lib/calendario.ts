@@ -440,8 +440,8 @@ export async function miniaturasDeGuiones(
   const unicos = [...new Set(ids)].filter((n) => Number.isInteger(n) && n > 0).slice(0, 90);
   const mapa = new Map<number, Record<string, string>>();
   if (unicos.length === 0) return mapa;
-  const filas = await db.todos<{ guion_id: number; tipo: string; clave: string; meta: string }>(
-    `SELECT guion_id, tipo, clave, meta FROM archivos
+  const filas = await db.todos<{ id: number; guion_id: number; tipo: string; clave: string; meta: string }>(
+    `SELECT id, guion_id, tipo, clave, meta FROM archivos
      WHERE tipo = 'miniatura' AND guion_id IN (${unicos.map(() => "?").join(", ")}) ORDER BY id DESC`,
     unicos,
   );

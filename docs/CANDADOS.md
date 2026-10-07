@@ -434,12 +434,12 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
   vio». Además, el panel seguía mostrando la miniatura vieja de un Short después de rehacerla, y
   en una salió «_SIN SOLTAR_ EL» con los asteriscos a la vista.
 - **Las causas:** los colores y la trama eran fijos por canal; la misma foto se elegía cuando no
-  había otra; `miniaturasPorPieza` se quedaba con la PRIMERA miniatura subida de cada pieza; y
+  había otra; `miniaturasPorPieza` dependía del orden en que cada pantalla pedía las filas; y
   las marcas de color solo se entendían palabra por palabra, no en grupos («_SIN SOLTAR_»).
 - **Qué se hizo:** `paletaDePieza` y `tramaDePieza` (`compartido/portada.ts`): el largo con
   los colores del canal y cada Short con otra paleta (azul, morado, verde azulado, naranja) y
   otra trama (puntos, líneas, rejilla); si la persona no tiene otra foto, la misma va en espejo
-  (`sujeto.espejo`). `miniaturasPorPieza` se queda con la más nueva. `partesDeLinea` y
+  (`sujeto.espejo`). `miniaturasPorPieza` se queda con la más nueva por `id`, sin importar el orden de las filas. `partesDeLinea` y
   `partesDelRemate` entienden marcas de varias palabras, y el recorte no parte una marca.
 - **Cómo se comprueba:** `pruebas/portada.test.ts`, prueba C-PORTADA-4: cuatro paletas
   distintas, tramas que rotan, «_SIN SOLTAR_ EL» sin asteriscos, el recorte respeta la marca,

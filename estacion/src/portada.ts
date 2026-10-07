@@ -56,6 +56,7 @@ async function principal() {
   const props: PropsPortada = {
     formato,
     sujeto: { ruta: `portada/sujeto-${clave}.png`, ...sitio, espejo: false },
+    trama: "puntos",
     fondoFoto: null,
     objeto: objeto
       ? {

@@ -237,17 +237,21 @@ export function piezaDeMeta(meta: string): { clave: string; portada: boolean } {
  * miniatura automática. Un Short nunca le presta la suya al video largo.
  */
 export function miniaturasPorPieza(
-  filas: { tipo: string; clave: string; meta: string }[],
+  filas: { tipo: string; clave: string; meta: string; id?: number }[],
 ): Record<string, string> {
   const impacto: Record<string, string> = {};
   const automatica: Record<string, string> = {};
-  for (const f of filas) {
+  // La más nueva de cada pieza gana: una miniatura rehecha reemplaza a la anterior. Si las filas
+  // traen `id`, se ordenan aquí (no depende de cómo las pidió cada pantalla); si no, se asume que
+  // llegan de la más nueva a la más vieja.
+  const ordenadas = filas.every((f) => typeof f.id === "number")
+    ? [...filas].sort((a, b) => (b.id ?? 0) - (a.id ?? 0))
+    : filas;
+  for (const f of ordenadas) {
     if (f.tipo !== "miniatura") continue;
     const p = piezaDeMeta(f.meta);
     const destino = p.portada ? impacto : automatica;
-    // La más nueva de cada pieza gana (las filas llegan de la más vieja a la más nueva): una
-    // miniatura rehecha reemplaza a la anterior en el panel (6 oct 2026: se seguía viendo la vieja).
-    destino[p.clave] = f.clave;
+    if (!(p.clave in destino)) destino[p.clave] = f.clave;
   }
   return { ...automatica, ...impacto };
 }

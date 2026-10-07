@@ -22,7 +22,12 @@ import { instruccionesPublicacion } from "@/lib/publicacion";
 import { esquemaPortada, letraQueCabe, partesDeLinea, partesDelRemate } from "../estacion/src/remotion/props";
 
 const raiz = path.join(__dirname, "..");
-const fila = (clave: string, meta: object = {}) => ({ tipo: "miniatura", clave, meta: JSON.stringify(meta) });
+const fila = (clave: string, meta: object = {}, id?: number) => ({
+  tipo: "miniatura",
+  clave,
+  meta: JSON.stringify(meta),
+  ...(id === undefined ? {} : { id }),
+});
 
 describe("portada de impacto: el texto", () => {
   it("la palabra entre asteriscos del remate va resaltada y sin asteriscos", () => {
@@ -320,8 +325,8 @@ describe("portada con presentador y diseño nuevo (C-PORTADA-2)", () => {
     );
     // En el panel gana la miniatura más nueva de cada pieza (una rehecha reemplaza a la vieja).
     const m = miniaturasPorPieza([
-      fila("short-3-vieja.png", { portada: true, pieza: "short", indice: 3 }),
-      fila("short-3-nueva.png", { portada: true, pieza: "short", indice: 3 }),
+      fila("short-3-vieja.png", { portada: true, pieza: "short", indice: 3 }, 10),
+      fila("short-3-nueva.png", { portada: true, pieza: "short", indice: 3 }, 11),
     ]);
     expect(m[clavePieza("short", 3)]).toBe("short-3-nueva.png");
   });
