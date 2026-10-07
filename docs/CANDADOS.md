@@ -446,6 +446,9 @@ llama directamente a `asegurarModelo("claude-opus-5")` y espera el error).
 - **Comprobado en rojo** el 5 oct 2026: con el recorte viejo la prueba falla.
 - **Comprobado en vivo** el 5 oct 2026: la miniatura del guion 15 se rehizo a mano
   con «NOT A ~TEMPLATE~» (`portadas.ts 40 --guion 15`) y quedó en el panel.
+  - 6 oct 2026, Short 3 de Shakira: «SIN SUERTE / DÉCADAS DE MICRÓFONO» quedó en «SIN /
+    DÉCADAS DE». Ahora una línea que se pasa por poco (hasta un 20 %) va entera y apenas más
+    chica, y una línea recortada nunca termina en una palabrita de enlace («DE», «A», «UN»).
 - **Qué NO tocar:** no subir los topes de letras para «que quepa»: la miniatura se lee
   en chiquito y las líneas cortas son la receta. Si la IA se pasa, manda esta regla.
 

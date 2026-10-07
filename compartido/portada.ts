@@ -25,7 +25,9 @@ function recortarPalabras(texto: string, maximo: number): string {
     .trim();
   // Tampoco cuentan las virgulillas que marcan una palabra TACHADA («IA ~GRATIS~»).
   const letras = (s: string) => s.replace(/[*~]/g, "").length;
-  if (letras(limpio) <= maximo) return limpio;
+  // Si se pasa por poco (hasta un 20 %), va entera y la plantilla la hace apenas más chica: «SIN
+  // SUERTE» (10 letras, tope 9) recortado quedaba en «SIN» (6 oct 2026, Short 3 de Shakira).
+  if (letras(limpio) <= Math.round(maximo * 1.2)) return limpio;
   const palabras = limpio.split(" ");
   // La palabra marcada (la fuerte entre asteriscos o la tachada entre virgulillas) es el golpe
   // de la línea y NUNCA se recorta: el 5 oct 2026 «NOT JUST A ~TEMPLATE~» quedó en «NOT JUST A».
@@ -38,6 +40,12 @@ function recortarPalabras(texto: string, maximo: number): string {
     if (palabras.length - 1 <= ultimaMarcada) break;
     palabras.pop();
   }
+  // Una línea recortada no termina en una palabrita de enlace («DÉCADAS DE» → «DÉCADAS»).
+  while (
+    palabras.length > 1 &&
+    /^(DE|DEL|A|Y|E|O|U|EN|SIN|CON|POR|LA|EL|LOS|LAS|UN|UNA)$/i.test(palabras[palabras.length - 1] ?? "")
+  )
+    palabras.pop();
   return palabras.join(" ");
 }
 

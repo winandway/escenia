@@ -46,7 +46,7 @@ describe("portada de impacto: el texto", () => {
       remate: "*15* nominaciones",
     });
     expect(t.grande).toBe("NUNCA");
-    expect(t.linea).toBe("HA GANADO UN");
+    expect(t.linea).toBe("HA GANADO");
     expect(t.remate).toBe("*15* NOMINACIONES");
     // Los asteriscos no cuentan como letras: «SIEMPRE ENCENDIDOS» cabe entero.
     expect(textoDePortada({ remate: "siempre *encendidos*" }).remate).toBe("SIEMPRE *ENCENDIDOS*");
@@ -62,6 +62,9 @@ describe("portada de impacto: el texto", () => {
     );
     // Sin palabra marcada, se sigue recortando por el final.
     expect(textoDePortada({ linea: "la inteligencia artificial gratis" }).linea).toBe("LA INTELIGENCIA");
+    // Pasarse por poco no recorta («SIN SUERTE» quedaba en «SIN»); y una línea recortada no termina en «DE».
+    expect(textoDePortada({ grande: "sin suerte" }).grande).toBe("SIN SUERTE");
+    expect(textoDePortada({ linea: "décadas de micrófono" }).linea).toBe("DÉCADAS");
   });
 
   it("una palabra larga se achica para caber; una cifra corta va al máximo", () => {
