@@ -284,3 +284,81 @@ Maluma, Beéle y Dani Martín, cada uno a partir de una foto real con fuente; el
 con fotos reales; las cifras en grande (50 000; 13; 650 000; 150 000; 10 millones).
 
 El 6 oct 2026 Richard aprobó la propuesta («Dale, de una. Trabajamos full con eso»). Quedó como guion 18 (borrador, temática nueva `historias-musica`, Cómic), con el texto y los planos escritos a mano: 10 escenas, 560 palabras, 35 cambios de imagen.
+
+## 6 oct 2026 — borrador de monólogo para Richard: «El que me debe soy yo»
+
+Idea de Richard: se presta una plata a sí mismo, no se quiere pagar, se llama por teléfono y
+termina separando a «Yo» (el que prestó, el cobrador) y «el Otro Yo» (el deudor). La gracia
+está en que son la misma persona. Reglas del texto: cada frase va marcada con quién habla, el
+cobrador habla serio y rápido, el deudor melosito y lento, y el teléfono cambia de oreja en
+cada cambio de personaje.
+
+```
+EL QUE ME DEBE SOY YO
+
+[Entra tranquilo, como quien cuenta un chisme]
+Hace como un mes me presté una plata. Sí: me la presté yo. A mí.
+Porque yo andaba necesitado, y el único que tenía plata era yo.
+Y yo, que soy buena gente, le dije: «tranquilo, yo le presto».
+
+Y ahí empezó el problema. Porque yo me la gasté.
+Y cuando llegó la fecha de pagar, yo no me quería pagar.
+Me hacía el loco. Me veía en el espejo y me cambiaba de tema.
+
+Hasta que un día me cansé. Dije: «no, esto no puede seguir así:
+yo me debo, y yo me voy a cobrar». Cogí el teléfono y me llamé.
+
+[Teléfono a la oreja derecha. Suena.] Riiing… riiing…
+
+[Cambia el teléfono a la oreja izquierda. EL DEUDOR, melosito y lento]
+—¿Aló? ¿Quién es?
+[Oreja derecha. EL COBRADOR, serio y rápido]
+—Soy yo.
+[DEUDOR]
+—¿Quién es «yo»?
+[COBRADOR]
+—¡Yo! ¡Yo!
+[DEUDOR, feliz, como si no supiera nada]
+—¡Qué hubo, papito! ¿Cómo me le va? ¿Qué más?
+
+[A la cámara, bajando el teléfono]
+Y ahí me di cuenta: me había llamado yo.
+
+[DEUDOR]
+—¿Y para qué me llamas?
+[COBRADOR]
+—Te llamo para que me pagues la plata.
+[DEUDOR, ofendido]
+—¿Cuál plata?
+[COBRADOR]
+—¿Cómo que cuál plata? ¡La que te presté yo!
+[DEUDOR]
+—Ah no, no, no… eso fue otro yo. Yo no era yo ese día.
+
+[A la cámara]
+Y ahí me acordé de lo que me decían mis amigos.
+Porque mis amigos me veían conmigo mismo para arriba y para abajo,
+y me decían: «Richard, esa junta no te conviene».
+Y yo: «¿cuál junta, si soy yo?».
+Y ellos: «por eso».
+
+[Pausa]
+Y yo me defendía: «es que yo no puedo vivir sin mí».
+Y es verdad. A donde voy, voy conmigo. Me acompaño a todo.
+Pero el hecho de que yo me deba una plata…
+y que yo no me quiera pagar…
+ya dice mucho de esa compañía.
+
+[Remate]
+Así que tomé una decisión: me bloqueé.
+[Mira el teléfono] Ahora, cuando me llamo, me sale ocupado.
+Y lo peor: me debo, me cobro, y los dos sabemos que no me voy a pagar.
+Pero eso sí: ni un peso más.
+La próxima vez que yo me pida plata prestada, me la voy a negar.
+Aunque me duela… porque yo me quiero mucho.
+```
+
+Cómo no perder el hilo de quién habla: el COBRADOR siempre en la oreja derecha, serio y rápido;
+el DEUDOR siempre en la oreja izquierda, melosito y lento; lo que va «a la cámara» es Richard
+narrando, con el teléfono abajo. Cada cambio de oreja es un cambio de personaje, y el chiste
+crece porque los dos son él.
