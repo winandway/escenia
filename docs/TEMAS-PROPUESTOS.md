@@ -362,3 +362,81 @@ Cómo no perder el hilo de quién habla: el COBRADOR siempre en la oreja derecha
 el DEUDOR siempre en la oreja izquierda, melosito y lento; lo que va «a la cámara» es Richard
 narrando, con el teléfono abajo. Cada cambio de oreja es un cambio de personaje, y el chiste
 crece porque los dos son él.
+
+## 6 oct 2026 — borrador de monólogo para Richard: «La camioneta de Chacao a Catia»
+
+Idea de Richard: su prima viaja en una camioneta de Chacao a Catia; los choferes frenan duro y
+seguido con el vallenato a todo volumen; en cada frenazo alguien de atrás se le viene encima
+(«¡chácata!»), ella se vuelve a parar y llega otro; al bajarse en su parada llega embarazada y no
+sabe quién es el papá. El chiste está en la cuenta de los frenazos y en que ella nunca pierde la
+dignidad.
+
+```
+LA CAMIONETA DE CHACAO A CATIA
+
+[Entra, como quien cuenta un chisme de familia]
+Yo tengo una prima. Y mi prima un día tenía que ir de Chacao a Catia.
+Los que son de Caracas ya saben: eso no es un viaje, eso es una aventura.
+Y los que no son de Caracas, les explico: allá a los autobuses les dicen camioneta.
+Y el chofer de camioneta tiene dos pedales: el acelerador… y el otro también es acelerador.
+El freno lo usa de sorpresa.
+
+[Pausa]
+Mi prima se paró en la parada, arregladita, con su cartera, su cabello planchado.
+Y llegó la camioneta: llena. Pero llena de que la gente iba afuera agarrada.
+Y el colector, colgado de la puerta, gritando: «¡Entra, entra, que atrás hay puesto!».
+Atrás no había puesto. Atrás había gente. Pero mi prima entró.
+
+[Se agarra de un tubo imaginario]
+Y quedó ahí, parada en el pasillo, agarrada del tubo, con el vallenato a todo volumen,
+y detrás de ella… un señor. Un señor grandote. Un señor que respiraba.
+
+[Al público]
+Arrancó la camioneta. Y a los veinte metros, el chofer vio una señora que ni iba a montarse,
+y frenó. Pero no frenó: clavó.
+[Sonido de freno] ¡Chííí!
+Y el señor grandote se vino de atrás: ¡chácata!
+Cuerpo a cuerpo. Y la mandó para adelante.
+
+[Se endereza, se arregla el cabello]
+Mi prima no dijo nada. Se paró como pudo. Se arregló la cartera. «Buenas tardes».
+
+[Pausa]
+En la siguiente esquina se bajó el grandote. Y se paró detrás de ella un flaco.
+Un flaco con un morral. Y el chofer vio un hueco, y lo esquivó, y frenó.
+¡Chííí! ¡Chácata! El flaco, el morral, todo.
+Y mi prima otra vez para adelante. Y otra vez se paró. «Buenas tardes».
+
+[Cada vez más rápido]
+Plaza Venezuela: ¡chácata!, un policía.
+El Silencio: ¡chácata!, un muchacho con una bolsa de hielo.
+Y el chofer tranquilo, subiéndole al vallenato,
+y el colector: «¡Pasen para atrás, que atrás hay puesto!».
+
+[Al público]
+Mi prima me contó que a la altura de Gato Negro ya no sabía si iba en camioneta
+o si la estaban pasando de mano en mano.
+Y en el último frenazo, antes de Catia, se le vino un abuelo con bastón.
+¡Chácata! Y el bastón también.
+
+[Pausa larga, baja la voz]
+Y cuando por fin llegó a su parada… mi prima se bajó.
+Despeinada. Con la cartera en la mano. Mareada.
+Y embarazada.
+
+[Al público, serio]
+Sí. Llegó embarazada a Catia.
+Y lo peor no es eso.
+Lo peor es que no sabe quién es el papá.
+Ella dice que pudo ser el grandote, que pudo ser el flaco, que pudo ser el policía…
+Lo único que sabe es que no fue el abuelo, porque el abuelo frenó primero.
+
+[Remate]
+Hoy el niño tiene cinco años. Está sanito. Es un niño normal.
+Lo único raro es que cuando uno lo lleva en el carro y frena…
+el niño dice: «¡chácata!».
+```
+
+Cómo contarlo: el chiste crece con la cuenta de frenazos; cada «¡chácata!» va más rápido que el
+anterior, y mi prima siempre se endereza con la misma dignidad («Buenas tardes»). El remate baja
+la voz antes de «y embarazada», y la última línea del niño va en seco.
