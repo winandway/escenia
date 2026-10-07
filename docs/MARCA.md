@@ -82,3 +82,17 @@ debajo (**C-MUSICA-2**).
   social, y la etiqueta del canal en cada publicación.
 
 La pieza es una sola: `src/componentes/FiltroCanal.tsx` y `ChipCanal.tsx`.
+
+## Etiquetas por defecto de Caprichoso TV en YouTube Studio (6 oct 2026)
+
+Richard devolvió el canal a lo que siempre fue, música, y pidió cambiar las etiquetas por
+defecto de subida (Configuración → Ajustes de subida → Información básica → Etiquetas), que
+venían del uso anterior (IA, Beellon, QRBOTT). Las nuevas, 29 etiquetas y 525 letras
+(el tope de YouTube son 500):
+
+```
+música latina, historias de música, biografías de artistas, cantantes latinos, música en español, bachata, salsa, reggaetón, música urbana, conciertos, música en vivo, entrevistas a artistas, podcast de música, documental musical, noticias de música, premios de la música, Latin Grammy, Billboard latino, canciones nuevas, lyric video, letra de canciones, historia detrás de la canción, curiosidades de artistas, tendencias musicales, récords de la música, giras y conciertos, artistas latinos, Caprichoso TV, Grupo Kprichoso
+```
+
+Son del canal, no de un video: los nombres de artistas van en las etiquetas de cada video, que
+escribe el panel al terminar cada producción.
