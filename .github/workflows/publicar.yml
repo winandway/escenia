@@ -34,10 +34,14 @@ jobs:
       # responde el canario.
       - name: Humo del _worker.js empaquetado
         run: |
+          # Base local con el esquema, para que el canario pueda consultar. Sin secretos de la
+          # cuenta: las piezas que los necesitan salen «apagado» o «error» y el canario responde
+          # 503 con su JSON igual (no se usa `curl -f`: un 503 con JSON también es «arranca»).
+          npx wrangler d1 execute escenia-local --local -c wrangler.prueba.jsonc --file=schema.sql > /dev/null
           npx wrangler dev -c wrangler.prueba.jsonc --port 8787 > /tmp/wrangler-dev.log 2>&1 &
           for i in $(seq 1 40); do
-            if curl -sf --max-time 5 http://localhost:8787/datos/salud | grep -q '"estado"'; then
-              echo "El worker empaquetado arranca."; exit 0
+            if curl -s --max-time 5 http://localhost:8787/datos/salud | grep -q '"estado":.*"version"'; then
+              echo "El worker empaquetado arranca:"; curl -s --max-time 5 http://localhost:8787/datos/salud | cut -c1-300; exit 0
             fi
             sleep 3
           done
