@@ -1331,3 +1331,24 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   búsquedas de reserva son de música y época (`RESERVA_DOCUMENTAL`).
 - **Cómo se comprueba:** en un documental, ningún titular tiene fondo de
   oficina o pantallas; `creditos.txt` casi sin Pexels.
+
+## C-AVATAR-1 — Solo dos modelos de avatar, y ningún clip pasa de 40 segundos (8 oct 2026)
+
+- **Qué se protege:** el avatar guiado por audio (docs/AVATAR.md) cobra por segundo, y un modelo
+  caro o un audio largo colado por error son la misma historia de las facturas de imágenes. Aquí
+  no había fallo todavía: el candado se puso antes de la primera llamada.
+- **Causa posible:** el nombre del modelo viaja como texto hasta la cola de fal.ai; cualquier
+  cadena «fal-ai/…» se encolaría y se cobraría. Y el costo depende del audio, que no se mira
+  hasta que fal lo procesa.
+- **Qué se hizo:** `AVATARES_PERMITIDOS` en `compartido/modelos.ts` con los dos modelos que
+  Richard autorizó el 8 oct 2026 con el precio delante (Kling AI Avatar v2 Standard, 0,0562 $/s;
+  OmniHuman v1.5, 0,16 $/s). `asegurarModeloAvatar` revienta con cualquier otro, incluido el
+  Kling Pro. `costoAvatarUsd` mide el audio con ffprobe antes de encolar y revienta si pasa de
+  `TOPE_AVATAR_SEG` (40 s) o si está vacío. `estacion/src/avatar.ts` solo acepta direcciones de
+  `queue.fal.run` para consultar y bajar, y anota cada clip con su costo en `pruebas/gastos.txt`.
+- **Commit:** el de este candado (8 oct 2026, «feat(avatar): …»).
+- **Cómo se comprueba:** `npx vitest run pruebas/modelos.test.ts`: con el candado quitado (sin
+  el `throw` de modelo o de tope) la prueba se pone en rojo; comprobado el 8 oct 2026.
+- **Qué NO tocar:** no agregar modelos a `AVATARES_PERMITIDOS` sin autorización escrita de
+  Richard con el precio por segundo; no subir `TOPE_AVATAR_SEG`; no quitar la comprobación del
+  dominio de fal.

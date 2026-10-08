@@ -158,3 +158,60 @@ publicada por YouTube que lo diga, y no se afirma ninguna de memoria. Lo que sí
 su ayuda (ver docs/FORMATOS.md) es que recomienda por lo que la gente mira y se queda viendo. La
 prueba sensata es un personaje fijo, un Short diario a la misma hora durante 2 a 4 semanas, y
 comparar retención y vistas a las 48 horas de cada uno.
+
+## 8 oct 2026 — Chase Montes, aventurero («Chase, el Mono Caribe»): el MVP
+
+El muñeco se llama **Chase Montes — aventurero**, y su apodo es **Chase, el Mono Caribe** (lo
+fijó Richard el 8 oct 2026). Es el personaje fijo de una serie de Shorts hablados de 15 a 30
+segundos con voz paisa, para Caprichoso TV. Todo lo suyo vive en `avatar/chase-montes/`
+(fuera de git: `avatar/` está en `.gitignore`):
+
+| Carpeta o archivo                      | Qué es                                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| `fotos/cuerpo-entero-fondo-blanco.png` | La foto buena que mandó Richard (1024×1536, cuerpo entero, fondo blanco) |
+| `fotos/hoja-con-coco.png`              | Recorte de la hoja de personaje (570×800), el muñeco con un coco         |
+| `fotos/hoja-de-personaje.webp`         | La hoja de personaje completa                                            |
+| `referencia-reel-muneca.mp4`           | El reel de Instagram de referencia (la muñeca que habla con gestos)      |
+| `guion-prueba.txt`                     | El guion paisa de 15 segundos de la prueba                               |
+| `voces/`                               | Los audios de la voz (hoy: la prueba con la voz de Richard, 13 s)        |
+| `pruebas/`                             | Los clips generados y `gastos.txt` con fecha, modelo, segundos y costo   |
+
+### Cómo se genera un clip (la pieza de código)
+
+- **El candado** está en `compartido/modelos.ts`: `AVATARES_PERMITIDOS` solo admite dos modelos,
+  **Kling AI Avatar v2 Standard** (5,62 centavos por segundo) y **OmniHuman v1.5** (16 centavos
+  por segundo), los dos autorizados por Richard el 8 oct 2026 con el precio delante. Ningún otro
+  corre, ni como respaldo. `TOPE_AVATAR_SEG = 40`: un audio más largo revienta antes de pedir
+  nada. `costoAvatarUsd(modelo, segundos)` calcula el gasto a partir de los segundos del audio
+  (el video dura lo que dura el audio). Prueba: `pruebas/modelos.test.ts` (C-AVATAR-1).
+- **El generador** es `estacion/src/avatar.ts` (`generarAvatar`): manda la foto y el audio a la
+  cola de fal.ai (`queue.fal.run/<modelo>`) como datos en base64, espera hasta 15 minutos
+  avisando el puesto en la cola, y baja el mp4. Solo sigue direcciones de `queue.fal.run`.
+- **La prueba suelta** es `estacion/src/avatar-prueba.ts`: foto, audio, modelo (`kling` u
+  `omnihuman`) y salida; imprime el costo antes de encolar y lo anota en `pruebas/gastos.txt`.
+  Desde `estacion/`:
+  `npx tsx src/avatar-prueba.ts --imagen ../avatar/chase-montes/fotos/cuerpo-entero-fondo-blanco.png --audio ../avatar/chase-montes/voces/prueba-voz-richard.mp3 --modelo omnihuman --salida ../avatar/chase-montes/pruebas/omnihuman-1.mp4`
+- **La voz** se sintetiza como siempre con ElevenLabs (`estacion/src/voz.ts`, modelo
+  multilingual v2). La prueba de hoy usa la voz clonada de Richard porque la clave de ElevenLabs
+  de `estacion/.env` solo tiene permiso de texto a voz: al pedir la biblioteca de voces responde
+  401 «missing_permissions: voices_read» (y tampoco tiene `user_read`). Para las voces paisa hace
+  falta **una clave nueva con permisos de Voices (lectura y escritura) y User (lectura)**, o que
+  Richard agregue las voces a su cuenta desde la web y pase sus ids.
+
+### El guion de la prueba (15 segundos, paisa)
+
+> ¿Qué más pues, parceros? Yo soy Chase Montes, el Mono Caribe. Rubio, pero con sabor. Hoy
+> arranco una aventura: playa, coco frío y una historia que no me van a creer. ¿Se le miden?
+> Pilas, que ya empezamos.
+
+Con la voz de Richard dura 13,2 segundos: Kling cuesta unos 74 centavos y OmniHuman unos 2,12
+dólares. El resultado de la prueba se anota más abajo cuando salga.
+
+### Lo que falta para la serie (en orden)
+
+1. La clave nueva de ElevenLabs (o los ids de tres voces paisa) → se eligen las tres voces y
+   Richard escoge una oyéndolas.
+2. Tres a cinco fotos del muñeco en escenas reales (playa, calle, mercado), verticales, de la
+   cintura para arriba y mirando a cámara; dos sin gafas de sol y una de hombros para arriba.
+3. Cinco guiones de 15 a 30 segundos acordados con Richard (temas, no inventados).
+4. Un Short diario a la misma hora durante dos a cuatro semanas y medir a las 48 horas.

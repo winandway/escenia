@@ -40,3 +40,19 @@ describe("candado de modelos", () => {
     expect(costoVozUsd("eleven_multilingual_v2", 3000)).toBeCloseTo(0.3);
   });
 });
+
+describe("avatar guiado por audio: candado de modelos y de segundos (C-AVATAR-1)", () => {
+  it("solo corren los dos modelos autorizados, el costo sale de los segundos y nada pasa de 40 s", async () => {
+    const { asegurarModeloAvatar, costoAvatarUsd, TOPE_AVATAR_SEG } = await import("@compartido/modelos");
+    expect(asegurarModeloAvatar("fal-ai/kling-video/ai-avatar/v2/standard")).toBe(
+      "fal-ai/kling-video/ai-avatar/v2/standard",
+    );
+    expect(() => asegurarModeloAvatar("fal-ai/kling-video/ai-avatar/v2/pro")).toThrow(/bloqueado/);
+    expect(() => asegurarModeloAvatar("fal-ai/infinitalk")).toThrow(/bloqueado/);
+    expect(costoAvatarUsd("fal-ai/kling-video/ai-avatar/v2/standard", 15)).toBeCloseTo(0.843, 3);
+    expect(costoAvatarUsd("fal-ai/bytedance/omnihuman/v1.5", 15)).toBeCloseTo(2.4, 3);
+    expect(TOPE_AVATAR_SEG).toBe(40);
+    expect(() => costoAvatarUsd("fal-ai/bytedance/omnihuman/v1.5", 41)).toThrow(/tope/);
+    expect(() => costoAvatarUsd("fal-ai/bytedance/omnihuman/v1.5", 0)).toThrow(/vacío/);
+  });
+});
