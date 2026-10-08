@@ -1345,7 +1345,8 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   OmniHuman v1.5, 0,16 $/s). `asegurarModeloAvatar` revienta con cualquier otro, incluido el
   Kling Pro. `costoAvatarUsd` mide el audio con ffprobe antes de encolar y revienta si pasa de
   `TOPE_AVATAR_SEG` (40 s) o si está vacío. `estacion/src/avatar.ts` solo acepta direcciones de
-  `queue.fal.run` para consultar y bajar, y anota cada clip con su costo en `pruebas/gastos.txt`.
+  `queue.fal.run` para consultar y bajar, sube foto y audio al almacén de fal antes de encolar (el
+  base64 no entra en OmniHuman) y anota cada clip con su costo en `pruebas/gastos.txt`.
 - **Commit:** el de este candado (8 oct 2026, «feat(avatar): …»).
 - **Cómo se comprueba:** `npx vitest run pruebas/modelos.test.ts`: con el candado quitado (sin
   el `throw` de modelo o de tope) la prueba se pone en rojo; comprobado el 8 oct 2026.

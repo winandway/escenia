@@ -37,10 +37,31 @@ const TIPOS: Record<string, string> = {
   ".m4a": "audio/mp4",
 };
 
-async function comoDataUri(ruta: string): Promise<string> {
+/**
+ * Sube un archivo al almacén de fal.ai y devuelve su dirección pública. Los modelos de avatar no
+ * aceptan datos en base64 en `audio_url` (OmniHuman respondió «Failed to download the file» el
+ * 8 oct 2026), así que foto y audio van subidos primero, como hace el cliente oficial de fal.
+ */
+async function subirAFal(ruta: string, falKey: string): Promise<string> {
   const tipo = TIPOS[path.extname(ruta).toLowerCase()];
   if (!tipo) throw new Error(`No sé mandar a fal.ai un archivo ${path.extname(ruta)}.`);
-  return `data:${tipo};base64,${(await readFile(ruta)).toString("base64")}`;
+  const inicio = await fetch("https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3", {
+    method: "POST",
+    headers: { authorization: `Key ${falKey}`, "content-type": "application/json" },
+    body: JSON.stringify({ content_type: tipo, file_name: path.basename(ruta) }),
+  });
+  if (!inicio.ok)
+    throw new Error(
+      `fal.ai respondió ${inicio.status} al preparar la subida: ${(await inicio.text()).slice(0, 200)}`,
+    );
+  const { upload_url, file_url } = (await inicio.json()) as { upload_url: string; file_url: string };
+  const subida = await fetch(upload_url, {
+    method: "PUT",
+    headers: { "content-type": tipo },
+    body: await readFile(ruta),
+  });
+  if (!subida.ok) throw new Error(`fal.ai respondió ${subida.status} al subir ${path.basename(ruta)}.`);
+  return file_url;
 }
 
 /** Solo se habla con la cola de fal.ai: una dirección que no sea de ahí no se sigue. */
@@ -74,8 +95,8 @@ export async function generarAvatar(entrada: {
 
   const cabeceras = { authorization: `Key ${config.FAL_KEY}`, "content-type": "application/json" };
   const cuerpo: Record<string, unknown> = {
-    image_url: await comoDataUri(entrada.imagen),
-    audio_url: await comoDataUri(entrada.audio),
+    image_url: await subirAFal(entrada.imagen, config.FAL_KEY),
+    audio_url: await subirAFal(entrada.audio, config.FAL_KEY),
     ...(entrada.prompt ? { prompt: entrada.prompt } : {}),
   };
   const envio = await fetch(`https://queue.fal.run/${modelo}`, {

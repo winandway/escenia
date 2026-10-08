@@ -192,11 +192,25 @@ segundos con voz paisa, para Caprichoso TV. Todo lo suyo vive en `avatar/chase-m
   Desde `estacion/`:
   `npx tsx src/avatar-prueba.ts --imagen ../avatar/chase-montes/fotos/cuerpo-entero-fondo-blanco.png --audio ../avatar/chase-montes/voces/prueba-voz-richard.mp3 --modelo omnihuman --salida ../avatar/chase-montes/pruebas/omnihuman-1.mp4`
 - **La voz** se sintetiza como siempre con ElevenLabs (`estacion/src/voz.ts`, modelo
-  multilingual v2). La prueba de hoy usa la voz clonada de Richard porque la clave de ElevenLabs
-  de `estacion/.env` solo tiene permiso de texto a voz: al pedir la biblioteca de voces responde
-  401 «missing_permissions: voices_read» (y tampoco tiene `user_read`). Para las voces paisa hace
-  falta **una clave nueva con permisos de Voices (lectura y escritura) y User (lectura)**, o que
-  Richard agregue las voces a su cuenta desde la web y pase sus ids.
+  multilingual v2). La clave de `estacion/.env` no puede leer la biblioteca de voces (401
+  «missing_permissions: voices_read»), pero **sí puede diseñar voces nuevas** con Voice Design
+  (`POST /v1/text-to-voice/design`, comprobado el 8 oct 2026) y **crearlas** a partir de una
+  vista previa (`POST /v1/text-to-voice`). Así se hicieron las voces paisa: tres descripciones
+  (joven, relajado, animador), tres vistas previas cada una, las nueve guardadas en
+  `voces/diseno-<nombre>-<n>.mp3` con sus ids en `voces/disenos.json`. La primera («paisa joven 1»)
+  quedó creada en la cuenta como «Chase Montes - paisa joven 1 (prueba)» y con ella se sintetizó
+  el guion (`voces/chase-paisa-joven-1.mp3`, 12,9 s). Richard oye las nueve y elige; la que elija
+  se crea con el mismo código y se guarda su id en `estacion/.env` como `ELEVENLABS_VOICE_ID_CHASE`.
+- **El muñeco va sobre un fondo real, de la cintura para arriba** (`estacion/src/avatar-fondo.ts`):
+  la foto de Richard es un PNG recortado con transparencia, y fal.ai la aplana a NEGRO: los dos
+  primeros clips salieron con el muñeco sobre negro y con ruido alrededor. La herramienta pone el
+  recorte sobre una foto de fondo (una que mande Richard, o una playa generada con Seedream por
+  3 centavos), lo deja a 1080×1920 y recorta de la cintura para arriba, como en el reel. Ojo: si el
+  fondo generado se pide «tomado con un teléfono», la IA dibuja una mano con el teléfono en la
+  esquina; en el recorte de cintura no se ve.
+- **Foto y audio se suben primero al almacén de fal** (`rest.alpha.fal.ai/storage/upload/initiate`
+  y un PUT): OmniHuman rechaza el audio en base64 («Failed to download the file», 8 oct 2026) y
+  el pedido falló sin generar nada. Con la subida, el mismo pedido entra.
 
 ### El guion de la prueba (15 segundos, paisa)
 
@@ -204,13 +218,26 @@ segundos con voz paisa, para Caprichoso TV. Todo lo suyo vive en `avatar/chase-m
 > arranco una aventura: playa, coco frío y una historia que no me van a creer. ¿Se le miden?
 > Pilas, que ya empezamos.
 
-Con la voz de Richard dura 13,2 segundos: Kling cuesta unos 74 centavos y OmniHuman unos 2,12
-dólares. El resultado de la prueba se anota más abajo cuando salga.
+Con la voz de Richard dura 13,2 segundos y con la paisa 12,9: Kling cuesta unos 72 centavos y
+OmniHuman unos 2,06 dólares. El resultado de la prueba se anota más abajo.
+
+### Resultado de la prueba (8 oct 2026)
+
+| Clip                            | Modelo            | Voz           | Qué se ve                                                                                                                                                | Costo |
+| ------------------------------- | ----------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `pruebas/kling-1.mp4`           | Kling v2 Standard | la de Richard | El muñeco casi no se mueve: solo la boca y un poco la cabeza. Fondo negro (transparencia).                                                               | 0,74  |
+| `pruebas/omnihuman-1.mp4`       | OmniHuman v1.5    | paisa joven 1 | Gestos de verdad: saluda con las dos manos, se toca el pecho, señala a cámara. Fondo negro con ruido.                                                    | 2,06  |
+| `pruebas/omnihuman-2-playa.mp4` | OmniHuman v1.5    | paisa joven 1 | Chase en la playa, de la cintura para arriba: saluda con las dos manos, mano al pecho al presentarse, señala a cámara; fondo limpio. **Este es el MVP.** | 2,06  |
+
+Más 3 centavos del fondo de playa. **Decisión:** para la serie de Chase se usa **OmniHuman v1.5**:
+es el único de los dos que hace lo que hace el reel de referencia (las manos). Kling queda para la
+cara de Richard en «Mi opinión», donde no hacen falta gestos. El primer pedido a OmniHuman con el
+audio en base64 falló sin cobrar.
 
 ### Lo que falta para la serie (en orden)
 
-1. La clave nueva de ElevenLabs (o los ids de tres voces paisa) → se eligen las tres voces y
-   Richard escoge una oyéndolas.
+1. Richard oye las nueve vistas previas paisa de `voces/` y dice cuál es la voz de Chase (o se
+   queda con «paisa joven 1», que ya está creada).
 2. Tres a cinco fotos del muñeco en escenas reales (playa, calle, mercado), verticales, de la
    cintura para arriba y mirando a cámara; dos sin gafas de sol y una de hombros para arriba.
 3. Cinco guiones de 15 a 30 segundos acordados con Richard (temas, no inventados).
