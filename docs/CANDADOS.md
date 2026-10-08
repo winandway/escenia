@@ -1373,3 +1373,27 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   push a los 6 minutos.
 - **Qué NO tocar:** no quitar la comprobación final de `.wasm` que queda; no subir el tope de
   10 MB gzip para «pasar».
+
+## C-DEPLOY-2 — Se publica solo si el _worker.js empaquetado arranca (8 oct 2026)
+
+- **Qué se rompió y cómo se veía:** con Next 16.4.0 (subido por el aviso de seguridad del
+  16.3.6) el panel empaquetado arrancaba con «Unexpected loadManifest(/.next/server/preview-props.json)
+  call!» en todas las rutas, también con el adaptador 1.20.9. El flujo de publicación no lo
+  detectaba: la comprobación de versiones Next / adaptador daba verde (el adaptador declara que
+  acepta 16.4), y el build de f797e83 llegó a la rama `yapanel-build`. Se devolvió a mano a la
+  publicación anterior (3db233b) antes de que la plataforma la sirviera, y el panel en vivo no
+  se cayó.
+- **Causa real:** el adaptador `@opennextjs/cloudflare` 1.20.x está hecho para Next 16.3.8 y no
+  conoce el manifiesto `preview-props.json` que Next 16.4 pide al arrancar. Una versión que «cuadra»
+  en el `peerDependencies` no garantiza que arranque.
+- **Qué se hizo:** Next clavado en **16.3.8** (sin avisos en `npm audit`, comprobado el 8 oct 2026)
+  con el adaptador 1.20.9. Y en `.github/workflows/publicar.yml` un paso «Humo del _worker.js
+  empaquetado»: levanta `wrangler dev` con `wrangler.prueba.jsonc` sobre `out-deploy` y exige que
+  `/datos/salud` responda con `"estado"`; si no, no se publica.
+- **Commit:** el de este candado (8 oct 2026, «fix(deploy): …»).
+- **Cómo se comprueba:** `npm run preview` (o el launch `panel-empaquetado`) y abrir
+  `http://localhost:8787/datos/salud`: tiene que responder el JSON del canario. Para ver el candado
+  en rojo: poner `next` en `^16.4.0`, rebuild, y el paso de humo (o el canario local) falla.
+- **Qué NO tocar:** no subir Next a 16.4 hasta que el adaptador lo soporte de verdad (probar con
+  `npm run preview` antes, no fiarse del rango de versiones); no quitar el paso de humo; no
+  volver a mover `yapanel-build` a mano salvo en una emergencia como esta.

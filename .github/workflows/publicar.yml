@@ -29,6 +29,21 @@ jobs:
         run: |
           npx wrangler deploy --dry-run --outdir=.dist-worker --minify
           node scripts/empaquetar-worker.mjs
+      # El par Next / adaptador puede "cuadrar" en versiones y aun así no arrancar (Next 16.4.0 con
+      # el adaptador 1.20.x reventaba al iniciar: C-DEPLOY-2). Se publica solo si el worker empaquetado
+      # responde el canario.
+      - name: Humo del _worker.js empaquetado
+        run: |
+          npx wrangler dev -c wrangler.prueba.jsonc --port 8787 > /tmp/wrangler-dev.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -sf --max-time 5 http://localhost:8787/datos/salud | grep -q '"estado"'; then
+              echo "El worker empaquetado arranca."; exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::El _worker.js empaquetado no arranca (canario sin respuesta)."
+          tail -40 /tmp/wrangler-dev.log
+          exit 1
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
