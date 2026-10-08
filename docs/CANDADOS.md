@@ -1353,3 +1353,23 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué NO tocar:** no agregar modelos a `AVATARES_PERMITIDOS` sin autorización escrita de
   Richard con el precio por segundo; no subir `TOPE_AVATAR_SEG`; no quitar la comprobación del
   dominio de fal.
+
+## C-DEPLOY-1 — Los imports .wasm de Next se reemplazan aunque el nombre minificado lleve `$` (8 oct 2026)
+
+- **Qué se rompió y cómo se veía:** desde la subida a Next 16.4.0 (commit ccb4cd7, 8 oct 2026)
+  el flujo «Publicar en YaDominios Cloud» fallaba en «Empaquetar en un solo _worker.js» con
+  «Quedó un import .wasm sin reemplazar», y el panel se quedó en la versión del 7 oct (3db233b)
+  durante tres pushes. El canario `/datos/salud` lo delató: `version` no cambiaba.
+- **Causa real:** `scripts/empaquetar-worker.mjs` reemplazaba `import X from "./x.wasm"` con una
+  expresión `\w+` para el nombre. Con `--minify`, Next 16.4 sacó los nombres como `Y$` y `J$`
+  (`import Y$ from"./…-yoga.wasm"`), y `\w` no incluye `$`: no se reemplazaba ninguno y la
+  comprobación final abortaba.
+- **Qué se hizo:** el reemplazo vive ahora en `scripts/reemplazar-wasm.mjs` (`reemplazarWasm`),
+  con `[\w$]+` para el nombre y `from\s*"` para admitir el `from"` pegado del minificado.
+  El empaquetador lo usa y sigue abortando si queda algún `.wasm`.
+- **Commit:** el de este candado (8 oct 2026, «fix(deploy): …»).
+- **Cómo se comprueba:** `npx vitest run pruebas/empaquetar-worker.test.ts` (con `\w+` se pone en
+  rojo; comprobado el 8 oct 2026). Y en vivo: `/datos/salud` tiene que decir la versión del último
+  push a los 6 minutos.
+- **Qué NO tocar:** no quitar la comprobación final de `.wasm` que queda; no subir el tope de
+  10 MB gzip para «pasar».

@@ -7,6 +7,7 @@
 // único, así que esos imports se reemplazan por un módulo wasm vacío válido.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
+import { reemplazarWasm } from "./reemplazar-wasm.mjs";
 
 const ORIGEN = ".dist-worker/worker.js";
 const SALIDA = "out-deploy";
@@ -19,14 +20,8 @@ if (!existsSync(ORIGEN)) {
   process.exit(1);
 }
 
-let codigo = readFileSync(ORIGEN, "utf8");
-const WASM_VACIO = "new WebAssembly.Module(new Uint8Array([0,97,115,109,1,0,0,0]))";
-let reemplazos = 0;
-codigo = codigo.replace(/import\s+(\w+)\s+from\s*"\.\/[^"]+\.wasm"\s*;?/g, (_, nombre) => {
-  reemplazos++;
-  return `const ${nombre}=${WASM_VACIO};`;
-});
-if (/from\s*"[^"]+\.wasm"/.test(codigo)) {
+const { codigo, reemplazos, quedan } = reemplazarWasm(readFileSync(ORIGEN, "utf8"));
+if (quedan) {
   console.error("Quedó un import .wasm sin reemplazar; el _worker.js no sería un bundle único.");
   process.exit(1);
 }
