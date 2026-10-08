@@ -127,3 +127,34 @@ de avatar.
 - No se genera el video entero con avatar.
 - No se enciende ningún modelo fuera de la lista sin autorización escrita de
   Richard con el costo por segundo.
+
+## 8 oct 2026 — El personaje «Caribe» (muñeco) y el reel de referencia
+
+Richard mandó la hoja de personaje de un muñeco tipo Ken caribeño («Caribe»: rubio de rizos, ojos
+azules, short rojo, camiseta de palmeras; energético, carismático, optimista; 30 cm) y un reel de
+Instagram de referencia: una muñeca tipo Barbie, fotografiada de verdad frente a un centro
+comercial, que habla a cámara 30 segundos con labios sincronizados y GESTOS de manos (se toca el
+pecho, saluda, se peina). Quiere probar un sistema de Shorts de 15 a 30 segundos con ese muñeco,
+un guion corto y una voz paisa colombiana, para ver si así el algoritmo responde.
+
+Lo que se ve en el reel (mirado cuadro por cuadro, sin oír): una sola foto del muñeco animada por
+el audio; la cara, el pelo y el fondo son de la foto; las manos se mueven con naturalidad. Eso es
+lo que hacen los modelos de «avatar guiado por audio». El que ya habíamos elegido, Kling AI
+Avatar v2 Standard, anima la cara y la cabeza (su página, releída el 8 oct 2026: «animates facial
+features and subtle head movements»; 5,62 centavos por segundo); los gestos de manos como los del
+reel los dan los modelos de cuerpo entero, tipo OmniHuman v1.5 (16 centavos por segundo en la
+tabla del 29 sep 2026; releer antes de encender).
+
+Propuesta de prueba (espera el «sí» de Richard, porque el avatar estaba en pausa y gasta):
+un mismo guion de 15 segundos con la voz paisa, dos clips del muñeco Caribe: uno con Kling
+Standard (unos 84 centavos) y otro con OmniHuman v1.5 (unos 2,40 dólares), para comparar gestos
+y naturalidad. Con el que convenza, un lote de 5 Shorts (uno al día) y medir a las 48 horas.
+La imagen del muñeco recortada de la hoja quedó en `avatar/caribe-hoja.png` (fuera de git), y el
+reel en `avatar/referencia-muneca-reel.mp4`. Falta: la voz paisa (cuál, en ElevenLabs) y, si
+existe, la imagen original del muñeco en mejor resolución.
+
+Sobre «cuántos videos hay que subir para que el algoritmo nos preste atención»: no hay una cifra
+publicada por YouTube que lo diga, y no se afirma ninguna de memoria. Lo que sí está escrito en
+su ayuda (ver docs/FORMATOS.md) es que recomienda por lo que la gente mira y se queda viendo. La
+prueba sensata es un personaje fijo, un Short diario a la misma hora durante 2 a 4 semanas, y
+comparar retención y vistas a las 48 horas de cada uno.
