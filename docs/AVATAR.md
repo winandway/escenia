@@ -332,6 +332,43 @@ Propuesta: probar FlashTalk y Hunyuan con el mismo audio y una escena nueva (uno
 comparar contra OmniHuman. Ninguno de los dos está en `AVATARES_PERMITIDOS`: hace falta el «sí»
 escrito de Richard con el precio antes de encenderlos.
 
+### Comparación de modelos y cámara (8 oct 2026, con el «sí» de Richard)
+
+Richard autorizó probar FlashTalk (0,02 $/s) y Hunyuan Avatar (0,40 $ por clip de hasta 16 s); los
+dos quedaron en `AVATARES_PERMITIDOS` con su precio (Hunyuan cobra por clip y revienta si el audio
+pasa de 16 s). Prueba justa: la misma foto y el mismo audio del jalón de pelo, solo cambia el
+modelo (`--rehacer`, porque es el mismo video).
+
+- **FlashTalk** (`pruebas/comparar-flashtalk-ambiente.mp4`, 0,52 $): mueve brazos y cara, menos que
+  OmniHuman (sin mano en la cintura ni pelo), y sale a **448×768**, unas cinco veces menos puntos
+  que OmniHuman (1088×1920): en el celular se ve blando.
+- **Hunyuan**: no arrancó. Los dos pedidos se quedaron más de quince minutos en la fila de fal.ai
+  sin empezar nunca («IN_QUEUE, puesto 0»); en la lista de pedidos procesados de fal.ai no aparece
+  ninguno, así que no se han cobrado. Si fal.ai los procesa más tarde, se cobran (0,40 $ cada uno)
+  y no se pueden bajar: sus IDs no quedaron anotados.
+- **Arreglo para que no vuelva a pasar:** `estacion/src/avatar.ts` anota cada pedido en
+  `pedidos-fal.jsonl` (junto al clip) apenas fal.ai lo acepta, la espera sube a 30 minutos, y
+  `estacion/src/avatar-recoger.ts <carpeta>` baja después lo que fal.ai terminó y no se bajó.
+- Video lado a lado con el mismo audio: `pruebas/comparar-omnihuman-vs-flashtalk.mp4`.
+- **Recomendación:** seguir con OmniHuman para Chase (gestos y resolución); para bajar el costo,
+  Shorts de 15 a 20 segundos (2,40 a 3,20 $ por clip). FlashTalk sirve si algún día basta un
+  personaje que hable con poco movimiento y en baja resolución.
+- Error del 8 oct 2026: el primer pedido a Hunyuan seguía en la cola y se relanzó creyéndolo
+  caído; se cobraron dos (0,40 $ de más). Lección: un proceso en segundo plano se vigila con su
+  propia tarea, no con `pgrep` y un registro que solo se escribe al final.
+
+**La cámara** (`estacion/src/avatar-camara.ts`, gratis, prueba `pruebas/avatar-camara.test.ts`):
+acercamiento lento todo el clip centrado en la cara, y un golpe de cámara (acercamiento rápido del
+30 %, se sostiene un segundo y vuelve) en cada risa y en las palabras que se pidan. Las risas salen
+de la transcripción de ElevenLabs con eventos de audio; la cara, del detector de la Mac. Probada en
+el jalón: `pruebas/chase-jalon-de-pelo-voz1-camara.mp4` (golpes en las dos risas y en «suscríbete»).
+
+**Tercer chiste: «La silla vacía»** (`avatar/chase-montes/guion-3-silla-vacia.txt`), idea de Richard
+(invitar a alguien a la playa de Santa Marta, la tierra de Carlos Vives). Escena hecha:
+`fotos/escena-santa-marta-silla-vacia.png` (guayabera blanca, short rosado, cadenita, la bahía con
+los cerros secos detrás y la silla de plástico vacía en primer plano; 3 ¢). La voz y el clip
+esperan su visto bueno al texto.
+
 ### Pendiente: voz de un viral adaptada a Chase (punto dos de Richard, sin empezar)
 
 Montar el audio de una conversación viral de 5 a 10 segundos, convertirlo a la voz de Chase, y que

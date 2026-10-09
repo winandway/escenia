@@ -49,8 +49,14 @@ describe("avatar guiado por audio: candado de modelos y de segundos (C-AVATAR-1)
     );
     expect(() => asegurarModeloAvatar("fal-ai/kling-video/ai-avatar/v2/pro")).toThrow(/bloqueado/);
     expect(() => asegurarModeloAvatar("fal-ai/infinitalk")).toThrow(/bloqueado/);
+    expect(() => asegurarModeloAvatar("mirage-api/avatar-x/reference-to-video")).toThrow(/bloqueado/);
     expect(costoAvatarUsd("fal-ai/kling-video/ai-avatar/v2/standard", 15)).toBeCloseTo(0.843, 3);
     expect(costoAvatarUsd("fal-ai/bytedance/omnihuman/v1.5", 15)).toBeCloseTo(2.4, 3);
+    expect(costoAvatarUsd("fal-ai/flashtalk", 26)).toBeCloseTo(0.52, 3);
+    // Hunyuan cobra por clip, no por segundo, y no pasa de 16 s.
+    expect(costoAvatarUsd("fal-ai/hunyuan-avatar", 15.5)).toBeCloseTo(0.4, 3);
+    expect(costoAvatarUsd("fal-ai/hunyuan-avatar", 3)).toBeCloseTo(0.4, 3);
+    expect(() => costoAvatarUsd("fal-ai/hunyuan-avatar", 20)).toThrow(/hasta 16 s/);
     expect(TOPE_AVATAR_SEG).toBe(40);
     expect(() => costoAvatarUsd("fal-ai/bytedance/omnihuman/v1.5", 41)).toThrow(/tope/);
     expect(() => costoAvatarUsd("fal-ai/bytedance/omnihuman/v1.5", 0)).toThrow(/vacío/);

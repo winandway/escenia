@@ -96,15 +96,20 @@ export function asegurarModeloImagen(modelo: string): ModeloImagen {
 }
 
 // Avatares guiados por audio (docs/AVATAR.md): una foto más una voz dan el video de la persona
-// o del muñeco hablando. Precios de fal.ai releídos el 8 oct 2026. Los dos los autorizó Richard
-// ese día, con el precio por segundo delante, para la prueba de «Chase Montes» (dos clips de
-// 15 s). Ningún otro modelo corre, ni como respaldo.
+// o del muñeco hablando. Precios de la API de precios de fal.ai (api.fal.ai/v1/models/pricing),
+// leídos el 8 oct 2026. Todos autorizados por Richard con el precio delante: Kling y OmniHuman
+// para la primera prueba de «Chase Montes»; FlashTalk y Hunyuan el mismo día («sí, vamos a
+// probarlo») para buscar uno más barato. Ningún otro corre, ni como respaldo.
 export const AVATARES_PERMITIDOS = {
-  // Cara y cabeza; el más barato con foto propia.
-  "fal-ai/kling-video/ai-avatar/v2/standard": 0.0562,
+  // Cara y cabeza; casi no mueve el cuerpo.
+  "fal-ai/kling-video/ai-avatar/v2/standard": { usd: 0.0562, por: "segundo" },
   // Cuerpo entero: las manos y el cuerpo siguen el audio (lo que se ve en el reel de referencia).
-  "fal-ai/bytedance/omnihuman/v1.5": 0.16,
-} as const;
+  "fal-ai/bytedance/omnihuman/v1.5": { usd: 0.16, por: "segundo" },
+  // SoulX-FlashTalk 14B: el más barato (2 centavos por segundo).
+  "fal-ai/flashtalk": { usd: 0.02, por: "segundo" },
+  // HunyuanAvatar: precio fijo por clip, hasta 401 cuadros a 25 por segundo (16 s).
+  "fal-ai/hunyuan-avatar": { usd: 0.4, por: "clip", maxSeg: 16 },
+} as const satisfies Record<string, { usd: number; por: "segundo" | "clip"; maxSeg?: number }>;
 export type ModeloAvatar = keyof typeof AVATARES_PERMITIDOS;
 /** Ningún clip de avatar pasa de 40 segundos: a 16 centavos por segundo son $6,40 como mucho. */
 export const TOPE_AVATAR_SEG = 40;
@@ -115,12 +120,18 @@ export function asegurarModeloAvatar(modelo: string): ModeloAvatar {
   return modelo as ModeloAvatar;
 }
 
-/** Cuánto cuesta un clip de `segundos` con ese modelo; revienta si pasa del tope de segundos. */
+/** Cuánto cuesta un clip de `segundos` con ese modelo; revienta si pasa del tope del motor o del modelo. */
 export function costoAvatarUsd(modelo: ModeloAvatar, segundos: number): number {
   if (!(segundos > 0)) throw new Error("El audio del avatar está vacío.");
   if (segundos > TOPE_AVATAR_SEG)
     throw new Error(
       `El audio dura ${Math.round(segundos)} s y el tope de un avatar son ${TOPE_AVATAR_SEG} s.`,
     );
-  return Math.round(AVATARES_PERMITIDOS[modelo] * segundos * 1000) / 1000;
+  const precio: { usd: number; por: "segundo" | "clip"; maxSeg?: number } = AVATARES_PERMITIDOS[modelo];
+  if (precio.maxSeg !== undefined && segundos > precio.maxSeg)
+    throw new Error(
+      `El audio dura ${segundos.toFixed(1)} s y ${modelo} admite hasta ${precio.maxSeg} s: hay que cortarlo.`,
+    );
+  const usd = precio.por === "clip" ? precio.usd : precio.usd * segundos;
+  return Math.round(usd * 1000) / 1000;
 }

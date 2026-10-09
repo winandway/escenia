@@ -1342,7 +1342,8 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   hasta que fal lo procesa.
 - **Qué se hizo:** `AVATARES_PERMITIDOS` en `compartido/modelos.ts` con los dos modelos que
   Richard autorizó el 8 oct 2026 con el precio delante (Kling AI Avatar v2 Standard, 0,0562 $/s;
-  OmniHuman v1.5, 0,16 $/s). `asegurarModeloAvatar` revienta con cualquier otro, incluido el
+  OmniHuman v1.5, 0,16 $/s; y el mismo día FlashTalk, 0,02 $/s, y Hunyuan Avatar, 0,40 $ por clip
+  de hasta 16 s, que revienta si el audio es más largo). `asegurarModeloAvatar` revienta con cualquier otro, incluido el
   Kling Pro. `costoAvatarUsd` mide el audio con ffprobe antes de encolar y revienta si pasa de
   `TOPE_AVATAR_SEG` (40 s) o si está vacío. `estacion/src/avatar.ts` solo acepta direcciones de
   `queue.fal.run` para consultar y bajar, sube foto y audio al almacén de fal antes de encolar (el

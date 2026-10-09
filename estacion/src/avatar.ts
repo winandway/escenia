@@ -3,14 +3,26 @@
 // Cada llamada pasa por el candado de modelos y de segundos de compartido/modelos.ts.
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { asegurarModeloAvatar, costoAvatarUsd, type ModeloAvatar } from "@compartido/modelos";
 import { config } from "./config";
 
 const exec = promisify(execFile);
-const ESPERA_MAXIMA_MS = 15 * 60_000;
+const ESPERA_MAXIMA_MS = 30 * 60_000;
+/** Cada pedido encolado se anota aquí (junto al clip) apenas fal.ai lo acepta: si la espera se corta,
+ *  el pedido sigue en fal.ai y se cobra, así que se puede recoger después con avatar-recoger.ts. */
+export const PEDIDOS_FAL = "pedidos-fal.jsonl";
+export type PedidoFal = {
+  request_id: string;
+  status_url: string;
+  response_url: string;
+  salida: string;
+  modelo: string;
+  costoUsd: number;
+  fecha: string;
+};
 
 export type ResultadoAvatar = { ruta: string; segundos: number; costoUsd: number; modelo: ModeloAvatar };
 
@@ -72,6 +84,31 @@ function urlDeFal(direccion: string): string {
   return u.toString();
 }
 
+/** Lo que pide cada modelo (esquemas leídos en fal.ai el 8 oct 2026). */
+export function cuerpoDelPedido(
+  modelo: ModeloAvatar,
+  imagenUrl: string,
+  audioUrl: string,
+  segundos: number,
+  prompt?: string,
+): Record<string, unknown> {
+  const base = { image_url: imagenUrl, audio_url: audioUrl };
+  switch (modelo) {
+    case "fal-ai/flashtalk":
+      return base; // solo foto y audio
+    case "fal-ai/hunyuan-avatar":
+      // 25 cuadros por segundo, tope del modelo 401 (16 s); `text` describe la escena.
+      return {
+        ...base,
+        text: prompt ?? "A person is talking naturally to the camera.",
+        num_frames: Math.min(401, Math.ceil(segundos * 25) + 1),
+        turbo_mode: true,
+      };
+    default:
+      return { ...base, ...(prompt ? { prompt } : {}) };
+  }
+}
+
 /**
  * Genera el clip del avatar. `prompt` (opcional) guía la animación en Kling. El costo se calcula
  * con los segundos del audio: el video dura lo que dura el audio.
@@ -94,11 +131,9 @@ export async function generarAvatar(entrada: {
   avisar(`avatar con ${modelo}: ${segundos.toFixed(1)} s de audio, $${costoUsd.toFixed(2)}`);
 
   const cabeceras = { authorization: `Key ${config.FAL_KEY}`, "content-type": "application/json" };
-  const cuerpo: Record<string, unknown> = {
-    image_url: await subirAFal(entrada.imagen, config.FAL_KEY),
-    audio_url: await subirAFal(entrada.audio, config.FAL_KEY),
-    ...(entrada.prompt ? { prompt: entrada.prompt } : {}),
-  };
+  const imagenUrl = await subirAFal(entrada.imagen, config.FAL_KEY);
+  const audioUrl = await subirAFal(entrada.audio, config.FAL_KEY);
+  const cuerpo = cuerpoDelPedido(modelo, imagenUrl, audioUrl, segundos, entrada.prompt);
   const envio = await fetch(`https://queue.fal.run/${modelo}`, {
     method: "POST",
     headers: cabeceras,
@@ -109,12 +144,24 @@ export async function generarAvatar(entrada: {
       `fal.ai respondió ${envio.status} al encolar el avatar: ${(await envio.text()).slice(0, 300)}`,
     );
   const cola = (await envio.json()) as { request_id: string; status_url: string; response_url: string };
+  const pedido: PedidoFal = {
+    ...cola,
+    salida: entrada.salida,
+    modelo,
+    costoUsd,
+    fecha: new Date().toISOString(),
+  };
+  await mkdir(path.dirname(entrada.salida), { recursive: true });
+  await appendFile(path.join(path.dirname(entrada.salida), PEDIDOS_FAL), `${JSON.stringify(pedido)}\n`);
+  avisar(`pedido ${cola.request_id} anotado en ${PEDIDOS_FAL}`);
 
   const inicio = Date.now();
   let ultimo = "";
   for (;;) {
     if (Date.now() - inicio > ESPERA_MAXIMA_MS)
-      throw new Error("fal.ai tardó más de 15 minutos con el avatar.");
+      throw new Error(
+        `fal.ai tardó más de 30 minutos con el avatar. El pedido ${cola.request_id} sigue allá y se cobra: recógelo con avatar-recoger.ts.`,
+      );
     const est = await fetch(urlDeFal(cola.status_url), { headers: cabeceras });
     const estado = (await est.json()) as { status: string; queue_position?: number };
     const texto = `${estado.status}${estado.queue_position !== undefined ? ` (puesto ${estado.queue_position})` : ""}`;
