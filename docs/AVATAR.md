@@ -429,6 +429,15 @@ mismo momento, con el polvo y la fiesta detrás, y suena la música del video. T
 en fal.ai. Costo: 0,79 $ (baile) + 0,11 $ (mejora) + 0,03 $ (escena) = **0,93 $**. Sin movimiento
 de cámara a propósito: en un baile, acercarse a la cara corta los pies.
 
+**Segunda prueba, Chase cantando (9 oct 2026):** Richard grabó su propio video (29 s, de traje,
+frente a la tela verde, cantando y bailando, acercándose y alejándose de la cámara) y dijo que
+DreamActor «no copia exactamente los gestos, como un espejo». Se probó **Kling 2.6 Motion Control
+Standard** (0,07 $/s, agregado a `TRANSFERENCIA_PERMITIDA`): `avatar-baile.ts --modelo kling`
+manda `character_orientation: "video"` (la orientación sigue al video, la mejor para movimientos
+complejos, hasta 30 s) y conserva el sonido original. Escena nueva:
+`fotos/escena-escenario-playa-traje.png` (traje azul claro, tarima de un bar de playa al
+atardecer, micrófono de pie). Resultado en `avatar/chase-montes/canto/`.
+
 **Qué tiene que traer Richard:** un video vertical de 15 a 30 segundos bailando, con el cuerpo
 entero en cuadro de pies a cabeza, la cámara quieta (en un trípode o apoyada), buena luz, fondo
 despejado, una sola persona, y la canción libre de derechos sonando. Y la escena de Chase será una

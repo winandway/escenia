@@ -85,6 +85,10 @@ describe("transferencia de movimiento: un solo modelo, hasta 30 s", () => {
       /bloqueado/,
     );
     expect(costoTransferenciaUsd("fal-ai/bytedance/dreamactor/v2", 15.75)).toBeCloseTo(0.788, 3);
+    expect(costoTransferenciaUsd("fal-ai/kling-video/v2.6/standard/motion-control", 29.16)).toBeCloseTo(
+      2.041,
+      3,
+    );
     expect(() => costoTransferenciaUsd("fal-ai/bytedance/dreamactor/v2", 31)).toThrow(/hasta 30 s/);
   });
 });

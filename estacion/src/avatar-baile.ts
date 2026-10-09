@@ -1,11 +1,11 @@
 // Chase copia los movimientos de un video (docs/AVATAR.md, «transferencia de movimiento»): una foto
 // de Chase de cuerpo entero y un video de alguien bailando dan a Chase bailando igual (cuerpo, manos,
-// cara y labios). Modelo: DreamActor v2 en fal.ai (0,05 $/s, hasta 30 s), con su candado en
+// cara y labios). Modelos: DreamActor v2 (0,05 $/s) o Kling 2.6 Motion Control (0,07 $/s), hasta 30 s, con su candado en
 // compartido/modelos.ts. Se le devuelve el sonido del video de referencia y se anota la escena
 // (C-AVATAR-2: la misma foto no se repite).
 // Uso (desde estacion/):
 //   npx tsx src/avatar-baile.ts --imagen ../avatar/chase-montes/fotos/escena-x.png \
-//       --video ../avatar/chase-montes/bailes/referencia.mp4 --salida ../avatar/chase-montes/bailes/chase-baile.mp4
+//       --video ../avatar/chase-montes/bailes/referencia.mp4 --salida ../avatar/chase-montes/bailes/chase-baile.mp4 [--modelo dreamactor|kling]
 import { execFile } from "node:child_process";
 import { appendFile, mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -18,7 +18,10 @@ import { asegurarEscenaNueva, registrarEscena } from "./avatar-escena";
 import { config } from "./config";
 
 const exec = promisify(execFile);
-const MODELO = "fal-ai/bytedance/dreamactor/v2";
+const MODELOS: Record<string, string> = {
+  dreamactor: "fal-ai/bytedance/dreamactor/v2",
+  kling: "fal-ai/kling-video/v2.6/standard/motion-control",
+};
 const ESPERA_MAXIMA_MS = 30 * 60_000;
 
 const opcion = (nombre: string): string | null => {
@@ -37,7 +40,7 @@ async function principal() {
   const carpetaClips = path.dirname(rutaSalida);
   await mkdir(carpetaClips, { recursive: true });
   const huella = await asegurarEscenaNueva(path.resolve(imagen), carpetaClips);
-  const modelo = asegurarModeloTransferencia(MODELO);
+  const modelo = asegurarModeloTransferencia(MODELOS[opcion("--modelo") ?? "dreamactor"] ?? "");
 
   // El modelo pide mp4 normal (H.264) y una foto de menos de 4,7 MB.
   const tmp = await mkdtemp(path.join(os.tmpdir(), "chase-baile-"));
@@ -84,7 +87,10 @@ async function principal() {
     body: JSON.stringify({
       image_url: await subirAFal(fotoJpg, config.FAL_KEY),
       video_url: await subirAFal(videoMp4, config.FAL_KEY),
-      trim_first_second: true,
+      ...(modelo === "fal-ai/bytedance/dreamactor/v2"
+        ? { trim_first_second: true }
+        : // Kling: «video» = la orientación sigue al video, la mejor para movimientos complejos (hasta 30 s).
+          { character_orientation: "video", keep_original_sound: true }),
     }),
   });
   if (!envio.ok)
@@ -121,7 +127,9 @@ async function principal() {
   const crudo = path.join(tmp, "crudo.mp4");
   await writeFile(crudo, Buffer.from(await (await fetch(r.video.url)).arrayBuffer()));
   // Se le pone el sonido del video de referencia (el modelo puede devolverlo mudo). Con
-  // trim_first_second el modelo quita su segundo de transición, así que el audio arranca 1 s después.
+  // trim_first_second DreamActor quita su segundo de transición, así que el audio arranca 1 s después;
+  // Kling no recorta nada.
+  const desfase = modelo === "fal-ai/bytedance/dreamactor/v2" ? "1" : "0";
   await exec("ffmpeg", [
     "-v",
     "error",
@@ -129,7 +137,7 @@ async function principal() {
     "-i",
     crudo,
     "-ss",
-    "1",
+    desfase,
     "-i",
     videoMp4,
     "-map",
