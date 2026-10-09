@@ -5,7 +5,7 @@
 // Uso (desde estacion/):
 //   npx tsx src/avatar-portada.ts --imagen ../avatar/chase-montes/fotos/escena-x.png \
 //       --grande "¿PELUCA?" --linea "UN NIÑO ME LA JALÓ" --remate "*100%* PELO REAL" \
-//       --variante 2 [--espejo] --salida ../avatar/chase-montes/publicar/portada-x.png
+//       --variante 2 [--espejo] [--foto-entera] --salida ../avatar/chase-montes/publicar/portada-x.png
 import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { encuadre, paletaDePieza, tramaDePieza } from "@compartido/portada";
@@ -35,19 +35,30 @@ async function principal() {
   const base = path.basename(imagen, path.extname(imagen));
   const copia = path.join(publica, `${base}${path.extname(imagen)}`);
   await copyFile(path.resolve(imagen), copia);
-  const recorte = await recortar(copia, path.join(publica, `${base}-recorte.png`));
-  const cara = recorte.caras[0];
-  if (!cara) throw new Error("No se encontró la cara de Chase en la foto: prueba con otra escena.");
-  // Como el presentador en vertical: más lejos y más abajo, para que quepan la cabeza y los hombros.
-  const sitio = encuadre("vertical", recorte, cara, 0.8);
-  const props = esquemaPortada.parse({
-    formato: "vertical",
-    sujeto: {
+  // `--foto-entera`: la imagen tal como está, a pantalla completa y oscurecida detrás del texto
+  // (Richard, 9 oct 2026: «a esa imagen, así como está, agrégale alguna lectura»).
+  const fotoEntera = process.argv.includes("--foto-entera");
+  let sujeto = null;
+  if (!fotoEntera) {
+    const recorte = await recortar(copia, path.join(publica, `${base}-recorte.png`));
+    const cara = recorte.caras[0];
+    if (!cara)
+      throw new Error(
+        "No se encontró la cara de Chase en la foto: prueba con otra escena o con --foto-entera.",
+      );
+    // Como el presentador en vertical: más lejos y más abajo, para que quepan la cabeza y los hombros.
+    const sitio = encuadre("vertical", recorte, cara, 0.8);
+    sujeto = {
       ruta: `${base}-recorte.png`,
       ...sitio,
       arriba: sitio.arriba + 90,
       espejo: process.argv.includes("--espejo"),
-    },
+    };
+  }
+  const props = esquemaPortada.parse({
+    formato: "vertical",
+    sujeto,
+    fondoFoto: fotoEntera ? `${base}${path.extname(imagen)}` : null,
     trama: tramaDePieza(variante),
     etiqueta: opcion("--etiqueta") ?? "CHASE, EL MONO CARIBE",
     cifra: opcion("--grande") ?? "",
@@ -55,7 +66,6 @@ async function principal() {
     remate: opcion("--remate") ?? "",
     ...paletaDePieza(COLORES_CANAL, variante),
   });
-  // Se empaqueta solo su carpeta (la carpeta pública entera lleva todos los videos y pesa mucho).
   const serveUrl = await empaquetar(publica);
   await mkdir(path.dirname(path.resolve(salida)), { recursive: true });
   await renderizarPortada(serveUrl, props, path.resolve(salida), null);
