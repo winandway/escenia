@@ -15,5 +15,6 @@ describe("avatar: cada video de Chase cambia de escenografía (C-AVATAR-2)", () 
     expect(p).toContain("Scene: sitting under a coconut palm.");
     expect(p).toContain("Image 2 is the real place");
     expect(promptDeEscena("x", "y", false)).not.toContain("Image 2");
+    expect(promptDeEscena("x", "y", false, true)).toContain("FULL BODY from head to shoes");
   });
 });

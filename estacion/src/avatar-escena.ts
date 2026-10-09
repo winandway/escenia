@@ -10,7 +10,7 @@
 //   npx tsx src/avatar-escena.ts --muneco ../avatar/chase-montes/fotos/cuerpo-entero-fondo-blanco.png \
 //       --ropa "light blue linen shirt open over a white tank top, beige shorts" \
 //       --escena "sitting at an outdoor restaurant table by the water, holding a fresh drink" \
-//       [--fondo ../avatar/chase-montes/fondos/foto-real.jpg] --salida ../avatar/chase-montes/fotos/escena-x.png
+//       [--fondo ../avatar/chase-montes/fondos/foto-real.jpg] [--cuerpo-entero] --salida ../avatar/chase-montes/fotos/escena-x.png
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { appendFile, mkdtemp, readFile } from "node:fs/promises";
@@ -58,7 +58,12 @@ export async function registrarEscena(huella: string, carpetaClips: string, clip
 }
 
 /** El pedido a Seedream: mismo muñeco, ropa y lugar nuevos, vertical, de la cintura para arriba y mirando a cámara. */
-export function promptDeEscena(ropa: string, escena: string, conFondoReal: boolean): string {
+export function promptDeEscena(
+  ropa: string,
+  escena: string,
+  conFondoReal: boolean,
+  cuerpoEntero = false,
+): string {
   return [
     "Image 1 is the character: a real plastic fashion doll. Keep EXACTLY the same doll: same face, same blue eyes, same curly blond hair, same tanned glossy plastic skin and doll proportions. It must still look like a real doll photographed in real life, not a human and not a drawing.",
     `Dress him in: ${ropa}.`,
@@ -66,7 +71,9 @@ export function promptDeEscena(ropa: string, escena: string, conFondoReal: boole
     conFondoReal
       ? "Image 2 is the real place: put the doll inside this exact place, keep the background as it is in the photo, same light, same perspective."
       : "Real photograph of a real place, natural daylight.",
-    "Vertical photo, the doll seen from the waist up, facing the camera, the whole head visible with space above the hair, both hands visible, sharp focus on the doll, softly blurred background.",
+    cuerpoEntero
+      ? "Vertical photo, the doll standing and seen FULL BODY from head to shoes, centered, facing the camera, arms relaxed at the sides, feet on the ground, some space above the head and below the feet, sharp focus on the doll."
+      : "Vertical photo, the doll seen from the waist up, facing the camera, the whole head visible with space above the hair, both hands visible, sharp focus on the doll, softly blurred background.",
     "No text, no letters, no logos, no watermark, no other people close to the camera.",
   ].join(" ");
 }
@@ -94,7 +101,7 @@ async function principal() {
   // Se carga aquí y no arriba: imagenes.ts lee estacion/.env al importarse, y las pruebas no lo tienen.
   const { imagenConReferencias } = await import("./imagenes");
   const costo = await imagenConReferencias(
-    promptDeEscena(ropa, escena, Boolean(fondo)),
+    promptDeEscena(ropa, escena, Boolean(fondo), process.argv.includes("--cuerpo-entero")),
     referencias,
     path.resolve(salida),
   );

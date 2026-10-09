@@ -74,3 +74,17 @@ describe("mejorador de video: un solo modelo y con tope de segundos", () => {
     expect(() => costoMejoradorUsd("fal-ai/bytedance-upscaler/upscale/video", 41)).toThrow(/tope/);
   });
 });
+
+describe("transferencia de movimiento: un solo modelo, hasta 30 s", () => {
+  it("solo corre DreamActor v2, cobra por segundo y no pasa de 30 s", async () => {
+    const { asegurarModeloTransferencia, costoTransferenciaUsd } = await import("@compartido/modelos");
+    expect(asegurarModeloTransferencia("fal-ai/bytedance/dreamactor/v2")).toBe(
+      "fal-ai/bytedance/dreamactor/v2",
+    );
+    expect(() => asegurarModeloTransferencia("fal-ai/kling-video/v3/pro/motion-control")).toThrow(
+      /bloqueado/,
+    );
+    expect(costoTransferenciaUsd("fal-ai/bytedance/dreamactor/v2", 15.75)).toBeCloseTo(0.788, 3);
+    expect(() => costoTransferenciaUsd("fal-ai/bytedance/dreamactor/v2", 31)).toThrow(/hasta 30 s/);
+  });
+});

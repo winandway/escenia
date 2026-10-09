@@ -414,6 +414,21 @@ Propuesta: probar DreamActor v2 y Kling 2.6 Standard con el mismo video de Richa
 75 centavos y 1,05 $), y si sale en baja resolución, pasarlo por el mejorador. Ninguno está en
 los candados todavía: entran con el «sí» de Richard y su precio.
 
+**Primera prueba (8–9 oct 2026):** Richard pasó un video viral bajado de YouTube (un vaquero
+zapateando de noche sobre tierra en una fiesta de Sonora, 16 s, 1080×1920) para probar; **ese video
+y su música son de otra persona: sirven para probar, no para publicar**. Se autorizó DreamActor v2
+(0,05 $/s, candado `TRANSFERENCIA_PERMITIDA` en `compartido/modelos.ts`). Herramienta:
+`estacion/src/avatar-baile.ts` (foto de Chase + video → Chase bailando; pasa el video a H.264, la
+foto a JPEG, anota el pedido en `pedidos-fal.jsonl`, le devuelve el sonido del video de referencia y
+anota la escena para que no se repita). Escena nueva de cuerpo entero (`avatar-escena.ts
+--cuerpo-entero`): `fotos/escena-fiesta-sonora-cuerpo-entero.png` (sombrero blanco, camisa de
+cuadros rojos, hebilla grande, botas, fiesta de noche sobre tierra). Resultado en
+`avatar/chase-montes/bailes/`: `chase-baile-sonora-hd.mp4` (DreamActor sale a 694×1230; mejorado a
+1080×1916) y `chase-baile-lado-a-lado.mp4` (el original y Chase). Chase hace los mismos pasos en el
+mismo momento, con el polvo y la fiesta detrás, y suena la música del video. Tardó unos 25 minutos
+en fal.ai. Costo: 0,79 $ (baile) + 0,11 $ (mejora) + 0,03 $ (escena) = **0,93 $**. Sin movimiento
+de cámara a propósito: en un baile, acercarse a la cara corta los pies.
+
 **Qué tiene que traer Richard:** un video vertical de 15 a 30 segundos bailando, con el cuerpo
 entero en cuadro de pies a cabeza, la cámara quieta (en un trípode o apoyada), buena luz, fondo
 despejado, una sola persona, y la canción libre de derechos sonando. Y la escena de Chase será una

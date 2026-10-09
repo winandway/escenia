@@ -157,3 +157,28 @@ export function costoMejoradorUsd(modelo: ModeloMejorador, segundos: number): nu
     throw new Error(`El video dura ${Math.round(segundos)} s y el tope son ${TOPE_AVATAR_SEG} s.`);
   return Math.round(MEJORADORES_PERMITIDOS[modelo] * segundos * 1000) / 1000;
 }
+
+// Transferencia de movimiento (docs/AVATAR.md): un video de referencia (alguien bailando) y una foto
+// de Chase dan a Chase haciendo lo mismo. Precio de la API de precios de fal.ai, 8 oct 2026.
+// DreamActor v2 lo autorizó Richard el 8 oct 2026 («hágalo con uno de los modelos»), con el precio
+// de 0,05 $ por segundo delante. Admite hasta 30 s de video.
+export const TRANSFERENCIA_PERMITIDA = {
+  "fal-ai/bytedance/dreamactor/v2": { usd: 0.05, maxSeg: 30 },
+} as const;
+export type ModeloTransferencia = keyof typeof TRANSFERENCIA_PERMITIDA;
+
+export function asegurarModeloTransferencia(modelo: string): ModeloTransferencia {
+  if (!Object.prototype.hasOwnProperty.call(TRANSFERENCIA_PERMITIDA, modelo))
+    throw new Error(`Modelo de transferencia de movimiento bloqueado: «${modelo}».`);
+  return modelo as ModeloTransferencia;
+}
+
+export function costoTransferenciaUsd(modelo: ModeloTransferencia, segundos: number): number {
+  if (!(segundos > 0)) throw new Error("El video de referencia está vacío.");
+  const precio = TRANSFERENCIA_PERMITIDA[modelo];
+  if (segundos > precio.maxSeg)
+    throw new Error(
+      `El video dura ${segundos.toFixed(1)} s y ${modelo} admite hasta ${precio.maxSeg} s: hay que cortarlo.`,
+    );
+  return Math.round(precio.usd * segundos * 1000) / 1000;
+}
