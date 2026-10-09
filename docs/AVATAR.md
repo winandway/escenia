@@ -290,6 +290,48 @@ con el cierre que pidió: «Suscríbete a Caprichoso TV y síguenos».
 - **Regla nueva (Richard, 8 oct 2026):** el texto se le muestra ANTES de sintetizar o generar.
   Este clip se generó sin que lo viera (su mensaje llegó a mitad del trabajo).
 
+### Regla: cada video cambia de escenografía y de ropa (Richard, 8 oct 2026)
+
+Richard: «hiciste dos videos iguales, con el mismo fondo, mismo todo, y eso no está bien». Cada
+video de Chase lleva **otro lugar, otra pose y otra ropa**: la orilla de la playa como hasta ahora,
+sentado debajo de una palmera, recostado a un carro, en un kiosco playero con mesitas de plástico
+y ambiente festivo, en un restaurante. **Mejor con un fondo real** detrás (mandó de ejemplo la foto
+de una terraza de restaurante en un muelle: `avatar/chase-montes/fondos/ejemplo-restaurante-muelle.webp`).
+
+- **La herramienta:** `estacion/src/avatar-escena.ts` arma la foto nueva con Seedream edit (3 ¢):
+  el muñeco con la misma cara y el mismo pelo, la ropa y la escena que se le digan, vertical, de
+  la cintura para arriba y mirando a cámara. Con `--fondo foto-real.jpg` usa ese lugar real de fondo.
+  Primeras dos: `fotos/escena-restaurante-muelle.png` (camisa de lino azul, jugo verde, con la foto
+  de Richard de fondo) y `fotos/escena-kiosco-playero.png` (camisa de flores, sombrero de paja,
+  coco en una mesita de plástico). Seis centavos las dos.
+- **El candado (C-AVATAR-2):** cada foto usada en un clip queda anotada por su huella en
+  `pruebas/escenas-usadas.txt`, y `avatar-prueba.ts` revienta ANTES de gastar si se intenta repetir
+  una (`--rehacer` solo para corregir ese mismo video). Las fotos de los cuatro clips de hoy ya están
+  anotadas.
+- Ojo con la foto de ejemplo: es de un restaurante real con un barco de una empresa; para un video
+  publicado, mejor fotos de Richard o lugares sin marcas legibles.
+
+### Cuánto cuesta un clip y qué alternativas hay (precios oficiales de fal.ai, 8 oct 2026)
+
+Precios leídos de la API de precios de fal.ai (`api.fal.ai/v1/models/pricing`), no de memoria.
+OmniHuman v1.5 cobra 0,16 dólares por segundo de video: el clip del jalón de pelo (25,8 s) son
+4,13 dólares. El cobro real de la cuenta no se puede ver desde aquí: la clave de la Estación no
+tiene permiso de facturación (`billing:usage:read`); se ve en el panel de fal.ai, en Usage.
+
+| Modelo en fal.ai                   | Precio          | Un clip de 26 s  | Nota                                                               |
+| ---------------------------------- | --------------- | ---------------- | ------------------------------------------------------------------ |
+| FlashTalk (SoulX-FlashTalk 14B)    | 0,02 $/s        | 0,52 $           | El más barato; pide «imagen de la cara»: probar si mueve el cuerpo |
+| Hunyuan Avatar                     | 0,40 $ por clip | 0,80 $ (2 clips) | Hasta 16 s por clip (401 cuadros a 25 por s)                       |
+| Kling AI Avatar v2 Standard        | 0,0562 $/s      | 1,46 $           | Ya probado: casi no mueve el muñeco                                |
+| VEED Fabric 1.0                    | 0,08 $/s        | 2,08 $           |                                                                    |
+| OmniHuman v1                       | 0,14 $/s        | 3,64 $           |                                                                    |
+| **OmniHuman v1.5 (el que usamos)** | **0,16 $/s**    | **4,16 $**       | Gestos de verdad                                                   |
+| LongCat Avatar                     | 0,15 $/s a 480p | 3,90 $           | 720p cuesta cuatro veces más                                       |
+
+Propuesta: probar FlashTalk y Hunyuan con el mismo audio y una escena nueva (unos 1,30 dólares) y
+comparar contra OmniHuman. Ninguno de los dos está en `AVATARES_PERMITIDOS`: hace falta el «sí»
+escrito de Richard con el precio antes de encenderlos.
+
 ### Pendiente: voz de un viral adaptada a Chase (punto dos de Richard, sin empezar)
 
 Montar el audio de una conversación viral de 5 a 10 segundos, convertirlo a la voz de Chase, y que

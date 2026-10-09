@@ -3,7 +3,7 @@
 // se queda con clip de fondo: nunca se escala a un modelo caro.
 // Sin FAL_KEY en estacion/.env, esta pieza está apagada.
 import { existsSync } from "node:fs";
-import { copyFile, link, mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, link, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -61,7 +61,11 @@ async function reducirReferencia(ruta: string): Promise<{ dataUri: string; huell
     .slice(0, 16);
   const reducida = path.join(carpeta, `${huella}.jpg`);
   if (!existsSync(reducida)) {
-    await exec("sips", ["-s", "format", "jpeg", "-Z", "1280", ruta, "--out", reducida]);
+    // A un archivo propio de este proceso y luego se renombra: dos procesos que reducen la misma
+    // foto a la vez (dos escenas de Chase en paralelo, 8 oct 2026) ya no se pisan.
+    const temporal = `${reducida}.${process.pid}.${Date.now()}.jpg`;
+    await exec("sips", ["-s", "format", "jpeg", "-Z", "1280", ruta, "--out", temporal]);
+    await rename(temporal, reducida);
   }
   return { dataUri: `data:image/jpeg;base64,${(await readFile(reducida)).toString("base64")}`, huella };
 }
@@ -73,6 +77,33 @@ function urlDeFal(direccion: string): string {
     throw new Error(`fal.ai devolvió una dirección inesperada (${u.hostname}); no se envía la clave.`);
   }
   return u.toString();
+}
+
+/**
+ * Imagen nueva a partir de VARIAS referencias (Seedream edit, 3 ¢): el muñeco Chase y, si hay, una
+ * foto real del lugar (docs/AVATAR.md, regla de la escenografía). Se guarda en `destino` y devuelve
+ * lo que costó (0 si ya existía con el mismo pedido).
+ */
+export async function imagenConReferencias(
+  prompt: string,
+  referencias: string[],
+  destino: string,
+): Promise<number> {
+  if (!config.FAL_KEY) throw new Error("Falta FAL_KEY en estacion/.env.");
+  if (referencias.length === 0 || referencias.length > 4) throw new Error("Van de 1 a 4 referencias.");
+  const modelo = asegurarModeloImagen(MODELO_IMAGEN_CON_REFERENCIA);
+  if (existsSync(destino)) return 0;
+  const refs = await Promise.all(referencias.map((r) => referenciaEnBase64(r)));
+  const imagen = await pedirAFal(modelo, {
+    prompt,
+    image_urls: refs.map((r) => r.dataUri),
+    image_size: { width: 1152, height: 2048 },
+    num_images: 1,
+    enable_safety_checker: true,
+  });
+  await mkdir(path.dirname(destino), { recursive: true });
+  await writeFile(destino, imagen);
+  return IMAGENES_PERMITIDAS[modelo];
 }
 
 /** Encola un pedido en fal.ai, espera a que termine (hasta 90 s) y devuelve la imagen. */
