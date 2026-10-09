@@ -436,7 +436,13 @@ Standard** (0,07 $/s, agregado a `TRANSFERENCIA_PERMITIDA`): `avatar-baile.ts --
 manda `character_orientation: "video"` (la orientación sigue al video, la mejor para movimientos
 complejos, hasta 30 s) y conserva el sonido original. Escena nueva:
 `fotos/escena-escenario-playa-traje.png` (traje azul claro, tarima de un bar de playa al
-atardecer, micrófono de pie). Resultado en `avatar/chase-montes/canto/`.
+atardecer, micrófono de pie). Resultado en `avatar/chase-montes/canto/`:
+`chase-canto-kling-hd.mp4` y `chase-canto-lado-a-lado.mp4`. **Kling sí copia como un espejo:** se
+agacha, gira, levanta los dedos, se acerca a la cámara en el mismo momento que Richard, y la boca
+abre y cierra con la canción (no es un doblaje exacto sílaba por sílaba, pero sigue el canto).
+Conserva el sonido del video. Sale a 720×1280 y se mejora a 1080×1920. Tardó unos 5 minutos.
+Costo exacto: 2,04 $ (Kling, 29,2 s) + 0,21 $ (mejora) + 0,03 $ (escena) = **2,28 $**.
+Para copiar gestos de Richard, Kling 2.6 es el modelo; DreamActor queda para lo más barato.
 
 **Qué tiene que traer Richard:** un video vertical de 15 a 30 segundos bailando, con el cuerpo
 entero en cuadro de pies a cabeza, la cámara quieta (en un trípode o apoyada), buena luz, fondo
