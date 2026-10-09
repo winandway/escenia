@@ -37,19 +37,15 @@ export function escenaRepetida(huella: string, registro: string): string | null 
 }
 
 /** Revienta si la foto ya se usó en otro clip de la misma carpeta (salvo `rehacer`: corregir ESE mismo video). */
-export async function asegurarEscenaNueva(
-  imagen: string,
-  carpetaClips: string,
-  rehacer: boolean,
-): Promise<string> {
+export async function asegurarEscenaNueva(imagen: string, carpetaClips: string): Promise<string> {
   const huella = await huellaDeImagen(imagen);
   const archivo = path.join(carpetaClips, REGISTRO_ESCENAS);
   const registro = existsSync(archivo) ? await readFile(archivo, "utf8") : "";
   const clip = escenaRepetida(huella, registro);
-  if (clip && !rehacer)
+  if (clip)
     throw new Error(
-      `Esta escena ya salió en ${clip}. Regla de Richard: cada video cambia de escenografía y de ropa. ` +
-        "Arma una escena nueva con avatar-escena.ts (o usa --rehacer solo para corregir ESE mismo video).",
+      `Esta escena ya salió en ${clip}. Regla de Richard: cada video cambia de escenografía y de ropa, ` +
+        "sin excepciones (tampoco para pruebas). Arma una escena nueva con avatar-escena.ts.",
     );
   return huella;
 }

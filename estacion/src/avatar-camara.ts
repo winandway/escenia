@@ -76,14 +76,18 @@ export function filtroDeCamara(
   alto: number,
   fps: number,
 ): string {
+  // Un clip chico (FlashTalk sale a 448×768) se entrega a 1920 de alto, con la misma proporción.
+  const escala = Math.max(1, 1920 / alto);
+  const anchoSalida = Math.round((ancho * escala) / 2) * 2;
+  const altoSalida = Math.round((alto * escala) / 2) * 2;
   const cx = Math.min(0.9, Math.max(0.1, cara.cx));
   const cy = Math.min(0.9, Math.max(0.1, cara.cy));
   // Un vaivén lateral muy suave para que la toma no quede de trípode.
   const x = `clip(iw*(${cx.toFixed(4)}+0.008*sin(it*0.6))-iw/zoom/2,0,iw-iw/zoom)`;
   const y = `clip(ih*${cy.toFixed(4)}-ih/zoom/2,0,ih-ih/zoom)`;
   return (
-    `scale=${ancho * 2}:${alto * 2}:flags=lanczos,` +
-    `zoompan=z='${expresionDeZoom(duracion, golpes)}':x='${x}':y='${y}':d=1:s=${ancho}x${alto}:fps=${fps}`
+    `scale=${anchoSalida * 2}:${altoSalida * 2}:flags=lanczos,` +
+    `zoompan=z='${expresionDeZoom(duracion, golpes)}':x='${x}':y='${y}':d=1:s=${anchoSalida}x${altoSalida}:fps=${fps}`
   );
 }
 

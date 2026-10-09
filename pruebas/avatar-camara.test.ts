@@ -29,5 +29,7 @@ describe("avatar: movimiento de cámara en las risas y en el remate", () => {
     expect(f).toContain("scale=2176:3840");
     expect(f).toContain("s=1088x1920:fps=25");
     expect(f).toContain("ih*0.2500");
+    // FlashTalk (448×768) sale a 1920 de alto con su misma proporción.
+    expect(filtroDeCamara(25, [], { cx: 0.5, cy: 0.25 }, 448, 768, 25)).toContain("s=1120x1920");
   });
 });

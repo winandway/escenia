@@ -2,7 +2,7 @@
 // clip donde se diga. Imprime el costo antes de pedirlo y lo anota en un registro al lado.
 // Uso (desde estacion/):
 //   npx tsx src/avatar-prueba.ts --imagen ../avatar/chase-montes/fotos/x.png --audio ../avatar/chase-montes/voces/x.mp3 \
-//       --modelo kling|omnihuman|flashtalk|hunyuan --salida ../avatar/chase-montes/pruebas/x.mp4 [--prompt "..."] [--ambiente ../avatar/chase-montes/sonidos/olas-playa.mp3] [--rehacer]
+//       --modelo kling|omnihuman|flashtalk|hunyuan --salida ../avatar/chase-montes/pruebas/x.mp4 [--prompt "..."] [--ambiente ../avatar/chase-montes/sonidos/olas-playa.mp3]
 import { appendFile } from "node:fs/promises";
 import path from "node:path";
 import { generarAvatar } from "./avatar";
@@ -30,11 +30,7 @@ async function principal() {
       "Uso: avatar-prueba.ts --imagen foto --audio voz.mp3 --modelo kling|omnihuman|flashtalk|hunyuan --salida clip.mp4",
     );
   // C-AVATAR-2: cada video cambia de escenografía y de ropa; la misma foto no se repite.
-  const huella = await asegurarEscenaNueva(
-    path.resolve(imagen),
-    path.dirname(path.resolve(salida)),
-    process.argv.includes("--rehacer"),
-  );
+  const huella = await asegurarEscenaNueva(path.resolve(imagen), path.dirname(path.resolve(salida)));
   const r = await generarAvatar({
     imagen: path.resolve(imagen),
     audio: path.resolve(audio),

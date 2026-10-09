@@ -1409,7 +1409,8 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué se hizo:** `estacion/src/avatar-escena.ts`: `huellaDeImagen` (sha1 de la foto),
   `escenaRepetida(huella, registro)` y `asegurarEscenaNueva`, que lee `escenas-usadas.txt` junto a
   los clips. `avatar-prueba.ts` lo llama ANTES de encolar nada (no gasta) y anota la escena después
-  de generar. `--rehacer` solo para corregir ese mismo video. La herramienta para armar la escena
+  de generar. **Sin excepciones:** la salida `--rehacer` se usó el mismo día para comparar modelos
+  con la misma foto (tres videos iguales) y se quitó del código. La herramienta para armar la escena
   nueva (ropa, pose, lugar, fondo real opcional) está en el mismo archivo. Además, `imagenes.ts`
   reduce la referencia a un archivo propio del proceso y lo renombra: dos escenas pedidas a la vez
   chocaban en la misma reducción (error de `sips`).
@@ -1417,5 +1418,5 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Cómo se comprueba:** `npx vitest run pruebas/avatar-escena.test.ts` (con `escenaRepetida`
   devolviendo siempre null se pone en rojo; comprobado el 8 oct 2026). En vivo: pedir un clip con
   `fotos/chase-playa-cintura.png` tiene que reventar con «Esta escena ya salió en…» sin encolar.
-- **Qué NO tocar:** no borrar líneas de `escenas-usadas.txt` para «poder repetir»; no usar
-  `--rehacer` para un video nuevo.
+- **Qué NO tocar:** no borrar líneas de `escenas-usadas.txt` para «poder repetir»; no volver a
+  poner ninguna salida en `asegurarEscenaNueva`, ni para pruebas ni para comparar modelos.

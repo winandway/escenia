@@ -350,9 +350,18 @@ modelo (`--rehacer`, porque es el mismo video).
   `pedidos-fal.jsonl` (junto al clip) apenas fal.ai lo acepta, la espera sube a 30 minutos, y
   `estacion/src/avatar-recoger.ts <carpeta>` baja después lo que fal.ai terminó y no se bajó.
 - Video lado a lado con el mismo audio: `pruebas/comparar-omnihuman-vs-flashtalk.mp4`.
-- **Recomendación:** seguir con OmniHuman para Chase (gestos y resolución); para bajar el costo,
-  Shorts de 15 a 20 segundos (2,40 a 3,20 $ por clip). FlashTalk sirve si algún día basta un
-  personaje que hable con poco movimiento y en baja resolución.
+- **Decisión de Richard (8 oct 2026): FlashTalk.** Viendo la comparación lado a lado le pareció
+  de muy buena calidad («el barato lo veo súper bien»). Es el modelo por defecto para Chase: unos
+  50 centavos por Short en vez de 4 dólares. La cámara lo entrega a 1120×1920 (la herramienta
+  agranda los clips chicos a 1920 de alto).
+- **Primer video con FlashTalk:** «La silla vacía» en Santa Marta,
+  `pruebas/chase-silla-vacia-final.mp4` (26,8 s, voz 1, olas y cámara; 0,54 $). Richard dijo que el
+  chiste no le parece muy gracioso, pero pidió verlo hecho.
+
+**Error que no se repite:** para comparar modelos se usó la misma foto de la playa con una salida
+del candado (`--rehacer`), y quedaron tres videos con el mismo fondo, justo lo que la regla prohíbe.
+La salida se quitó: el candado C-AVATAR-2 no tiene excepciones, tampoco para pruebas.
+
 - Error del 8 oct 2026: el primer pedido a Hunyuan seguía en la cola y se relanzó creyéndolo
   caído; se cobraron dos (0,40 $ de más). Lección: un proceso en segundo plano se vigila con su
   propia tarea, no con `pgrep` y un registro que solo se escribe al final.
