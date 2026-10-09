@@ -249,6 +249,28 @@ audio en base64 falló sin cobrar.
   sonido (401 `sound_generation`); es provisional: una grabación real de olas que Richard suba en
   «Sonidos» lo reemplaza con el mismo comando.
 
+### Cómo trae Richard una voz de la biblioteca de ElevenLabs (tutorial, 8 oct 2026)
+
+La clave de la Estación no puede leer la biblioteca, así que la voz la elige Richard en la web y
+me pasa su **ID de voz** (unas veinte letras y números, como el de la voz creada hoy).
+
+1. **Dónde:** en la web de ElevenLabs, con su cuenta, menú **Voices** y dentro la **Library**
+   (la biblioteca de voces de la comunidad). Quién lo hace: Richard.
+2. **Filtrar:** idioma **Spanish**, acento **Colombian** (o **Latin American** si no sale),
+   género **Male**; y en el buscador probar «colombiano», «paisa», «Medellín», «antioqueño».
+   Darle play a cada una: la que suene paisa y natural.
+3. **Agregarla a la cuenta:** botón **Add to my voices** (o «Add voice») en esa voz. Sin este paso
+   la voz no se puede usar desde la API, aunque se tenga el ID.
+4. **Copiar el ID:** en **My Voices**, en la tarjeta de esa voz, el menú de los tres puntos →
+   **Copy voice ID** (también está dentro de la voz, en sus ajustes, como «Voice ID»).
+5. **Pasármelo:** pegar el ID en el chat. Yo lo guardo en `estacion/.env` como
+   `ELEVENLABS_VOICE_ID_CHASE` (nunca en el repositorio), sintetizo el guion y rehago el clip.
+   Qué se comprueba: el audio nuevo en `voces/` y el clip nuevo en `pruebas/`.
+
+Si no aparece ninguna paisa que convenza, se queda la «paisa joven 1» para empezar (lo dijo
+Richard el 8 oct 2026). Para más naturalidad, con la voz elegida se prueba también el modelo
+`eleven_v3` (ya permitido en `compartido/modelos.ts`, mismo precio), que es más expresivo.
+
 ### Lo que falta para la serie (en orden)
 
 1. La voz paisa de verdad: Richard busca en la biblioteca de ElevenLabs una voz masculina
