@@ -135,3 +135,25 @@ export function costoAvatarUsd(modelo: ModeloAvatar, segundos: number): number {
   const usd = precio.por === "clip" ? precio.usd : precio.usd * segundos;
   return Math.round(usd * 1000) / 1000;
 }
+
+// Mejorador de video (docs/AVATAR.md): FlashTalk sale a 448×768 y en el celular se ve borroso.
+// El mejorador de ByteDance en fal.ai lo lleva a 1080p con un modo para video hecho con IA.
+// Precio de la API de precios de fal.ai, 8 oct 2026: 0,0072 $ por segundo de video. Ningún otro corre.
+export const MEJORADORES_PERMITIDOS = {
+  "fal-ai/bytedance-upscaler/upscale/video": 0.0072,
+} as const;
+export type ModeloMejorador = keyof typeof MEJORADORES_PERMITIDOS;
+
+export function asegurarModeloMejorador(modelo: string): ModeloMejorador {
+  if (!Object.prototype.hasOwnProperty.call(MEJORADORES_PERMITIDOS, modelo))
+    throw new Error(`Mejorador de video bloqueado: «${modelo}».`);
+  return modelo as ModeloMejorador;
+}
+
+/** Costo de mejorar un video de `segundos`; con el mismo tope que el avatar (40 s). */
+export function costoMejoradorUsd(modelo: ModeloMejorador, segundos: number): number {
+  if (!(segundos > 0)) throw new Error("El video a mejorar está vacío.");
+  if (segundos > TOPE_AVATAR_SEG)
+    throw new Error(`El video dura ${Math.round(segundos)} s y el tope son ${TOPE_AVATAR_SEG} s.`);
+  return Math.round(MEJORADORES_PERMITIDOS[modelo] * segundos * 1000) / 1000;
+}

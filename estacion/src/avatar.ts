@@ -47,6 +47,7 @@ const TIPOS: Record<string, string> = {
   ".mp3": "audio/mpeg",
   ".wav": "audio/wav",
   ".m4a": "audio/mp4",
+  ".mp4": "video/mp4",
 };
 
 /**
@@ -54,7 +55,7 @@ const TIPOS: Record<string, string> = {
  * aceptan datos en base64 en `audio_url` (OmniHuman respondió «Failed to download the file» el
  * 8 oct 2026), así que foto y audio van subidos primero, como hace el cliente oficial de fal.
  */
-async function subirAFal(ruta: string, falKey: string): Promise<string> {
+export async function subirAFal(ruta: string, falKey: string): Promise<string> {
   const tipo = TIPOS[path.extname(ruta).toLowerCase()];
   if (!tipo) throw new Error(`No sé mandar a fal.ai un archivo ${path.extname(ruta)}.`);
   const inicio = await fetch("https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3", {
@@ -77,7 +78,7 @@ async function subirAFal(ruta: string, falKey: string): Promise<string> {
 }
 
 /** Solo se habla con la cola de fal.ai: una dirección que no sea de ahí no se sigue. */
-function urlDeFal(direccion: string): string {
+export function urlDeFal(direccion: string): string {
   const u = new URL(direccion);
   if (u.protocol !== "https:" || u.hostname !== "queue.fal.run")
     throw new Error(`fal.ai devolvió una dirección inesperada: ${u.hostname}`);

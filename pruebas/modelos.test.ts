@@ -62,3 +62,15 @@ describe("avatar guiado por audio: candado de modelos y de segundos (C-AVATAR-1)
     expect(() => costoAvatarUsd("fal-ai/bytedance/omnihuman/v1.5", 0)).toThrow(/vacío/);
   });
 });
+
+describe("mejorador de video: un solo modelo y con tope de segundos", () => {
+  it("solo corre el de ByteDance, cobra por segundo y no pasa de 40 s", async () => {
+    const { asegurarModeloMejorador, costoMejoradorUsd } = await import("@compartido/modelos");
+    expect(asegurarModeloMejorador("fal-ai/bytedance-upscaler/upscale/video")).toBe(
+      "fal-ai/bytedance-upscaler/upscale/video",
+    );
+    expect(() => asegurarModeloMejorador("topaz/upscale/video/precision")).toThrow(/bloqueado/);
+    expect(costoMejoradorUsd("fal-ai/bytedance-upscaler/upscale/video", 26.8)).toBeCloseTo(0.193, 3);
+    expect(() => costoMejoradorUsd("fal-ai/bytedance-upscaler/upscale/video", 41)).toThrow(/tope/);
+  });
+});

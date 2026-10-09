@@ -358,6 +358,19 @@ modelo (`--rehacer`, porque es el mismo video).
   `pruebas/chase-silla-vacia-final.mp4` (26,8 s, voz 1, olas y cámara; 0,54 $). Richard dijo que el
   chiste no le parece muy gracioso, pero pidió verlo hecho.
 
+**Pero FlashTalk solo se ve borroso (Richard, 8 oct 2026):** en la comparación lado a lado los
+dos videos iban a la mitad de tamaño y no se notaba; en pantalla completa, los 448×768 de
+FlashTalk se ven blandos aunque se agranden. **Arreglo: el mejorador de video de ByteDance** en
+fal.ai (`estacion/src/avatar-mejorar.ts`, 0,0072 $ por segundo, modo «aigc» para video hecho con
+IA, a 1080p). Con la mejora suave («fidelity high») casi no se notaba; con la fuerte («medium») el
+pelo, los ojos, la cadena y la tela salen nítidos, casi al nivel de OmniHuman. Queda la fuerte.
+
+**El circuito de un Short de Chase, entonces:** escena nueva (`avatar-escena.ts`, 3 ¢) → voz
+(`eleven_v3`) → FlashTalk con olas (`avatar-prueba.ts --modelo flashtalk --ambiente …`, 2 ¢/s) →
+mejora a 1080p (`avatar-mejorar.ts`, 0,7 ¢/s) → cámara (`avatar-camara.ts`, gratis).
+Un video de 27 s: **unos 76 centavos** (0,54 + 0,19 + 0,03), contra 4,29 $ con OmniHuman.
+Ejemplo: `pruebas/chase-silla-vacia-final-hd.mp4`.
+
 **Error que no se repite:** para comparar modelos se usó la misma foto de la playa con una salida
 del candado (`--rehacer`), y quedaron tres videos con el mismo fondo, justo lo que la regla prohíbe.
 La salida se quitó: el candado C-AVATAR-2 no tiene excepciones, tampoco para pruebas.
