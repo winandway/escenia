@@ -271,11 +271,36 @@ Si no aparece ninguna paisa que convenza, se queda la «paisa joven 1» para emp
 Richard el 8 oct 2026). Para más naturalidad, con la voz elegida se prueba también el modelo
 `eleven_v3` (ya permitido en `compartido/modelos.ts`, mismo precio), que es más expresivo.
 
+### Segundo clip: «El jalón de pelo» (8 oct 2026)
+
+Richard eligió dos voces de la biblioteca de ElevenLabs y pasó sus IDs; quedaron en
+`estacion/.env` como `ELEVENLABS_VOICE_ID_CHASE` (voz 1) y `ELEVENLABS_VOICE_ID_CHASE_2` (voz 2).
+Se sintetizan con **`eleven_v3`**, que entiende etiquetas como `[laughs]` y suena más natural.
+
+Historia que pidió: Chase llega a la playa, un niño se le acerca, él se agacha a hablarle, el niño
+le da un jalón en el pelo y le pregunta si es peluca o pelo de verdad; Chase se ríe. Personalidad:
+coqueto, enamoradizo, que se quiere mostrar. Guion en `avatar/chase-montes/guion-2-jalon-de-pelo.txt`,
+con el cierre que pidió: «Suscríbete a Caprichoso TV y síguenos».
+
+- Audio: `voces/chase-voz1-jalon-v3.mp3` (25,8 s) y `voces/chase-voz2-jalon-v3.mp3` (26,1 s).
+- Clip: `pruebas/chase-jalon-de-pelo-voz1-ambiente.mp4`, OmniHuman con la voz 1 y las olas,
+  4,13 dólares. Se ve: risa con la boca abierta, brazos abiertos, mano en la cintura varias veces,
+  el mar en movimiento. No se ve: tocarse el pelo (el prompt lo pedía). Leve borrón de color en
+  las piernas, al borde de abajo.
+- **Regla nueva (Richard, 8 oct 2026):** el texto se le muestra ANTES de sintetizar o generar.
+  Este clip se generó sin que lo viera (su mensaje llegó a mitad del trabajo).
+
+### Pendiente: voz de un viral adaptada a Chase (punto dos de Richard, sin empezar)
+
+Montar el audio de una conversación viral de 5 a 10 segundos, convertirlo a la voz de Chase, y que
+los gestos sigan ese audio. Cómo se haría: ElevenLabs «voz a voz» (speech-to-speech) con la voz
+de Chase, y OmniHuman con el audio convertido. Antes de empezar: comprobar que la clave tenga ese
+permiso, y tener en cuenta que el audio de un viral ajeno puede tener dueño y que YouTube puede
+reclamarlo.
+
 ### Lo que falta para la serie (en orden)
 
-1. La voz paisa de verdad: Richard busca en la biblioteca de ElevenLabs una voz masculina
-   colombiana (paisa) y la agrega a su cuenta; con el nombre se sintetiza. Las nueve diseñadas no
-   dieron el acento.
+1. Hecho el 8 oct 2026: Richard eligió dos voces de la biblioteca (ver arriba).
 2. Tres a cinco fotos del muñeco en escenas reales (playa, calle, mercado), verticales, de la
    cintura para arriba y mirando a cámara; dos sin gafas de sol y una de hombros para arriba.
 3. Cinco guiones de 15 a 30 segundos acordados con Richard (temas, no inventados).
