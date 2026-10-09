@@ -434,6 +434,19 @@ entero en cuadro de pies a cabeza, la cámara quieta (en un trípode o apoyada),
 despejado, una sola persona, y la canción libre de derechos sonando. Y la escena de Chase será una
 nueva, de cuerpo entero (regla de la escenografía).
 
+### Publicar un Short de Chase: miniatura y textos de YouTube (9 oct 2026)
+
+Richard preguntó por la miniatura, el título, la descripción y las palabras clave, que los videos
+del panel traen solos y los de Chase no. **La miniatura** sale con la misma pieza de las portadas
+de impacto (`estacion/src/avatar-portada.ts`): el muñeco recortado de la foto de su escena (nítida,
+no un cuadro del video), titular enorme, línea y remate en caja de color, etiqueta «CHASE, EL
+MONO CARIBE», y otra paleta y otra trama por video (`--variante N`, `--espejo` si la foto se
+repite). Empaqueta solo su carpeta (`cache/public/chase-portadas`), no la carpeta pública entera.
+**Los textos** (título con #Shorts, descripción con la invitación a suscribirse, palabras clave) se
+escriben a mano por video. Todo lo listo para subir queda en `avatar/chase-montes/publicar/`:
+cada video numerado, su miniatura y `textos-youtube.md`. Al subir: marcar «Contenido alterado o
+sintético: Sí». El baile de Sonora no se publica (video y música ajenos).
+
 ### Pendiente: voz de un viral adaptada a Chase (punto dos de Richard, sin empezar)
 
 Montar el audio de una conversación viral de 5 a 10 segundos, convertirlo a la voz de Chase, y que
