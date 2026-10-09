@@ -5,7 +5,7 @@
 // (C-AVATAR-2: la misma foto no se repite).
 // Uso (desde estacion/):
 //   npx tsx src/avatar-baile.ts --imagen ../avatar/chase-montes/fotos/escena-x.png \
-//       --video ../avatar/chase-montes/bailes/referencia.mp4 --salida ../avatar/chase-montes/bailes/chase-baile.mp4 [--modelo dreamactor|kling]
+//       --video ../avatar/chase-montes/bailes/referencia.mp4 --salida ../avatar/chase-montes/bailes/chase-baile.mp4 [--modelo dreamactor|kling|kling3] [--cara frente.png --cara-refs a.png,b.png]
 import { execFile } from "node:child_process";
 import { appendFile, mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -21,6 +21,7 @@ const exec = promisify(execFile);
 const MODELOS: Record<string, string> = {
   dreamactor: "fal-ai/bytedance/dreamactor/v2",
   kling: "fal-ai/kling-video/v2.6/standard/motion-control",
+  kling3: "fal-ai/kling-video/v3/standard/motion-control",
 };
 const ESPERA_MAXIMA_MS = 30 * 60_000;
 
@@ -80,6 +81,29 @@ async function principal() {
   const costoUsd = costoTransferenciaUsd(modelo, segundos);
   console.log(`  ${modelo}: ${segundos.toFixed(1)} s de video, $${costoUsd.toFixed(2)}`);
 
+  // Kling 3: la cara aparte (`--cara frente.png --cara-refs a.png,b.png`) para no perder el parecido.
+  const falKey = config.FAL_KEY;
+  const cara = opcion("--cara");
+  const carasRef = (opcion("--cara-refs") ?? "")
+    .split(",")
+    .map((r) => r.trim())
+    .filter(Boolean);
+  const elemento =
+    modelo === "fal-ai/kling-video/v3/standard/motion-control" && cara && carasRef.length > 0
+      ? {
+          elements: [
+            {
+              frontal_image_url: await subirAFal(path.resolve(cara), falKey),
+              reference_image_urls: await Promise.all(
+                carasRef.slice(0, 3).map((r) => subirAFal(path.resolve(r), falKey)),
+              ),
+            },
+          ],
+          prompt:
+            opcion("--prompt") ??
+            "@Element1 is the lead singer: keep his face exactly the same in every frame, also in close-ups.",
+        }
+      : {};
   const cabeceras = { authorization: `Key ${config.FAL_KEY}`, "content-type": "application/json" };
   const envio = await fetch(`https://queue.fal.run/${modelo}`, {
     method: "POST",
@@ -90,7 +114,7 @@ async function principal() {
       ...(modelo === "fal-ai/bytedance/dreamactor/v2"
         ? { trim_first_second: true }
         : // Kling: «video» = la orientación sigue al video, la mejor para movimientos complejos (hasta 30 s).
-          { character_orientation: "video", keep_original_sound: true }),
+          { character_orientation: "video", keep_original_sound: true, ...elemento }),
     }),
   });
   if (!envio.ok)

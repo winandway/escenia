@@ -167,6 +167,10 @@ export const TRANSFERENCIA_PERMITIDA = {
   // Kling 2.6 Motion Control Standard: propuesto con su precio el 8 oct 2026 y pedido por Richard el
   // 9 oct («no copia exactamente los gestos como un espejo… vamos a volver a probar»).
   "fal-ai/kling-video/v2.6/standard/motion-control": { usd: 0.07, maxSeg: 30 },
+  // Kling 3 Motion Control Standard: recibe fotos de la cara aparte para no perder el parecido en los
+  // primeros planos. Para el avatar de Richard (9 oct 2026: «que quede casi perfecto»); precio de la
+  // tabla que vio el 8 oct.
+  "fal-ai/kling-video/v3/standard/motion-control": { usd: 0.126, maxSeg: 30 },
 } as const;
 export type ModeloTransferencia = keyof typeof TRANSFERENCIA_PERMITIDA;
 

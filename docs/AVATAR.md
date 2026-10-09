@@ -449,6 +449,25 @@ entero en cuadro de pies a cabeza, la cámara quieta (en un trípode o apoyada),
 despejado, una sola persona, y la canción libre de derechos sonando. Y la escena de Chase será una
 nueva, de cuerpo entero (regla de la escenografía).
 
+### Avatar de Richard: él mismo cantando con su banda en vivo (9 oct 2026)
+
+Richard pasó dos imágenes suyas hechas con IA («eso ya es mío»): una en concierto con guitarra
+blanca y banda, y una hoja de personaje (ángulos de la cara, expresiones, poses, seis vestuarios,
+accesorios y ambientes del videoclip, estilo bachata moderna). Pidió su avatar cantando la canción
+de su video (el mismo de traje frente a la tela verde) con una puesta en escena en vivo, «algo bien
+bacano», y que no se repitiera el error de Chase en la tarima redonda («se sale de una tabla»).
+
+- **Carpeta:** `avatar/richard/` (fuera de git): `referencias/` (sus imágenes, los recortes de su
+  cara y su cuerpo, y su video), `escenas/`, `clips/`.
+- **La escena** (`avatar-escena.ts --persona ref1,ref2,…`, nuevo modo para personas reales): de
+  cuerpo entero, manos vacías, micrófono de diadema, y **piso de sobra delante hasta la cámara, sin
+  bordes, escalones, micrófonos de pie ni objetos** (porque en su video se acerca a la cámara). Se
+  hicieron tres con luces distintas (9 ¢): la azul quedó bien; la ámbar tenía el borde de la tarima
+  a sus pies y la roja metió un micrófono de pie aunque se prohibió. **Siempre se revisan antes de
+  gastar en el video.**
+- **El video:** Kling 3 Motion Control Standard (0,126 $/s) con su cara aparte (`--cara` de frente
+  y `--cara-refs`), para no perder el parecido en los primeros planos.
+
 ### Publicar un Short de Chase: miniatura y textos de YouTube (9 oct 2026)
 
 Richard preguntó por la miniatura, el título, la descripción y las palabras clave, que los videos

@@ -78,6 +78,22 @@ export function promptDeEscena(
   ].join(" ");
 }
 
+/**
+ * El pedido de escena para una PERSONA real (el avatar de Richard), no para el muñeco. Lo que
+ * aprendimos con Chase cantando (9 oct 2026): si la persona del video se acerca a la cámara, delante
+ * de ella tiene que haber piso de sobra; con una tarima redonda se «salía de la tabla». Y las manos
+ * vacías, sin micrófono de pie ni guitarra: el video de referencia no los tiene y el modelo los rompe.
+ */
+export function promptDeEscenaPersona(ropa: string, escena: string, referencias: number): string {
+  return [
+    `Images 1 to ${referencias} show the same real man. Keep EXACTLY his identity: the same face, the same thick black-framed glasses, the same hairstyle, skin tone, age, build and height proportions. Photorealistic, not a drawing.`,
+    `Outfit: ${ropa}.`,
+    `Scene: ${escena}.`,
+    "Vertical photo, he stands FULL BODY from head to shoes in the middle of the frame, facing the camera, relaxed, both hands empty and visible. In front of him, all the way to the camera, there is plenty of empty flat floor: no stage edge, no steps, no microphone stand, no instruments and no objects between him and the camera. He wears a thin skin-colored headset microphone. Sharp focus on him.",
+    "No text, no letters, no logos, no watermark.",
+  ].join(" ");
+}
+
 const opcion = (nombre: string): string | null => {
   const i = process.argv.indexOf(nombre);
   return i === -1 ? null : (process.argv[i + 1] ?? null);
@@ -89,22 +105,31 @@ async function principal() {
   const escena = opcion("--escena");
   const salida = opcion("--salida");
   const fondo = opcion("--fondo");
-  if (!muneco || !ropa || !escena || !salida)
+  if ((!muneco && !opcion("--persona")) || !ropa || !escena || !salida)
     throw new Error(
       'Uso: avatar-escena.ts --muneco x.png --ropa "..." --escena "..." [--fondo foto.jpg] --salida y.png',
     );
-  // El recorte transparente se aplana sobre blanco: así el modelo ve el muñeco y no un fondo negro.
+  // `--persona ref1,ref2,…`: una persona real (el avatar de Richard) a partir de sus fotos; si no, el muñeco.
+  const persona = opcion("--persona");
   const carpeta = await mkdtemp(path.join(os.tmpdir(), "chase-escena-"));
-  const plano = path.join(carpeta, "muneco.jpg");
-  await sharp(path.resolve(muneco)).flatten({ background: "#ffffff" }).jpeg({ quality: 92 }).toFile(plano);
-  const referencias = fondo ? [plano, path.resolve(fondo)] : [plano];
+  let referencias: string[];
+  let prompt: string;
+  if (persona) {
+    referencias = persona.split(",").map((r) => path.resolve(r.trim()));
+    prompt = promptDeEscenaPersona(ropa, escena, referencias.length);
+  } else {
+    // El recorte transparente se aplana sobre blanco: así el modelo ve el muñeco y no un fondo negro.
+    const plano = path.join(carpeta, "muneco.jpg");
+    await sharp(path.resolve(muneco as string))
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality: 92 })
+      .toFile(plano);
+    referencias = fondo ? [plano, path.resolve(fondo)] : [plano];
+    prompt = promptDeEscena(ropa, escena, Boolean(fondo), process.argv.includes("--cuerpo-entero"));
+  }
   // Se carga aquí y no arriba: imagenes.ts lee estacion/.env al importarse, y las pruebas no lo tienen.
   const { imagenConReferencias } = await import("./imagenes");
-  const costo = await imagenConReferencias(
-    promptDeEscena(ropa, escena, Boolean(fondo), process.argv.includes("--cuerpo-entero")),
-    referencias,
-    path.resolve(salida),
-  );
+  const costo = await imagenConReferencias(prompt, referencias, path.resolve(salida));
   console.log(`Listo: ${path.resolve(salida)} ($${costo.toFixed(2)})`);
 }
 
