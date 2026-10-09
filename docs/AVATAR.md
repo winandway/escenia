@@ -391,6 +391,34 @@ el jalón: `pruebas/chase-jalon-de-pelo-voz1-camara.mp4` (golpes en las dos risa
 los cerros secos detrás y la silla de plástico vacía en primer plano; 3 ¢). La voz y el clip
 esperan su visto bueno al texto.
 
+### Para mañana (9 oct 2026): Chase copia los movimientos de Richard («transferencia de movimiento»)
+
+Richard aprobó el circuito barato de Chase el 8 oct 2026 («mueve las manos, tiene naturalidad,
+hubo movimiento de cámara»). Lo siguiente que quiere: él graba un video bailando con una canción
+libre de derechos, y Chase repite todo (cuerpo, manos, mímica, labios). En la industria se llama
+**transferencia de movimiento** («motion control» / «motion transfer»): una foto del personaje más
+un video de referencia dan el video del personaje haciendo lo mismo.
+
+Modelos en fal.ai con su precio oficial (API de precios, 8 oct 2026):
+
+| Modelo                            | Precio    | 30 s   | Nota                                                                   |
+| --------------------------------- | --------- | ------ | ---------------------------------------------------------------------- |
+| ByteDance DreamActor v2           | 0,05 $/s  | 1,50 $ | Copia movimiento, expresiones y labios; hasta 30 s; muñecos y animales |
+| Wan Motion                        | 0,06 $/s  | 1,80 $ |                                                                        |
+| Kling 2.6 Motion Control Standard | 0,07 $/s  | 2,10 $ | El que más se ve en redes; puede conservar el sonido del video         |
+| Wan 2.2 Animate Move              | 0,08 $/s  | 2,40 $ | Hasta 720p                                                             |
+| Kling 3 Motion Control Standard   | 0,126 $/s | 3,78 $ | Admite fotos de la cara para que no cambie                             |
+| Kling 3 Motion Control Pro        | 0,168 $/s | 5,04 $ |                                                                        |
+
+Propuesta: probar DreamActor v2 y Kling 2.6 Standard con el mismo video de Richard (unos 15 s:
+75 centavos y 1,05 $), y si sale en baja resolución, pasarlo por el mejorador. Ninguno está en
+los candados todavía: entran con el «sí» de Richard y su precio.
+
+**Qué tiene que traer Richard:** un video vertical de 15 a 30 segundos bailando, con el cuerpo
+entero en cuadro de pies a cabeza, la cámara quieta (en un trípode o apoyada), buena luz, fondo
+despejado, una sola persona, y la canción libre de derechos sonando. Y la escena de Chase será una
+nueva, de cuerpo entero (regla de la escenografía).
+
 ### Pendiente: voz de un viral adaptada a Chase (punto dos de Richard, sin empezar)
 
 Montar el audio de una conversación viral de 5 a 10 segundos, convertirlo a la voz de Chase, y que
