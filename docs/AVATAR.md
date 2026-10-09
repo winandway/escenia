@@ -234,10 +234,26 @@ es el único de los dos que hace lo que hace el reel de referencia (las manos). 
 cara de Richard en «Mi opinión», donde no hacen falta gestos. El primer pedido a OmniHuman con el
 audio en base64 falló sin cobrar.
 
+### Lo que dijo Richard al verlo (8 oct 2026) y qué se hizo
+
+- «La voz no es de paisa»: la voz diseñada «paisa joven 1» suena neutra. Las voces diseñadas con
+  Voice Design no garantizan el acento; la salida es una voz de la biblioteca de ElevenLabs
+  etiquetada como colombiana (la busca Richard en la web de ElevenLabs y la agrega a su cuenta; con
+  el nombre se sintetiza) o una clonada de una grabación suya imitando el paisa.
+- «Faltó el sonido de las olas»: ahora cada clip de Chase lleva ambiente debajo de la voz.
+  `estacion/src/avatar-ambiente.ts` (`mezclarAmbiente`) repite el ambiente hasta cubrir el clip,
+  lo pone al 20 % con un fundido de un segundo a cada lado y lo mezcla sin tocar la voz
+  (prueba: `pruebas/avatar-ambiente.test.ts`). `avatar-prueba.ts --ambiente olas.mp3` lo hace al
+  generar. El ambiente de hoy, `avatar/chase-montes/sonidos/olas-playa.mp3`, es **sintetizado** con
+  ffmpeg (ruido con oleaje lento), porque la clave de ElevenLabs no tiene permiso de efectos de
+  sonido (401 `sound_generation`); es provisional: una grabación real de olas que Richard suba en
+  «Sonidos» lo reemplaza con el mismo comando.
+
 ### Lo que falta para la serie (en orden)
 
-1. Richard oye las nueve vistas previas paisa de `voces/` y dice cuál es la voz de Chase (o se
-   queda con «paisa joven 1», que ya está creada).
+1. La voz paisa de verdad: Richard busca en la biblioteca de ElevenLabs una voz masculina
+   colombiana (paisa) y la agrega a su cuenta; con el nombre se sintetiza. Las nueve diseñadas no
+   dieron el acento.
 2. Tres a cinco fotos del muñeco en escenas reales (playa, calle, mercado), verticales, de la
    cintura para arriba y mirando a cámara; dos sin gafas de sol y una de hombros para arriba.
 3. Cinco guiones de 15 a 30 segundos acordados con Richard (temas, no inventados).

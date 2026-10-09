@@ -2,10 +2,11 @@
 // clip donde se diga. Imprime el costo antes de pedirlo y lo anota en un registro al lado.
 // Uso (desde estacion/):
 //   npx tsx src/avatar-prueba.ts --imagen ../avatar/chase-montes/fotos/x.png --audio ../avatar/chase-montes/voces/x.mp3 \
-//       --modelo kling|omnihuman --salida ../avatar/chase-montes/pruebas/x.mp4 [--prompt "..."]
+//       --modelo kling|omnihuman --salida ../avatar/chase-montes/pruebas/x.mp4 [--prompt "..."] [--ambiente ../avatar/chase-montes/sonidos/olas-playa.mp3]
 import { appendFile } from "node:fs/promises";
 import path from "node:path";
 import { generarAvatar } from "./avatar";
+import { mezclarAmbiente } from "./avatar-ambiente";
 
 const opcion = (nombre: string): string | null => {
   const i = process.argv.indexOf(nombre);
@@ -33,6 +34,15 @@ async function principal() {
     prompt: opcion("--prompt") ?? undefined,
     avisar: (t) => console.log(`  ${t}`),
   });
+  if (opcion("--ambiente")) {
+    const conAmbiente = r.ruta.replace(/\.mp4$/i, "-ambiente.mp4");
+    await mezclarAmbiente({
+      clip: r.ruta,
+      ambiente: path.resolve(opcion("--ambiente") as string),
+      salida: conAmbiente,
+    });
+    console.log(`  con ambiente: ${conAmbiente}`);
+  }
   const linea = `${new Date().toISOString()}\t${r.modelo}\t${r.segundos.toFixed(1)} s\t$${r.costoUsd.toFixed(2)}\t${path.basename(r.ruta)}\n`;
   await appendFile(path.join(path.dirname(r.ruta), "gastos.txt"), linea);
   console.log(`Listo: ${r.ruta} (${r.segundos.toFixed(1)} s, $${r.costoUsd.toFixed(2)})`);
