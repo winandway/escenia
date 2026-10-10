@@ -5,7 +5,7 @@
 // virtual que lo sigue por la cara y lo deja siempre de la cintura para arriba; así nunca aparecen
 // los pies ni el borde del piso, y la escena se hace también de medio cuerpo.
 // Uso (desde estacion/):
-//   npx tsx src/avatar-encuadre.ts --video referencia.mov --salida referencia-medio-cuerpo.mp4
+//   npx tsx src/avatar-encuadre.ts --video referencia.mov --salida referencia-medio-cuerpo.mp4 [--fijo [--alto 0.68]]
 import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readdir } from "node:fs/promises";
 import os from "node:os";
@@ -56,6 +56,30 @@ export function encuadresDeCaras(caras: CaraCuadro[], ancho: number, alto: numbe
       h: Math.min(h, alto),
     };
   });
+}
+
+/**
+ * Un solo encuadre FIJO para todo el video (sin movimiento de cámara): arriba del todo, `fraccion` del
+ * alto, 9:16, centrado en la mediana de la cara. Con la cámara virtual en movimiento, Kling redibujaba
+ * el fondo y la banda desaparecía (9 oct 2026); quieto, el fondo se queda. Devuelve también cuántos
+ * cuadros dejan la cara fuera, para avisar.
+ */
+export function encuadreFijo(
+  caras: CaraCuadro[],
+  ancho: number,
+  alto: number,
+  fraccion = 0.68,
+): { encuadre: Encuadre; fuera: number } {
+  const h = Math.round((alto * fraccion) / 2) * 2;
+  const w = Math.round(Math.min(ancho, (h * 9) / 16) / 2) * 2;
+  const xs = caras.flatMap((c) => (c ? [c.cx * ancho] : [])).sort((a, b) => a - b);
+  const mediana = xs.length ? (xs[Math.floor(xs.length / 2)] ?? ancho / 2) : ancho / 2;
+  const x = Math.round(Math.min(ancho - w, Math.max(0, mediana - w / 2)));
+  const encuadre = { x, y: 0, w, h: Math.round((w * 16) / 9 / 2) * 2 };
+  const fuera = caras.filter(
+    (c) => c && (c.cx * ancho < x || c.cx * ancho > x + w || (c.cy + c.h / 2) * alto > encuadre.h),
+  ).length;
+  return { encuadre, fuera };
 }
 
 const opcion = (nombre: string): string | null => {
@@ -114,7 +138,18 @@ async function principal() {
     return mayor ?? null;
   });
   console.log(`  cara encontrada en ${caras.filter(Boolean).length} de ${caras.length} cuadros`);
-  const encuadres = encuadresDeCaras(caras, ancho, alto);
+  // `--fijo`: un solo encuadre para todo el video (sin movimiento de cámara). Es el de los videos
+  // con banda o escenario detrás: si el encuadre se mueve, Kling redibuja el fondo.
+  let encuadres: Encuadre[];
+  if (process.argv.includes("--fijo")) {
+    const { encuadre, fuera } = encuadreFijo(caras, ancho, alto, Number(opcion("--alto") ?? "0.68"));
+    console.log(
+      `  encuadre fijo ${encuadre.w}×${encuadre.h} desde x=${encuadre.x}; cara fuera en ${fuera} cuadros`,
+    );
+    encuadres = caras.map(() => encuadre);
+  } else {
+    encuadres = encuadresDeCaras(caras, ancho, alto);
+  }
   const sharp = (await import("sharp")).default;
   const salidaCuadros = path.join(tmp, "salida");
   await mkdir(salidaCuadros);

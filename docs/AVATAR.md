@@ -478,6 +478,19 @@ bacano», y que no se repitiera el error de Chase en la tarima redonda («se sal
   aparecen los pies ni el borde del piso. Prueba: `pruebas/avatar-encuadre.test.ts`.
   **Regla:** si el video de referencia se acerca o se aleja de la cámara, se encuadra de medio
   cuerpo antes de mandarlo.
+- **Segundo intento (Kling 3 con la cara aparte):** fal.ai lo dejó 40 minutos y respondió «Generation
+  timeout» (código 504): sin video. Si se cobró o no, se ve en el panel de fal.ai.
+- **Tercer intento (Kling 2.6, encuadre que sigue la cara, 2,04 $):** copia como un espejo y ya no
+  se hunde en el piso, pero salieron dos errores: (1) **la banda desaparecía a ratos**: la cámara
+  virtual se movía y Kling, con `character_orientation: "video"`, redibujaba el fondo siguiendo ese
+  movimiento; (2) **un logo borroso abajo a la izquierda todo el video**: estaba en la escena que
+  generó Seedream (las fotos de Richard no tienen ninguno), y Kling lo conservó. No se le entregó.
+- **Arreglos:** `avatar-encuadre.ts --fijo` (`encuadreFijo`): un solo encuadre para todo el video,
+  arriba, 68 % del alto, 9:16, centrado en la mediana de la cara, y avisa cuántos cuadros dejan la
+  cara fuera (con su video: ninguno). Y la escena se revisa en las esquinas antes de usarla; el
+  logo se quitó recortando ese borde (`escena-medio-cuerpo-azul-limpia.png`).
+  **Regla:** con banda o escenario detrás, el encuadre va FIJO; y antes de mandar una escena a
+  Kling se miran sus cuatro esquinas buscando marcas de agua.
 
 ### Publicar un Short de Chase: miniatura y textos de YouTube (9 oct 2026)
 
