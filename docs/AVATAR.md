@@ -467,6 +467,17 @@ bacano», y que no se repitiera el error de Chase en la tarima redonda («se sal
   gastar en el video.**
 - **El video:** Kling 3 Motion Control Standard (0,126 $/s) con su cara aparte (`--cara` de frente
   y `--cara-refs`), para no perder el parecido en los primeros planos.
+- **Primer intento (cuerpo entero, 3,67 $), con error:** el cuerpo lo copió bien, pero en los
+  primeros planos, cuando se acerca a la cámara, **el cuerpo se hundía en el piso brillante** (se veía
+  el torso y debajo el reflejo). Causa: su video va de cuerpo entero a primer plano y la cámara del
+  escenario generado queda fija y lejos; el piso no «baja» con él. No se le entregó.
+- **Arreglo (C-AVATAR-3):** `estacion/src/avatar-encuadre.ts` pone una cámara virtual que lo sigue
+  por la cara y lo deja SIEMPRE de la cintura para arriba (la cara mide un sexto del encuadre; se
+  abre hasta el cuadro entero cuando se acerca), suavizada para que no tiemble. Y la escena se hace
+  de medio cuerpo (`avatar-escena.ts --persona … --medio-cuerpo`), sin piso a la vista. Así nunca
+  aparecen los pies ni el borde del piso. Prueba: `pruebas/avatar-encuadre.test.ts`.
+  **Regla:** si el video de referencia se acerca o se aleja de la cámara, se encuadra de medio
+  cuerpo antes de mandarlo.
 
 ### Publicar un Short de Chase: miniatura y textos de YouTube (9 oct 2026)
 

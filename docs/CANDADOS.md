@@ -1420,3 +1420,23 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   `fotos/chase-playa-cintura.png` tiene que reventar con «Esta escena ya salió en…» sin encolar.
 - **Qué NO tocar:** no borrar líneas de `escenas-usadas.txt` para «poder repetir»; no volver a
   poner ninguna salida en `asegurarEscenaNueva`, ni para pruebas ni para comparar modelos.
+
+## C-AVATAR-3 — Si la persona se acerca a la cámara, el video de referencia va de medio cuerpo (9 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en la transferencia de movimiento, cuando la persona del video
+  de referencia se acerca a la cámara, el personaje generado no tiene de dónde pararse: con Chase en
+  una tarima redonda «se salía de la tabla» (Richard), y con el avatar de Richard en un escenario de
+  piso brillante, en los primeros planos su cuerpo se hundía en el piso (torso arriba, reflejo abajo).
+- **Causa real:** el video de referencia va de cuerpo entero a primer plano, pero la escena generada
+  tiene una sola cámara fija y lejana; el modelo agranda a la persona sin mover el piso.
+- **Qué se hizo:** `estacion/src/avatar-encuadre.ts` (`encuadresDeCaras`): cámara virtual 9:16 que
+  sigue la cara y deja a la persona siempre de la cintura para arriba (cara = un sexto del alto, aire
+  arriba, suavizado de 0,6 s; se abre hasta el cuadro entero cuando se acerca). La escena se pide de
+  medio cuerpo (`promptDeEscenaPersona(…, medioCuerpo)`), con el borde de abajo en la cintura y sin
+  piso a la vista.
+- **Commit:** el de este candado (9 oct 2026, «fix(avatar): …medio cuerpo…»).
+- **Cómo se comprueba:** `npx vitest run pruebas/avatar-encuadre.test.ts` (lejos el encuadre acaba
+  antes del 70 % del alto: sin pies; cerca se abre; siempre 9:16 y dentro del cuadro). Y mirar los
+  cuadros de los primeros planos del clip antes de entregarlo.
+- **Qué NO tocar:** no mandar a Kling un video que se acerque a la cámara sin encuadrarlo; no pedir
+  escenas de cuerpo entero con piso a la vista para esos videos.

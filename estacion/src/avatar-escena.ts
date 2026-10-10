@@ -84,12 +84,20 @@ export function promptDeEscena(
  * de ella tiene que haber piso de sobra; con una tarima redonda se «salía de la tabla». Y las manos
  * vacías, sin micrófono de pie ni guitarra: el video de referencia no los tiene y el modelo los rompe.
  */
-export function promptDeEscenaPersona(ropa: string, escena: string, referencias: number): string {
+export function promptDeEscenaPersona(
+  ropa: string,
+  escena: string,
+  referencias: number,
+  medioCuerpo = false,
+): string {
   return [
     `Images 1 to ${referencias} show the same real man. Keep EXACTLY his identity: the same face, the same thick black-framed glasses, the same hairstyle, skin tone, age, build and height proportions. Photorealistic, not a drawing.`,
     `Outfit: ${ropa}.`,
     `Scene: ${escena}.`,
-    "Vertical photo, he stands FULL BODY from head to shoes in the middle of the frame, facing the camera, relaxed, both hands empty and visible. In front of him, all the way to the camera, there is plenty of empty flat floor: no stage edge, no steps, no microphone stand, no instruments and no objects between him and the camera. He wears a thin skin-colored headset microphone. Sharp focus on him.",
+    medioCuerpo
+      ? // Para videos que se acercan a la cámara: de medio cuerpo nunca se ve el piso (C-AVATAR-3).
+        "Vertical medium shot: he is seen from the WAIST UP, centered, facing the camera, the bottom edge of the photo cuts at his waist, the floor is NOT visible, some space above his head, both hands empty and visible in front of his chest. Nothing between him and the camera: no microphone stand, no instruments. He wears a thin skin-colored headset microphone. Sharp focus on him, the band softly out of focus behind him."
+      : "Vertical photo, he stands FULL BODY from head to shoes in the middle of the frame, facing the camera, relaxed, both hands empty and visible. In front of him, all the way to the camera, there is plenty of empty flat floor: no stage edge, no steps, no microphone stand, no instruments and no objects between him and the camera. He wears a thin skin-colored headset microphone. Sharp focus on him.",
     "No text, no letters, no logos, no watermark.",
   ].join(" ");
 }
@@ -116,7 +124,7 @@ async function principal() {
   let prompt: string;
   if (persona) {
     referencias = persona.split(",").map((r) => path.resolve(r.trim()));
-    prompt = promptDeEscenaPersona(ropa, escena, referencias.length);
+    prompt = promptDeEscenaPersona(ropa, escena, referencias.length, process.argv.includes("--medio-cuerpo"));
   } else {
     // El recorte transparente se aplana sobre blanco: así el modelo ve el muñeco y no un fondo negro.
     const plano = path.join(carpeta, "muneco.jpg");
