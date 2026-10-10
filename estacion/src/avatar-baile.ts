@@ -23,7 +23,8 @@ const MODELOS: Record<string, string> = {
   kling: "fal-ai/kling-video/v2.6/standard/motion-control",
   kling3: "fal-ai/kling-video/v3/standard/motion-control",
 };
-const ESPERA_MAXIMA_MS = 30 * 60_000;
+// Kling 3 con la cara aparte pasó de 30 minutos el 9 oct 2026: se espera hasta una hora.
+const ESPERA_MAXIMA_MS = 60 * 60_000;
 
 const opcion = (nombre: string): string | null => {
   const i = process.argv.indexOf(nombre);
@@ -130,7 +131,7 @@ async function principal() {
   for (;;) {
     if (Date.now() - inicio > ESPERA_MAXIMA_MS)
       throw new Error(
-        `fal.ai tardó más de 30 minutos. El pedido ${cola.request_id} sigue allá: recógelo con avatar-recoger.ts.`,
+        `fal.ai tardó más de una hora. El pedido ${cola.request_id} sigue allá: recógelo con avatar-recoger.ts.`,
       );
     const estado = (await (await fetch(urlDeFal(cola.status_url), { headers: cabeceras })).json()) as {
       status: string;
