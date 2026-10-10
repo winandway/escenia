@@ -2,8 +2,6 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Avatar de Richard (docs/AVATAR.md, sección «Avatar de Richard»): ver el mostrario de su avatar cantando con la banda en vivo (2,28 $ el video; 8,12 $ con los intentos con errores) y decir si así queda → con su sí se hacen las otras canciones o los otros vestuarios y ambientes de su hoja de personaje.
-
 - 👤 Ver su primer video con el formato Presentador (guion 12, «ChatGPT y Gemini ya no son gratis»), decir qué le cambiaría y probarlo en los otros formatos con el botón «Probar en…» → con su opinión se afina el diseño (tamaño en la esquina, cuánto rato sale en grande).
 - 👤 Decir si le gustan los nombres de los formatos (Documental, Cómic, Neón, Presentador) y cuál de las ideas nuevas quiere primero (Pizarra, Pantalla, Ranking, Versus, Línea de tiempo): docs/FORMATOS.md.
 
