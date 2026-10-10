@@ -491,6 +491,19 @@ bacano», y que no se repitiera el error de Chase en la tarima redonda («se sal
   logo se quitó recortando ese borde (`escena-medio-cuerpo-azul-limpia.png`).
   **Regla:** con banda o escenario detrás, el encuadre va FIJO; y antes de mandar una escena a
   Kling se miran sus cuatro esquinas buscando marcas de agua.
+- **Cuarto intento, el bueno (Kling 2.6, encuadre fijo, escena limpia):**
+  `avatar/richard/clips/richard-concierto-final-hd.mp4` (1080×1920, mejorado) y
+  `richard-concierto-lado-a-lado.mp4`. La banda se queda detrás todo el video, no hay piso donde
+  hundirse, sin logo, y copia los gestos (se agacha, gira de perfil, levanta los dedos, se abraza,
+  se acerca a la cámara al final). Suena su canción. Costo de este video: 2,04 + 0,21 + 0,03 =
+  **2,28 $**. Costo total del mostrario con los intentos fallidos: **8,12 $** (5 escenas 0,15; Kling 3
+  de cuerpo entero 3,67; Kling 2.6 con cámara móvil 2,04; el bueno 2,04; mejora 0,21), más el
+  intento de Kling 3 que fal.ai cortó por tiempo (si se cobró, se ve en su panel).
+
+**La receta para el avatar de Richard (que no se repitan los errores):** escena de medio cuerpo con
+`--persona` y `--medio-cuerpo` → revisar las cuatro esquinas → video de referencia con
+`avatar-encuadre.ts --fijo` → `avatar-baile.ts --modelo kling` → revisar cuadros (banda, piso,
+esquinas, cara) → `avatar-mejorar.ts`.
 
 ### Publicar un Short de Chase: miniatura y textos de YouTube (9 oct 2026)
 
