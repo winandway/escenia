@@ -440,3 +440,27 @@ el niño dice: «¡chácata!».
 Cómo contarlo: el chiste crece con la cuenta de frenazos; cada «¡chácata!» va más rápido que el
 anterior, y mi prima siempre se endereza con la misma dignidad («Buenas tardes»). El remate baja
 la voz antes de «y embarazada», y la última línea del niño va en seco.
+
+## 11 oct 2026 — Temas de intriga con monigotes animados (Caprichoso TV)
+
+Richard mandó de referencia un reel viral de «señales de que le gustas» (monigotes de línea blanca
+sobre fondo negro, un brillo de color rojo o naranja, título en rojo y blanco, subtítulo con la
+palabra clave en una caja roja, y los dibujos EN MOVIMIENTO; 268 mil me gusta y 42 mil guardados).
+Pidió temas de intriga para el canal de música, para probar los videos con movimiento. El estilo
+se hace propio, sin copiar la marca de ese canal. Cada tema cierra invitando a escribir en los
+comentarios y puede llevar una canción de Grupo Kprichoso.
+
+1. **«Señales de que le gustas… por la música que te manda».** Te manda canciones a medianoche;
+   te dedica una que no es de amor «pero sí»; se aprende tu canción favorita; te pasa su lista de
+   reproducción privada. Cierre: «¿Qué canción te mandó a ti? Escríbela». Es el más cercano al
+   viral de referencia, con el giro de la música.
+2. **«Lo que la canción que más repites dice de ti».** Bachata: corazón roto que no suelta. Salsa:
+   no se queda quieto. Reguetón: anda en modo conquista. Balada: lo extraña aunque no lo diga.
+   Cierre: «¿Cuál repites tú?». Invita a comentar sí o sí.
+3. **«Por qué una canción te pone la piel de gallina».** El escalofrío al oír una canción tiene
+   nombre y explicación (se verifica con fuentes antes de escribirlo). Tres momentos que lo
+   disparan: el cambio de tono, la voz que se quiebra, el silencio antes del coro. Cierre: «¿Qué
+   canción te lo hace a ti?».
+4. **«Tres canciones que no debes escuchar después de una ruptura».** Intriga pura: la que te
+   devuelve al primer día, la que te hace escribirle, y la que te hace llorar en el carro. Al final,
+   la que sí debes escuchar: una de Grupo Kprichoso. Es el que mejor vende una canción propia.
