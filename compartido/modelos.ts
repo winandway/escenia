@@ -194,8 +194,12 @@ export function costoTransferenciaUsd(modelo: ModeloTransferencia, segundos: num
 // Wan 2.2 (5B) en fal.ai lo autorizó Richard el 6 oct 2026 a 15 centavos por clip (precio por video,
 // releído en la API de precios de fal.ai el 11 oct 2026). Ningún otro corre, ni como respaldo.
 export const ANIMACION_PERMITIDA = {
-  "fal-ai/wan/v2.2-5b/image-to-video": 0.15,
-} as const;
+  "fal-ai/wan/v2.2-5b/image-to-video": { usd: 0.15, por: "clip" },
+  // Kling 2.5 Turbo Pro: sigue mejor las instrucciones y no pierde objetos (con Wan el celular
+  // desaparecía y las lágrimas se pegaban a la cama). Richard, 11 oct 2026: «no importa que se gaste
+  // un poquito más de crédito, pero hágalo bien». 0,07 $ por segundo, clips de 5 o 10 s.
+  "fal-ai/kling-video/v2.5-turbo/pro/image-to-video": { usd: 0.07, por: "segundo" },
+} as const satisfies Record<string, { usd: number; por: "clip" | "segundo" }>;
 export type ModeloAnimacion = keyof typeof ANIMACION_PERMITIDA;
 
 export function asegurarModeloAnimacion(modelo: string): ModeloAnimacion {
@@ -204,8 +208,11 @@ export function asegurarModeloAnimacion(modelo: string): ModeloAnimacion {
   return modelo as ModeloAnimacion;
 }
 
-/** Costo de animar `clips` imágenes con ese modelo (precio fijo por clip). */
-export function costoAnimacionUsd(modelo: ModeloAnimacion, clips: number): number {
+/** Costo de animar `clips` imágenes de `segundos` cada una (los de precio por clip ignoran los segundos). */
+export function costoAnimacionUsd(modelo: ModeloAnimacion, clips: number, segundos = 5): number {
   if (!Number.isInteger(clips) || clips < 1) throw new Error("Hay que animar al menos un clip.");
-  return Math.round(ANIMACION_PERMITIDA[modelo] * clips * 1000) / 1000;
+  if (!(segundos > 0) || segundos > 10) throw new Error("Cada clip dura entre 0 y 10 segundos.");
+  const precio: { usd: number; por: "clip" | "segundo" } = ANIMACION_PERMITIDA[modelo];
+  const usd = precio.por === "clip" ? precio.usd * clips : precio.usd * segundos * clips;
+  return Math.round(usd * 1000) / 1000;
 }

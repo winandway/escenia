@@ -22,7 +22,7 @@ const opcion = (nombre: string): string | null => {
   return i === -1 ? null : (process.argv[i + 1] ?? null);
 };
 
-if (process.argv[1] && path.basename(process.argv[1]).startsWith("monigote")) {
+if (process.argv[1] && /^monigote\.(ts|js|mjs)$/.test(path.basename(process.argv[1]))) {
   const escena = opcion("--escena");
   const salida = opcion("--salida");
   if (!escena || !salida) {

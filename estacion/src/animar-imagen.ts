@@ -2,40 +2,60 @@
 // Wan 2.2 (5B) en fal.ai, 15 centavos por clip, con su candado en compartido/modelos.ts. Vertical
 // 9:16, 720p, 5 segundos. Cada pedido se anota en pedidos-fal.jsonl y su costo en gastos.txt.
 // Uso (desde estacion/):
-//   npx tsx src/animar-imagen.ts --imagen dibujo.png --prompt "the man looks at his phone and sighs" --salida clip.mp4
+//   npx tsx src/animar-imagen.ts --imagen dibujo.png --prompt "…" --salida clip.mp4 [--modelo wan|kling] [--segundos 5|10]
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { asegurarModeloAnimacion, costoAnimacionUsd } from "@compartido/modelos";
 import { PEDIDOS_FAL, subirAFal, urlDeFal } from "./avatar";
 import { config } from "./config";
 
-const MODELO = "fal-ai/wan/v2.2-5b/image-to-video";
+export const MODELOS_ANIMACION: Record<string, string> = {
+  wan: "fal-ai/wan/v2.2-5b/image-to-video",
+  kling: "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
+};
 const ESPERA_MAXIMA_MS = 30 * 60_000;
 
 export async function animarImagen(entrada: {
   imagen: string;
   prompt: string;
   salida: string;
+  /** «wan» (por defecto) o «kling». */
+  modelo?: string;
+  /** Kling: 5 o 10 segundos. */
+  segundos?: 5 | 10;
   avisar?: (t: string) => void;
 }): Promise<{ ruta: string; costoUsd: number }> {
   if (!config.FAL_KEY) throw new Error("Falta FAL_KEY en estacion/.env.");
-  const modelo = asegurarModeloAnimacion(MODELO);
-  const costoUsd = costoAnimacionUsd(modelo, 1);
+  const modelo = asegurarModeloAnimacion(MODELOS_ANIMACION[entrada.modelo ?? "wan"] ?? "");
+  const segundos = entrada.segundos ?? 5;
+  const costoUsd = costoAnimacionUsd(modelo, 1, segundos);
   const avisar = entrada.avisar ?? (() => {});
   avisar(`animando con ${modelo}: $${costoUsd.toFixed(2)}`);
   const cabeceras = { authorization: `Key ${config.FAL_KEY}`, "content-type": "application/json" };
   const envio = await fetch(`https://queue.fal.run/${modelo}`, {
     method: "POST",
     headers: cabeceras,
-    body: JSON.stringify({
-      image_url: await subirAFal(entrada.imagen, config.FAL_KEY),
-      prompt: entrada.prompt,
-      negative_prompt: "text, letters, watermark, color photo, realistic, 3d render, extra limbs, blurry",
-      aspect_ratio: "9:16",
-      resolution: "720p",
-      num_frames: 121, // 5 s a 24 cuadros por segundo
-      frames_per_second: 24,
-    }),
+    body: JSON.stringify(
+      modelo === "fal-ai/kling-video/v2.5-turbo/pro/image-to-video"
+        ? {
+            image_url: await subirAFal(entrada.imagen, config.FAL_KEY),
+            prompt: entrada.prompt,
+            negative_prompt:
+              "text, letters, watermark, color photo, realistic, 3d render, extra limbs, objects disappearing, blur, distort, low quality",
+            duration: String(segundos),
+            cfg_scale: 0.6,
+          }
+        : {
+            image_url: await subirAFal(entrada.imagen, config.FAL_KEY),
+            prompt: entrada.prompt,
+            negative_prompt:
+              "text, letters, watermark, color photo, realistic, 3d render, extra limbs, blurry",
+            aspect_ratio: "9:16",
+            resolution: "720p",
+            num_frames: 121, // 5 s a 24 cuadros por segundo
+            frames_per_second: 24,
+          },
+    ),
   });
   if (!envio.ok)
     throw new Error(`fal.ai respondió ${envio.status} al encolar: ${(await envio.text()).slice(0, 300)}`);
@@ -71,7 +91,7 @@ export async function animarImagen(entrada: {
   await writeFile(entrada.salida, Buffer.from(await (await fetch(r.video.url)).arrayBuffer()));
   await appendFile(
     path.join(path.dirname(entrada.salida), "gastos.txt"),
-    `${new Date().toISOString()}\t${modelo}\t1 clip\t$${costoUsd.toFixed(2)}\t${path.basename(entrada.salida)}\n`,
+    `${new Date().toISOString()}\t${modelo}\t${segundos} s\t$${costoUsd.toFixed(2)}\t${path.basename(entrada.salida)}\n`,
   );
   return { ruta: entrada.salida, costoUsd };
 }

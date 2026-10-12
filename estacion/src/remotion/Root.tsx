@@ -12,6 +12,16 @@ import {
 import { Miniatura } from "./Miniatura";
 import { Cancion } from "./Cancion";
 import { TechExplainer } from "./TechExplainer";
+import { Monigotes, esquemaMonigotes, type PropsMonigotes } from "./Monigotes";
+
+const monigotesVacio: PropsMonigotes = {
+  titulo: ["", ""],
+  marca: "",
+  audio: "",
+  duracionMs: 3000,
+  escenas: [],
+  subtitulos: [],
+};
 
 const portadaVacia: PropsPortada = {
   formato: "horizontal",
@@ -67,6 +77,17 @@ const vacio: PropsVideo = {
 
 export const Root: React.FC = () => (
   <>
+    <Composition
+      id="Monigotes"
+      component={Monigotes}
+      schema={esquemaMonigotes}
+      defaultProps={monigotesVacio}
+      fps={FPS}
+      width={1080}
+      height={1920}
+      durationInFrames={duracionEnFrames(monigotesVacio.duracionMs)}
+      calculateMetadata={({ props }) => ({ durationInFrames: duracionEnFrames(props.duracionMs) })}
+    />
     <Composition
       id="TechExplainer"
       component={TechExplainer}

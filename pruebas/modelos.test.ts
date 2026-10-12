@@ -94,7 +94,7 @@ describe("transferencia de movimiento: un solo modelo, hasta 30 s", () => {
 });
 
 describe("animar una imagen: un solo modelo, precio por clip", () => {
-  it("solo corre Wan 2.2 5B, a 15 centavos por clip", async () => {
+  it("solo corren Wan 2.2 5B (15 centavos por clip) y Kling 2.5 Turbo Pro (7 centavos por segundo)", async () => {
     const { asegurarModeloAnimacion, costoAnimacionUsd } = await import("@compartido/modelos");
     expect(asegurarModeloAnimacion("fal-ai/wan/v2.2-5b/image-to-video")).toBe(
       "fal-ai/wan/v2.2-5b/image-to-video",
@@ -102,5 +102,10 @@ describe("animar una imagen: un solo modelo, precio por clip", () => {
     expect(() => asegurarModeloAnimacion("fal-ai/kling-video/v3/pro/image-to-video")).toThrow(/bloqueado/);
     expect(costoAnimacionUsd("fal-ai/wan/v2.2-5b/image-to-video", 6)).toBeCloseTo(0.9, 3);
     expect(() => costoAnimacionUsd("fal-ai/wan/v2.2-5b/image-to-video", 0)).toThrow(/al menos/);
+    // Kling 2.5 Turbo Pro cobra por segundo: un clip de 10 s son 70 centavos.
+    expect(costoAnimacionUsd("fal-ai/kling-video/v2.5-turbo/pro/image-to-video", 1, 10)).toBeCloseTo(0.7, 3);
+    expect(() => costoAnimacionUsd("fal-ai/kling-video/v2.5-turbo/pro/image-to-video", 1, 12)).toThrow(
+      /10 segundos/,
+    );
   });
 });
