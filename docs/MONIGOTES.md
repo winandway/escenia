@@ -119,3 +119,35 @@ corazonada» y «Corazón resentido» (temas verificados en La República).
 - **Costo:** 5,44 $ por video con Kling 2.5 Turbo Pro; uno al día son unos 165 $ al mes. Con Kling 2.5
   Turbo Standard (0,042 $/s) bajaría a unos 3,30 $ por video, pero hay que probar primero si la calidad
   aguanta.
+
+## Segundo video: Darío Gómez, el Rey del Despecho (12 oct 2026)
+
+`monigotes/rey-del-despecho/tres-canciones-prohibidas-dario-gomez.mp4` (71,4 s), miniatura
+`portada-dario-gomez.png`, textos en `textos-youtube.md`. Ya con la plantilla nueva (recuadro pequeño
+arriba a la izquierda). Huecos: 22,5 s, 39,2 s y 60,6 s. Gancho cambiado a pedido de Richard: «Y la
+tercera te va a sorprender».
+
+**Costo exacto:** el video, 5,47 $ (clips 5,25; dibujos 0,18; voz 0,04). Con todo lo que se repitió,
+9,18 $.
+
+Lo que salió mal y cómo se arregló (todo mirado cuadro por cuadro antes de armar):
+
+- **Dibujo de la ventana:** la ventana con el hombre flotaba arriba a la izquierda (donde va el recuadro
+  de la canción) y el poste parecía una llave. Regla nueva en `promptDeMonigote`: esquina de arriba a
+  la izquierda vacía.
+- **Escena del banco:** el hombre se volvía azul entero y le salían chispitas. Se repitió diciendo que
+  «solo brilla la pantalla; él sigue siendo un dibujo blanco»; al final del segundo clip quedaban unas
+  motas y se recortó el clip a 6 s (el armado lo estira un poco).
+- **Escena de las flores, segunda mitad:** dos veces él agarró el ramo aunque la instrucción decía lo
+  contrario (el clip arrancaba con su mano junto a las flores). Se cambió la idea: un dibujo nuevo con
+  ella sola con el ramo y él alejándose de espaldas. La primera versión de ese dibujo la puso tan abajo
+  que los subtítulos le tapaban la cara. Regla nueva: las caras van en la franja del medio (entre 35 %
+  y 60 % del alto), nunca en el tercio de abajo.
+- **El nombre largo de una canción** se partía en dos líneas y pisaba la marca: `tamanoDeTarjeta` lo deja
+  en una línea.
+- **Error de la herramienta:** `animar-imagen.ts` ignoraba `--modelo` y animó una vez con Wan (15 ¢
+  perdidos). Ahora usa el modelo pedido y revienta con uno desconocido antes de gastar.
+
+**Lo que se aprende para la serie:** Kling tiende a poner partículas cerca de las luces (motas, chispas,
+polillas); si el texto pide que dos personajes NO se toquen y el clip arranca con sus manos cerca, igual
+se tocan: mejor un dibujo donde ya estén lejos.

@@ -2,7 +2,7 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Monigotes animados (docs/MONIGOTES.md): el primero (Diomedes) va muy bien: 1.132 vistas en 48 horas. Aprobar o corregir el guion del siguiente, «Tres canciones prohibidas» con Darío Gómez, el Rey del Despecho (monigotes/rey-del-despecho/guion.txt) → con su sí se hace el video completo, ya con el recuadro fijo para el video de cada canción.
+- 👤 Monigotes animados (docs/MONIGOTES.md): el de Diomedes va muy bien (1.132 vistas en 48 h). Listo el de Darío Gómez (5,47 $): pegar las tres canciones en el recuadro de arriba a la izquierda (segundos 22,5, 39,2 y 60,6) y subirlo con su miniatura y textos (monigotes/rey-del-despecho/) → después siguen salsa, merengue, música mexicana.
 
 - 👤 Ver su primer video con el formato Presentador (guion 12, «ChatGPT y Gemini ya no son gratis»), decir qué le cambiaría y probarlo en los otros formatos con el botón «Probar en…» → con su opinión se afina el diseño (tamaño en la esquina, cuánto rato sale en grande).
 - 👤 Decir si le gustan los nombres de los formatos (Documental, Cómic, Neón, Presentador) y cuál de las ideas nuevas quiere primero (Pizarra, Pantalla, Ranking, Versus, Línea de tiempo): docs/FORMATOS.md.

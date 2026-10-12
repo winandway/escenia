@@ -11,9 +11,9 @@ export function promptDeMonigote(escena: string, brillo: string): string {
     "Minimalist stick figure illustration, thin clean white line art on a pure black background, simple round heads with small expressive faces, hand-drawn look like a viral explainer animation.",
     `Scene: ${escena}.`,
     `The only color is a soft ${brillo} glow on the most important object of the scene; everything else is white lines on black.`,
-    "Vertical composition, the characters in the middle and lower part of the frame with space above, simple line-drawn background objects.",
+    "Vertical composition: the characters stand in the MIDDLE band of the image, their heads between 35% and 60% of the image height, never in the lower third; simple line-drawn background objects.",
     // El título va arriba y el recuadro de la canción arriba a la izquierda (C-MONIGOTES-1): ahí no puede haber nada importante.
-    "Keep the top quarter of the image almost empty black, and keep the upper-left corner completely empty: no characters, windows or important objects there.",
+    "Keep the top quarter of the image almost empty black, keep the upper-left corner completely empty, and keep the lower quarter free of faces: no characters' heads, windows or important objects in those areas.",
     "No text, no letters, no words, no captions, no logos, no watermark.",
   ].join(" ");
 }

@@ -104,3 +104,14 @@ describe("monigotes: el dibujo deja libre el sitio del título y del recuadro de
     expect(p).toContain("soft blue glow");
   });
 });
+
+describe("monigotes: el nombre de la canción cabe en una línea y las caras no van abajo", () => {
+  it("la tarjeta se achica con nombres largos y el dibujo pide las caras en la franja del medio", async () => {
+    const { tamanoDeTarjeta } = await import("../estacion/src/remotion/Monigotes");
+    const largo = "ASÍ SE LE CANTA AL DESPECHO";
+    expect(tamanoDeTarjeta(largo) * 0.47 * (largo.length + 2)).toBeLessThanOrEqual(820);
+    expect(tamanoDeTarjeta("LA CORAZONADA")).toBe(84);
+    const { promptDeMonigote } = await import("../estacion/src/monigote");
+    expect(promptDeMonigote("x", "red")).toContain("never in the lower third");
+  });
+});

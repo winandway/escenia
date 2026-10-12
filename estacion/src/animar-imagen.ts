@@ -101,18 +101,32 @@ const opcion = (nombre: string): string | null => {
   return i === -1 ? null : (process.argv[i + 1] ?? null);
 };
 
-if (process.argv[1] && path.basename(process.argv[1]).startsWith("animar-imagen")) {
+if (process.argv[1] && /^animar-imagen\.(ts|js|mjs)$/.test(path.basename(process.argv[1]))) {
   const imagen = opcion("--imagen");
   const prompt = opcion("--prompt");
   const salida = opcion("--salida");
-  if (!imagen || !prompt || !salida) {
-    console.error('Uso: animar-imagen.ts --imagen dibujo.png --prompt "…" --salida clip.mp4');
+  const modeloPedido = opcion("--modelo") ?? "wan";
+  const segundosPedidos = opcion("--segundos") ?? "5";
+  if (
+    !imagen ||
+    !prompt ||
+    !salida ||
+    !MODELOS_ANIMACION[modeloPedido] ||
+    !["5", "10"].includes(segundosPedidos)
+  ) {
+    // El 12 oct 2026 la opción --modelo se ignoraba y se animó con Wan en vez de Kling: ahora un valor
+    // desconocido revienta antes de gastar.
+    console.error(
+      'Uso: animar-imagen.ts --imagen dibujo.png --prompt "…" --salida clip.mp4 [--modelo wan|kling] [--segundos 5|10]',
+    );
     process.exit(1);
   }
   animarImagen({
     imagen: path.resolve(imagen),
     prompt,
     salida: path.resolve(salida),
+    modelo: modeloPedido,
+    segundos: segundosPedidos === "10" ? 10 : 5,
     avisar: (t) => console.log(`  ${t}`),
   })
     .then((r) => console.log(`Listo: ${r.ruta} ($${r.costoUsd.toFixed(2)})`))

@@ -118,6 +118,10 @@ const Fundido: React.FC<{
 export const tamanoDeLinea = (texto: string): number =>
   Math.max(56, Math.min(96, Math.floor(960 / Math.max(1, texto.length * 0.46))));
 
+/** La tarjeta de la canción en UNA línea: «Así se le canta al despecho» se partía y pisaba la marca. */
+export const tamanoDeTarjeta = (cancion: string): number =>
+  Math.max(44, Math.min(84, Math.floor(820 / Math.max(1, (cancion.length + 2) * 0.47))));
+
 const sombra = "0 0 18px rgba(0,0,0,0.95), 0 4px 0 #000, 0 -2px 0 #000, 3px 0 0 #000, -3px 0 0 #000";
 
 export const Monigotes: React.FC<PropsMonigotes> = (p) => {
@@ -217,7 +221,8 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
                 display: "inline-block",
                 background: ROJO,
                 color: "#fff",
-                fontSize: 84,
+                fontSize: tamanoDeTarjeta(hueco.cancion),
+                whiteSpace: "nowrap",
                 padding: "6px 26px",
                 borderRadius: 10,
               }}
