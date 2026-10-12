@@ -106,6 +106,25 @@ export async function imagenConReferencias(
   return IMAGENES_PERMITIDAS[modelo];
 }
 
+/**
+ * Una imagen con el prompt TAL CUAL, sin el estilo de foto realista que el motor agrega a todo
+ * (Seedream, 3 ¢). La usan los monigotes animados (docs/MONIGOTES.md), que son dibujos de línea.
+ */
+export async function imagenLibre(prompt: string, destino: string, vertical = true): Promise<number> {
+  if (!config.FAL_KEY) throw new Error("Falta FAL_KEY en estacion/.env.");
+  if (existsSync(destino)) return 0;
+  const modelo = asegurarModeloImagen(MODELO_IMAGEN_POR_DEFECTO);
+  const imagen = await pedirAFal(modelo, {
+    prompt,
+    image_size: vertical ? { width: 1152, height: 2048 } : { width: 2048, height: 1152 },
+    num_images: 1,
+    enable_safety_checker: true,
+  });
+  await mkdir(path.dirname(destino), { recursive: true });
+  await writeFile(destino, imagen);
+  return IMAGENES_PERMITIDAS[modelo];
+}
+
 /** Encola un pedido en fal.ai, espera a que termine (hasta 90 s) y devuelve la imagen. */
 async function pedirAFal(modelo: ModeloImagen, cuerpo: Record<string, unknown>): Promise<Buffer> {
   const cabeceras = { authorization: `Key ${config.FAL_KEY}`, "content-type": "application/json" };

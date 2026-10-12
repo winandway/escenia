@@ -189,3 +189,23 @@ export function costoTransferenciaUsd(modelo: ModeloTransferencia, segundos: num
     );
   return Math.round(precio.usd * segundos * 1000) / 1000;
 }
+
+// Animar una imagen (imagen a video, docs/MONIGOTES.md): un dibujo quieto pasa a tener movimiento.
+// Wan 2.2 (5B) en fal.ai lo autorizó Richard el 6 oct 2026 a 15 centavos por clip (precio por video,
+// releído en la API de precios de fal.ai el 11 oct 2026). Ningún otro corre, ni como respaldo.
+export const ANIMACION_PERMITIDA = {
+  "fal-ai/wan/v2.2-5b/image-to-video": 0.15,
+} as const;
+export type ModeloAnimacion = keyof typeof ANIMACION_PERMITIDA;
+
+export function asegurarModeloAnimacion(modelo: string): ModeloAnimacion {
+  if (!Object.prototype.hasOwnProperty.call(ANIMACION_PERMITIDA, modelo))
+    throw new Error(`Modelo de animación bloqueado: «${modelo}».`);
+  return modelo as ModeloAnimacion;
+}
+
+/** Costo de animar `clips` imágenes con ese modelo (precio fijo por clip). */
+export function costoAnimacionUsd(modelo: ModeloAnimacion, clips: number): number {
+  if (!Number.isInteger(clips) || clips < 1) throw new Error("Hay que animar al menos un clip.");
+  return Math.round(ANIMACION_PERMITIDA[modelo] * clips * 1000) / 1000;
+}

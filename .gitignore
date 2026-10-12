@@ -84,3 +84,6 @@ descargas/
 # Sonidos que Richard sube desde el panel; la Estación los baja a la Mac (C-SONIDOS-1)
 estacion/recursos/musica-panel/
 estacion/recursos/sfx-panel/
+
+# Dibujos y clips de los videos de monigotes animados (pesan; no van al repositorio)
+monigotes/
