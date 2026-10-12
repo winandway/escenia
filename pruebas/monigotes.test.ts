@@ -70,3 +70,20 @@ describe("monigotes: cada línea del título cabe en una sola línea", () => {
     expect(tamanoDeLinea("X".repeat(80))).toBe(56);
   });
 });
+
+describe("monigotes: todo el texto queda donde YouTube no lo tapa (C-MONIGOTES-1)", () => {
+  it("subtítulos, marca y recuadro de la canción quedan por encima del 85 % del alto y dentro de los lados", async () => {
+    const { ZONA } = await import("../estacion/src/remotion/Monigotes");
+    // Subtítulo (una línea de ~100 px) y marca (~110 px) tienen que terminar antes del límite.
+    expect(ZONA.subtitulos + 100).toBeLessThan(ZONA.limiteAbajo);
+    expect(ZONA.marca + 110).toBeLessThan(ZONA.limiteAbajo);
+    expect(ZONA.limiteAbajo).toBeLessThanOrEqual(1920 * 0.85);
+    // El recuadro de la canción: 16:9, dentro del ancho y sin pisar el título ni la tarjeta.
+    const r = ZONA.recuadro;
+    expect(Math.abs(r.ancho / r.alto - 16 / 9)).toBeLessThan(0.01);
+    expect(r.x + r.ancho).toBeLessThanOrEqual(1080 - 80);
+    expect(r.y).toBeGreaterThan(ZONA.titulo + 250);
+    expect(r.y + r.alto).toBeLessThan(ZONA.tarjetaCancion);
+    expect(ZONA.tarjetaCancion + 180).toBeLessThan(ZONA.marca + 20);
+  });
+});

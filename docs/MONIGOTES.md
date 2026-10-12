@@ -84,3 +84,35 @@ notas musicales; revisar cada clip cuadro por cuadro antes de armar.
 ## Lo que falta para el primer video
 
 Hecho. Richard pega los tres pedacitos de canción en su editor y lo sube.
+
+## Cómo le fue y la plantilla nueva (12 oct 2026)
+
+El Short «3 canciones de Diomedes que NO debes poner después de una ruptura» (subido el 12 oct) llevaba
+**1.132 vistas en 48 horas y 761 en la última hora** (captura de YouTube Studio de Richard), muy por
+encima del resto del canal. Richard pegó en su editor un pedacito del video de cada canción, y vio
+dos cosas que se arreglaron en la plantilla (`ZONA` en `Monigotes.tsx`, candado C-MONIGOTES-1):
+
+- **La marca quedaba tapada** por el nombre del canal y el título que YouTube pone abajo en los Shorts.
+  Ahora los subtítulos van en 1370 px y la marca en 1500 px: todo el texto por encima del 85 % del alto.
+- **No había dónde poner el video de la canción.** Ahora, en cada hueco, el dibujo se oscurece y queda un
+  **recuadro 16:9 vacío con borde rojo, siempre en el mismo sitio: x 90, y 600, 900 × 506 px** (en un
+  video de 1080 × 1920). Richard pega ahí el video de la canción. Debajo va el nombre de la canción.
+  Muestra: `monigotes/prueba-ruptura/muestra-recuadro-cancion.png`.
+
+**Siguiente en la serie** (guion en `monigotes/rey-del-despecho/guion.txt`, esperando su visto bueno):
+la misma fórmula con Darío Gómez, el Rey del Despecho: «Así se le canta al despecho», «La
+corazonada» y «Corazón resentido» (temas verificados en La República).
+
+## Cuántos subir y qué pide YouTube para pagar (12 oct 2026)
+
+- **No hay una cifra oficial de cuántos Shorts subir.** Recomendación nuestra (opinión, no regla de
+  YouTube): uno de este formato al día, a la misma hora, durante dos a cuatro semanas, más dos o tres
+  videos de Richard en vivo por semana, y medir cada uno a las 48 horas.
+- **Requisitos para ganar con anuncios por la vía de Shorts** (según AIR Media-Tech, Newscast Studio
+  y PPC Land, que citan el Centro de Ayuda): 1.000 suscriptores y 10 millones de vistas de Shorts en
+  los últimos 90 días; la otra vía es 1.000 suscriptores y 4.000 horas de videos largos en 12 meses.
+  Desde febrero de 2027 subiría a 20 millones de vistas en 90 días (lo dijo un vicepresidente de
+  YouTube; todavía no está en el texto oficial). Se confirma en la pestaña «Ganar» de YouTube Studio.
+- **Costo:** 5,44 $ por video con Kling 2.5 Turbo Pro; uno al día son unos 165 $ al mes. Con Kling 2.5
+  Turbo Standard (0,042 $/s) bajaría a unos 3,30 $ por video, pero hay que probar primero si la calidad
+  aguanta.

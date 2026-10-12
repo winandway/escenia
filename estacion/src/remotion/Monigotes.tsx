@@ -46,6 +46,23 @@ export type PropsMonigotes = z.infer<typeof esquemaMonigotes>;
 
 const f = (ms: number) => Math.round((ms / 1000) * FPS);
 
+/**
+ * Dónde va cada cosa (en píxeles de 1080×1920). En un Short, YouTube tapa más o menos el 15 % de abajo
+ * con el nombre del canal y el título, y la columna derecha con los botones: el 12 oct 2026 la marca
+ * «CAPRICHOSO TV» quedó debajo del título de YouTube (C-MONIGOTES-1). Todo el texto queda por encima
+ * del 85 % del alto y lejos del borde derecho. En cada hueco de canción va un recuadro 16:9 vacío,
+ * siempre en el mismo sitio, para que Richard pegue ahí el video de la canción en su editor.
+ */
+export const ZONA = {
+  titulo: 250,
+  subtitulos: 1370,
+  marca: 1500,
+  limiteAbajo: 1920 * 0.85,
+  margenLados: 110,
+  recuadro: { x: 90, y: 600, ancho: 900, alto: 506 },
+  tarjetaCancion: 1150,
+} as const;
+
 const Escena: React.FC<{ clips: PropsMonigotes["escenas"][number]["clips"]; duracion: number }> = ({
   clips,
   duracion,
@@ -118,15 +135,33 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
           </Sequence>
         );
       })}
+      {hueco ? (
+        // En el hueco de una canción: el dibujo se oscurece y queda el recuadro para el video de la canción.
+        <AbsoluteFill style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+          <div
+            style={{
+              position: "absolute",
+              left: ZONA.recuadro.x,
+              top: ZONA.recuadro.y,
+              width: ZONA.recuadro.ancho,
+              height: ZONA.recuadro.alto,
+              background: "#000",
+              border: `6px solid ${ROJO}`,
+              borderRadius: 14,
+              boxSizing: "border-box",
+            }}
+          />
+        </AbsoluteFill>
+      ) : null}
       {/* Sombra negra arriba y abajo: el título, los subtítulos y la marca se leen aunque el dibujo pase por debajo. */}
       <AbsoluteFill
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.92) 0px, rgba(0,0,0,0.85) 470px, rgba(0,0,0,0) 640px, rgba(0,0,0,0) 1330px, rgba(0,0,0,0.85) 1520px, rgba(0,0,0,0.92) 1920px)",
+            "linear-gradient(to bottom, rgba(0,0,0,0.92) 0px, rgba(0,0,0,0.85) 470px, rgba(0,0,0,0) 640px, rgba(0,0,0,0) 1230px, rgba(0,0,0,0.8) 1380px, rgba(0,0,0,0.92) 1920px)",
         }}
       />
       {/* Título arriba, como el reel de referencia: la primera línea en rojo y la segunda en blanco. */}
-      <AbsoluteFill style={{ top: 250, alignItems: "center", justifyContent: "flex-start" }}>
+      <AbsoluteFill style={{ top: ZONA.titulo, alignItems: "center", justifyContent: "flex-start" }}>
         <div
           style={{
             color: ROJO,
@@ -151,7 +186,14 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
         </div>
       </AbsoluteFill>
       {/* Subtítulo: la palabra clave en una caja roja. En el hueco de una canción, su nombre. */}
-      <AbsoluteFill style={{ top: 1520, alignItems: "center", justifyContent: "flex-start" }}>
+      <AbsoluteFill
+        style={{
+          top: hueco ? ZONA.tarjetaCancion : ZONA.subtitulos,
+          alignItems: "center",
+          justifyContent: "flex-start",
+          padding: `0 ${ZONA.margenLados}px`,
+        }}
+      >
         {hueco ? (
           <div style={{ textAlign: "center" }}>
             <div
@@ -204,7 +246,7 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
         ) : null}
       </AbsoluteFill>
       {/* La marca del canal, abajo y en rojo. */}
-      <AbsoluteFill style={{ top: 1745, alignItems: "center", justifyContent: "flex-start" }}>
+      <AbsoluteFill style={{ top: ZONA.marca, alignItems: "center", justifyContent: "flex-start" }}>
         <div style={{ color: ROJO, fontSize: 84, letterSpacing: 2, textShadow: sombra }}>{p.marca}</div>
       </AbsoluteFill>
       {p.audio ? <Audio src={staticFile(p.audio)} /> : null}

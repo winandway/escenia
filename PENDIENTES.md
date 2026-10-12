@@ -2,7 +2,7 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Monigotes animados (docs/MONIGOTES.md): ver «Tres canciones prohibidas después de una ruptura» (5,44 $ el video), pegar en su editor los tres pedacitos de canción en los huecos (segundos 21,8, 37,0 y 56,9) y subirlo con su miniatura y sus textos (monigotes/prueba-ruptura/) → si convence, se hacen los otros temas de intriga.
+- 👤 Monigotes animados (docs/MONIGOTES.md): el primero (Diomedes) va muy bien: 1.132 vistas en 48 horas. Aprobar o corregir el guion del siguiente, «Tres canciones prohibidas» con Darío Gómez, el Rey del Despecho (monigotes/rey-del-despecho/guion.txt) → con su sí se hace el video completo, ya con el recuadro fijo para el video de cada canción.
 
 - 👤 Ver su primer video con el formato Presentador (guion 12, «ChatGPT y Gemini ya no son gratis»), decir qué le cambiaría y probarlo en los otros formatos con el botón «Probar en…» → con su opinión se afina el diseño (tamaño en la esquina, cuánto rato sale en grande).
 - 👤 Decir si le gustan los nombres de los formatos (Documental, Cómic, Neón, Presentador) y cuál de las ideas nuevas quiere primero (Pizarra, Pantalla, Ranking, Versus, Línea de tiempo): docs/FORMATOS.md.

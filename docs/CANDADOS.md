@@ -1440,3 +1440,22 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   cuadros de los primeros planos del clip antes de entregarlo.
 - **Qué NO tocar:** no mandar a Kling un video que se acerque a la cámara sin encuadrarlo; no pedir
   escenas de cuerpo entero con piso a la vista para esos videos.
+
+## C-MONIGOTES-1 — El texto de los monigotes queda donde YouTube no lo tapa, y la canción tiene su recuadro (12 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en el primer Short de monigotes subido, la marca «CAPRICHOSO TV»
+  quedó debajo del nombre del canal y el título que YouTube pone abajo; y Richard no tenía dónde poner
+  el video de cada canción («no hay dónde ponerlo, un cuadrito que yo necesito poner»).
+- **Causa real:** la plantilla ponía subtítulos en 1520 px y marca en 1745 px (79 % y 91 % del alto);
+  en un Short, YouTube tapa más o menos el 15 % de abajo. Y el hueco de la canción solo mostraba el
+  nombre sobre el dibujo.
+- **Qué se hizo:** `ZONA` en `estacion/src/remotion/Monigotes.tsx`: subtítulos en 1370, marca en
+  1500, márgenes de 110 px a los lados; en cada hueco, el dibujo se oscurece (debajo del título) y se
+  dibuja un recuadro 16:9 vacío con borde rojo en x 90, y 600, 900 × 506, con la tarjeta de la canción
+  en 1150.
+- **Commit:** el de este candado (12 oct 2026, «fix(monigotes): …zona segura…»).
+- **Cómo se comprueba:** `npx vitest run pruebas/monigotes.test.ts` (con la marca en 1745 se pone en
+  rojo; comprobado el 12 oct 2026) y mirar un cuadro de un hueco: título completo, recuadro y nombre
+  de la canción.
+- **Qué NO tocar:** no bajar el texto por debajo del 85 % del alto; no mover el recuadro (Richard ya
+  sabe dónde pegar el video).
