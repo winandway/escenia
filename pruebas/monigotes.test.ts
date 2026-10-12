@@ -78,12 +78,15 @@ describe("monigotes: todo el texto queda donde YouTube no lo tapa (C-MONIGOTES-1
     expect(ZONA.subtitulos + 100).toBeLessThan(ZONA.limiteAbajo);
     expect(ZONA.marca + 110).toBeLessThan(ZONA.limiteAbajo);
     expect(ZONA.limiteAbajo).toBeLessThanOrEqual(1920 * 0.85);
-    // El recuadro de la canción: 16:9, dentro del ancho y sin pisar el título ni la tarjeta.
+    // El recuadro de la canción: 16:9, PEQUEÑO, en la esquina de arriba a la izquierda, debajo del título
+    // y por encima de donde están los personajes (el muñeco sigue siendo el protagonista).
     const r = ZONA.recuadro;
     expect(Math.abs(r.ancho / r.alto - 16 / 9)).toBeLessThan(0.01);
-    expect(r.x + r.ancho).toBeLessThanOrEqual(1080 - 80);
-    expect(r.y).toBeGreaterThan(ZONA.titulo + 250);
-    expect(r.y + r.alto).toBeLessThan(ZONA.tarjetaCancion);
-    expect(ZONA.tarjetaCancion + 180).toBeLessThan(ZONA.marca + 20);
+    expect(r.ancho).toBeLessThanOrEqual(1080 * 0.4);
+    expect(r.x).toBeLessThanOrEqual(60);
+    expect(r.y).toBeGreaterThan(ZONA.titulo + 200);
+    expect(r.y + r.alto).toBeLessThanOrEqual(1920 * 0.4);
+    // El nombre de la canción va donde van los subtítulos (zona segura).
+    expect(ZONA.tarjetaCancion + 150).toBeLessThan(ZONA.limiteAbajo);
   });
 });

@@ -94,10 +94,13 @@ dos cosas que se arreglaron en la plantilla (`ZONA` en `Monigotes.tsx`, candado 
 
 - **La marca quedaba tapada** por el nombre del canal y el título que YouTube pone abajo en los Shorts.
   Ahora los subtítulos van en 1370 px y la marca en 1500 px: todo el texto por encima del 85 % del alto.
-- **No había dónde poner el video de la canción.** Ahora, en cada hueco, el dibujo se oscurece y queda un
-  **recuadro 16:9 vacío con borde rojo, siempre en el mismo sitio: x 90, y 600, 900 × 506 px** (en un
-  video de 1080 × 1920). Richard pega ahí el video de la canción. Debajo va el nombre de la canción.
-  Muestra: `monigotes/prueba-ruptura/muestra-recuadro-cancion.png`.
+- **No había dónde poner el video de la canción.** Primero se probó un recuadro grande en el centro con el
+  dibujo oscurecido, y Richard lo rechazó: «no le podemos quitar ese protagonismo al muñequito». Queda
+  así: en cada hueco el dibujo sigue igual, sin oscurecer, y aparece un **recuadro 16:9 PEQUEÑO con
+  borde rojo arriba a la izquierda, debajo del título: x 40, y 470, 400 × 225 px** (en un video de
+  1080 × 1920), con el nombre del artista debajo. Richard pega ahí el video de la canción. El nombre de
+  la canción va abajo, en el sitio de los subtítulos. Muestra:
+  `monigotes/prueba-ruptura/muestra-recuadro-cancion.png`.
 
 **Siguiente en la serie** (guion en `monigotes/rey-del-despecho/guion.txt`, esperando su visto bueno):
 la misma fórmula con Darío Gómez, el Rey del Despecho: «Así se le canta al despecho», «La

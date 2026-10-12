@@ -1450,12 +1450,14 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   en un Short, YouTube tapa más o menos el 15 % de abajo. Y el hueco de la canción solo mostraba el
   nombre sobre el dibujo.
 - **Qué se hizo:** `ZONA` en `estacion/src/remotion/Monigotes.tsx`: subtítulos en 1370, marca en
-  1500, márgenes de 110 px a los lados; en cada hueco, el dibujo se oscurece (debajo del título) y se
-  dibuja un recuadro 16:9 vacío con borde rojo en x 90, y 600, 900 × 506, con la tarjeta de la canción
-  en 1150.
+  1500, márgenes de 110 px a los lados; en cada hueco, un recuadro 16:9 PEQUEÑO vacío con borde rojo
+  arriba a la izquierda (x 40, y 470, 400 × 225) con el artista debajo, y el nombre de la canción en el
+  sitio de los subtítulos. El dibujo NO se oscurece: Richard rechazó el recuadro grande en el centro
+  porque le quitaba el protagonismo al muñeco.
 - **Commit:** el de este candado (12 oct 2026, «fix(monigotes): …zona segura…»).
-- **Cómo se comprueba:** `npx vitest run pruebas/monigotes.test.ts` (con la marca en 1745 se pone en
-  rojo; comprobado el 12 oct 2026) y mirar un cuadro de un hueco: título completo, recuadro y nombre
-  de la canción.
-- **Qué NO tocar:** no bajar el texto por debajo del 85 % del alto; no mover el recuadro (Richard ya
-  sabe dónde pegar el video).
+- **Cómo se comprueba:** `npx vitest run pruebas/monigotes.test.ts` (con la marca en 1745, o con el
+  recuadro grande en el centro, se pone en rojo; comprobado el 12 oct 2026) y mirar un cuadro de un
+  hueco: el dibujo entero y sin oscurecer, el recuadro pequeño arriba a la izquierda y el nombre de la
+  canción abajo.
+- **Qué NO tocar:** no bajar el texto por debajo del 85 % del alto; no agrandar el recuadro ni
+  oscurecer el dibujo; no mover el recuadro (Richard ya sabe dónde pegar el video).

@@ -50,8 +50,9 @@ const f = (ms: number) => Math.round((ms / 1000) * FPS);
  * Dónde va cada cosa (en píxeles de 1080×1920). En un Short, YouTube tapa más o menos el 15 % de abajo
  * con el nombre del canal y el título, y la columna derecha con los botones: el 12 oct 2026 la marca
  * «CAPRICHOSO TV» quedó debajo del título de YouTube (C-MONIGOTES-1). Todo el texto queda por encima
- * del 85 % del alto y lejos del borde derecho. En cada hueco de canción va un recuadro 16:9 vacío,
- * siempre en el mismo sitio, para que Richard pegue ahí el video de la canción en su editor.
+ * del 85 % del alto y lejos del borde derecho. En cada hueco de canción va un recuadro 16:9 PEQUEÑO en la
+ * esquina de arriba a la izquierda, siempre en el mismo sitio, para que Richard pegue ahí el video de la
+ * canción; el dibujo NO se oscurece: el muñeco sigue siendo el protagonista.
  */
 export const ZONA = {
   titulo: 250,
@@ -59,8 +60,9 @@ export const ZONA = {
   marca: 1500,
   limiteAbajo: 1920 * 0.85,
   margenLados: 110,
-  recuadro: { x: 90, y: 600, ancho: 900, alto: 506 },
-  tarjetaCancion: 1150,
+  // Pequeño y en la esquina: el protagonista sigue siendo el dibujo (Richard, 12 oct 2026).
+  recuadro: { x: 40, y: 470, ancho: 400, alto: 225 },
+  tarjetaCancion: 1370,
 } as const;
 
 const Escena: React.FC<{ clips: PropsMonigotes["escenas"][number]["clips"]; duracion: number }> = ({
@@ -136,8 +138,8 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
         );
       })}
       {hueco ? (
-        // En el hueco de una canción: el dibujo se oscurece y queda el recuadro para el video de la canción.
-        <AbsoluteFill style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+        // En el hueco de una canción: el recuadro pequeño para el video de la canción; el dibujo sigue igual.
+        <AbsoluteFill>
           <div
             style={{
               position: "absolute",
@@ -146,11 +148,25 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
               width: ZONA.recuadro.ancho,
               height: ZONA.recuadro.alto,
               background: "#000",
-              border: `6px solid ${ROJO}`,
-              borderRadius: 14,
+              border: `5px solid ${ROJO}`,
+              borderRadius: 12,
               boxSizing: "border-box",
             }}
           />
+          <div
+            style={{
+              position: "absolute",
+              left: ZONA.recuadro.x,
+              top: ZONA.recuadro.y + ZONA.recuadro.alto + 8,
+              width: ZONA.recuadro.ancho,
+              textAlign: "center",
+              color: "#fff",
+              fontSize: 40,
+              textShadow: sombra,
+            }}
+          >
+            {hueco.artista}
+          </div>
         </AbsoluteFill>
       ) : null}
       {/* Sombra negra arriba y abajo: el título, los subtítulos y la marca se leen aunque el dibujo pase por debajo. */}
@@ -207,9 +223,6 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
               }}
             >
               ♪ {hueco.cancion}
-            </div>
-            <div style={{ color: "#fff", fontSize: 58, marginTop: 14, textShadow: sombra }}>
-              {hueco.artista}
             </div>
           </div>
         ) : sub ? (
