@@ -78,14 +78,26 @@ const Escena: React.FC<{ clips: PropsMonigotes["escenas"][number]["clips"]; dura
   );
 };
 
-const Fundido: React.FC<{ duracion: number; children: React.ReactNode }> = ({ duracion, children }) => {
+const Fundido: React.FC<{
+  duracion: number;
+  primera: boolean;
+  ultima: boolean;
+  children: React.ReactNode;
+}> = ({ duracion, primera, ultima, children }) => {
   const frame = useCurrentFrame();
-  const opacidad = interpolate(frame, [0, 6, duracion - 6, duracion], [0, 1, 1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // Entre escenas, un fundido corto. La primera arranca ya visible (los 3 primeros segundos son imagen y
+  // voz, C-GANCHO-1) y la última no se apaga: el video no termina en negro.
+  const entrada = primera ? 1 : interpolate(frame, [0, 6], [0, 1], { extrapolateRight: "clamp" });
+  const salida = ultima
+    ? 1
+    : interpolate(frame, [duracion - 6, duracion], [1, 0], { extrapolateLeft: "clamp" });
+  const opacidad = Math.min(entrada, salida);
   return <AbsoluteFill style={{ opacity: opacidad }}>{children}</AbsoluteFill>;
 };
+
+/** Cada línea del título en una sola línea: la letra se achica si el texto es largo (Anton, ~0,46 del alto por letra). */
+export const tamanoDeLinea = (texto: string): number =>
+  Math.max(56, Math.min(96, Math.floor(960 / Math.max(1, texto.length * 0.46))));
 
 const sombra = "0 0 18px rgba(0,0,0,0.95), 0 4px 0 #000, 0 -2px 0 #000, 3px 0 0 #000, -3px 0 0 #000";
 
@@ -100,22 +112,28 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
         const dur = f(e.finMs) - f(e.inicioMs);
         return (
           <Sequence key={i} from={f(e.inicioMs)} durationInFrames={dur}>
-            <Fundido duracion={dur}>
+            <Fundido duracion={dur} primera={i === 0} ultima={i === p.escenas.length - 1}>
               <Escena clips={e.clips} duracion={dur} />
             </Fundido>
           </Sequence>
         );
       })}
+      {/* Sombra negra arriba y abajo: el título, los subtítulos y la marca se leen aunque el dibujo pase por debajo. */}
+      <AbsoluteFill
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0.92) 0px, rgba(0,0,0,0.85) 470px, rgba(0,0,0,0) 640px, rgba(0,0,0,0) 1330px, rgba(0,0,0,0.85) 1520px, rgba(0,0,0,0.92) 1920px)",
+        }}
+      />
       {/* Título arriba, como el reel de referencia: la primera línea en rojo y la segunda en blanco. */}
       <AbsoluteFill style={{ top: 250, alignItems: "center", justifyContent: "flex-start" }}>
         <div
           style={{
             color: ROJO,
-            fontSize: 92,
-            lineHeight: 1.05,
+            fontSize: tamanoDeLinea(p.titulo[0]),
+            lineHeight: 1.08,
             textShadow: sombra,
-            textAlign: "center",
-            padding: "0 60px",
+            whiteSpace: "nowrap",
           }}
         >
           {p.titulo[0]}
@@ -123,18 +141,17 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
         <div
           style={{
             color: "#fff",
-            fontSize: 92,
-            lineHeight: 1.05,
+            fontSize: tamanoDeLinea(p.titulo[1]),
+            lineHeight: 1.08,
             textShadow: sombra,
-            textAlign: "center",
-            padding: "0 60px",
+            whiteSpace: "nowrap",
           }}
         >
           {p.titulo[1]}
         </div>
       </AbsoluteFill>
       {/* Subtítulo: la palabra clave en una caja roja. En el hueco de una canción, su nombre. */}
-      <AbsoluteFill style={{ top: 1210, alignItems: "center", justifyContent: "flex-start" }}>
+      <AbsoluteFill style={{ top: 1520, alignItems: "center", justifyContent: "flex-start" }}>
         {hueco ? (
           <div style={{ textAlign: "center" }}>
             <div
@@ -187,8 +204,8 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
         ) : null}
       </AbsoluteFill>
       {/* La marca del canal, abajo y en rojo. */}
-      <AbsoluteFill style={{ top: 1500, alignItems: "center", justifyContent: "flex-start" }}>
-        <div style={{ color: ROJO, fontSize: 96, letterSpacing: 2, textShadow: sombra }}>{p.marca}</div>
+      <AbsoluteFill style={{ top: 1745, alignItems: "center", justifyContent: "flex-start" }}>
+        <div style={{ color: ROJO, fontSize: 84, letterSpacing: 2, textShadow: sombra }}>{p.marca}</div>
       </AbsoluteFill>
       {p.audio ? <Audio src={staticFile(p.audio)} /> : null}
     </AbsoluteFill>

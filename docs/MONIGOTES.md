@@ -58,9 +58,29 @@ Voz de esta prueba: 68,5 s, con los huecos de canción en 21,8–27,1 s, 37,0–
 Se corrigió un dibujo: el reloj digital marcaba «0:00» y el texto dice «las dos de la mañana»; se
 cambió por un reloj de agujas.
 
+### Resultado (11 oct 2026)
+
+`monigotes/prueba-ruptura/tres-canciones-prohibidas.mp4`: 68,5 s, 1080×1920, con la miniatura
+`portada-tres-canciones.png` (portada de impacto con `avatar-portada.ts --foto-entera`) y los
+textos de YouTube en `textos-youtube.md`. Sin las canciones: los huecos de 5 s quedan en 21,8–27,1 s,
+37,0–42,4 s y 56,9–62,3 s, con el nombre de cada canción en pantalla.
+
+Lo que se repitió por defectos, mirado cuadro por cuadro: la escena 1 (le salía del celular una
+burbuja roja con letras sin sentido), la escena 2 (las «notas musicales» salían como un enjambre de
+puntitos; en la versión buena quedan unas pocas notas que flotan hacia la foto, se aceptó porque la
+escena trata de una canción) y el dibujo 3 (reloj digital con «0:00»). Y en el armado: el título se
+partía en tres líneas (`tamanoDeLinea` lo deja en una por línea), el título y la marca se montaban
+sobre el dibujo (sombra negra arriba y abajo), los subtítulos tapaban la cara del hombre en la cama
+(se bajaron, cerca de la marca) y el final quedaba en negro (la composición dura justo lo que la voz
+y la última escena no se apaga).
+
+**Costo exacto:** el video, 5,44 $ (clips de Kling 5,25; dibujos 0,15; voz 0,04). Con lo que se
+repitió y la prueba con Wan, 7,72 $ en total.
+
+**Reglas que quedan:** en los movimientos nada de lágrimas, partículas ni objetos nuevos; decir que
+el objeto que tiene en la mano no se suelta; si hay un radio en el dibujo, Kling tiende a ponerle
+notas musicales; revisar cada clip cuadro por cuadro antes de armar.
+
 ## Lo que falta para el primer video
 
-1. El visto bueno de Richard al guion.
-2. Los tres fragmentos de 5 segundos de las canciones.
-3. La voz, los cuatro dibujos que faltan y sus clips, y armarlo con títulos y subtítulos en el
-   estilo de la referencia (rojo y blanco, caja roja en la palabra clave).
+Hecho. Richard pega los tres pedacitos de canción en su editor y lo sube.

@@ -59,3 +59,14 @@ describe("monigotes: el hueco de cada canción, las escenas, los clips y los sub
     expect(b[1]?.palabras).toEqual(["DE", "TERMINAR"]);
   });
 });
+
+describe("monigotes: cada línea del título cabe en una sola línea", () => {
+  it("la letra se achica con el texto largo y nunca baja de 56 ni pasa de 96", async () => {
+    const { tamanoDeLinea } = await import("../estacion/src/remotion/Monigotes");
+    const t = tamanoDeLinea("TRES CANCIONES PROHIBIDAS");
+    expect(t).toBeLessThan(92);
+    expect(t * 0.46 * "TRES CANCIONES PROHIBIDAS".length).toBeLessThanOrEqual(960);
+    expect(tamanoDeLinea("HOLA")).toBe(96);
+    expect(tamanoDeLinea("X".repeat(80))).toBe(56);
+  });
+});

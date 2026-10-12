@@ -85,8 +85,11 @@ export const Root: React.FC = () => (
       fps={FPS}
       width={1080}
       height={1920}
-      durationInFrames={duracionEnFrames(monigotesVacio.duracionMs)}
-      calculateMetadata={({ props }) => ({ durationInFrames: duracionEnFrames(props.duracionMs) })}
+      durationInFrames={Math.ceil((monigotesVacio.duracionMs / 1000) * FPS)}
+      // Justo lo que dura la voz: sin cola en negro al final (el formato no termina en negro).
+      calculateMetadata={({ props }) => ({
+        durationInFrames: Math.max(1, Math.ceil((props.duracionMs / 1000) * FPS)),
+      })}
     />
     <Composition
       id="TechExplainer"
