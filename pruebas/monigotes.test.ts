@@ -45,6 +45,10 @@ describe("monigotes: el hueco de cada canción, las escenas, los clips y los sub
     expect(clipsDeEscena(15200)).toEqual([10, 5]);
     expect(clipsDeEscena(19000)).toEqual([10, 10]);
     expect(clipsDeEscena(14900)).toEqual([10, 5]);
+    // Si sobra poco, se estira el último en vez de pagar otro clip.
+    expect(clipsDeEscena(5400)).toEqual([5]);
+    expect(clipsDeEscena(21400)).toEqual([10, 10]);
+    expect(clipsDeEscena(25000)).toEqual([10, 10, 5]);
   });
   it("subtítulos de hasta 3 palabras en mayúsculas, con la más larga resaltada", () => {
     const b = bloquesDeSubtitulos([
@@ -88,5 +92,15 @@ describe("monigotes: todo el texto queda donde YouTube no lo tapa (C-MONIGOTES-1
     expect(r.y + r.alto).toBeLessThanOrEqual(1920 * 0.4);
     // El nombre de la canción va donde van los subtítulos (zona segura).
     expect(ZONA.tarjetaCancion + 150).toBeLessThan(ZONA.limiteAbajo);
+  });
+});
+
+describe("monigotes: el dibujo deja libre el sitio del título y del recuadro de la canción", () => {
+  it("el pedido de dibujo exige la esquina de arriba a la izquierda vacía y sin texto", async () => {
+    const { promptDeMonigote } = await import("../estacion/src/monigote");
+    const p = promptDeMonigote("a man on a bench", "blue");
+    expect(p).toContain("upper-left corner completely empty");
+    expect(p).toContain("No text");
+    expect(p).toContain("soft blue glow");
   });
 });

@@ -71,16 +71,19 @@ export function escenasDePartes(
   }));
 }
 
-/** Los clips de una escena: uno de 5 o 10 s, y si no alcanza, otro que sigue desde el último cuadro. */
+/**
+ * Los clips de una escena: de 5 o 10 s, encadenados (el siguiente arranca desde el último cuadro).
+ * Si al final sobra poco, el último clip se estira hasta un 15 % (va un poco más lento) en vez de pagar
+ * otro clip para un segundo y medio.
+ */
+export const ESTIRAMIENTO_MAXIMO = 1.15;
 export function clipsDeEscena(duracionMs: number): (5 | 10)[] {
-  const seg = duracionMs / 1000;
+  let resto = duracionMs / 1000;
   const clips: (5 | 10)[] = [];
-  let resto = seg;
-  while (resto > 0.25) {
-    const c: 5 | 10 = resto <= 5.3 ? 5 : 10;
+  while (resto > 0.25 && clips.length < 3) {
+    const c: 5 | 10 = resto <= 5 * ESTIRAMIENTO_MAXIMO ? 5 : 10;
     clips.push(c);
-    resto -= c;
-    if (clips.length >= 3) break;
+    resto -= c * (resto <= c * ESTIRAMIENTO_MAXIMO ? ESTIRAMIENTO_MAXIMO : 1);
   }
   return clips.length ? clips : [5];
 }

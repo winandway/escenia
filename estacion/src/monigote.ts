@@ -4,7 +4,6 @@
 // Uso (desde estacion/):
 //   npx tsx src/monigote.ts --escena "a man sitting on his bed at night holding his phone" --brillo "red" --salida dibujo.png
 import path from "node:path";
-import { imagenLibre } from "./imagenes";
 
 /** El estilo fijo de los monigotes (el del reel viral de referencia, hecho propio). */
 export function promptDeMonigote(escena: string, brillo: string): string {
@@ -12,7 +11,9 @@ export function promptDeMonigote(escena: string, brillo: string): string {
     "Minimalist stick figure illustration, thin clean white line art on a pure black background, simple round heads with small expressive faces, hand-drawn look like a viral explainer animation.",
     `Scene: ${escena}.`,
     `The only color is a soft ${brillo} glow on the most important object of the scene; everything else is white lines on black.`,
-    "Vertical composition, the characters in the middle of the frame with space above, simple line-drawn background objects.",
+    "Vertical composition, the characters in the middle and lower part of the frame with space above, simple line-drawn background objects.",
+    // El título va arriba y el recuadro de la canción arriba a la izquierda (C-MONIGOTES-1): ahí no puede haber nada importante.
+    "Keep the top quarter of the image almost empty black, and keep the upper-left corner completely empty: no characters, windows or important objects there.",
     "No text, no letters, no words, no captions, no logos, no watermark.",
   ].join(" ");
 }
@@ -29,7 +30,11 @@ if (process.argv[1] && /^monigote\.(ts|js|mjs)$/.test(path.basename(process.argv
     console.error('Uso: monigote.ts --escena "…" [--brillo red] --salida dibujo.png');
     process.exit(1);
   }
-  imagenLibre(promptDeMonigote(escena, opcion("--brillo") ?? "red"), path.resolve(salida))
+  // Se carga aquí: imagenes.ts lee estacion/.env al importarse, y las pruebas no lo tienen.
+  import("./imagenes")
+    .then(({ imagenLibre }) =>
+      imagenLibre(promptDeMonigote(escena, opcion("--brillo") ?? "red"), path.resolve(salida)),
+    )
     .then((c) => console.log(`Listo: ${path.resolve(salida)} ($${c.toFixed(2)})`))
     .catch((e: unknown) => {
       console.error(e instanceof Error ? e.message : e);
