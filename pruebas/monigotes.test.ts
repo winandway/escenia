@@ -5,7 +5,7 @@ import {
   escenasDePartes,
   piezasDeVoz,
   type PlanMonigotes,
-} from "../estacion/src/monigotes";
+} from "../estacion/src/monigotes-plan";
 
 const plan: PlanMonigotes = {
   titulo: ["A", "B"],
@@ -75,7 +75,7 @@ describe("monigotes: el hueco de cada canción, las escenas, los clips y los sub
 
 describe("monigotes: cada línea del título cabe en una sola línea", () => {
   it("la letra se achica con el texto largo y nunca baja de 56 ni pasa de 96", async () => {
-    const { tamanoDeLinea } = await import("../estacion/src/remotion/Monigotes");
+    const { tamanoDeLinea } = await import("../estacion/src/remotion/monigotes-diseno");
     const t = tamanoDeLinea("TRES CANCIONES PROHIBIDAS");
     expect(t).toBeLessThan(92);
     expect(t * 0.46 * "TRES CANCIONES PROHIBIDAS".length).toBeLessThanOrEqual(960);
@@ -86,7 +86,7 @@ describe("monigotes: cada línea del título cabe en una sola línea", () => {
 
 describe("monigotes: todo el texto queda donde YouTube no lo tapa (C-MONIGOTES-1)", () => {
   it("subtítulos, marca y recuadro de la canción quedan por encima del 85 % del alto y dentro de los lados", async () => {
-    const { ZONA } = await import("../estacion/src/remotion/Monigotes");
+    const { ZONA } = await import("../estacion/src/remotion/monigotes-diseno");
     // Subtítulo (una línea de ~100 px) y marca (~110 px) tienen que terminar antes del límite.
     expect(ZONA.subtitulos + 100).toBeLessThan(ZONA.limiteAbajo);
     expect(ZONA.marca + 110).toBeLessThan(ZONA.limiteAbajo);
@@ -116,7 +116,7 @@ describe("monigotes: el dibujo deja libre el sitio del título y del recuadro de
 
 describe("monigotes: el nombre de la canción cabe en una línea y las caras no van abajo", () => {
   it("la tarjeta se achica con nombres largos y el dibujo pide las caras en la franja del medio", async () => {
-    const { tamanoDeTarjeta } = await import("../estacion/src/remotion/Monigotes");
+    const { tamanoDeTarjeta } = await import("../estacion/src/remotion/monigotes-diseno");
     const largo = "ASÍ SE LE CANTA AL DESPECHO";
     expect(tamanoDeTarjeta(largo) * 0.47 * (largo.length + 2)).toBeLessThanOrEqual(820);
     expect(tamanoDeTarjeta("LA CORAZONADA")).toBe(84);
@@ -127,8 +127,8 @@ describe("monigotes: el nombre de la canción cabe en una línea y las caras no 
 
 describe("monigotes: cada canal con su color (Full Código en verde, Caprichoso TV en rojo)", () => {
   it("sin color en el plan sale rojo; con color, ese; y el texto sobre la caja se lee", async () => {
-    const { esquemaPlanMonigotes } = await import("../estacion/src/monigotes");
-    const { textoSobre, ROJO } = await import("../estacion/src/remotion/Monigotes");
+    const { esquemaPlanMonigotes } = await import("../estacion/src/monigotes-plan");
+    const { textoSobre, ROJO } = await import("../estacion/src/remotion/monigotes-diseno");
     const base = { titulo: ["A", "B"], marca: "M", partes: [{ texto: "t", dibujo: "d", movimiento: "m" }] };
     expect(esquemaPlanMonigotes.parse(base).acento).toBe(ROJO);
     expect(esquemaPlanMonigotes.parse({ ...base, acento: "#10f08c" }).acento).toBe("#10f08c");
@@ -142,13 +142,13 @@ describe("monigotes: cada canal con su color (Full Código en verde, Caprichoso 
 describe("monigotes baratos: poses en vez de clips de pago (Richard, 13 oct 2026: «5 dólares no quiero»)", () => {
   const base = { titulo: ["A", "B"], marca: "M", partes: [{ texto: "t", dibujo: "d", movimiento: "m" }] };
   it("sin decir nada sale con poses y no paga animación; Kling solo si el plan lo pide", async () => {
-    const { esquemaPlanMonigotes, necesitaAnimacionDePago } = await import("../estacion/src/monigotes");
+    const { esquemaPlanMonigotes, necesitaAnimacionDePago } = await import("../estacion/src/monigotes-plan");
     expect(esquemaPlanMonigotes.parse(base).animacion).toBe("poses");
     expect(necesitaAnimacionDePago(esquemaPlanMonigotes.parse(base))).toBe(false);
     expect(necesitaAnimacionDePago(esquemaPlanMonigotes.parse({ ...base, animacion: "kling" }))).toBe(true);
   });
   it("el costo de los dibujos es 3 ¢ por imagen: la base de cada parte más sus poses", async () => {
-    const { esquemaPlanMonigotes, costoDibujosUsd } = await import("../estacion/src/monigotes");
+    const { esquemaPlanMonigotes, costoDibujosUsd } = await import("../estacion/src/monigotes-plan");
     const plan = esquemaPlanMonigotes.parse({
       ...base,
       animacion: "poses",
@@ -160,14 +160,14 @@ describe("monigotes baratos: poses en vez de clips de pago (Richard, 13 oct 2026
     expect(costoDibujosUsd(plan)).toBeCloseTo(0.12, 5);
   });
   it("las poses se reparten la escena en partes iguales que suman justo lo que dura", async () => {
-    const { repartoDePoses } = await import("../estacion/src/monigotes");
+    const { repartoDePoses } = await import("../estacion/src/monigotes-plan");
     expect(repartoDePoses(12000, 4)).toEqual([3000, 3000, 3000, 3000]);
     const r = repartoDePoses(10001, 3);
     expect(r.reduce((s, x) => s + x, 0)).toBe(10001);
     expect(Math.max(...r) - Math.min(...r)).toBeLessThanOrEqual(1);
   });
   it("ninguna imagen se queda más de 5 s en pantalla (formato Escenia)", async () => {
-    const { posesCortas } = await import("../estacion/src/monigotes");
+    const { posesCortas } = await import("../estacion/src/monigotes-plan");
     expect(posesCortas(14000, 3)).toBe(true);
     expect(posesCortas(16000, 3)).toBe(false);
   });
@@ -179,7 +179,7 @@ describe("monigotes baratos: poses en vez de clips de pago (Richard, 13 oct 2026
     expect(p).toMatch(/no text/i);
   });
   it("la plantilla acepta imágenes además de videos", async () => {
-    const { esquemaMonigotes } = await import("../estacion/src/remotion/Monigotes");
+    const { esquemaMonigotes } = await import("../estacion/src/remotion/monigotes-diseno");
     const props = esquemaMonigotes.parse({
       titulo: ["A", "B"],
       marca: "M",
@@ -201,7 +201,7 @@ describe("monigotes baratos: poses en vez de clips de pago (Richard, 13 oct 2026
 
 describe("monigotes: el dibujo se sube y se acerca a la franja libre del medio (gancho con el muñeco abajo, 13 oct 2026)", () => {
   it("un dibujo pequeño y abajo se sube y se agranda; nunca se mete debajo del título", async () => {
-    const { encuadreDeDibujo, FRANJA_LIBRE } = await import("../estacion/src/monigotes");
+    const { encuadreDeDibujo, FRANJA_LIBRE } = await import("../estacion/src/monigotes-plan");
     const caja = { arriba: 0.45, abajo: 1, izquierda: 0, derecha: 0.95 };
     const e = encuadreDeDibujo(caja);
     expect(e.subir).toBeGreaterThan(0.2);
@@ -210,17 +210,36 @@ describe("monigotes: el dibujo se sube y se acerca a la franja libre del medio (
     expect(arribaNueva).toBeGreaterThanOrEqual(FRANJA_LIBRE.arriba - 1e-9);
   });
   it("un dibujo centrado y pequeño se agranda sin salirse por los lados", async () => {
-    const { encuadreDeDibujo } = await import("../estacion/src/monigotes");
+    const { encuadreDeDibujo } = await import("../estacion/src/monigotes-plan");
     const e = encuadreDeDibujo({ arriba: 0.4, abajo: 0.6, izquierda: 0.3, derecha: 0.7 });
     expect(e.zoom).toBeGreaterThan(1.2);
     expect(0.4 * e.zoom).toBeLessThanOrEqual(0.98);
   });
   it("un dibujo que ya llena la pantalla no se acerca, y si toca el título baja solo lo justo", async () => {
-    const { encuadreDeDibujo, FRANJA_LIBRE } = await import("../estacion/src/monigotes");
+    const { encuadreDeDibujo, FRANJA_LIBRE } = await import("../estacion/src/monigotes-plan");
     const e = encuadreDeDibujo({ arriba: 0.2, abajo: 0.75, izquierda: 0, derecha: 1 });
     expect(e.zoom).toBe(1);
     expect(e.subir).toBeLessThan(0);
     expect(e.subir).toBeGreaterThan(-0.05);
     expect(0.2 - e.subir).toBeCloseTo(FRANJA_LIBRE.arriba, 6);
+  });
+});
+
+describe("la lógica de los monigotes que prueba la raíz no toca Remotion (C-CI-1)", () => {
+  it("monigotes-plan y monigotes-diseno no importan Remotion ni el render", async () => {
+    const { readFileSync } = await import("node:fs");
+    for (const archivo of ["estacion/src/monigotes-plan.ts", "estacion/src/remotion/monigotes-diseno.ts"]) {
+      const fuente = readFileSync(archivo, "utf8");
+      expect(fuente).not.toMatch(/from ["'](remotion|@remotion\/[^"']+)["']/);
+      expect(fuente).not.toMatch(/import\(["'](\.\/render|remotion|@remotion\/[^"']+)["']\)/);
+    }
+  });
+  it("las pruebas no importan los archivos que sí usan Remotion", async () => {
+    const { readdirSync, readFileSync } = await import("node:fs");
+    for (const f of readdirSync("pruebas").filter((n) => n.endsWith(".ts"))) {
+      const fuente = readFileSync(`pruebas/${f}`, "utf8");
+      expect(fuente, f).not.toMatch(/["']\.\.\/estacion\/src\/monigotes["']/);
+      expect(fuente, f).not.toMatch(/["']\.\.\/estacion\/src\/remotion\/Monigotes["']/);
+    }
   });
 });

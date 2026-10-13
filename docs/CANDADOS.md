@@ -1506,16 +1506,25 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué NO tocar:** no calcular el encuadre pose por pose (las poses saltarían); no acercar más de
   ×1,35 (se pixela); no subir el dibujo por encima del título.
 
-## C-CI-1 — La verificación de GitHub instala la Estación antes de probar (13 oct 2026)
+## C-CI-1 — Las pruebas de la raíz no tocan Remotion, o el panel deja de publicarse (13 oct 2026)
 
-- **Qué se rompió y cómo se veía:** desde el 12 oct 2026 la verificación de GitHub salía en rojo en
-  cada envío («Cannot find module 'remotion'»), aunque en la Mac todo pasaba. La publicación seguía
-  funcionando porque va por otro camino, y por eso nadie se enteró.
-- **Causa real:** las pruebas de la raíz (`pruebas/monigotes.test.ts`) importan la plantilla de los
-  monigotes y `estacion/src/monigotes.ts`, que usan Remotion; Remotion vive en `estacion/node_modules`,
-  que en la Mac existe y en GitHub se instalaba recién en el último paso.
-- **Qué se hizo:** `.github/workflows/verify.yml` instala los paquetes de la Estación justo después de
-  los de la raíz, antes de los tipos y las pruebas.
-- **Cómo se comprueba:** la verificación de GitHub en verde después de cada envío (`gh run list
---workflow Verificar`).
-- **Qué NO tocar:** no mover ese paso al final; no sacar las pruebas de la plantilla para que pase.
+- **Qué se rompió y cómo se veía:** desde el 12 oct 2026 la verificación de GitHub y la PUBLICACIÓN
+  del panel salían en rojo en cada envío («Cannot find module 'remotion'»), aunque en la Mac todo
+  pasaba. El panel en vivo siguió funcionando con la versión anterior, pero ningún cambio llegaba (se
+  notó al crear la temática «Casos reales de tecnología»).
+- **Causa real:** las pruebas de la raíz (`pruebas/monigotes.test.ts`) importaban la plantilla
+  `estacion/src/remotion/Monigotes.tsx` y `estacion/src/monigotes.ts`, que usan Remotion. La revisión
+  de tipos de la raíz (y la de `next build` al publicar) sigue esas importaciones; Remotion vive en
+  `estacion/node_modules`, que existe en la Mac pero no en la nube.
+- **Qué se hizo:** la lógica pura se separó en archivos sin Remotion: `estacion/src/monigotes-plan.ts`
+  (plan, tiempos, costos, encuadre) y `estacion/src/remotion/monigotes-diseno.ts` (esquema de props,
+  color, zonas, tamaños). `monigotes.ts` y `Monigotes.tsx` los usan y los reexportan; las pruebas
+  importan solo esos dos.
+- **Commit:** el de este candado (13 oct 2026, «fix(ci): …sin Remotion…»).
+- **Cómo se comprueba:** `npx vitest run pruebas/monigotes.test.ts` («no toca Remotion»: si una prueba
+  vuelve a importar `monigotes` o `Monigotes`, se pone en rojo; comprobado el 13 oct 2026). Y para ver
+  lo que ve la nube: mover `estacion/node_modules` a otro nombre, correr `npx tsc --noEmit` en la raíz
+  y devolverlo. Después de cada envío, `gh run list` con las dos tareas en verde.
+- **Qué NO tocar:** no importar Remotion (ni `./render`) desde `monigotes-plan.ts` o
+  `monigotes-diseno.ts`; no instalar la Estación en la verificación para «pasar» (taparía el error
+  que rompe la publicación).
