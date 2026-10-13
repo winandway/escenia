@@ -190,5 +190,28 @@ Kling eran el 96 % del costo, y el animador de pago más barato (Hailuo 02 Fast)
 - **Lo que no tiene:** los muñecos no caminan ni hacen gestos seguidos como en los clips de Kling;
   cambian de pose. Si un video concreto lo merece, el plan puede decir `"animacion": "kling"` (unos
   5 $), solo con el visto bueno de Richard y el precio delante.
-- **Muestra gratis** (sin gastar nada, con los dibujos y la voz del video de Darío Gómez):
-  `monigotes/chatgpt-tres-cosas/muestra-modo-barato.mp4`.
+- **El encuadre se ajusta solo** (candado C-MONIGOTES-3): la plantilla mide dónde está el dibujo en
+  la imagen (lo que no es fondo negro), y lo sube y lo acerca (hasta ×1,35) para que quede en la franja
+  libre entre el título y los subtítulos. Un solo encuadre por escena (el dibujo y sus poses juntos),
+  para que las poses no salten de sitio.
+
+### Resultado (13 oct 2026)
+
+`monigotes/chatgpt-tres-cosas/tres-cosas-que-nunca-debes-contarle-a-chatgpt.mp4` (66,4 s), miniatura
+`portada-chatgpt.png` (sale de un dibujo, gratis), textos en `textos-youtube.md`.
+
+**Costo exacto:** 0,92 $ con lo que se repitió; el video solo, 0,77 $ (voz 0,049; 24 dibujos 0,72).
+Detalle en `gastos.txt`.
+
+Lo que salió mal y cómo se arregló (todo mirado antes de armar y después, cuadro por cuadro):
+
+- **Tres dibujos base:** la persona del sofá sin cara, la de la cama fundida con la cama, y la del
+  gancho muy abajo. Se repitieron los tres; en el del gancho la segunda versión salió peor (una cara
+  verde rara) y se quedó la primera.
+- **Dos poses:** «tres cosas» con el muñeco levantando dos dedos (se cambió por el gesto de «shhh»,
+  porque contar dedos les sale mal) y el ingeniero con un casco de obra (se repitió diciendo «sin
+  sombrero ni casco»).
+- **Dos manchas en la esquina de arriba** (un borde blanco y un brillo rojo): se pintaron del negro
+  del fondo, gratis.
+- **Muñecos abajo con los subtítulos encima y media pantalla negra arriba** en el primer armado: nació
+  el encuadre automático (arriba). Rearmar es gratis.

@@ -1486,3 +1486,22 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué NO tocar:** no volver a Kling por defecto; no pasar a clips de pago sin que Richard lo pida
   para ese video con el precio delante; no hacer cada pose a partir de la anterior (se deforma): todas
   salen del dibujo base.
+
+## C-MONIGOTES-3 — El dibujo queda en la franja libre, no debajo de los subtítulos (13 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en el primer armado del video de ChatGPT, varios dibujos tenían a
+  los muñecos en la mitad de abajo: los subtítulos les caían encima y arriba sobraba media pantalla
+  negra. Lo peor, en el gancho (los primeros tres segundos).
+- **Causa real:** el generador de imágenes pone a los personajes más abajo de lo que se le pide (la
+  regla del 35 al 60 % del alto se cumple a medias), y la plantilla mostraba la imagen tal cual.
+- **Qué se hizo:** `encuadreDeDibujo` y `cajaDeContenido` en `estacion/src/monigotes.ts`: al armar en
+  modo poses se mide la caja de lo dibujado (píxeles de más de 60 de gris, filas y columnas con al
+  menos 4) juntando el dibujo y sus poses, y se calcula cuánto subir y acercar (hasta ×1,35, sin
+  salirse por los lados) para centrarla en la franja libre (de 470 a 1370 px); nunca debajo del
+  título. La plantilla (`DibujoVivo`) aplica `encuadre` antes del movimiento de cámara.
+- **Commit:** el de este candado (13 oct 2026, «feat(monigotes): encuadre automático…»).
+- **Cómo se comprueba:** `npx vitest run pruebas/monigotes.test.ts` («el dibujo se sube y se acerca»;
+  sin la función se pone en rojo, comprobado el 13 oct 2026) y, al armar, la línea `parte N: subir …
+· acercar …` del registro; mirar los cuadros: las caras entre el título y los subtítulos.
+- **Qué NO tocar:** no calcular el encuadre pose por pose (las poses saltarían); no acercar más de
+  ×1,35 (se pixela); no subir el dibujo por encima del título.

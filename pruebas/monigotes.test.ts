@@ -198,3 +198,29 @@ describe("monigotes baratos: poses en vez de clips de pago (Richard, 13 oct 2026
     expect(props.escenas[0]?.clips[0]?.tipo).toBe("imagen");
   });
 });
+
+describe("monigotes: el dibujo se sube y se acerca a la franja libre del medio (gancho con el muñeco abajo, 13 oct 2026)", () => {
+  it("un dibujo pequeño y abajo se sube y se agranda; nunca se mete debajo del título", async () => {
+    const { encuadreDeDibujo, FRANJA_LIBRE } = await import("../estacion/src/monigotes");
+    const caja = { arriba: 0.45, abajo: 1, izquierda: 0, derecha: 0.95 };
+    const e = encuadreDeDibujo(caja);
+    expect(e.subir).toBeGreaterThan(0.2);
+    expect(e.zoom).toBeGreaterThanOrEqual(1);
+    const arribaNueva = 0.5 + (caja.arriba - 0.5) * e.zoom - e.subir;
+    expect(arribaNueva).toBeGreaterThanOrEqual(FRANJA_LIBRE.arriba - 1e-9);
+  });
+  it("un dibujo centrado y pequeño se agranda sin salirse por los lados", async () => {
+    const { encuadreDeDibujo } = await import("../estacion/src/monigotes");
+    const e = encuadreDeDibujo({ arriba: 0.4, abajo: 0.6, izquierda: 0.3, derecha: 0.7 });
+    expect(e.zoom).toBeGreaterThan(1.2);
+    expect(0.4 * e.zoom).toBeLessThanOrEqual(0.98);
+  });
+  it("un dibujo que ya llena la pantalla no se acerca, y si toca el título baja solo lo justo", async () => {
+    const { encuadreDeDibujo, FRANJA_LIBRE } = await import("../estacion/src/monigotes");
+    const e = encuadreDeDibujo({ arriba: 0.2, abajo: 0.75, izquierda: 0, derecha: 1 });
+    expect(e.zoom).toBe(1);
+    expect(e.subir).toBeLessThan(0);
+    expect(e.subir).toBeGreaterThan(-0.05);
+    expect(0.2 - e.subir).toBeCloseTo(FRANJA_LIBRE.arriba, 6);
+  });
+});

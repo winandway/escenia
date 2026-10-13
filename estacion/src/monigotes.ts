@@ -91,6 +91,61 @@ export function posesCortas(duracionMs: number, imagenes: number): boolean {
   return Math.max(...repartoDePoses(duracionMs, imagenes)) <= POSE_MAXIMA_MS;
 }
 
+/**
+ * La franja de la pantalla que no tapa ningún texto: debajo del título (470 px) y encima de los
+ * subtítulos (1370 px), en fracción del alto de 1920.
+ */
+export const FRANJA_LIBRE = { arriba: 470 / 1920, abajo: 1370 / 1920 } as const;
+
+type Caja = { arriba: number; abajo: number; izquierda: number; derecha: number };
+
+/**
+ * Cuánto subir y acercar un dibujo para que su contenido quede en la franja libre (13 oct 2026: en el
+ * gancho el muñeco quedó en la mitad de abajo, con los subtítulos encima y media pantalla negra arriba).
+ * `caja` es dónde está el dibujo dentro de la imagen (fracciones). El acercamiento es como mucho ×1,35 y
+ * nunca saca el dibujo por los lados; la subida nunca lo mete debajo del título.
+ */
+export function encuadreDeDibujo(caja: Caja): { subir: number; zoom: number } {
+  const alto = Math.max(0.01, caja.abajo - caja.arriba);
+  const ancho = Math.max(0.01, caja.derecha - caja.izquierda);
+  const zoom = Math.max(1, Math.min(1.35, 0.62 / alto, 0.98 / ancho));
+  const centroLibre = (FRANJA_LIBRE.arriba + FRANJA_LIBRE.abajo) / 2;
+  const centro = (caja.arriba + caja.abajo) / 2;
+  let subir = 0.5 + (centro - 0.5) * zoom - centroLibre;
+  const arribaNueva = 0.5 + (caja.arriba - 0.5) * zoom - subir;
+  if (arribaNueva < FRANJA_LIBRE.arriba) subir -= FRANJA_LIBRE.arriba - arribaNueva;
+  return { subir, zoom };
+}
+
+/** Dónde está el dibujo dentro de la imagen: filas y columnas con línea (lo que no es fondo negro). */
+async function cajaDeContenido(ruta: string): Promise<Caja> {
+  const { default: sharp } = await import("sharp");
+  const { data, info } = await sharp(ruta).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const filas = new Array<number>(info.height).fill(0);
+  const columnas = new Array<number>(info.width).fill(0);
+  for (let y = 0; y < info.height; y++)
+    for (let x = 0; x < info.width; x++)
+      if ((data[y * info.width + x] ?? 0) > 60) {
+        filas[y] = (filas[y] ?? 0) + 1;
+        columnas[x] = (columnas[x] ?? 0) + 1;
+      }
+  const primero = (v: number[]) =>
+    Math.max(
+      0,
+      v.findIndex((n) => n >= 4),
+    );
+  const ultimo = (v: number[]) => {
+    for (let i = v.length - 1; i >= 0; i--) if ((v[i] ?? 0) >= 4) return i;
+    return v.length - 1;
+  };
+  return {
+    arriba: primero(filas) / info.height,
+    abajo: (ultimo(filas) + 1) / info.height,
+    izquierda: primero(columnas) / info.width,
+    derecha: (ultimo(columnas) + 1) / info.width,
+  };
+}
+
 /** Las piezas de voz: cada parte, y después de cada canción un silencio del largo del hueco. */
 export function piezasDeVoz(plan: PlanMonigotes): { texto: string; silencioSeg?: number }[] {
   return plan.partes.flatMap((p) =>
@@ -317,7 +372,12 @@ async function pasoArmar(plan: PlanMonigotes, carpeta: string) {
     );
   const escenasProps = [];
   for (const [i, e] of escenas.entries()) {
-    const clips: { ruta: string; duracionMs: number; tipo: "video" | "imagen" }[] = [];
+    const clips: {
+      ruta: string;
+      duracionMs: number;
+      tipo: "video" | "imagen";
+      encuadre?: { subir: number; zoom: number };
+    }[] = [];
     const parte = plan.partes[i];
     if (plan.animacion === "poses" && parte) {
       const imagenes = [
@@ -332,10 +392,22 @@ async function pasoArmar(plan: PlanMonigotes, carpeta: string) {
           `La parte ${i + 1} dura ${(largo / 1000).toFixed(1)} s y con ${imagenes.length} imágenes alguna pasa de 5 s: agrégale poses.`,
         );
       const reparto = repartoDePoses(largo, imagenes.length);
+      // Un solo encuadre para toda la escena (la caja que junta el dibujo y sus poses): así las poses
+      // no saltan de sitio entre una y otra.
+      const cajas = await Promise.all(imagenes.map((r) => cajaDeContenido(r)));
+      const encuadre = encuadreDeDibujo({
+        arriba: Math.min(...cajas.map((c) => c.arriba)),
+        abajo: Math.max(...cajas.map((c) => c.abajo)),
+        izquierda: Math.min(...cajas.map((c) => c.izquierda)),
+        derecha: Math.max(...cajas.map((c) => c.derecha)),
+      });
+      console.log(
+        `  parte ${i + 1}: subir ${(encuadre.subir * 100).toFixed(0)} % · acercar ×${encuadre.zoom.toFixed(2)}`,
+      );
       for (const [k, origen] of imagenes.entries()) {
         const nombre = path.basename(origen);
         await copyFile(origen, path.join(publica, nombre));
-        clips.push({ ruta: nombre, duracionMs: reparto[k] ?? 0, tipo: "imagen" });
+        clips.push({ ruta: nombre, duracionMs: reparto[k] ?? 0, tipo: "imagen", encuadre });
       }
     }
     for (const letra of plan.animacion === "poses" ? "" : "abc") {

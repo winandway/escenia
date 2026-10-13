@@ -48,6 +48,9 @@ export const esquemaMonigotes = z.object({
           ruta: z.string(),
           duracionMs: z.number(),
           tipo: z.enum(["video", "imagen"]).default("video"),
+          // Solo en imágenes: cuánto subir (fracción del alto) y acercar el dibujo para dejarlo en la
+          // franja libre entre el título y los subtítulos (encuadreDeDibujo en monigotes.ts).
+          encuadre: z.object({ subir: z.number(), zoom: z.number() }).optional(),
         }),
       ),
       hueco: z
@@ -105,11 +108,12 @@ const FiltrosDeHervor: React.FC = () => (
  * cámara se acerca y se corre despacio (una pose hacia un lado, la siguiente hacia el otro), la línea
  * tiembla como dibujada a mano y el brillo de color respira.
  */
-const DibujoVivo: React.FC<{ ruta: string; duracion: number; indice: number }> = ({
-  ruta,
-  duracion,
-  indice,
-}) => {
+const DibujoVivo: React.FC<{
+  ruta: string;
+  duracion: number;
+  indice: number;
+  encuadre?: { subir: number; zoom: number } | undefined;
+}> = ({ ruta, duracion, indice, encuadre }) => {
   const frame = useCurrentFrame();
   const avance = Math.min(1, frame / Math.max(1, duracion));
   const lado = indice % 2 === 0 ? 1 : -1;
@@ -117,7 +121,8 @@ const DibujoVivo: React.FC<{ ruta: string; duracion: number; indice: number }> =
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
-  const zoom = 1.04 + 0.07 * avance + golpe;
+  const zoom = (encuadre?.zoom ?? 1) * (1.04 + 0.07 * avance + golpe);
+  const subir = (encuadre?.subir ?? 0) * 1920;
   const x = lado * (avance * 36 - 18);
   const giro = lado * 0.5 * Math.sin(frame / 45);
   const respira = 1 + 0.5 * (0.5 + 0.5 * Math.sin(frame / 8));
@@ -130,7 +135,7 @@ const DibujoVivo: React.FC<{ ruta: string; duracion: number; indice: number }> =
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          transform: `translateX(${x.toFixed(1)}px) scale(${zoom.toFixed(4)}) rotate(${giro.toFixed(3)}deg)`,
+          transform: `translate(${x.toFixed(1)}px, ${(-subir).toFixed(1)}px) scale(${zoom.toFixed(4)}) rotate(${giro.toFixed(3)}deg)`,
         }}
       />
     </AbsoluteFill>
@@ -155,7 +160,7 @@ const Escena: React.FC<{ clips: PropsMonigotes["escenas"][number]["clips"]; dura
         return (
           <Sequence key={c.ruta} from={inicio} durationInFrames={dura} layout="none">
             {c.tipo === "imagen" ? (
-              <DibujoVivo ruta={c.ruta} duracion={dura} indice={i} />
+              <DibujoVivo ruta={c.ruta} duracion={dura} indice={i} encuadre={c.encuadre} />
             ) : (
               <AbsoluteFill>
                 <OffthreadVideo
