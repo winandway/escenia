@@ -151,3 +151,22 @@ Lo que salió mal y cómo se arregló (todo mirado cuadro por cuadro antes de ar
 **Lo que se aprende para la serie:** Kling tiende a poner partículas cerca de las luces (motas, chispas,
 polillas); si el texto pide que dos personajes NO se toquen y el clip arranca con sus manos cerca, igual
 se tocan: mejor un dibujo donde ya estén lejos.
+
+## Tercer video, el primero de Full Código (13 oct 2026)
+
+«Tres cosas que nunca debes contarle a ChatGPT» (`monigotes/chatgpt-tres-cosas/`): los secretos del
+trabajo (Samsung), las claves y la tarjeta (la falla de 2023) y los secretos íntimos (sin secreto
+profesional). Contenido que no caduca, a pedido de Richard. Datos y fuentes en
+[TEMAS-PROPUESTOS.md](TEMAS-PROPUESTOS.md).
+
+**El color del canal.** La plantilla ya no es solo roja: el plan lleva `acento` (por defecto el rojo
+de Caprichoso TV). Full Código va con el verde de su logo (`#10f08c`): la primera línea del título,
+la caja de la palabra clave y la marca. Sobre un color claro la letra de la caja sale negra
+(`textoSobre`), para que se lea. Prueba: «cada canal con su color» en `pruebas/monigotes.test.ts`.
+
+**La miniatura.** `avatar-portada.ts --canal full-codigo` usa los colores de las portadas de Full
+Código (azul eléctrico y amarillo); sin `--canal` sigue con los de Caprichoso TV.
+
+**Costo calculado antes de generar:** unos 5,48 $ (seis dibujos 0,18; 75 s de clips de Kling 5,25;
+voz unos 0,05). Seis dibujos en vez de cinco: la tercera cosa va en dos escenas (el psicólogo y el
+juez) para que ninguna imagen se quede quieta casi veinte segundos.

@@ -2,6 +2,7 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Aprobar el guion del primer monigote de Full Código, «Tres cosas que nunca debes contarle a ChatGPT» (monigotes/chatgpt-tres-cosas/guion.txt, unos 5,48 $) → con su «sí» se generan voz, dibujos y clips, se revisan cuadro por cuadro y se arma con el verde de Full Código, miniatura y textos.
 - 👤 Monigotes animados (docs/MONIGOTES.md): el de Diomedes va muy bien (1.132 vistas en 48 h). Listo el de Darío Gómez (5,47 $): pegar las tres canciones en el recuadro de arriba a la izquierda (segundos 22,5, 39,2 y 60,6) y subirlo con su miniatura y textos (monigotes/rey-del-despecho/) → después siguen salsa, merengue, música mexicana.
 
 - 👤 Ver su primer video con el formato Presentador (guion 12, «ChatGPT y Gemini ya no son gratis»), decir qué le cambiaría y probarlo en los otros formatos con el botón «Probar en…» → con su opinión se afina el diseño (tamaño en la esquina, cuánto rato sale en grande).

@@ -3,8 +3,8 @@
 //              Richard pegue el pedacito en su editor), con los tiempos de cada palabra;
 //   dibujos  → un dibujo por parte en el estilo fijo de monigote (3 ¢ cada uno);
 //   animar   → cada dibujo animado con Kling 2.5 Turbo Pro, del largo que necesita su parte;
-//   armar    → el video con Remotion: título arriba en rojo y blanco, subtítulos con la palabra
-//              clave en caja roja, el nombre de la canción en cada hueco y la marca abajo.
+//   armar    → el video con Remotion: título arriba en el color del canal y blanco, subtítulos con
+//              la palabra clave en caja de ese color, el nombre de la canción en cada hueco y la marca.
 // Uso (desde estacion/): npx tsx src/monigotes.ts ../monigotes/<proyecto>/plan.json --paso voz|dibujos|animar|armar
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
@@ -12,10 +12,17 @@ import path from "node:path";
 import { z } from "zod";
 
 export const HUECO_CANCION_SEG = 5;
+/** El color de cada canal en la plantilla: rojo para Caprichoso TV, el verde del logo para Full Código. */
+export const COLOR_CAPRICHOSO = "#ff2a2a";
+export const COLOR_FULL_CODIGO = "#10f08c";
 
 export const esquemaPlanMonigotes = z.object({
   titulo: z.tuple([z.string(), z.string()]),
   marca: z.string(),
+  acento: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .default(COLOR_CAPRICHOSO),
   partes: z
     .array(
       z.object({
@@ -263,6 +270,7 @@ async function pasoArmar(plan: PlanMonigotes, carpeta: string) {
   const props = {
     titulo: plan.titulo,
     marca: plan.marca,
+    acento: plan.acento,
     audio: "voz.mp3",
     duracionMs: voz.duracionMs,
     escenas: escenasProps,

@@ -5,14 +5,15 @@
 // Uso (desde estacion/):
 //   npx tsx src/avatar-portada.ts --imagen ../avatar/chase-montes/fotos/escena-x.png \
 //       --grande "¿PELUCA?" --linea "UN NIÑO ME LA JALÓ" --remate "*100%* PELO REAL" \
-//       --variante 2 [--espejo] [--foto-entera] --salida ../avatar/chase-montes/publicar/portada-x.png
+//       --variante 2 [--espejo] [--foto-entera] [--canal full-codigo] --salida ../avatar/chase-montes/publicar/portada-x.png
+// `--canal full-codigo` usa los colores de las portadas de Full Código (azul eléctrico y amarillo).
 import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { encuadre, paletaDePieza, tramaDePieza } from "@compartido/portada";
 import { config } from "./config";
 import { recortar } from "./recorte";
 import { empaquetar } from "./render";
-import { renderizarPortada } from "./portadas";
+import { COLORES, renderizarPortada } from "./portadas";
 import { esquemaPortada } from "./remotion/props";
 
 const COLORES_CANAL = { fondo: ["#d00000", "#14000a"] as [string, string], acento: "#ffd60a" };
@@ -30,6 +31,10 @@ async function principal() {
       'Uso: avatar-portada.ts --imagen escena.png --grande "…" --linea "…" --remate "…" --variante N --salida x.png',
     );
   const variante = Number(opcion("--variante") ?? "1");
+  const canal = opcion("--canal");
+  const colores = canal ? COLORES[canal] : COLORES_CANAL;
+  if (!colores)
+    throw new Error(`Canal sin colores de portada: ${canal}. Usa: ${Object.keys(COLORES).join(", ")}`);
   const publica = path.join(config.CARPETA_PUBLICA, "chase-portadas");
   await mkdir(publica, { recursive: true });
   const base = path.basename(imagen, path.extname(imagen));
@@ -64,7 +69,7 @@ async function principal() {
     cifra: opcion("--grande") ?? "",
     linea: opcion("--linea") ?? "",
     remate: opcion("--remate") ?? "",
-    ...paletaDePieza(COLORES_CANAL, variante),
+    ...paletaDePieza(colores, variante),
   });
   const serveUrl = await empaquetar(publica);
   await mkdir(path.dirname(path.resolve(salida)), { recursive: true });

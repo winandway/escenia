@@ -1,7 +1,8 @@
 // Plantilla de los videos de monigotes animados (docs/MONIGOTES.md), en el estilo del reel viral de
 // referencia: fondo negro, el dibujo animado a pantalla completa, el título arriba en dos líneas
-// (rojo y blanco), subtítulos en mayúsculas con la palabra clave en una caja roja, el nombre de la
-// canción en cada hueco (Richard pega ahí el pedacito en su editor) y la marca del canal abajo en rojo.
+// (color del canal y blanco), subtítulos en mayúsculas con la palabra clave en una caja del color del
+// canal, el nombre de la canción en cada hueco (Richard pega ahí el pedacito en su editor) y la marca
+// abajo. El color es el del canal: rojo en Caprichoso TV, el verde del logo en Full Código.
 import {
   AbsoluteFill,
   Audio,
@@ -16,11 +17,23 @@ import { z } from "zod";
 
 const { fontFamily } = loadFont("normal", { weights: ["400"], subsets: ["latin", "latin-ext"] });
 const FPS = 30;
-const ROJO = "#ff2a2a";
+export const ROJO = "#ff2a2a";
+
+/** Letra negra sobre un color claro (el verde de Full Código) y blanca sobre uno oscuro (el rojo). */
+export function textoSobre(color: string): "#000" | "#fff" {
+  const n = (i: number) => parseInt(color.slice(i, i + 2), 16) / 255;
+  const lineal = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const luz = 0.2126 * lineal(n(1)) + 0.7152 * lineal(n(3)) + 0.0722 * lineal(n(5));
+  return luz > 0.3 ? "#000" : "#fff";
+}
 
 export const esquemaMonigotes = z.object({
   titulo: z.tuple([z.string(), z.string()]),
   marca: z.string(),
+  acento: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .default(ROJO),
   audio: z.string(),
   duracionMs: z.number(),
   escenas: z.array(
@@ -129,6 +142,8 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
   const ms = (frame / FPS) * 1000;
   const sub = p.subtitulos.find((s) => ms >= s.inicioMs && ms < s.finMs);
   const hueco = p.escenas.map((e) => e.hueco).find((h) => h && ms >= h.inicioMs && ms < h.finMs) ?? null;
+  const acento = p.acento;
+  const letraSobreAcento = textoSobre(acento);
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", fontFamily }}>
       {p.escenas.map((e, i) => {
@@ -152,7 +167,7 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
               width: ZONA.recuadro.ancho,
               height: ZONA.recuadro.alto,
               background: "#000",
-              border: `5px solid ${ROJO}`,
+              border: `5px solid ${acento}`,
               borderRadius: 12,
               boxSizing: "border-box",
             }}
@@ -180,11 +195,11 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
             "linear-gradient(to bottom, rgba(0,0,0,0.92) 0px, rgba(0,0,0,0.85) 470px, rgba(0,0,0,0) 640px, rgba(0,0,0,0) 1230px, rgba(0,0,0,0.8) 1380px, rgba(0,0,0,0.92) 1920px)",
         }}
       />
-      {/* Título arriba, como el reel de referencia: la primera línea en rojo y la segunda en blanco. */}
+      {/* Título arriba, como el reel de referencia: la primera línea en el color del canal y la segunda en blanco. */}
       <AbsoluteFill style={{ top: ZONA.titulo, alignItems: "center", justifyContent: "flex-start" }}>
         <div
           style={{
-            color: ROJO,
+            color: acento,
             fontSize: tamanoDeLinea(p.titulo[0]),
             lineHeight: 1.08,
             textShadow: sombra,
@@ -205,7 +220,7 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
           {p.titulo[1]}
         </div>
       </AbsoluteFill>
-      {/* Subtítulo: la palabra clave en una caja roja. En el hueco de una canción, su nombre. */}
+      {/* Subtítulo: la palabra clave en una caja del color del canal. En el hueco de una canción, su nombre. */}
       <AbsoluteFill
         style={{
           top: hueco ? ZONA.tarjetaCancion : ZONA.subtitulos,
@@ -219,8 +234,8 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
             <div
               style={{
                 display: "inline-block",
-                background: ROJO,
-                color: "#fff",
+                background: acento,
+                color: letraSobreAcento,
                 fontSize: tamanoDeTarjeta(hueco.cancion),
                 whiteSpace: "nowrap",
                 padding: "6px 26px",
@@ -245,8 +260,8 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
                 <span
                   key={i}
                   style={{
-                    background: ROJO,
-                    color: "#fff",
+                    background: acento,
+                    color: letraSobreAcento,
                     fontSize: 80,
                     padding: "2px 16px",
                     borderRadius: 10,
@@ -263,9 +278,9 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
           </div>
         ) : null}
       </AbsoluteFill>
-      {/* La marca del canal, abajo y en rojo. */}
+      {/* La marca del canal, abajo y en su color. */}
       <AbsoluteFill style={{ top: ZONA.marca, alignItems: "center", justifyContent: "flex-start" }}>
-        <div style={{ color: ROJO, fontSize: 84, letterSpacing: 2, textShadow: sombra }}>{p.marca}</div>
+        <div style={{ color: acento, fontSize: 84, letterSpacing: 2, textShadow: sombra }}>{p.marca}</div>
       </AbsoluteFill>
       {p.audio ? <Audio src={staticFile(p.audio)} /> : null}
     </AbsoluteFill>

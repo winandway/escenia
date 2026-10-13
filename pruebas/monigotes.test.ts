@@ -10,6 +10,7 @@ import {
 const plan: PlanMonigotes = {
   titulo: ["A", "B"],
   marca: "CAPRICHOSO TV",
+  acento: "#ff2a2a",
   partes: [
     { texto: "gancho", dibujo: "d", brillo: "red", movimiento: "m" },
     { texto: "uno", dibujo: "d", brillo: "red", movimiento: "m", cancion: { titulo: "X", artista: "Y" } },
@@ -113,5 +114,19 @@ describe("monigotes: el nombre de la canción cabe en una línea y las caras no 
     expect(tamanoDeTarjeta("LA CORAZONADA")).toBe(84);
     const { promptDeMonigote } = await import("../estacion/src/monigote");
     expect(promptDeMonigote("x", "red")).toContain("never in the lower third");
+  });
+});
+
+describe("monigotes: cada canal con su color (Full Código en verde, Caprichoso TV en rojo)", () => {
+  it("sin color en el plan sale rojo; con color, ese; y el texto sobre la caja se lee", async () => {
+    const { esquemaPlanMonigotes } = await import("../estacion/src/monigotes");
+    const { textoSobre, ROJO } = await import("../estacion/src/remotion/Monigotes");
+    const base = { titulo: ["A", "B"], marca: "M", partes: [{ texto: "t", dibujo: "d", movimiento: "m" }] };
+    expect(esquemaPlanMonigotes.parse(base).acento).toBe(ROJO);
+    expect(esquemaPlanMonigotes.parse({ ...base, acento: "#10f08c" }).acento).toBe("#10f08c");
+    expect(() => esquemaPlanMonigotes.parse({ ...base, acento: "verde" })).toThrow();
+    // Sobre el verde claro va letra negra; sobre el rojo, blanca.
+    expect(textoSobre("#10f08c")).toBe("#000");
+    expect(textoSobre(ROJO)).toBe("#fff");
   });
 });

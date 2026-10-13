@@ -17,6 +17,7 @@ import { Monigotes, esquemaMonigotes, type PropsMonigotes } from "./Monigotes";
 const monigotesVacio: PropsMonigotes = {
   titulo: ["", ""],
   marca: "",
+  acento: "#ff2a2a",
   audio: "",
   duracionMs: 3000,
   escenas: [],

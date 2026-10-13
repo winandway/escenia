@@ -464,3 +464,47 @@ comentarios y puede llevar una canción de Grupo Kprichoso.
 4. **«Tres canciones que no debes escuchar después de una ruptura».** Intriga pura: la que te
    devuelve al primer día, la que te hace escribirle, y la que te hace llorar en el carro. Al final,
    la que sí debes escuchar: una de Grupo Kprichoso. Es el que mejor vende una canción propia.
+
+## 13 oct 2026 — Full Código con monigotes: «Tres cosas que nunca debes contarle a ChatGPT»
+
+Richard pidió ideas en el mismo estilo de monigotes para Full Código (código, IA y sucesos) y eligió
+esta: _«tiene algo que es… un material duradero… quiero que sea un material que siempre esté allí y
+que nunca se venza»_. Por eso el guion no lleva fechas, versiones, nombres de ajustes ni nada que
+caduque: tres casos que ya pasaron y un consejo que vale siempre.
+
+### Datos verificados el 13 oct 2026 (solo estos entran en el guion)
+
+1. **Los secretos del trabajo (Samsung).** En abril de 2023, ingenieros de la división de semiconductores
+   de Samsung pegaron en ChatGPT código fuente confidencial y notas de reuniones internas para que les
+   ayudara; la empresa registró tres casos en un mes. Samsung restringió el uso de herramientas de IA
+   generativa en las computadoras y redes de la empresa (memo de finales de abril, contado por Bloomberg el
+   2 de mayo de 2023), porque lo enviado queda en servidores externos y es difícil recuperarlo o borrarlo.
+   - https://www.forbes.com.au/news/innovation/samsung-bans-chatgpt-among-employees-after-sensitive-code-leak/
+   - https://thenational-the-national-prod.cdn.arcpublishing.com/business/technology/2023/05/02/samsung-electronics-bans-employee-use-of-chatgpt
+   - https://amp.kedglobal.com/newsAmp/ked202305020022
+2. **Claves, tarjeta y documentos (la falla de marzo de 2023).** Un error en una librería de código
+   abierto (redis-py) dejó que algunos usuarios vieran los títulos del historial de chats de otros, y
+   pudo mostrar a otros usuarios datos de pago del 1,2 % de los suscriptores de ChatGPT Plus activos
+   en una ventana de nueve horas: nombre, correo, dirección de pago, los últimos cuatro números de la
+   tarjeta y su vencimiento (nunca el número completo). OpenAI lo contó en su blog el 24 de marzo de 2023.
+   - https://thehackernews.com/2023/03/openai-reveals-redis-bug-behind-chatgpt.html
+   - https://www.infosecurity-magazine.com/news/chatgpt-vulnerability-payment/
+3. **Los secretos íntimos (sin secreto profesional).** Sam Altman, jefe de OpenAI, dijo en el pódcast
+   de Theo Von (julio de 2025) que mucha gente usa ChatGPT de terapeuta y que, si hay una demanda,
+   la empresa podría verse obligada a entregar esas conversaciones, porque no tienen la protección
+   legal de hablar con un terapeuta, un abogado o un médico.
+   - https://www.kenyans.co.ke/news/114588-openai-ceo-admits-chatgpt-chats-can-be-used-evidence-court
+   - https://nymynet.com/chatgpt-chats-are-not-private-and-could-be-used-in-court-openai-ceo-sam-altman-warns/
+   - https://minnlawyer.com/2026/08/31/ai-chatbot-conversations-court-evidence-privacy-lawsuits/
+4. **Contexto que NO entra en el guion** (sirve para responder comentarios): en el juicio del New York
+   Times contra OpenAI, una jueza ordenó en mayo de 2025 guardar incluso los chats borrados; la orden
+   general terminó a finales de septiembre de 2025, pero lo ya guardado siguió retenido. La ayuda de
+   OpenAI pide no compartir información sensible y avisa que las conversaciones pueden ser revisadas.
+   - https://engadget.com/ai/openai-no-longer-has-to-preserve-all-of-its-chatgpt-data-with-some-exceptions-192422093.html
+   - https://www.malwarebytes.com/blog/news/2025/06/openai-forced-to-preserve-chatgpt-chats
+   - https://libraryguides.emoryhenry.edu/AI
+
+### El guion (seis partes, unos 64 segundos)
+
+Está en `monigotes/chatgpt-tres-cosas/guion.txt` y su plan en `plan.json` (con los dibujos y los
+movimientos). Esperando el «sí» de Richard antes de generar voz o clips.

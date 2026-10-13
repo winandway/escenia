@@ -61,7 +61,7 @@ const exec = promisify(execFile);
  * Full Código: luz azul eléctrico sobre casi negro y amarillo en lo que grita. (El morado con
  * rayos de antes se retiró el 5 oct 2026: «no es un diseño serio».)
  */
-const COLORES: Record<string, Pick<PropsPortada, "fondo" | "acento">> = {
+export const COLORES: Record<string, Pick<PropsPortada, "fondo" | "acento">> = {
   "full-codigo": { fondo: ["#1d5cff", "#04060d"], acento: "#ffd60a" },
 };
 const COLORES_BASE: Pick<PropsPortada, "fondo" | "acento"> = {
