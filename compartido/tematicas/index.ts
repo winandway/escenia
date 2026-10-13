@@ -112,6 +112,36 @@ export const TEMATICAS: Tematica[] = [
     ],
   },
   {
+    // El formato más barato de Full Código (Richard, 13 oct 2026: «todo lo más económico que puedas»):
+    // Documental con fotos reales de internet, sin dibujos ni imágenes de IA. Casos que no caducan.
+    id: "casos-tech",
+    nombre: "Casos reales de tecnología (Documental con fotos reales)",
+    canal: "canal-ia",
+    activa: true,
+    tono: "de quien cuenta un caso real de tecnología como una historia de intriga, directo y sin rodeos; claro para quien no programa, y siempre con un consejo práctico al final",
+    duracionObjetivo: { largo: 240, short: 45 },
+    plantilla: "TechExplainer",
+    estilo: "clasico",
+    ctaProductos: [],
+    estructuras: [
+      ["gancho", "contexto", "dato", "problema", "dato", "opinion", "cierre"],
+      ["gancho", "problema", "contexto", "dato", "dato", "opinion", "cierre"],
+    ],
+    bibliotecaEtiquetas: ["sorpresa", "tension", "error"],
+    densidadRecursos: "media",
+    cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
+    reglas: [
+      "Abre con el momento más fuerte del caso en la primera frase, sin presentar el tema ni saludar.",
+      "Toda cifra, fecha, nombre y cita sale del contexto pegado. Lo que no esté ahí no se dice.",
+      "Contenido que no caduca: fechas absolutas («en enero de 2024»), nunca «hoy», «este año» ni «la semana pasada»; nada de versiones ni precios de herramientas.",
+      "Cada caso termina con lo que una persona o un negocio puede hacer para que no le pase, en una frase.",
+      "Aquí no hay un personaje único: la primera escena es una «foto» real del caso (el lugar, la empresa o la persona; si no es una persona, con `visual.foto_de`: «lugar»). No uses «ia». Con rótulo solo van personas conocidas cuya foto se pueda confirmar; si alguien es poco conocido, mejor un plano «dato».",
+      "Cada escena «dato» o «problema» arranca con una frase que se entienda sola, porque de ahí salen los Shorts.",
+      "Para los clips «stock» busca imágenes concretas («video call on laptop screen», «bank transfer on phone screen», «hacker typing in dark room»), nunca gente genérica de oficina sonriendo.",
+      "`musica`: siempre un ritmo con bombo y bajo que empuje («driving kick and bass beat, dark pulse»); nada de melodías que distraigan.",
+    ],
+  },
+  {
     id: "explicador",
     nombre: "Así funciona: explicado con diagramas de neón",
     canal: "canal-ia",

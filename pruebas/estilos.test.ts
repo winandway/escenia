@@ -647,3 +647,15 @@ describe("estilos: cada temática con su diseño", () => {
     ).toBe("mixto");
   });
 });
+
+describe("Full Código tiene un Documental con fotos reales, el formato más barato (13 oct 2026)", () => {
+  it("la temática «casos-tech» es de Full Código, sale en clásico y no dibuja personas", async () => {
+    const { buscarTematica, estiloDeTematica, dibujaPersonas } = await import("../compartido/tematicas");
+    const t = buscarTematica("casos-tech");
+    expect(t?.canal).toBe("canal-ia");
+    expect(t?.activa).toBe(true);
+    expect(estiloDeTematica("casos-tech")).toBe("clasico");
+    expect(dibujaPersonas(estiloDeTematica("casos-tech"))).toBe(false);
+    expect(t?.reglas.join(" ")).toMatch(/nunca «hoy»/);
+  });
+});
