@@ -5,6 +5,7 @@ import { partesDe, TAMANO_PARTE } from "@compartido/grabaciones";
 import { esquemaGuion, type Guion } from "@compartido/guion";
 import { CABECERA_META, metaParaCabecera } from "@compartido/meta";
 import { conReintentos, ErrorDelPanel } from "@compartido/reintentos";
+import { senalDeVida } from "./vigilante";
 import { ESTILOS_VIDEO, type Canal, type EstiloVideo } from "@compartido/tematicas";
 import { z } from "zod";
 import { config } from "./config";
@@ -103,6 +104,7 @@ async function llamar(
   // Un corte de red de unos segundos no tumba el trabajo: se reintenta con espera (C-ENTREGA-1).
   return conReintentos(
     async () => {
+      senalDeVida();
       const r = await fetch(`${config.PANEL_URL}${ruta}`, {
         method: opciones.metodo ?? "POST",
         headers: {
@@ -146,6 +148,7 @@ export const panel = {
   },
   async bajarSonido(id: number): Promise<Buffer> {
     return conReintentos(async () => {
+      senalDeVida();
       const r = await fetch(`${config.PANEL_URL}/datos/estacion/sonidos/${id}`, {
         headers: { authorization: `Bearer ${config.ESTACION_SECRETO}` },
         signal: AbortSignal.timeout(180_000),
@@ -176,6 +179,7 @@ export const panel = {
   },
   async bajarImagen(id: number): Promise<Buffer> {
     return conReintentos(async () => {
+      senalDeVida();
       const r = await fetch(`${config.PANEL_URL}/datos/estacion/imagenes/${id}`, {
         headers: { authorization: `Bearer ${config.ESTACION_SECRETO}` },
         signal: AbortSignal.timeout(180_000),
@@ -249,6 +253,7 @@ export const panel = {
         const hasta = Math.min(total, posicion + RANGO) - 1;
         const desde = posicion;
         const trozo = await conReintentos(async () => {
+          senalDeVida();
           const r = await fetch(`${config.PANEL_URL}/datos/estacion/grabaciones/${id}/archivo`, {
             headers: { authorization: `Bearer ${config.ESTACION_SECRETO}`, range: `bytes=${desde}-${hasta}` },
             signal: AbortSignal.timeout(180_000),

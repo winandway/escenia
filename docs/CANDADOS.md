@@ -1528,3 +1528,23 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué NO tocar:** no importar Remotion (ni `./render`) desde `monigotes-plan.ts` o
   `monigotes-diseno.ts`; no instalar la Estación en la verificación para «pasar» (taparía el error
   que rompe la publicación).
+
+## C-ESTACION-VIGILANTE — La Estación se reinicia sola si se queda trabada (13 oct 2026)
+
+- **Qué se rompió y cómo se veía:** el guion 19 se aprobó y no se producía. La Estación seguía
+  «encendida» (launchd la mostraba viva) pero no escribía nada en su registro desde las 9:01 de la
+  mañana, después de un «el panel no respondió… fetch failed; reintento 1 en 2 s». Casi diez horas
+  quieta sin que nadie se enterara.
+- **Causa real:** no se pudo ver el punto exacto (el ciclo de espera no escribe nada mientras no hay
+  trabajo); todo indica una espera que nunca terminó después de un corte de red. launchd solo reinicia
+  un proceso que se cae, no uno que se queda quieto.
+- **Qué se hizo:** `estacion/src/vigilante.ts`: cada consulta al panel (`panel.ts`, antes de cada
+  `fetch`) y cada vuelta del ciclo (`estacion.ts`) dan señal de vida; el latido de 45 s de cada
+  producción también pasa por el panel. Si pasan 10 minutos sin señal, la Estación escribe «lleva N min
+  sin señal de vida: se reinicia sola» y se sale; launchd (KeepAlive) la arranca de nuevo.
+- **Commit:** el de este candado (13 oct 2026, «fix(estacion): vigilante…»).
+- **Cómo se comprueba:** `npx vitest run pruebas/vigilante.test.ts` (si se quita la señal de vida o el
+  vigilante, se pone en rojo; comprobado el 13 oct 2026). En el registro, después de un corte largo,
+  tiene que aparecer la línea del reinicio y luego «Lista. Esperando trabajos.».
+- **Qué NO tocar:** no bajar el límite de 10 minutos (el latido es cada 45 s, y un paso largo no debe
+  matar una producción); no quitar el `KeepAlive` del LaunchAgent.

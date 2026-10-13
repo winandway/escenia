@@ -10,6 +10,7 @@ import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas"
 import { catalogoMusica } from "./musica";
 import { producir } from "./produccion";
 import { sincronizarSonidos } from "./sonidos";
+import { senalDeVida, vigilar } from "./vigilante";
 import { marcaDeCanal } from "@compartido/marcas";
 import { buscarTematica, estiloDelTrabajo } from "@compartido/tematicas";
 
@@ -205,7 +206,13 @@ async function principal() {
       : "Música de fondo: NINGUNA (deja las pistas en music-cortinas-libre-de-copy; ver docs/MUSICA.md)",
   );
   console.log("Lista. Esperando trabajos.");
+  // Si se queda 10 minutos sin hablar con el panel, se sale y launchd la vuelve a arrancar.
+  vigilar((minutos) => {
+    console.error(`[${hora()}] La Estación lleva ${minutos} min sin señal de vida: se reinicia sola.`);
+    process.exit(1);
+  });
   for (;;) {
+    senalDeVida();
     let espera = ESPERA_MS;
     try {
       // Primero los videos ya aprobados; si no hay, las grabaciones que Richard subió.

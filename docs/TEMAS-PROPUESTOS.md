@@ -509,3 +509,36 @@ caduque: tres casos que ya pasaron y un consejo que vale siempre.
 Está en `monigotes/chatgpt-tres-cosas/guion.txt` y su plan en `plan.json` (con los dibujos y los
 poses). Va en el modo barato de monigotes (0,77 $, docs/MONIGOTES.md): Richard rechazó los 5,48 $
 con clips de pago. Esperando su «sí» antes de generar voz o dibujos.
+
+## 13 oct 2026 — Full Código en Documental (lo más barato): «Le robaron 25 millones con una videollamada falsa»
+
+Richard pidió un video de Full Código en el formato más barato (Documental con fotos reales de
+internet) y que la IA lo hiciera todo («genéralo tú, tú maneja el software y hazlo todo tú»). Se eligió
+la continuación natural del monigote de ChatGPT que le gustó: las estafas con inteligencia artificial,
+con casos reales que no caducan y consejos que sirven siempre. Temática nueva «Casos reales de
+tecnología» (`casos-tech`), en clásico.
+
+### Datos verificados el 13 oct 2026
+
+1. **Hong Kong, enero de 2024 (Arup).** Un empleado de finanzas recibió un mensaje del supuesto director
+   financiero en el Reino Unido pidiendo una transacción secreta; sospechó, pero una videollamada con
+   el director y varios colegas falsos (deepfakes pregrabados, hechos con videos y audios públicos de
+   YouTube) lo convenció. Hizo 15 transferencias a 5 cuentas: 200 millones de dólares de Hong Kong,
+   unos 25,6 millones de dólares. Denuncia el 29 de enero de 2024; lo contó el superintendente interino
+   Baron Chan. En mayo de 2024 Arup confirmó ser la víctima («voces e imágenes falsas»; ningún sistema
+   interno vulnerado).
+   - https://edition.cnn.com/2024/02/04/asia/deepfake-cfo-scam-hong-kong-intl-hnk
+   - https://hongkongfp.com/2024/02/05/multinational-loses-hk200-million-to-deepfake-video-conference-scam-hong-kong-police-say/
+   - https://abc17news.com/money/cnn-business-consumer/2024/05/16/british-engineering-giant-arup-revealed-as-25-million-deepfake-scam-victim/
+2. **Reino Unido, marzo de 2019.** El director de una empresa de energía pagó 220 mil euros (unos 243 mil
+   dólares) a un «proveedor» de Hungría porque creyó oír a su jefe alemán (voz clonada con el acento).
+   Una tercera llamada desde Austria lo hizo sospechar. La aseguradora Euler Hermes cubrió la pérdida y
+   lo contó al Wall Street Journal.
+   - https://thenextweb.com/security/2019/09/02/fraudsters-deepfake-ceos-voice-to-trick-manager-into-transferring-243000/
+   - https://www.darkreading.com/risk/cybercriminals-impersonate-chief-execs-voice-with-ai-software/d/d-id/1335722
+3. **Cómo protegerse.** FBI (aviso I-120324-PSA, 3 dic 2024): palabra o frase secreta con la familia;
+   colgar y llamar a un número oficial; redes en privado. FTC: a un estafador le basta un audio corto;
+   llamar a un número que ya conoces; transferencias, criptomonedas y tarjetas de regalo son señal de
+   estafa.
+   - https://www.ic3.gov/psa/2024/psa241203
+   - https://consumer.ftc.gov/scams/family-emergency-scams
