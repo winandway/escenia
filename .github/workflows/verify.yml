@@ -12,6 +12,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm }
       - run: npm ci
+      # Las pruebas de la raíz también prueban piezas de la Estación (la plantilla de los monigotes usa
+      # Remotion): sus paquetes van instalados ANTES de los tipos y las pruebas (C-CI-1, 13 oct 2026).
+      - name: Estación (paquetes)
+        working-directory: estacion
+        run: npm ci
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test
@@ -22,4 +27,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Estación (tipos)
         working-directory: estacion
-        run: npm ci && npm run typecheck
+        run: npm run typecheck

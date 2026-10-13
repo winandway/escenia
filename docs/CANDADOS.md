@@ -1505,3 +1505,17 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 · acercar …` del registro; mirar los cuadros: las caras entre el título y los subtítulos.
 - **Qué NO tocar:** no calcular el encuadre pose por pose (las poses saltarían); no acercar más de
   ×1,35 (se pixela); no subir el dibujo por encima del título.
+
+## C-CI-1 — La verificación de GitHub instala la Estación antes de probar (13 oct 2026)
+
+- **Qué se rompió y cómo se veía:** desde el 12 oct 2026 la verificación de GitHub salía en rojo en
+  cada envío («Cannot find module 'remotion'»), aunque en la Mac todo pasaba. La publicación seguía
+  funcionando porque va por otro camino, y por eso nadie se enteró.
+- **Causa real:** las pruebas de la raíz (`pruebas/monigotes.test.ts`) importan la plantilla de los
+  monigotes y `estacion/src/monigotes.ts`, que usan Remotion; Remotion vive en `estacion/node_modules`,
+  que en la Mac existe y en GitHub se instalaba recién en el último paso.
+- **Qué se hizo:** `.github/workflows/verify.yml` instala los paquetes de la Estación justo después de
+  los de la raíz, antes de los tipos y las pruebas.
+- **Cómo se comprueba:** la verificación de GitHub en verde después de cada envío (`gh run list
+--workflow Verificar`).
+- **Qué NO tocar:** no mover ese paso al final; no sacar las pruebas de la plantilla para que pase.
