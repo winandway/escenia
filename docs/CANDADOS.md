@@ -1461,3 +1461,28 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   canción abajo.
 - **Qué NO tocar:** no bajar el texto por debajo del 85 % del alto; no agrandar el recuadro ni
   oscurecer el dibujo; no mover el recuadro (Richard ya sabe dónde pegar el video).
+
+## C-MONIGOTES-2 — Un video de monigotes cuesta menos de un dólar: poses, no clips de pago (13 oct 2026)
+
+- **Qué se rompió y cómo se veía:** el guion de Full Código salía en 5,48 $ y Richard lo frenó: _«es
+  demasiado dinero… si no funciona, hay mucho dinero para eso… algo que cueste 70, 80 centavos. Un
+  dólar, pero 5 dólares no quiero»_.
+- **Causa real:** el 96 % del costo eran los clips de Kling 2.5 Turbo Pro (7 ¢ por segundo, unos 75 s
+  por video). El animador de pago más barato que se encontró (Hailuo 02 Fast, 1,7 ¢ por segundo) igual
+  deja el video en 1,30 $.
+- **Qué se hizo:** modo `"animacion": "poses"` en el plan (`estacion/src/monigotes.ts`), y es el de
+  siempre: cada parte lleva su dibujo base y varias poses del mismo dibujo (`promptDePose` en
+  `monigote.ts`, Seedream con el dibujo base de referencia, 3 ¢ cada una), una imagen cada ~3 s. La
+  plantilla (`DibujoVivo` en `remotion/Monigotes.tsx`) las mueve gratis: entrada con golpecito, cámara
+  que se acerca y se corre (hacia lados alternos), línea que tiembla como dibujada a mano (filtro de
+  ruido con cuatro semillas, cambia cada 3 cuadros) y el brillo que respira. `pasoAnimar` no gasta
+  nada con poses; `pasoArmar` revienta si alguna imagen pasaría de 5 s en pantalla. Kling queda solo si
+  el plan dice `"animacion": "kling"` (los dos planes viejos lo dicen) y entonces cada parte exige su
+  `movimiento`.
+- **Commit:** el de este candado (13 oct 2026, «feat(monigotes): modo poses…»).
+- **Cómo se comprueba:** `npx vitest run pruebas/monigotes.test.ts` («monigotes baratos»): si el modo
+  por defecto vuelve a ser Kling, se pone en rojo (comprobado el 13 oct 2026). Y el costo calculado de
+  un plan (`costoDibujosUsd`) más la voz tiene que dar menos de un dólar.
+- **Qué NO tocar:** no volver a Kling por defecto; no pasar a clips de pago sin que Richard lo pida
+  para ese video con el precio delante; no hacer cada pose a partir de la anterior (se deforma): todas
+  salen del dibujo base.

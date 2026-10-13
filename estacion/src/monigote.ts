@@ -18,6 +18,21 @@ export function promptDeMonigote(escena: string, brillo: string): string {
   ].join(" ");
 }
 
+/**
+ * Una pose nueva del MISMO dibujo (Seedream con el dibujo base de referencia, 3 ¢): mismos personajes,
+ * mismo lugar, mismo encuadre; solo cambia la postura. Así se anima barato, cambiando de pose cada
+ * ~3 s en vez de pagar clips de video (Richard, 13 oct 2026: «5 dólares no quiero»).
+ */
+export function promptDePose(pose: string, brillo: string): string {
+  return [
+    "Redraw this exact same illustration: the same characters with the same faces, hair and clothes, the same place, the same objects, the same framing and camera distance, the same thin clean white line art on a pure black background.",
+    `Only change the characters' pose and expression: ${pose}.`,
+    `The only color is the same soft ${brillo} glow on the most important object; everything else is white lines on black.`,
+    "Keep the characters' heads in the middle band of the image, keep the top quarter almost empty black and the upper-left corner completely empty.",
+    "No text, no letters, no words, no captions, no logos, no watermark.",
+  ].join(" ");
+}
+
 const opcion = (nombre: string): string | null => {
   const i = process.argv.indexOf(nombre);
   return i === -1 ? null : (process.argv[i + 1] ?? null);

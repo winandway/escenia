@@ -6,6 +6,8 @@
 import {
   AbsoluteFill,
   Audio,
+  Easing,
+  Img,
   OffthreadVideo,
   Sequence,
   interpolate,
@@ -40,7 +42,14 @@ export const esquemaMonigotes = z.object({
     z.object({
       inicioMs: z.number(),
       finMs: z.number(),
-      clips: z.array(z.object({ ruta: z.string(), duracionMs: z.number() })),
+      // «video»: clip animado de pago (Kling). «imagen»: una pose dibujada que la plantilla mueve gratis.
+      clips: z.array(
+        z.object({
+          ruta: z.string(),
+          duracionMs: z.number(),
+          tipo: z.enum(["video", "imagen"]).default("video"),
+        }),
+      ),
       hueco: z
         .object({ inicioMs: z.number(), finMs: z.number(), cancion: z.string(), artista: z.string() })
         .nullable(),
@@ -78,6 +87,56 @@ export const ZONA = {
   tarjetaCancion: 1370,
 } as const;
 
+/** Cuatro ruidos distintos: se cambia de uno a otro cada 3 cuadros y la línea tiembla como dibujada a mano. */
+const HERVOR = [1, 2, 3, 4] as const;
+const FiltrosDeHervor: React.FC = () => (
+  <svg width="0" height="0" style={{ position: "absolute" }}>
+    {HERVOR.map((semilla) => (
+      <filter key={semilla} id={`hervor-${semilla}`} x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves={2} seed={semilla} />
+        <feDisplacementMap in="SourceGraphic" scale={3} />
+      </filter>
+    ))}
+  </svg>
+);
+
+/**
+ * Una pose quieta que se mueve gratis (modo «poses», docs/MONIGOTES.md): entra con un golpecito, la
+ * cámara se acerca y se corre despacio (una pose hacia un lado, la siguiente hacia el otro), la línea
+ * tiembla como dibujada a mano y el brillo de color respira.
+ */
+const DibujoVivo: React.FC<{ ruta: string; duracion: number; indice: number }> = ({
+  ruta,
+  duracion,
+  indice,
+}) => {
+  const frame = useCurrentFrame();
+  const avance = Math.min(1, frame / Math.max(1, duracion));
+  const lado = indice % 2 === 0 ? 1 : -1;
+  const golpe = interpolate(frame, [0, 6], [0.05, 0], {
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+  const zoom = 1.04 + 0.07 * avance + golpe;
+  const x = lado * (avance * 36 - 18);
+  const giro = lado * 0.5 * Math.sin(frame / 45);
+  const respira = 1 + 0.5 * (0.5 + 0.5 * Math.sin(frame / 8));
+  const semilla = HERVOR[Math.floor(frame / 3) % HERVOR.length] ?? 1;
+  return (
+    <AbsoluteFill style={{ filter: `url(#hervor-${semilla}) saturate(${respira.toFixed(3)})` }}>
+      <Img
+        src={staticFile(ruta)}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          transform: `translateX(${x.toFixed(1)}px) scale(${zoom.toFixed(4)}) rotate(${giro.toFixed(3)}deg)`,
+        }}
+      />
+    </AbsoluteFill>
+  );
+};
+
 const Escena: React.FC<{ clips: PropsMonigotes["escenas"][number]["clips"]; duracion: number }> = ({
   clips,
   duracion,
@@ -95,14 +154,18 @@ const Escena: React.FC<{ clips: PropsMonigotes["escenas"][number]["clips"]; dura
         const ritmo = ultimo ? Math.min(1, largo / dura) : 1;
         return (
           <Sequence key={c.ruta} from={inicio} durationInFrames={dura} layout="none">
-            <AbsoluteFill>
-              <OffthreadVideo
-                src={staticFile(c.ruta)}
-                muted
-                playbackRate={ritmo}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </AbsoluteFill>
+            {c.tipo === "imagen" ? (
+              <DibujoVivo ruta={c.ruta} duracion={dura} indice={i} />
+            ) : (
+              <AbsoluteFill>
+                <OffthreadVideo
+                  src={staticFile(c.ruta)}
+                  muted
+                  playbackRate={ritmo}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </AbsoluteFill>
+            )}
           </Sequence>
         );
       })}
@@ -146,6 +209,7 @@ export const Monigotes: React.FC<PropsMonigotes> = (p) => {
   const letraSobreAcento = textoSobre(acento);
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", fontFamily }}>
+      <FiltrosDeHervor />
       {p.escenas.map((e, i) => {
         const dur = f(e.finMs) - f(e.inicioMs);
         return (

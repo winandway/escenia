@@ -2,7 +2,11 @@
 //   voz      → la narración de cada parte, con un hueco de 5 s después de cada canción (para que
 //              Richard pegue el pedacito en su editor), con los tiempos de cada palabra;
 //   dibujos  → un dibujo por parte en el estilo fijo de monigote (3 ¢ cada uno);
-//   animar   → cada dibujo animado con Kling 2.5 Turbo Pro, del largo que necesita su parte;
+//   animar   → cada dibujo animado con Kling 2.5 Turbo Pro, del largo que necesita su parte (unos
+//              5 $ por video). Con `"animacion": "poses"` NO se paga animación: cada parte lleva su
+//              dibujo y varias poses del mismo dibujo (3 ¢ cada una) y la plantilla las mueve gratis
+//              (cámara lenta, línea que tiembla como dibujada a mano, brillo que respira). Unos 0,75 $;
+
 //   armar    → el video con Remotion: título arriba en el color del canal y blanco, subtítulos con
 //              la palabra clave en caja de ese color, el nombre de la canción en cada hueco y la marca.
 // Uso (desde estacion/): npx tsx src/monigotes.ts ../monigotes/<proyecto>/plan.json --paso voz|dibujos|animar|armar
@@ -16,27 +20,76 @@ export const HUECO_CANCION_SEG = 5;
 export const COLOR_CAPRICHOSO = "#ff2a2a";
 export const COLOR_FULL_CODIGO = "#10f08c";
 
-export const esquemaPlanMonigotes = z.object({
-  titulo: z.tuple([z.string(), z.string()]),
-  marca: z.string(),
-  acento: z
-    .string()
-    .regex(/^#[0-9a-f]{6}$/i)
-    .default(COLOR_CAPRICHOSO),
-  partes: z
-    .array(
-      z.object({
-        texto: z.string().min(1),
-        dibujo: z.string().min(1),
-        brillo: z.string().default("red"),
-        movimiento: z.string().min(1),
-        dibujoExistente: z.string().optional(),
-        cancion: z.object({ titulo: z.string(), artista: z.string() }).optional(),
-      }),
-    )
-    .min(1),
-});
+export const esquemaPlanMonigotes = z
+  .object({
+    titulo: z.tuple([z.string(), z.string()]),
+    marca: z.string(),
+    acento: z
+      .string()
+      .regex(/^#[0-9a-f]{6}$/i)
+      .default(COLOR_CAPRICHOSO),
+    /**
+     * «poses» (lo de siempre desde el 13 oct 2026): dibujos con varias poses y movimiento gratis (≈0,75 $).
+     * «kling»: clips animados de pago (≈5 $); solo si Richard lo pide para un video en concreto.
+     */
+    animacion: z.enum(["kling", "poses"]).default("poses"),
+    partes: z
+      .array(
+        z.object({
+          texto: z.string().min(1),
+          dibujo: z.string().min(1),
+          brillo: z.string().default("red"),
+          /** Solo con «kling»: cómo se mueve el clip. */
+          movimiento: z.string().default(""),
+          dibujoExistente: z.string().optional(),
+          /** Solo con «poses»: cada cambio de postura del mismo dibujo, en orden (una imagen cada ~3 s). */
+          poses: z.array(z.string().min(1)).default([]),
+          cancion: z.object({ titulo: z.string(), artista: z.string() }).optional(),
+        }),
+      )
+      .min(1),
+  })
+  .superRefine((plan, ctx) => {
+    if (plan.animacion !== "kling") return;
+    plan.partes.forEach((p, i) => {
+      if (!p.movimiento.trim())
+        ctx.addIssue({
+          code: "custom",
+          path: ["partes", i, "movimiento"],
+          message: "Con Kling cada parte dice cómo se mueve.",
+        });
+    });
+  });
 export type PlanMonigotes = z.infer<typeof esquemaPlanMonigotes>;
+
+/** Precio de cada dibujo (Seedream, base o pose). */
+export const COSTO_DIBUJO_USD = 0.03;
+/** Lo más que una imagen se queda quieta en pantalla (formato Escenia, regla 1). */
+export const POSE_MAXIMA_MS = 5000;
+
+/** Si el plan paga clips animados (Kling) o se arma gratis con poses. */
+export function necesitaAnimacionDePago(plan: PlanMonigotes): boolean {
+  return plan.animacion === "kling";
+}
+
+/** Lo que cuestan los dibujos del plan: la base de cada parte más sus poses. */
+export function costoDibujosUsd(plan: PlanMonigotes): number {
+  const imagenes = plan.partes.reduce((s, p) => s + 1 + (plan.animacion === "poses" ? p.poses.length : 0), 0);
+  return Math.round(imagenes * COSTO_DIBUJO_USD * 100) / 100;
+}
+
+/** La escena repartida entre sus imágenes en partes iguales (la suma da justo lo que dura). */
+export function repartoDePoses(duracionMs: number, imagenes: number): number[] {
+  const n = Math.max(1, imagenes);
+  const base = Math.floor(duracionMs / n);
+  const sobra = duracionMs - base * n;
+  return Array.from({ length: n }, (_, i) => base + (i < sobra ? 1 : 0));
+}
+
+/** Si con esas imágenes ninguna se queda más de 5 s en pantalla. */
+export function posesCortas(duracionMs: number, imagenes: number): boolean {
+  return Math.max(...repartoDePoses(duracionMs, imagenes)) <= POSE_MAXIMA_MS;
+}
 
 /** Las piezas de voz: cada parte, y después de cada canción un silencio del largo del hueco. */
 export function piezasDeVoz(plan: PlanMonigotes): { texto: string; silencioSeg?: number }[] {
@@ -170,24 +223,42 @@ type VozGuardada = {
 };
 
 async function pasoDibujos(plan: PlanMonigotes, carpeta: string) {
-  const { imagenLibre } = await import("./imagenes");
-  const { promptDeMonigote } = await import("./monigote");
+  const { imagenConReferencias, imagenLibre } = await import("./imagenes");
+  const { promptDeMonigote, promptDePose } = await import("./monigote");
+  const solo = opcion("--parte");
   let gasto = 0;
   for (const [i, parte] of plan.partes.entries()) {
+    if (solo && Number(solo) !== i + 1) continue;
     const destino = path.join(carpeta, `dibujo-${i + 1}.png`);
-    if (existsSync(destino)) continue;
-    if (parte.dibujoExistente) {
-      await copyFile(path.join(carpeta, parte.dibujoExistente), destino);
-      console.log(`  dibujo ${i + 1}: el que ya existía`);
-      continue;
+    if (!existsSync(destino)) {
+      if (parte.dibujoExistente) {
+        await copyFile(path.join(carpeta, parte.dibujoExistente), destino);
+        console.log(`  dibujo ${i + 1}: el que ya existía`);
+      } else {
+        gasto += await imagenLibre(promptDeMonigote(parte.dibujo, parte.brillo), destino);
+        console.log(`  dibujo ${i + 1}: listo`);
+      }
     }
-    gasto += await imagenLibre(promptDeMonigote(parte.dibujo, parte.brillo), destino);
-    console.log(`  dibujo ${i + 1}: listo`);
+    if (plan.animacion !== "poses") continue;
+    // Cada pose sale del dibujo base (no de la pose anterior): así no se deforma de pose en pose.
+    for (const [k, pose] of parte.poses.entries()) {
+      const salida = rutaDePose(carpeta, i, k);
+      if (existsSync(salida)) continue;
+      gasto += await imagenConReferencias(promptDePose(pose, parte.brillo), [destino], salida);
+      console.log(`  dibujo ${i + 1}, pose ${k + 1}: listo`);
+    }
   }
   console.log(`  dibujos: $${gasto.toFixed(2)}`);
 }
 
+const rutaDePose = (carpeta: string, parte: number, pose: number) =>
+  path.join(carpeta, `dibujo-${parte + 1}-pose-${pose + 1}.png`);
+
 async function pasoAnimar(plan: PlanMonigotes, carpeta: string) {
+  if (!necesitaAnimacionDePago(plan)) {
+    console.log("  Este plan va con poses: no se paga animación. Sigue con --paso armar.");
+    return;
+  }
   const { animarImagen } = await import("./animar-imagen");
   const { execFile } = await import("node:child_process");
   const { promisify } = await import("node:util");
@@ -246,17 +317,36 @@ async function pasoArmar(plan: PlanMonigotes, carpeta: string) {
     );
   const escenasProps = [];
   for (const [i, e] of escenas.entries()) {
-    const clips = [];
-    for (const letra of "abc") {
+    const clips: { ruta: string; duracionMs: number; tipo: "video" | "imagen" }[] = [];
+    const parte = plan.partes[i];
+    if (plan.animacion === "poses" && parte) {
+      const imagenes = [
+        path.join(carpeta, `dibujo-${i + 1}.png`),
+        ...parte.poses.map((_, k) => rutaDePose(carpeta, i, k)),
+      ];
+      const falta = imagenes.find((r) => !existsSync(r));
+      if (falta) throw new Error(`Falta ${path.basename(falta)}: corre el paso dibujos.`);
+      const largo = e.finMs - e.inicioMs;
+      if (!posesCortas(largo, imagenes.length))
+        throw new Error(
+          `La parte ${i + 1} dura ${(largo / 1000).toFixed(1)} s y con ${imagenes.length} imágenes alguna pasa de 5 s: agrégale poses.`,
+        );
+      const reparto = repartoDePoses(largo, imagenes.length);
+      for (const [k, origen] of imagenes.entries()) {
+        const nombre = path.basename(origen);
+        await copyFile(origen, path.join(publica, nombre));
+        clips.push({ ruta: nombre, duracionMs: reparto[k] ?? 0, tipo: "imagen" });
+      }
+    }
+    for (const letra of plan.animacion === "poses" ? "" : "abc") {
       const origen = path.join(carpeta, `clip-${i + 1}-${letra}.mp4`);
       if (!existsSync(origen)) break;
       // Un poco antes del final de cada clip: ahí es donde los modelos pierden objetos.
       const nombre = `clip-${i + 1}-${letra}.mp4`;
       await copyFile(origen, path.join(publica, nombre));
-      clips.push({ ruta: nombre, duracionMs: (await duracion(origen)) - 150 });
+      clips.push({ ruta: nombre, duracionMs: (await duracion(origen)) - 150, tipo: "video" });
     }
     if (!clips.length) throw new Error(`La parte ${i + 1} no tiene clips: corre el paso animar.`);
-    const parte = plan.partes[i];
     escenasProps.push({
       inicioMs: e.inicioMs,
       finMs: e.finMs,

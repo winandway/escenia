@@ -167,6 +167,28 @@ la caja de la palabra clave y la marca. Sobre un color claro la letra de la caja
 **La miniatura.** `avatar-portada.ts --canal full-codigo` usa los colores de las portadas de Full
 Código (azul eléctrico y amarillo); sin `--canal` sigue con los de Caprichoso TV.
 
-**Costo calculado antes de generar:** unos 5,48 $ (seis dibujos 0,18; 75 s de clips de Kling 5,25;
-voz unos 0,05). Seis dibujos en vez de cinco: la tercera cosa va en dos escenas (el psicólogo y el
-juez) para que ninguna imagen se quede quieta casi veinte segundos.
+**Costo:** primero salió en 5,48 $ con clips de Kling y Richard lo frenó: _«5 dólares no quiero»_.
+Ahora va en el modo **poses** (abajo): 24 dibujos de 3 ¢ (0,72 $) y la voz, unos 0,05 $. **Total
+calculado: 0,77 $.** La tercera cosa va en tres escenas (el psicólogo, el jefe de OpenAI en un pódcast
+y el juez), para que cada imagen dure unos 3 segundos.
+
+## El modo barato: poses en vez de clips (13 oct 2026, candado C-MONIGOTES-2)
+
+Lo pidió Richard: un video de monigotes tiene que costar entre 70 centavos y un dólar. Los clips de
+Kling eran el 96 % del costo, y el animador de pago más barato (Hailuo 02 Fast) igual lo deja en
+1,30 $. Así que el movimiento lo pone la plantilla, gratis:
+
+- **Cada parte lleva su dibujo y sus poses** (`"poses": [...]` en el plan): el mismo dibujo con otra
+  postura o expresión, hecho con el dibujo base de referencia (3 ¢ cada una). Una imagen nueva cada
+  2,5 a 3 segundos, como pide el formato. Cada pose sale del dibujo base, no de la anterior, para que
+  no se deforme.
+- **La plantilla mueve cada pose:** entra con un golpecito, la cámara se acerca y se corre despacio
+  (una pose hacia un lado, la siguiente hacia el otro), la línea tiembla como dibujada a mano y el
+  brillo de color respira.
+- **Pasos:** `--paso voz`, `--paso dibujos` (base y poses; con `--parte N` se rehace una sola parte),
+  `--paso armar`. El paso `animar` no gasta nada en este modo.
+- **Lo que no tiene:** los muñecos no caminan ni hacen gestos seguidos como en los clips de Kling;
+  cambian de pose. Si un video concreto lo merece, el plan puede decir `"animacion": "kling"` (unos
+  5 $), solo con el visto bueno de Richard y el precio delante.
+- **Muestra gratis** (sin gastar nada, con los dibujos y la voz del video de Darío Gómez):
+  `monigotes/chatgpt-tres-cosas/muestra-modo-barato.mp4`.

@@ -507,4 +507,5 @@ caduque: tres casos que ya pasaron y un consejo que vale siempre.
 ### El guion (seis partes, unos 64 segundos)
 
 Está en `monigotes/chatgpt-tres-cosas/guion.txt` y su plan en `plan.json` (con los dibujos y los
-movimientos). Esperando el «sí» de Richard antes de generar voz o clips.
+poses). Va en el modo barato de monigotes (0,77 $, docs/MONIGOTES.md): Richard rechazó los 5,48 $
+con clips de pago. Esperando su «sí» antes de generar voz o dibujos.

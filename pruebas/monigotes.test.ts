@@ -11,10 +11,18 @@ const plan: PlanMonigotes = {
   titulo: ["A", "B"],
   marca: "CAPRICHOSO TV",
   acento: "#ff2a2a",
+  animacion: "kling",
   partes: [
-    { texto: "gancho", dibujo: "d", brillo: "red", movimiento: "m" },
-    { texto: "uno", dibujo: "d", brillo: "red", movimiento: "m", cancion: { titulo: "X", artista: "Y" } },
-    { texto: "cierre", dibujo: "d", brillo: "red", movimiento: "m" },
+    { texto: "gancho", dibujo: "d", brillo: "red", movimiento: "m", poses: [] },
+    {
+      texto: "uno",
+      dibujo: "d",
+      brillo: "red",
+      movimiento: "m",
+      poses: [],
+      cancion: { titulo: "X", artista: "Y" },
+    },
+    { texto: "cierre", dibujo: "d", brillo: "red", movimiento: "m", poses: [] },
   ],
 };
 
@@ -128,5 +136,65 @@ describe("monigotes: cada canal con su color (Full Código en verde, Caprichoso 
     // Sobre el verde claro va letra negra; sobre el rojo, blanca.
     expect(textoSobre("#10f08c")).toBe("#000");
     expect(textoSobre(ROJO)).toBe("#fff");
+  });
+});
+
+describe("monigotes baratos: poses en vez de clips de pago (Richard, 13 oct 2026: «5 dólares no quiero»)", () => {
+  const base = { titulo: ["A", "B"], marca: "M", partes: [{ texto: "t", dibujo: "d", movimiento: "m" }] };
+  it("sin decir nada sale con poses y no paga animación; Kling solo si el plan lo pide", async () => {
+    const { esquemaPlanMonigotes, necesitaAnimacionDePago } = await import("../estacion/src/monigotes");
+    expect(esquemaPlanMonigotes.parse(base).animacion).toBe("poses");
+    expect(necesitaAnimacionDePago(esquemaPlanMonigotes.parse(base))).toBe(false);
+    expect(necesitaAnimacionDePago(esquemaPlanMonigotes.parse({ ...base, animacion: "kling" }))).toBe(true);
+  });
+  it("el costo de los dibujos es 3 ¢ por imagen: la base de cada parte más sus poses", async () => {
+    const { esquemaPlanMonigotes, costoDibujosUsd } = await import("../estacion/src/monigotes");
+    const plan = esquemaPlanMonigotes.parse({
+      ...base,
+      animacion: "poses",
+      partes: [
+        { texto: "a", dibujo: "d", movimiento: "m", poses: ["p1", "p2"] },
+        { texto: "b", dibujo: "d", movimiento: "m" },
+      ],
+    });
+    expect(costoDibujosUsd(plan)).toBeCloseTo(0.12, 5);
+  });
+  it("las poses se reparten la escena en partes iguales que suman justo lo que dura", async () => {
+    const { repartoDePoses } = await import("../estacion/src/monigotes");
+    expect(repartoDePoses(12000, 4)).toEqual([3000, 3000, 3000, 3000]);
+    const r = repartoDePoses(10001, 3);
+    expect(r.reduce((s, x) => s + x, 0)).toBe(10001);
+    expect(Math.max(...r) - Math.min(...r)).toBeLessThanOrEqual(1);
+  });
+  it("ninguna imagen se queda más de 5 s en pantalla (formato Escenia)", async () => {
+    const { posesCortas } = await import("../estacion/src/monigotes");
+    expect(posesCortas(14000, 3)).toBe(true);
+    expect(posesCortas(16000, 3)).toBe(false);
+  });
+  it("el pedido de cada pose repite el mismo dibujo y solo cambia la postura", async () => {
+    const { promptDePose } = await import("../estacion/src/monigote");
+    const p = promptDePose("the man raises one hand", "green");
+    expect(p).toContain("the man raises one hand");
+    expect(p).toMatch(/same characters/i);
+    expect(p).toMatch(/no text/i);
+  });
+  it("la plantilla acepta imágenes además de videos", async () => {
+    const { esquemaMonigotes } = await import("../estacion/src/remotion/Monigotes");
+    const props = esquemaMonigotes.parse({
+      titulo: ["A", "B"],
+      marca: "M",
+      audio: "",
+      duracionMs: 1000,
+      escenas: [
+        {
+          inicioMs: 0,
+          finMs: 1000,
+          clips: [{ ruta: "x.png", duracionMs: 1000, tipo: "imagen" }],
+          hueco: null,
+        },
+      ],
+      subtitulos: [],
+    });
+    expect(props.escenas[0]?.clips[0]?.tipo).toBe("imagen");
   });
 });
