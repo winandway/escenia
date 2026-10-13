@@ -10,11 +10,11 @@ Cada temática tiene su **estilo** (`estilo` en `compartido/tematicas/index.ts`)
 La Estación produce el video con el estilo de su temática; no hay que elegirlo
 a mano.
 
-| Estilo        | Cómo se ve                                                                            | Temáticas                                                                         |
-| ------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| **clásico**   | Fotos y clips a pantalla llena, rótulos y cifras en grande (el de Prince Royce)       | Biografías y las demás                                                            |
-| **ilustrado** | Las personas salen **dibujadas**, recortadas y con borde de luz, sobre fondo de cómic | Novedades de IA, IA y apps, Noticia de Losupe                                     |
-| **neón**      | Sin fotos ni clips: todo se explica con **diagramas de neón** que se van encendiendo  | «Así funciona: explicado con diagramas de neón» (temática nueva, id `explicador`) |
+| Estilo        | Cómo se ve                                                                            | Temáticas                                                                          |
+| ------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **clásico**   | Fotos y clips a pantalla llena, rótulos y cifras en grande (el de Prince Royce)       | Biografías, «Casos reales de tecnología» de Full Código (`casos-tech`) y las demás |
+| **ilustrado** | Las personas salen **dibujadas**, recortadas y con borde de luz, sobre fondo de cómic | Novedades de IA, IA y apps, Noticia de Losupe                                      |
+| **neón**      | Sin fotos ni clips: todo se explica con **diagramas de neón** que se van encendiendo  | «Así funciona: explicado con diagramas de neón» (temática nueva, id `explicador`)  |
 
 En los dos estilos nuevos, la palabra que se está diciendo va dentro de una
 caja de color en los subtítulos.
@@ -180,3 +180,12 @@ cd /Users/windocellc/Motor-Escenia/estacion && ELEVENLABS_API_KEY= npx tsx src/r
 | El dibujo de la figura                | `estacion/src/remotion/Ilustrado.tsx` (se usa desde `Planos.tsx`)            |
 | Reglas para la IA                     | `src/lib/prompt.ts` («diagrama») y las reglas de cada temática               |
 | Pruebas                               | `pruebas/estilos.test.ts`                                                    |
+
+## El más barato: Documental de Full Código (13 oct 2026)
+
+Richard preguntó cuál es el formato más económico. Con los gastos anotados en la base: el **Documental**
+(clásico) con fotos reales de internet y clips de Pexels, unos 6 centavos por minuto (GPT-6.1 Astra,
+29 ¢ el largo y sus tres Shorts). Para tenerlo también en Full Código se creó la temática **«Casos
+reales de tecnología»** (`casos-tech`): casos que no caducan, contados como intriga, con un consejo
+práctico al final. Primer video: guion 19, «Le robaron 25 millones con una videollamada falsa», 27 ¢
+(guion, voz y textos) con largo de 3 min 38 s y tres Shorts.

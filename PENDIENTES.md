@@ -2,6 +2,7 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Descargar del panel (guion 19) «Le robaron 25 millones con una videollamada falsa» para Full Código: largo de 3 min 38 s, tres Shorts y sus miniaturas (costó 27 ¢). La opinión la escribió la IA en su nombre por encargo: si no le gusta, la cambia en el panel y se vuelve a producir → subirlo y programarlo.
 - 👤 Ver y subir a Full Código el primer monigote, «Tres cosas que nunca debes contarle a ChatGPT» (monigotes/chatgpt-tres-cosas/: el video, la miniatura portada-chatgpt.png y los títulos de YouTube, Facebook y TikTok en textos-youtube.md). Costó 0,92 $ con repeticiones (el video solo, 0,77 $) → si funciona, la serie de Full Código sigue en el modo barato.
 - 👤 Monigotes animados (docs/MONIGOTES.md): el de Diomedes va muy bien (1.132 vistas en 48 h). Listo el de Darío Gómez (5,47 $): pegar las tres canciones en el recuadro de arriba a la izquierda (segundos 22,5, 39,2 y 60,6) y subirlo con su miniatura y textos (monigotes/rey-del-despecho/) → después siguen salsa, merengue, música mexicana.
 
