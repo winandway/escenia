@@ -1548,3 +1548,25 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   tiene que aparecer la línea del reinicio y luego «Lista. Esperando trabajos.».
 - **Qué NO tocar:** no bajar el límite de 10 minutos (el latido es cada 45 s, y un paso largo no debe
   matar una producción); no quitar el `KeepAlive` del LaunchAgent.
+
+## C-FONDO-2 — El primer cuadro ya no es la misma calle con carros en todos los videos (14 oct 2026)
+
+- **Qué se rompió y cómo se veía:** Richard lo vio en el reproductor del panel: el primer cuadro de
+  casi todos los videos (Celia Cruz, Prince Royce, Full Código…) era la misma calle con carros de
+  noche, borrosa, frente a un centro comercial.
+- **Causa real:** cuando una escena tenía foto propia, el fondo difuminado de detrás era un clip de
+  Pexels buscado con la palabra de reserva de su parte («city night timelapse» para el gancho), y el
+  banco devolvía siempre el mismo primer resultado (pexels-5836409) porque solo recordaba lo usado
+  dentro del mismo proceso. La foto de la primera escena entra unos cuadros tarde, así que el cuadro
+  cero era ese clip solo.
+- **Qué se hizo:** `estacion/src/fondo-escena.ts` (sin nada de la Mac): `fondoDeEscena` → toda escena
+  con foto propia lleva esa misma foto difuminada de fondo, en cualquier estilo (antes solo en las
+  biografías, C-FONDO-1); `elegirVideo` → el banco de clips salta los ya usados en este video y en los
+  de los últimos 60 días (`cache/clips/recientes.json`, escrito por `visuales.ts`). El video 19 se
+  rearmó así sin gastar.
+- **Commit:** el de este candado (14 oct 2026, «fix(fondo): …»).
+- **Cómo se comprueba:** `npx vitest run pruebas/fondo-escena.test.ts` (si el fondo propio vuelve a
+  ser solo de biografías, se pone en rojo; comprobado el 14 oct 2026). Y mirar el cuadro cero de un
+  video nuevo: tiene que ser su propia primera imagen (difuminada o no), nunca la calle de noche.
+- **Qué NO tocar:** no volver a buscar clip de reserva detrás de una foto; no borrar
+  `cache/clips/recientes.json` (se limpia solo).

@@ -19,6 +19,7 @@ import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { artistaDelCanal } from "@compartido/cancion";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_DOCUMENTAL, RESERVA_POR_PARTE } from "./visuales";
+import { fondoDeEscena } from "./fondo-escena";
 import { enfoquesDe } from "./enfoque";
 import { rellenarPlanos, resolverPlanos } from "./planos";
 import { tramosQuietos } from "@compartido/planos";
@@ -306,17 +307,21 @@ export async function producir(
         }
       : null;
     const esFrase = e.visual.tipo === "texto" || e.visual.tipo === "titulo";
-    // Fondo: en biografías, detrás de las fotos, los titulares y los recortes va
-    // una foto de la PERSONA difuminada (nunca un clip ajeno tipo «pantallas de
-    // trading»); solo las escenas «stock» llevan clip de ambiente. C-FONDO-1.
-    const fondoDePersona = documental && (foto || esFrase || esRecorte || e.parte === "interludio");
-    let fondoFoto: string | null = null;
-    if (fondoDePersona) {
-      const propia = foto ?? fotos[0] ?? null;
-      fondoFoto = propia ? propia.ruta : await fotoDeFondo(referencias, carpetaPublica);
-    }
+    // Fondo: la escena con foto propia la lleva también de fondo, difuminada, en CUALQUIER estilo
+    // (C-FONDO-2: antes, fuera de las biografías, iba el clip de reserva «city night timelapse» y el
+    // primer cuadro de casi todos los videos era la misma calle con carros). En biografías, detrás de
+    // titulares, recortes e interludios va la PERSONA difuminada (C-FONDO-1); el resto, su clip.
+    const propia = foto ?? fotos[0] ?? null;
+    const fondo = fondoDeEscena({
+      sinFondo,
+      propia: propia?.ruta ?? null,
+      documental,
+      pideFondoDePersona: esFrase || esRecorte || e.parte === "interludio",
+    });
+    let fondoFoto: string | null = fondo.tipo === "foto" ? fondo.ruta : null;
+    if (fondo.tipo === "persona") fondoFoto = await fotoDeFondo(referencias, carpetaPublica);
     const c =
-      fondoFoto || sinFondo
+      fondoFoto || fondo.tipo === "ninguno"
         ? null
         : await buscarClip(foto ? busquedas.slice(1) : busquedas, false, carpetaPublica);
     if (c) creditos.push(c.credito);

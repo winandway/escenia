@@ -3,9 +3,10 @@
 // con un clip; solo si todas fallan la escena queda sin clip.
 // Los clips se guardan en caché para no volver a bajarlos ni gastar cuota.
 import { existsSync } from "node:fs";
-import { copyFile, link, mkdir, writeFile } from "node:fs/promises";
+import { copyFile, link, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { config } from "./config";
+import { elegirVideo, idsRecientes } from "./fondo-escena";
 
 export type Clip = { ruta: string; duracionSeg: number; credito: string };
 
@@ -22,6 +23,26 @@ type RespuestaPexels = {
 
 // Ya usados en este proceso: así dos escenas seguidas no repiten clip.
 const usados = new Set<number>();
+
+// Los clips usados en los videos de los últimos días (C-FONDO-2), en el caché del banco de clips.
+const RUTA_RECIENTES = () => path.join(config.CARPETA_CLIPS, "recientes.json");
+
+async function leerRecientes(): Promise<Record<string, string>> {
+  try {
+    return JSON.parse(await readFile(RUTA_RECIENTES(), "utf8")) as Record<string, string>;
+  } catch {
+    // Sin archivo todavía (primera vez) o ilegible: se empieza de cero; no frena la producción.
+    return {};
+  }
+}
+
+async function anotarReciente(recientes: Record<string, string>, id: number): Promise<void> {
+  const vigentes = idsRecientes(recientes);
+  const limpio = Object.fromEntries(Object.entries(recientes).filter(([k]) => vigentes.has(Number(k))));
+  limpio[String(id)] = new Date().toISOString();
+  await mkdir(config.CARPETA_CLIPS, { recursive: true });
+  await writeFile(RUTA_RECIENTES(), JSON.stringify(limpio));
+}
 
 /** Búsquedas de reserva por parte del guion, cuando la de la IA no da resultado. */
 export const RESERVA_POR_PARTE: Record<string, string[]> = {
@@ -79,10 +100,10 @@ async function buscarUna(busqueda: string, vertical: boolean, carpetaPublica: st
     return null;
   }
   const datos = (await r.json()) as RespuestaPexels;
-  // Clips de 5 s o más, con la orientación correcta, y sin repetir.
-  const conOrientacion = datos.videos.filter((v) => (vertical ? v.height > v.width : v.width >= v.height));
-  const candidatos = conOrientacion.filter((v) => v.duration >= 5 && !usados.has(v.id));
-  const video = candidatos[0] ?? conOrientacion[0];
+  // Clips de 5 s o más, con la orientación correcta, sin repetir en este video ni en los recientes
+  // (C-FONDO-2: el banco devolvía siempre el mismo primer clip de cada búsqueda de reserva).
+  const recientes = await leerRecientes();
+  const video = elegirVideo(datos.videos, vertical, usados, idsRecientes(recientes));
   if (!video) return null;
   const tope = vertical ? 1080 : 1920;
   const archivo = video.video_files
@@ -100,6 +121,7 @@ async function buscarUna(busqueda: string, vertical: boolean, carpetaPublica: st
     await writeFile(destino, Buffer.from(await d.arrayBuffer()));
   }
   usados.add(video.id);
+  await anotarReciente(recientes, video.id);
   // Copia (enlace duro) del caché a la carpeta pública del trabajo.
   await mkdir(path.join(carpetaPublica, "clips"), { recursive: true });
   await link(destino, path.join(carpetaPublica, "clips", nombre)).catch(() =>
