@@ -87,3 +87,6 @@ estacion/recursos/sfx-panel/
 
 # Dibujos y clips de los videos de monigotes animados (pesan; no van al repositorio)
 monigotes/
+
+# Material de clientes para la publicidad (fotos, logos, avatar): no va al repo público
+publicidad/

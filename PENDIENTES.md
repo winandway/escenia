@@ -2,6 +2,7 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Ver el prototipo de Publicidad en Short (el generador de Pro In Shop, 30 s, 0,59 $) y decir qué le cambiarías y a qué precio se vendería → con eso se hace el menú «Publicidad» del panel (docs/PUBLICIDAD.md).
 - 👤 Descargar del panel (guion 20) la biografía de Juan Gabriel, «el preso de Lecumberri» (5 min 10 s, tres Shorts y sus miniaturas; costó 35 ¢) y pegar las canciones en sus huecos de 5 s (recuadro arriba a la izquierda). Largo: «No tengo dinero» 1:42.6 · «Amor eterno» 2:16.7 · «Querida» 2:44.5 · «Abrázame muy fuerte» 3:53.9. Short 2: 0:29.6 · 1:03.8 · 1:31.5 (las mismas tres primeras). Short 3: 0:25.9 («Abrázame muy fuerte»). Short 1 no lleva huecos. Ideal subirlo antes del desfile de Día de Muertos del 31 de octubre. La opinión la escribió la IA en su nombre: si no le gusta, la cambia en el panel.
 - 👤 Descargar del panel (guion 19) «Le robaron 25 millones con una videollamada falsa» para Full Código: largo de 3 min 38 s, tres Shorts y sus miniaturas (costó 27 ¢). La opinión la escribió la IA en su nombre por encargo: si no le gusta, la cambia en el panel y se vuelve a producir → subirlo y programarlo.
 - 👤 Ver y subir a Full Código el primer monigote, «Tres cosas que nunca debes contarle a ChatGPT» (monigotes/chatgpt-tres-cosas/: el video, la miniatura portada-chatgpt.png y los títulos de YouTube, Facebook y TikTok en textos-youtube.md). Costó 0,92 $ con repeticiones (el video solo, 0,77 $) → si funciona, la serie de Full Código sigue en el modo barato.
