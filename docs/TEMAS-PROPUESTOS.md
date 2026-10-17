@@ -542,3 +542,46 @@ tecnología» (`casos-tech`), en clásico.
    estafa.
    - https://www.ic3.gov/psa/2024/psa241203
    - https://consumer.ftc.gov/scams/family-emergency-scams
+
+## 17 oct 2026 — Biografía de Juan Gabriel (Caprichoso TV, Documental, con huecos de canción)
+
+Richard pidió una biografía «que enganche y se haga viral», en el formato de siempre (imágenes,
+documental, efectos), natural y sin que parezca hecha por IA, con huecos de 5 s para pegar la canción
+original. Se eligió a Juan Gabriel: 10 años de su muerte (28 ago 2026) y el desfile de Día de Muertos de
+CDMX del 31 oct 2026 con piezas dedicadas a él (página oficial de turismo de la ciudad).
+
+### Datos confirmados (al menos dos medios serios) — solo estos entran en el guion
+
+- Nació Alberto Aguilera Valadez el 7 ene 1950 en Parácuaro, Michoacán; el menor de diez hijos; el
+  padre internado en un psiquiátrico cuando él era bebé; la madre, empleada doméstica en Ciudad Juárez.
+  https://www.eluniversal.com.mx/articulo/espectaculos/musica/2016/08/28/perfil-adios-juan-gabriel-el-divo-de-juarez/ ·
+  https://www.excelsior.com.mx/funcion/2016/08/28/1113669 · https://www.bbc.com/mundo/articles/c397r9jnv8zo
+- A los cinco años, al internado «El Tribunal» de Ciudad Juárez, unos ocho años; el maestro Juan
+  Contreras le enseñó oficio y música (el origen de «Juan» en su nombre tiene versiones: no afirmarlo).
+- Detenido el 14 abr 1970, a los veinte años, acusado de robo en una fiesta donde lo invitaron a cantar;
+  juró ser inocente; más de un año en Lecumberri; ahí compuso «No tengo dinero». Lo sacó Enriqueta
+  Jiménez, «La Prieta Linda» (habló con la esposa del director del penal) y lo presentó en RCA.
+  https://www.milenio.com/policia/juan-gabriel-expediente-perdido-penal-lecumberri ·
+  https://www.eluniversal.com.mx/articulo/espectaculos/farandula/2016/09/7/juan-gabriel-en-lecumberri/
+- «No tengo dinero», su primer éxito, 1971 (RCA).
+- «Amor eterno»: para su madre, que murió el 27 dic 1974 mientras él estaba en Acapulco; no fue al
+  funeral porque no quiso verla en un ataúd (documental de Netflix, BBC Mundo); la grabó primero Rocío
+  Dúrcal en 1984; en 2024 la Biblioteca del Congreso de EE.UU. la puso en su registro nacional.
+  https://www.nbcnews.com/news/latino/juan-gabriel-hector-lavoe-national-recording-registry-cantante-eterno-rcna147991
+  (NO decir que lloraba al cantarla: no está confirmado).
+- «Querida», 1984, disco Recuerdos II, el más vendido de la historia de México; más de un año entre lo
+  más escuchado.
+- Bellas Artes, 9 may 1990: lo llamaron «sacrilegio»; el director de la Sinfónica Nacional se negó;
+  fue un éxito. https://www.proceso.com.mx/452693/juan-gabriel-aquel-apoteosico-polemico-concierto-en-bellas-artes
+- «Lo que se ve no se pregunta», 2002, entrevista con Fernando del Rincón (Primer Impacto, Univision).
+- Más de 1.800 canciones (Billboard) y más de 100 millones de discos.
+  https://www.billboard.com/music/latin/juan-gabriel-dead-7487898/
+- Último concierto: 26 ago 2016, Forum de Inglewood, unas 17.500 personas; murió el 28 ago 2016 en
+  Santa Mónica, a los 66 años, de un infarto. https://www.jornada.com.mx/2016/08/29/espectaculos/a03n1esp
+- 2025-2026: serie de Netflix «Debo, puedo y quiero» (30 oct 2025); disco póstumo «Eterno»; a los 10
+  años, la película «Mi primer Bellas Artes» en cines; las llaves de Ciudad Juárez; el desfile de Día de
+  Muertos del 31 oct 2026 con piezas dedicadas a él. https://mexicocity.cdmx.gob.mx/e/dia-de-muertos-en-la-ciudad-de-mexico/ ·
+  https://www.telemundo51.com/noticias/mexico/decimo-aniversario-muerte-juan-gabriel-emblematico-concierto-cines/2818421/
+
+Fuera del guion por delicado o sin confirmar: el abuso que sufrió de niño, la versión de que «Amor
+eterno» era para un novio, el número exacto de semanas de «Querida» en el número uno.

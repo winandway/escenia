@@ -122,3 +122,87 @@ describe("huecos de canción en las biografías y videos de música", () => {
     expect(prompt).toMatch(/cancion_artista/);
   });
 });
+
+describe("el hueco se reconoce aunque la IA lo etiquete mal (guion 20, 17 oct 2026)", () => {
+  it("una escena con canción cuyo texto es solo el título pasa a hueco de 5 s; una narración de verdad no", () => {
+    const vacio = { seccion: "", nodos: [], flechas: [], formula: "" };
+    const v = {
+      tipo: "foto",
+      busqueda: "Juan Gabriel 1971",
+      url: "",
+      prompt_imagen: "",
+      cuadros: [],
+      titular: "",
+      fecha: "",
+      cuerpo: "",
+      texto_en_pantalla: "",
+      foto_de: "persona",
+      planos: [],
+      diagrama: vacio,
+    };
+    const g = guionDesdeLaIA({
+      titulo: "Juan Gabriel: la canción de la cárcel",
+      gancho: "A los veinte años estaba preso.",
+      escenas: [
+        {
+          parte: "gancho",
+          narracion: "A los veinte años estaba preso.",
+          duracion_seg: 0,
+          cancion: "",
+          cancion_artista: "",
+          visual: v,
+        },
+        {
+          parte: "dato",
+          narracion: "No tengo dinero",
+          duracion_seg: 0,
+          cancion: "No tengo dinero",
+          cancion_artista: "Juan Gabriel",
+          visual: v,
+        },
+        {
+          parte: "hueco de canción",
+          narracion: "",
+          duracion_seg: 0,
+          cancion: "Amor eterno",
+          cancion_artista: "Juan Gabriel",
+          visual: v,
+        },
+        {
+          parte: "dato",
+          narracion: "En 1984 salió Querida y fue un récord.",
+          duracion_seg: 0,
+          cancion: "Querida",
+          cancion_artista: "Juan Gabriel",
+          visual: v,
+        },
+        {
+          parte: "cierre",
+          narracion: "Su música sigue viva.",
+          duracion_seg: 0,
+          cancion: "",
+          cancion_artista: "",
+          visual: v,
+        },
+      ],
+      hechos_a_verificar: [],
+      descripcion_youtube: "",
+      etiquetas: [],
+      musica: "mariachi",
+    } as GuionDeLaIA);
+    expect(g.escenas[1]).toMatchObject({
+      parte: "interludio",
+      narracion: "",
+      duracion_seg: 5,
+      cancion: { titulo: "No tengo dinero" },
+    });
+    expect(g.escenas[2]).toMatchObject({
+      parte: "interludio",
+      narracion: "",
+      duracion_seg: 5,
+      cancion: { titulo: "Amor eterno" },
+    });
+    expect(g.escenas[3]?.parte).toBe("dato");
+    expect(g.escenas[3]?.cancion).toBeUndefined();
+  });
+});

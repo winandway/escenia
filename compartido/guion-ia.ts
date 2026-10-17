@@ -138,6 +138,17 @@ export function iconoDeDiagrama(nombre: string): (typeof ICONOS_DIAGRAMA)[number
 }
 
 /** La parte de la escena: la que escribió la IA si existe; si no, una escena normal de contexto. */
+/** Si el texto de una escena es solo el título de la canción (o nada): entonces es un hueco, no narración. */
+function esSoloElTitulo(narracion: string, titulo: string): boolean {
+  const limpio = (t: string) =>
+    sinTildes(t)
+      .replace(/[^a-z0-9ñ ]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const n = limpio(narracion);
+  return n === "" || n === limpio(titulo);
+}
+
 export function parteValida(valor: string): (typeof PARTES)[number] {
   const pedida = sinTildes(valor);
   return PARTES.find((p) => p === pedida) ?? (pedida.includes("opini") ? "opinion" : "contexto");
@@ -173,7 +184,15 @@ function texto(valor: string, maximo: number): string | undefined {
 export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
   const escenas = crudo.escenas.map((e) => {
     const v = { ...e.visual, tipo: tipoVisualValido(e.visual.tipo) };
-    const parte = parteValida(e.parte);
+    // Un hueco de canción se reconoce aunque la IA lo etiquete mal (guion 20: lo puso como «dato» con el
+    // título de la canción por narración): trae canción y su texto está vacío o es solo el título.
+    const tituloCancion = texto(e.cancion, 80);
+    const esHueco =
+      Boolean(tituloCancion) &&
+      (parteValida(e.parte) === "interludio" ||
+        /hueco|cancion/.test(sinTildes(e.parte)) ||
+        esSoloElTitulo(e.narracion, tituloCancion ?? ""));
+    const parte = esHueco ? "interludio" : parteValida(e.parte);
     const nodos =
       v.tipo === "diagrama"
         ? v.diagrama.nodos
@@ -211,10 +230,10 @@ export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
         ? (texto(v.diagrama.seccion, 90) ?? texto(e.narracion.split(/\s+/).slice(0, 5).join(" "), 90))
         : undefined);
     // Un hueco de canción es un interludio con su canción: dura siempre 5 s (regla de Richard).
-    const cancion = parte === "interludio" ? texto(e.cancion, 80) : undefined;
+    const cancion = parte === "interludio" ? tituloCancion : undefined;
     return {
       parte,
-      narracion: texto(e.narracion, 1500) ?? "",
+      narracion: esHueco ? "" : (texto(e.narracion, 1500) ?? ""),
       duracion_seg:
         parte === "interludio"
           ? cancion
