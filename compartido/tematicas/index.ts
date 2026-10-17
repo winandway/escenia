@@ -294,8 +294,8 @@ export const TEMATICAS: Tematica[] = [
     cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
     reglas: [
       "Lleva huecos de canción: 3 o 4, justo después de nombrar sus canciones más conocidas (ver la regla de los huecos).",
-      "Cero música del artista: no se cita ni se reproduce ninguna canción; se puede nombrar títulos como dato.",
-      "Las fotos salen de Wikimedia Commons con licencia libre: en `visual.busqueda` pon el nombre del artista y, si ayuda, una época o lugar (ej.: «Celia Cruz 1990s», «Celia Cruz concert»).",
+      "El motor no pone música del artista ni cita sus letras: en los huecos de canción solo deja el espacio, y Richard pega ahí el pedacito original. Nombrar títulos como dato sí vale.",
+      "Que se vea natural, como un documental de verdad: nada de imágenes de IA («ia»). Todo son fotos reales (de internet: en `visual.busqueda` el nombre del artista y una época, lugar o momento, ej.: «Celia Cruz 1990s», «Celia Cruz concierto Carnegie Hall») y clips de ambiente; los interludios y los huecos de canción también van con «foto».",
       "Cuenta la vida como una historia: infancia, el momento que lo cambió todo, la cima, la caída o la pérdida, el legado. Fechas y lugares solo si están en el contexto.",
     ],
   },
