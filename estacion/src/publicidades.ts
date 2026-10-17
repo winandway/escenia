@@ -73,7 +73,7 @@ export async function atenderPublicidad(): Promise<boolean> {
     });
     console.log(`  logo: ${logo.nombre} · color ${armar.acento} · música: ${musica?.archivo ?? "ninguna"}`);
     await avisar("haciendo la voz");
-    const voz = await pasoVoz(armar, trabajo, (t) => avisar(`voz: ${t}`), MAXIMO_SEG_PANEL);
+    const voz = await pasoVoz(armar, trabajo, (t) => avisar(t), MAXIMO_SEG_PANEL);
     if (voz.nueva) await gasto("elevenlabs", `voz (${Math.round(voz.duracionMs / 1000)} s)`, voz.costoUsd);
     if (avatar) {
       await avisar("haciendo hablar a la persona (tarda unos minutos)");
