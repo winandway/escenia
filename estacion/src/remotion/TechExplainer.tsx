@@ -1,5 +1,6 @@
 import { createTikTokStyleCaptions } from "@remotion/captions";
 import { volumenMusica } from "./musica";
+import { tamanoDeTarjeta, textoSobre } from "./monigotes-diseno";
 import { posicionObjeto } from "./enfoque";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { loadFont as loadSerif } from "@remotion/google-fonts/PlayfairDisplay";
@@ -98,9 +99,15 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         .map((e) => ({
           inicioMs: Math.max(e.inicioMs, inicioVentanaMs) - inicioVentanaMs + (v ? INTRO_SHORT_MS : 0),
           finMs: Math.min(e.finMs, finVentanaMs) - inicioVentanaMs + (v ? INTRO_SHORT_MS : 0),
+          cancion: e.cancion,
         })),
     [p.escenas, inicioVentanaMs, finVentanaMs, v],
   );
+  // Huecos de canción (regla del 17 oct 2026): interludios con su canción. Ahí la música se apaga y
+  // sale el recuadro; en los demás interludios la música sube como siempre.
+  const huecos = interludios.filter((tr) => tr.cancion !== null);
+  const interludiosConMusica = interludios.filter((tr) => tr.cancion === null);
+  const huecoActual = huecos.find((tr) => tMs >= tr.inicioMs && tMs < tr.finMs) ?? null;
   const finVozLocalMs = aLocalMs(finVentanaMs);
   const finVideoMs = (durationInFrames / FPS) * 1000;
   const visibles = p.escenas
@@ -216,6 +223,17 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
         <Sequence from={0} durationInFrames={finMarcaFija} name="logo del canal">
           <MarcaFija marca={marca} vertical={vertical} />
         </Sequence>
+      )}
+
+      {/* Hueco de canción: el recuadro pequeño para pegar la canción original y su nombre abajo. */}
+      {huecoActual?.cancion && (
+        <HuecoCancion
+          titulo={huecoActual.cancion.titulo}
+          artista={huecoActual.cancion.artista}
+          vertical={vertical}
+          acento={acento}
+          fuente={fuenteTitulos}
+        />
       )}
 
       {/* Subtítulos palabra por palabra, al estilo CapCut: pocas palabras, borde grueso y la
@@ -393,10 +411,11 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
                 volume={(f) =>
                   volumenMusica(
                     ((f + desde) / FPS) * 1000,
-                    interludios,
+                    interludiosConMusica,
                     finVozLocalMs,
                     finVideoMs,
                     p.musica?.nivel ?? 1,
+                    huecos,
                   )
                 }
               />
@@ -717,6 +736,83 @@ const EtiquetaFija: React.FC<{ texto: string; acento: string; fuente: string; ve
     {texto}
   </div>
 );
+
+/**
+ * El hueco de una canción (regla de Richard, 17 oct 2026): un recuadro 16:9 PEQUEÑO arriba a la
+ * izquierda, siempre en el mismo sitio, para que él pegue ahí el pedacito de la canción original en su
+ * editor; el artista debajo y el nombre de la canción donde van los subtítulos. La imagen no se
+ * oscurece: sigue siendo la protagonista.
+ */
+export const RECUADRO_HUECO = {
+  horizontal: { x: 48, y: 48, ancho: 480, alto: 270 },
+  vertical: { x: 40, y: 300, ancho: 400, alto: 225 },
+} as const;
+
+const HuecoCancion: React.FC<{
+  titulo: string;
+  artista: string;
+  vertical: boolean;
+  acento: string;
+  fuente: string;
+}> = ({ titulo, artista, vertical, acento, fuente }) => {
+  const caja = vertical ? RECUADRO_HUECO.vertical : RECUADRO_HUECO.horizontal;
+  const nombre = titulo.toUpperCase();
+  const tamano = vertical
+    ? tamanoDeTarjeta(nombre)
+    : Math.max(40, Math.min(64, Math.floor(1500 / Math.max(1, (nombre.length + 2) * 0.55))));
+  const sombra = "0 0 14px rgba(0,0,0,0.9), 0 3px 0 #000";
+  return (
+    <AbsoluteFill style={{ fontFamily: fuente }}>
+      <div
+        style={{
+          position: "absolute",
+          left: caja.x,
+          top: caja.y,
+          width: caja.ancho,
+          height: caja.alto,
+          background: "#000",
+          border: `5px solid ${acento}`,
+          borderRadius: 12,
+          boxSizing: "border-box",
+        }}
+      />
+      {artista && (
+        <div
+          style={{
+            position: "absolute",
+            left: caja.x,
+            top: caja.y + caja.alto + 8,
+            width: caja.ancho,
+            textAlign: "center",
+            color: "#fff",
+            fontSize: vertical ? 38 : 30,
+            fontWeight: 800,
+            textShadow: sombra,
+          }}
+        >
+          {artista}
+        </div>
+      )}
+      <AbsoluteFill
+        style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: vertical ? 420 : 100 }}
+      >
+        <div
+          style={{
+            background: acento,
+            color: textoSobre(acento),
+            fontSize: tamano,
+            fontWeight: 900,
+            whiteSpace: "nowrap",
+            padding: "6px 26px",
+            borderRadius: 10,
+          }}
+        >
+          ♪ {nombre}
+        </div>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
 
 const Fondo: React.FC<{
   clip: Escena["clip"];

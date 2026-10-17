@@ -129,10 +129,12 @@ describe("del formato de la IA al guion de verdad (C-GUION-3)", () => {
     diagrama: vacio,
     ...extra,
   });
-  const guionIA = (escenas: GuionDeLaIA["escenas"]): GuionDeLaIA => ({
+  // Las escenas de prueba no traen los campos del hueco de canción: van vacíos, como los manda la IA.
+  type EscenaSinCancion = Omit<GuionDeLaIA["escenas"][number], "cancion" | "cancion_artista">;
+  const guionIA = (escenasSinCancion: EscenaSinCancion[]): GuionDeLaIA => ({
+    escenas: escenasSinCancion.map((e) => ({ cancion: "", cancion_artista: "", ...e })),
     titulo: "  Así se mueve una venta por el sistema  ",
     gancho: "¿Qué pasa por dentro cada vez que vendes?",
-    escenas,
     hechos_a_verificar: ["", "El inventario se descuenta al dar salida."],
     descripcion_youtube: "",
     etiquetas: ["ventas", ""],

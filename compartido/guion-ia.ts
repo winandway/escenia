@@ -17,6 +17,7 @@
 import { z } from "zod";
 import {
   DURACION_INTERLUDIO,
+  HUECO_CANCION_SEG,
   esquemaGuionGenerado,
   ICONOS_DIAGRAMA,
   NODOS_POR_DIAGRAMA,
@@ -37,6 +38,9 @@ export const esquemaGuionDeLaIA = z.object({
       narracion: z.string(),
       // Solo cuenta en un interludio; en las demás escenas va 0.
       duracion_seg: z.number(),
+      // Solo en un hueco de canción (un interludio): el título exacto y el artista. Si no, vacíos.
+      cancion: z.string(),
+      cancion_artista: z.string(),
       visual: z.object({
         tipo: z.string(),
         busqueda: z.string(),
@@ -206,13 +210,18 @@ export function guionDesdeLaIA(crudo: GuionDeLaIA): GuionGenerado {
       (esDiagrama
         ? (texto(v.diagrama.seccion, 90) ?? texto(e.narracion.split(/\s+/).slice(0, 5).join(" "), 90))
         : undefined);
+    // Un hueco de canción es un interludio con su canción: dura siempre 5 s (regla de Richard).
+    const cancion = parte === "interludio" ? texto(e.cancion, 80) : undefined;
     return {
       parte,
       narracion: texto(e.narracion, 1500) ?? "",
       duracion_seg:
         parte === "interludio"
-          ? Math.min(DURACION_INTERLUDIO.maximo, Math.max(DURACION_INTERLUDIO.minimo, e.duracion_seg || 0))
+          ? cancion
+            ? HUECO_CANCION_SEG
+            : Math.min(DURACION_INTERLUDIO.maximo, Math.max(DURACION_INTERLUDIO.minimo, e.duracion_seg || 0))
           : undefined,
+      cancion: cancion ? { titulo: cancion, artista: texto(e.cancion_artista, 60) ?? "" } : undefined,
       visual: {
         // Un diagrama sin objetos no explica nada: queda como frase en grande.
         tipo: v.tipo === "diagrama" && !esDiagrama ? ("texto" as const) : v.tipo,

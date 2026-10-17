@@ -362,6 +362,10 @@ export async function producir(
       fotos,
       recorte,
       interludio: e.parte === "interludio",
+      cancion:
+        e.parte === "interludio" && e.cancion
+          ? { titulo: e.cancion.titulo, artista: e.cancion.artista }
+          : null,
       fondoFoto,
       planos: [],
       diagrama,

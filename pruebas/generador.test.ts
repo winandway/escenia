@@ -62,6 +62,8 @@ const escena = (parte: string, narracion: string) => ({
   parte,
   narracion,
   duracion_seg: 0,
+  cancion: "",
+  cancion_artista: "",
   visual: {
     tipo: "stock",
     busqueda: "server room lights",

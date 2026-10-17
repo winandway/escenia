@@ -92,6 +92,12 @@ export const esquemaEscenaVideo = z.object({
     .default(null),
   // Respiro musical: no hay voz en este tramo, la música sube y pasan las imágenes.
   interludio: z.boolean().default(false),
+  // Hueco de canción (un interludio de 5 s): la música se apaga y sale el recuadro con el nombre, para
+  // que Richard pegue ahí el pedacito de la canción original (regla del 17 oct 2026).
+  cancion: z
+    .object({ titulo: z.string(), artista: z.string().default("") })
+    .nullable()
+    .default(null),
   // Foto (de la persona) difuminada como fondo, en vez de clip. Biografías.
   fondoFoto: z.string().nullable().default(null),
   // Los cambios de imagen de la escena, en orden. Vacío = la escena es una sola imagen.

@@ -291,6 +291,8 @@ describe("comerciales: el video publicitario de un cliente (C-COMERCIAL-1)", () 
             cuadros: [],
           },
           duracion_seg: 0,
+          cancion: "",
+          cancion_artista: "",
         })),
         hechos_a_verificar: [],
         descripcion_youtube: "",

@@ -57,6 +57,7 @@ const vacio: PropsVideo = {
       fotos: [],
       recorte: null,
       interludio: false,
+      cancion: null,
       fondoFoto: null,
       planos: [],
       diagrama: null,

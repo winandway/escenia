@@ -57,6 +57,7 @@ const escenaBase = (parte: string, inicioMs: number, finMs: number, extra: Parti
   fotos: [],
   recorte: null,
   interludio: false,
+  cancion: null,
   fondoFoto: null,
   planos: [],
   diagrama: null,

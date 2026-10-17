@@ -1570,3 +1570,25 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   video nuevo: tiene que ser su propia primera imagen (difuminada o no), nunca la calle de noche.
 - **Qué NO tocar:** no volver a buscar clip de reserva detrás de una foto; no borrar
   `cache/clips/recientes.json` (se limpia solo).
+
+## C-HUECO-1 — Las biografías y videos de música llevan huecos de 5 s para la canción original (17 oct 2026)
+
+- **Qué se pidió:** Richard, al pedir la biografía de Juan Gabriel: espacios de cinco segundos para
+  pegar la canción original, como en los monigotes (el de Diomedes se hizo viral). _«Me ha funcionado
+  muy bien esa técnica… métalo como regla y simplemente hágalo»_. Sin advertencias sobre derechos.
+- **Qué se hizo:** un hueco es una escena «interludio» de 5 s con `cancion: { titulo, artista }`
+  (`compartido/guion.ts`, `HUECO_CANCION_SEG`). La IA lo pide con `cancion` y `cancion_artista`
+  (campos obligatorios y vacíos cuando no aplican, C-GUION-3, en `compartido/guion-ia.ts`); la regla
+  va en `src/lib/prompt.ts` y en las temáticas de música (biografías, historias de música, entrevistas
+  de archivo). La Estación pasa la canción a la escena del video (`props.ts`); la plantilla
+  (`TechExplainer.tsx`, `HuecoCancion` y `RECUADRO_HUECO`) dibuja el recuadro 16:9 pequeño arriba a la
+  izquierda con el artista debajo y el nombre donde van los subtítulos, sin oscurecer la imagen, y la
+  música se apaga en el hueco (`volumenMusica(..., huecos)`). El editor del panel muestra «♪ Hueco de
+  canción».
+- **Commit:** el de este candado (17 oct 2026, «feat(huecos): …»).
+- **Cómo se comprueba:** `npx vitest run pruebas/huecos-cancion.test.ts` (sin la canción en el guion,
+  sin el apagado de la música o sin el recuadro en la plantilla se pone en rojo; comprobado el 17 oct
+  2026). En un video producido: en cada hueco, 5 s sin voz ni música, el recuadro arriba a la
+  izquierda y el nombre de la canción abajo.
+- **Qué NO tocar:** no agrandar el recuadro ni oscurecer la imagen (Richard lo rechazó en los
+  monigotes); no hacer opcionales `cancion`/`cancion_artista` en el formato de la IA (C-GUION-3).

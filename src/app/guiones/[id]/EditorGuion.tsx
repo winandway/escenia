@@ -213,6 +213,12 @@ export function EditorGuion(p: Props) {
                     s de música
                   </label>
                 )}
+                {e.parte === "interludio" && e.cancion && (
+                  <span className="rounded bg-amber-500/15 px-2 py-0.5 text-amber-300">
+                    ♪ Hueco de canción: «{e.cancion.titulo}»
+                    {e.cancion.artista ? ` · ${e.cancion.artista}` : ""}
+                  </span>
+                )}
                 <input
                   value={e.visual.texto_en_pantalla ?? ""}
                   readOnly={soloLectura}
@@ -268,7 +274,9 @@ export function EditorGuion(p: Props) {
                 aria-label={`Narración de la escena ${i + 1}`}
                 placeholder={
                   e.parte === "interludio"
-                    ? "Interludio: va sin voz. La música sube y pasan las imágenes de esta escena."
+                    ? e.cancion
+                      ? "Hueco de canción: 5 segundos sin voz ni música. Ahí pegas el pedacito de la canción original."
+                      : "Interludio: va sin voz. La música sube y pasan las imágenes de esta escena."
                     : undefined
                 }
               />

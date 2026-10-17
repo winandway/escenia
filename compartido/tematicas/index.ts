@@ -265,6 +265,7 @@ export const TEMATICAS: Tematica[] = [
     densidadRecursos: "media",
     cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
     reglas: [
+      "Lleva huecos de canción: 3 o 4, justo después de nombrar sus canciones más conocidas (ver la regla de los huecos).",
       "Abre con el dato más grande de la historia en la primera frase, sin saludar ni presentar el tema.",
       "Toda cifra, fecha, nombre y lugar sale del contexto pegado; lo que no esté ahí no se dice. Las cuentas propias (trece por cincuenta mil) se dicen como cuentas («saca la cuenta»).",
       "Cada persona que se nombra va con su plano «foto» y su nombre en `texto` (sale dibujada); los lugares con `foto_de`: «lugar». Las cifras saltan en planos «dato».",
@@ -292,6 +293,7 @@ export const TEMATICAS: Tematica[] = [
     densidadRecursos: "baja",
     cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
     reglas: [
+      "Lleva huecos de canción: 3 o 4, justo después de nombrar sus canciones más conocidas (ver la regla de los huecos).",
       "Cero música del artista: no se cita ni se reproduce ninguna canción; se puede nombrar títulos como dato.",
       "Las fotos salen de Wikimedia Commons con licencia libre: en `visual.busqueda` pon el nombre del artista y, si ayuda, una época o lugar (ej.: «Celia Cruz 1990s», «Celia Cruz concert»).",
       "Cuenta la vida como una historia: infancia, el momento que lo cambió todo, la cima, la caída o la pérdida, el legado. Fechas y lugares solo si están en el contexto.",
@@ -310,7 +312,10 @@ export const TEMATICAS: Tematica[] = [
     bibliotecaEtiquetas: ["risa", "sorpresa"],
     densidadRecursos: "baja",
     cortesComerciales: { cantidad: 0, duracionSeg: [0, 0] },
-    reglas: ["Solo material propio de Caprichoso TV."],
+    reglas: [
+      "Lleva huecos de canción: 3 o 4, justo después de nombrar sus canciones más conocidas (ver la regla de los huecos).",
+      "Solo material propio de Caprichoso TV.",
+    ],
   },
   // Formato Presentador: los guiones que nacen de una grabación de Richard (docs/PRESENTADOR.md).
   // No se eligen en «Nuevo video»: se crean solos al subir la grabación. El diseño de atrás

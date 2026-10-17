@@ -148,6 +148,11 @@ export const esquemaVisual = z.object({
 });
 
 export const DURACION_INTERLUDIO = { minimo: 3, maximo: 15, porDefecto: 6 } as const;
+/**
+ * Segundos del hueco para pegar la canción original en los videos de música (regla de Richard, 17 oct
+ * 2026): la voz se calla, la música se apaga y sale un recuadro pequeño con el nombre de la canción.
+ */
+export const HUECO_CANCION_SEG = 5;
 
 export const esquemaEscena = z
   .object({
@@ -159,8 +164,19 @@ export const esquemaEscena = z
     momento: z.string().trim().max(30).optional(),
     // Segundos que dura un interludio (no lleva voz, así que no se puede deducir).
     duracion_seg: z.number().min(DURACION_INTERLUDIO.minimo).max(DURACION_INTERLUDIO.maximo).optional(),
+    // Solo en un interludio: el hueco de 5 s para pegar la canción original (Richard la pega en su editor).
+    cancion: z
+      .object({ titulo: z.string().trim().min(1).max(80), artista: z.string().trim().max(60).default("") })
+      .optional(),
   })
   .superRefine((e, ctx) => {
+    if (e.cancion && e.parte !== "interludio") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["cancion"],
+        message: "Solo un interludio lleva canción (es el hueco de 5 s sin voz).",
+      });
+    }
     if (e.parte !== "interludio" && e.narracion.length === 0) {
       ctx.addIssue({
         code: "custom",

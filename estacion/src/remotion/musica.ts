@@ -22,14 +22,22 @@ export type TramoInterludio = { inicioMs: number; finMs: number };
 
 const entre = (a: number, b: number, t: number) => a + (b - a) * Math.min(1, Math.max(0, t));
 
+/** Rampa corta para apagar la música en un hueco de canción (que no se corte en seco). */
+export const RAMPA_HUECO_MS = 250;
+
 export function volumenMusica(
   ms: number,
   interludios: TramoInterludio[],
   finVozMs: number,
   finVideoMs: number,
   nivel = 1,
+  /** Huecos de canción: la música se apaga del todo (ahí se pega la canción original). */
+  huecos: TramoInterludio[] = [],
 ): number {
   if (ms < 0 || ms >= finVideoMs) return 0;
+  for (const h of huecos) {
+    if (ms >= h.inicioMs && ms <= h.finMs) return 0;
+  }
   const bajo = volumenBajoLaVoz(nivel);
   let v = bajo;
   for (const t of interludios) {
@@ -43,5 +51,10 @@ export function volumenMusica(
   if (ms > finVozMs) v = Math.max(v, entre(bajo, VOLUMEN_ALTO, (ms - finVozMs) / RAMPA_MS));
   if (ms > finVideoMs - APAGADO_MS) v *= (finVideoMs - ms) / APAGADO_MS;
   if (ms < ENTRADA_MS) v *= ms / ENTRADA_MS;
+  // Rampa corta hacia el hueco y de vuelta.
+  for (const h of huecos) {
+    if (ms > h.inicioMs - RAMPA_HUECO_MS && ms < h.inicioMs) v *= (h.inicioMs - ms) / RAMPA_HUECO_MS;
+    if (ms > h.finMs && ms < h.finMs + RAMPA_HUECO_MS) v *= (ms - h.finMs) / RAMPA_HUECO_MS;
+  }
   return Math.round(Math.min(1, Math.max(0, v)) * 1000) / 1000;
 }
