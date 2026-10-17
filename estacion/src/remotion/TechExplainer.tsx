@@ -160,7 +160,9 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
                 : aFrame(Math.min(e.finMs, finVentanaMs)) - desde + TRANSICION,
             );
             const colores = paleta[i % paleta.length] ?? PALETA[0];
-            const whoosh = whooshes.length ? (whooshes[i % whooshes.length] ?? null) : null;
+            // En un hueco de canción no suena nada (ni soplido ni chasquidos): ahí se pega la canción.
+            const enHueco = e.interludio && e.cancion !== null;
+            const whoosh = whooshes.length && !enHueco ? (whooshes[i % whooshes.length] ?? null) : null;
             return (
               <Sequence key={i} from={desde} durationInFrames={dur} name={`escena ${i + 1} · ${e.parte}`}>
                 <EscenaVista
@@ -170,15 +172,15 @@ export const TechExplainer: React.FC<PropsVideo> = (p) => {
                   durFrames={dur}
                   vertical={vertical}
                   fundir={!primera}
-                  pop={p.sfx.pop}
+                  pop={enHueco ? null : p.sfx.pop}
                   retraso={primera ? (v ? Math.round(FPS * 3.1) : 8) : TRANSICION}
                   acento={acento}
                   fuenteTitulos={fuenteTitulos}
-                  boom={p.sfx.boom}
+                  boom={enHueco ? null : p.sfx.boom}
                   whoosh={whoosh}
                   marca={marca}
                   desdeMs={Math.max(e.inicioMs, inicioVentanaMs)}
-                  cortes={p.sfx.corte.length ? p.sfx.corte : whooshes}
+                  cortes={enHueco ? [] : p.sfx.corte.length ? p.sfx.corte : whooshes}
                   neon={neon ? coloresNeon : null}
                   idioma={p.idioma}
                 />

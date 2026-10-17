@@ -118,6 +118,9 @@ describe("huecos de canción en las biografías y videos de música", () => {
   it("la plantilla dibuja el recuadro del hueco y el guionista sabe pedirlos", () => {
     const plantilla = readFileSync("estacion/src/remotion/TechExplainer.tsx", "utf8");
     expect(plantilla).toMatch(/HuecoCancion/);
+    // Ni soplido ni chasquidos dentro del hueco (en el de Juan Gabriel sonaban encima del silencio).
+    expect(plantilla).toMatch(/cortes=\{enHueco \? \[\]/);
+    expect(plantilla).toMatch(/whooshes\.length && !enHueco/);
     const prompt = readFileSync("src/lib/prompt.ts", "utf8");
     expect(prompt).toMatch(/cancion_artista/);
   });
