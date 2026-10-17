@@ -585,3 +585,13 @@ CDMX del 31 oct 2026 con piezas dedicadas a él (página oficial de turismo de l
 
 Fuera del guion por delicado o sin confirmar: el abuso que sufrió de niño, la versión de que «Amor
 eterno» era para un novio, el número exacto de semanas de «Querida» en el número uno.
+
+### Resultado (17 oct 2026)
+
+Guion 20, trabajo 59: 5 min 10 s, tres Shorts y cuatro miniaturas; 35 ¢ (guion, voz y textos). Huecos
+de canción (silencio total, recuadro arriba a la izquierda): largo 1:42.6 «No tengo dinero», 2:16.7
+«Amor eterno», 2:44.5 «Querida», 3:53.9 «Abrázame muy fuerte»; Short 2 en 0:29.6, 1:03.8 y 1:31.5; Short 3
+en 0:25.9. En la revisión se cambiaron 16 fotos del relleno automático que salían fuera de lugar (el
+periodista en el momento de su muerte, Rocío Dúrcal y La Prieta Linda donde no se hablaba de ellas,
+un desfile festivo al contar la muerte de su madre) y se quitaron los efectos de sonido dentro de los
+huecos.
