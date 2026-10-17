@@ -17,7 +17,7 @@ import { cortesDePausas, tiempoTrasCortes, trozosQueQuedan, type Silencio } from
 import { textoParaLaVoz } from "@compartido/pronunciacion";
 import { escalarAlineacion, factorDeRitmo } from "@compartido/ritmo";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
-import { elegirIdDeVoz } from "@compartido/voces";
+import { elegirIdDeVoz, modeloDeVoz } from "@compartido/voces";
 import { config } from "./config";
 
 const exec = promisify(execFile);
@@ -51,8 +51,11 @@ export async function generarVoz(
     ? elegirIdDeVoz(narrador, {
         richard: config.ELEVENLABS_VOICE_ID,
         femenina: config.ELEVENLABS_VOICE_ID_FEMENINA,
+        venezolana: config.ELEVENLABS_VOICE_ID_VENEZOLANA,
       })
     : "";
+  // Cada voz con su modelo: la venezolana se lee con Eleven v3 (con el rápido pierde el acento).
+  const modelo = asegurarModeloVoz(modeloDeVoz(narrador, config.ELEVENLABS_MODELO));
   const rutasPiezas: string[] = [];
   const palabras: Palabra[] = [];
   const tramos: ResultadoVoz["tramos"] = [];
@@ -81,7 +84,7 @@ export async function generarVoz(
       await silencio(rutaPieza, pieza.silencioSeg ?? 6);
       alineacion = { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] };
     } else if (usaElevenLabs) {
-      const r = await vozElevenLabs(textoVoz, rutaPieza, idVoz, {
+      const r = await vozElevenLabs(textoVoz, rutaPieza, idVoz, modelo, {
         anterior: textosVoz.slice(0, i).filter(Boolean).slice(-1)[0] ?? "",
         siguiente: textosVoz.slice(i + 1).filter(Boolean)[0] ?? "",
         idsAnteriores,
@@ -89,7 +92,7 @@ export async function generarVoz(
       alineacion = r.alineacion;
       if (r.requestId) idsAnteriores.push(r.requestId);
       while (idsAnteriores.length > 3) idsAnteriores.shift();
-      costoUsd += costoVozUsd(asegurarModeloVoz(config.ELEVENLABS_MODELO), textoVoz.length);
+      costoUsd += costoVozUsd(modelo, textoVoz.length);
     } else {
       alineacion = await vozDelSistema(textoVoz, rutaPieza, narrador);
     }
@@ -169,9 +172,11 @@ async function vozElevenLabs(
   texto: string,
   destino: string,
   idVoz: string,
+  modelo: string,
   contexto: { anterior: string; siguiente: string; idsAnteriores: string[] },
 ): Promise<{ alineacion: Alineacion; requestId: string | null }> {
-  const modelo = asegurarModeloVoz(config.ELEVENLABS_MODELO);
+  // Eleven v3 no une piezas con el contexto de las vecinas: se le manda solo el texto.
+  const conContexto = modelo !== "eleven_v3";
   const r = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${idVoz}/with-timestamps?output_format=mp3_44100_128`,
     {
@@ -183,9 +188,10 @@ async function vozElevenLabs(
         // La voz lee un poco rápido desde el origen: suena más natural que acelerarla después.
         voice_settings: { speed: config.ELEVENLABS_VELOCIDAD },
         // Contexto de las escenas vecinas: misma entonación al unir las piezas.
-        previous_text: contexto.anterior || undefined,
-        next_text: contexto.siguiente || undefined,
-        previous_request_ids: contexto.idsAnteriores.length ? contexto.idsAnteriores : undefined,
+        previous_text: (conContexto && contexto.anterior) || undefined,
+        next_text: (conContexto && contexto.siguiente) || undefined,
+        previous_request_ids:
+          conContexto && contexto.idsAnteriores.length ? contexto.idsAnteriores : undefined,
       }),
     },
   );

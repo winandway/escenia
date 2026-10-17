@@ -33,3 +33,17 @@ describe("voces (C-VOZ-1)", () => {
     expect(Object.keys(esquemaGuion.shape)).toContain("voz");
   });
 });
+
+describe("la voz venezolana (Publicidad, 17 oct 2026)", () => {
+  it("existe, tiene su variable propia y su modelo (el mismo con que se diseñó, para que no pierda el acento)", async () => {
+    const { modeloDeVoz, VARIABLE_DE_VOZ } = await import("@compartido/voces");
+    expect(VOCES).toContain("venezolana");
+    expect(elegirIdDeVoz("venezolana", { venezolana: "ve1" })).toBe("ve1");
+    expect(() => elegirIdDeVoz("venezolana", { richard: "abc", femenina: "xyz" })).toThrow(
+      /ELEVENLABS_VOICE_ID_VENEZOLANA/,
+    );
+    expect(VARIABLE_DE_VOZ.venezolana).toBe("ELEVENLABS_VOICE_ID_VENEZOLANA");
+    expect(modeloDeVoz("venezolana", "eleven_flash_v2_5")).toBe("eleven_v3");
+    expect(modeloDeVoz("richard", "eleven_flash_v2_5")).toBe("eleven_flash_v2_5");
+  });
+});

@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
+import { BancoDeVoces } from "@/componentes/BancoDeVoces";
 import { useBorrador } from "@/componentes/useBorrador";
 import { esquemaComercialNuevo, IDIOMAS, MAX_PALABRAS_COMERCIAL } from "@compartido/comerciales";
 import { contarPalabras } from "@compartido/grabaciones";
-import { ETIQUETA_VOZ, VOCES } from "@compartido/guion";
 import { NOMBRE_FORMATO } from "@compartido/tematicas";
 
 type Estado = { fase: "listo" | "enviando" | "hecho"; error: string };
@@ -110,32 +110,19 @@ export function FormularioComercial({ carpetas }: { carpetas: string[] }) {
             palabras (un minuto y medio).
           </p>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="idioma" className="etiqueta">
-              Idioma del texto
-            </label>
-            <select id="idioma" name="idioma" required className="campo" defaultValue="es">
-              {IDIOMAS.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="voz" className="etiqueta">
-              Quién narra
-            </label>
-            <select id="voz" name="voz" required className="campo" defaultValue="femenina">
-              {VOCES.map((v) => (
-                <option key={v} value={v}>
-                  {ETIQUETA_VOZ[v]}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="max-w-xs">
+          <label htmlFor="idioma" className="etiqueta">
+            Idioma del texto
+          </label>
+          <select id="idioma" name="idioma" required className="campo" defaultValue="es">
+            {IDIOMAS.map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.nombre}
+              </option>
+            ))}
+          </select>
         </div>
+        <BancoDeVoces porDefecto="femenina" />
         <fieldset>
           <legend className="etiqueta">Carpetas de imágenes que se usan</legend>
           {carpetas.length === 0 ? (

@@ -11,6 +11,8 @@ const CAMPOS_SENSIBLES = /clave|password|pin|cvv|tarjeta|token|secreto/i;
 // Campos ocultos que el propio framework mete en el formulario («$ACTION_…»):
 // no son de la persona y guardarlos rompería el envío con un valor viejo.
 const CAMPOS_INTERNOS = /^\$/;
+// Un grupo (las voces en radio, las carpetas en casillas) guarda sus valores juntos con este separador.
+const SEPARADOR = "\u001f";
 
 export type Borrador = Record<string, string>;
 
@@ -61,7 +63,8 @@ export function datosDelFormulario(form: HTMLFormElement): Borrador {
     // Los campos ocultos los pone el programa, no la persona: no son borrador.
     const campo = form.elements.namedItem(k);
     if (campo instanceof HTMLInputElement && campo.type === "hidden") return;
-    datos[k] = v;
+    // Varias casillas con el mismo nombre (las carpetas): se guardan todas, no solo la última.
+    datos[k] = k in datos ? `${datos[k]}${SEPARADOR}${v}` : v;
   });
   return datos;
 }
@@ -70,7 +73,15 @@ export function rellenarFormulario(form: HTMLFormElement, datos: Borrador): void
   for (const [k, v] of Object.entries(datos)) {
     if (CAMPOS_INTERNOS.test(k)) continue;
     const campo = form.elements.namedItem(k);
-    if (!campo || campo instanceof RadioNodeList) continue;
+    if (!campo) continue;
+    // Un grupo de radios o de casillas: se marcan las que estaban marcadas (antes se saltaba y se perdía).
+    if (campo instanceof RadioNodeList) {
+      const valores = v.split(SEPARADOR);
+      for (const el of Array.from(campo))
+        if (el instanceof HTMLInputElement && (el.type === "checkbox" || el.type === "radio"))
+          el.checked = valores.includes(el.value);
+      continue;
+    }
     const el = campo as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
     if (!("value" in el)) continue;
     if (el instanceof HTMLInputElement && ["password", "file", "hidden"].includes(el.type)) continue;
@@ -124,9 +135,11 @@ export function useBorrador(formulario: string) {
     setRecuperado(false);
   }, [formulario]);
 
+  // Al guardar con éxito: se borra el borrador y se quita el aviso (si no, «Recuperamos…» seguía ahí).
   const descartar = useCallback(() => {
     if (temporizador.current) clearTimeout(temporizador.current);
     borrarBorrador(formulario);
+    setRecuperado(false);
   }, [formulario]);
 
   return { ref, recuperado, empezarDeNuevo, descartar };

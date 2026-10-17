@@ -5,6 +5,7 @@ import { config } from "./config";
 import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEntregada } from "./entrega";
 import { atenderComercial, materialDeComercial } from "./comerciales";
 import { atenderGrabacion, materialDeGrabacion } from "./grabaciones";
+import { atenderPublicidad } from "./publicidades";
 import { panel } from "./panel";
 import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas";
 import { catalogoMusica } from "./musica";
@@ -194,7 +195,7 @@ async function unaVuelta(): Promise<boolean> {
 async function principal() {
   console.log(`Estación ${config.VERSION} → ${config.PANEL_URL}`);
   console.log(
-    `Voz: ${config.ELEVENLABS_API_KEY ? `ElevenLabs (mi voz: ${config.ELEVENLABS_VOICE_ID ? "sí" : "FALTA"} · femenina: ${config.ELEVENLABS_VOICE_ID_FEMENINA ? "sí" : "FALTA"})` : "de prueba (sistema)"} · Clips: ${config.PEXELS_API_KEY ? "Pexels" : "fondos de color"} · Imágenes IA: ${config.FAL_KEY ? "fal.ai" : "apagadas"}`,
+    `Voz: ${config.ELEVENLABS_API_KEY ? `ElevenLabs (mi voz: ${config.ELEVENLABS_VOICE_ID ? "sí" : "FALTA"} · femenina: ${config.ELEVENLABS_VOICE_ID_FEMENINA ? "sí" : "FALTA"} · venezolana: ${config.ELEVENLABS_VOICE_ID_VENEZOLANA ? "sí" : "FALTA"})` : "de prueba (sistema)"} · Clips: ${config.PEXELS_API_KEY ? "Pexels" : "fondos de color"} · Imágenes IA: ${config.FAL_KEY ? "fal.ai" : "apagadas"}`,
   );
   console.log(
     `Fotos reales de internet: ${config.SERPER_API_KEY ? "sí (Google Imágenes vía Serper)" : "NO (falta SERPER_API_KEY; solo Wikimedia)"}`,
@@ -215,8 +216,13 @@ async function principal() {
     senalDeVida();
     let espera = ESPERA_MS;
     try {
-      // Primero los videos ya aprobados; si no hay, las grabaciones que Richard subió.
-      const hubo = (await unaVuelta()) || (await atenderGrabacion()) || (await atenderComercial());
+      // Primero los videos ya aprobados; si no hay, las grabaciones que Richard subió, los comerciales
+      // y los anuncios de Publicidad.
+      const hubo =
+        (await unaVuelta()) ||
+        (await atenderGrabacion()) ||
+        (await atenderComercial()) ||
+        (await atenderPublicidad());
       if (hubo) espera = 1000;
     } catch (e) {
       console.error(`[${hora()}] No se pudo hablar con el panel:`, e instanceof Error ? e.message : e);

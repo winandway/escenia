@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { useBorrador } from "@/componentes/useBorrador";
-import { ETIQUETA_VOZ, VOCES } from "@compartido/guion";
+import { BancoDeVoces } from "@/componentes/BancoDeVoces";
 import type { Canal } from "@compartido/tematicas";
 import { crearGuion, type EstadoNuevo } from "./acciones";
 
@@ -137,18 +137,7 @@ export function FormularioNuevo({ canales, canalInicial, tematicas, productos }:
         </select>
       </div>
 
-      <div>
-        <label htmlFor="voz" className="etiqueta">
-          Quién narra
-        </label>
-        <select id="voz" name="voz" className="campo" defaultValue="richard">
-          {VOCES.map((v) => (
-            <option key={v} value={v}>
-              {ETIQUETA_VOZ[v]}
-            </option>
-          ))}
-        </select>
-      </div>
+      <BancoDeVoces porDefecto="richard" />
 
       <div>
         <label htmlFor="url_fuente" className="etiqueta">

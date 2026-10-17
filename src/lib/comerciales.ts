@@ -1,3 +1,4 @@
+import type { Voz } from "@compartido/guion";
 // Comerciales (C-COMERCIAL-1): el video publicitario de un cliente. Nace en el panel, la
 // Estación lo toma, pide el plan con las imágenes que tiene, y de ahí sale un guion aprobado
 // (el texto es del cliente) y su trabajo. Mismo camino que una grabación.
@@ -11,7 +12,7 @@ export type FilaComercial = {
   nombre: string;
   narracion: string;
   idioma: "es" | "en";
-  voz: "richard" | "femenina";
+  voz: Voz;
   instrucciones: string;
   carpetas: string; // JSON
   formato: EstiloVideo;

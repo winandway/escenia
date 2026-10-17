@@ -288,8 +288,36 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           )}
         </div>
       )}
-      {/* El avatar, abajo a la izquierda: habla todo el anuncio. */}
-      {p.avatar && (
+      {/* La persona con su fondo, en un recuadro del color de la marca (abajo a la izquierda). */}
+      {p.avatar?.recuadro && (
+        <div
+          style={{
+            position: "absolute",
+            left:
+              Z.recuadro.x +
+              interpolate(frame, [0, 10], [-500, 0], {
+                extrapolateRight: "clamp",
+                easing: Easing.out(Easing.cubic),
+              }),
+            bottom: Z.recuadro.abajo,
+            height: Z.recuadro.alto,
+            width: (Z.recuadro.alto * p.avatar.ancho) / p.avatar.alto,
+            borderRadius: Z.recuadro.radio,
+            border: `${Z.recuadro.borde}px solid ${p.acento}`,
+            overflow: "hidden",
+            boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+            background: "#000",
+          }}
+        >
+          <OffthreadVideo
+            src={staticFile(p.avatar.ruta)}
+            muted
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+      )}
+      {/* El avatar sin fondo, abajo a la izquierda: habla todo el anuncio. */}
+      {p.avatar && !p.avatar.recuadro && (
         <div
           style={{
             position: "absolute",

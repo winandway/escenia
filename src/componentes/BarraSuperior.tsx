@@ -16,6 +16,7 @@ export const GRUPOS = [
         icono: "M4 7h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4zM17 10l4-2v8l-4-2",
       },
       { href: "/comerciales", texto: "Comerciales", icono: "M3 11l18-6v14L3 13zM7 13v5" },
+      { href: "/publicidad", texto: "Publicidad", icono: "M7 3h10v18H7zM10 18h4M10 8l4 2.5-4 2.5z" },
     ],
   },
   {
@@ -73,7 +74,7 @@ export function BarraSuperior({
     href === "/" ? ruta === "/" || ruta.startsWith("/guiones") : ruta.startsWith(href);
   return (
     <header className="sticky top-0 z-20 border-b border-neutral-800/80 bg-[#0b0f19]/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 sm:flex-nowrap">
         <Link href="/" className="mr-1 flex items-center gap-2" aria-label="Escenia, inicio">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 text-sm font-black text-neutral-950 shadow-[0_0_18px_rgba(245,158,11,.45)]">
             E
@@ -82,10 +83,16 @@ export function BarraSuperior({
             Escenia
           </span>
         </Link>
-        {/* En pantalla chica los botones pasan a dos o tres filas: nada queda escondido. */}
-        <nav aria-label="Secciones" className="-mx-1 flex min-w-0 flex-1 flex-wrap items-center gap-1 px-1">
+        {/* En el celular los botones van en su propia fila, debajo del logo y de «Cerrar sesión», y bajan
+            de fila cuando no caben: nada queda escondido ni se sale de la pantalla. */}
+        <nav
+          aria-label="Secciones"
+          className="order-last -mx-1 flex w-full min-w-0 flex-wrap items-center gap-1 px-1 sm:order-none sm:w-auto sm:flex-1"
+        >
           {GRUPOS.map((g, k) => (
-            <div key={g.nombre} className="flex shrink-0 items-center gap-1">
+            // Los botones de cada grupo se acomodan sueltos en la barra («contents»): con cinco en «Videos»,
+            // el grupo entero ya no cabía a lo ancho de un celular y se salía de la pantalla.
+            <div key={g.nombre} className="contents">
               {k > 0 && <span aria-hidden="true" className="mx-1 h-5 w-px bg-neutral-800" />}
               {g.enlaces.map((e) => {
                 const on = activo(e.href);
@@ -114,7 +121,7 @@ export function BarraSuperior({
             </div>
           ))}
         </nav>
-        <div className="shrink-0">{salir}</div>
+        <div className="ml-auto shrink-0 sm:ml-0">{salir}</div>
       </div>
     </header>
   );

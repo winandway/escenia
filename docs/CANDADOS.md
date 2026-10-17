@@ -1610,3 +1610,47 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   del protagonista»; con el relleno de antes se pone en rojo, comprobado el 17 oct 2026). Y en la hoja de
   cuadros: nadie aparece fuera de su momento.
 - **Qué NO tocar:** no volver a meter todas las fotos del video en el relleno.
+
+## C-GITIGNORE-1 — Git no esconde código: las carpetas de material van ancladas a la raíz (17 oct 2026)
+
+- **Qué se rompió y cómo se veía:** la página nueva del menú «Publicidad» del panel no salía en la
+  compilación con sus estilos (los botones de radio se veían, las miniaturas no tenían tamaño) y git no
+  la mostraba como archivo nuevo. Se habría publicado un panel con el enlace «Publicidad» llevando a una
+  página inexistente.
+- **Causa real:** la regla `publicidad/` del `.gitignore` (para no subir las fotos de los clientes)
+  vale para CUALQUIER carpeta con ese nombre, también `src/app/publicidad`. Lo mismo pasaba con
+  `avatar/`, `descargas/` y `monigotes/`: una página futura con esos nombres se habría escondido sola.
+- **Qué se hizo:** esas reglas ahora empiezan con barra (`/publicidad/`, `/avatar/`, `/descargas/`,
+  `/monigotes/`, `/music-cortinas-libre-de-copy/`, `/PACK de SONIDOS*/`): solo valen para la carpeta de
+  la raíz.
+- **Commit:** el de la sección Publicidad del panel (17 oct 2026, «feat(publicidad): …»).
+- **Cómo se comprueba:** `npx vitest run pruebas/gitignore.test.ts` lista con `git ls-files --others --ignored` los archivos de `src`,
+  `compartido`, `estacion/src`, `pruebas`, `scripts` y `docs` que git ignora y exige
+  que ninguno quede ignorado (con la regla vieja se pone en rojo con las tres páginas de Publicidad,
+  comprobado el 17 oct 2026).
+- **Qué NO tocar:** no agregar al `.gitignore` una carpeta de material sin la barra de adelante.
+
+## C-VOCES-2 — Las voces se leen siempre de la lista del banco, nunca de una lista escrita a mano (17 oct 2026)
+
+- **Qué se rompió y cómo se veía:** al agregar la voz venezolana, la Mac seguía aceptando solo
+  «richard» y «femenina» en los comerciales: un comercial pedido con la venezolana habría tumbado la
+  vuelta de la Estación con un error de formato, sin que se armara.
+- **Causa real:** `estacion/src/panel.ts` tenía la lista de voces copiada a mano en vez de usar `VOCES`.
+- **Qué se hizo:** todos los esquemas usan `z.enum(VOCES)` de `compartido/guion.ts`.
+- **Cómo se comprueba:** `npx vitest run pruebas/publicidad-panel.test.ts` («C-VOCES-2») busca con `git grep` en todo el
+  código una lista `["richard", "femenina"]` fuera de `compartido/guion.ts` (con la lista vieja se pone
+  en rojo, comprobado el 17 oct 2026).
+- **Qué NO tocar:** una voz nueva se agrega solo en `VOCES` y en `compartido/voces.ts`.
+
+## C-BORRADOR-2 — El borrador recuerda los grupos (la voz elegida y todas las carpetas) y se calla al enviar (17 oct 2026)
+
+- **Qué se rompió y cómo se veía:** si se cerraba la ventana a mitad de un comercial o de un anuncio,
+  al volver estaba el texto pero no las carpetas marcadas (y con el banco de voces en botones, tampoco
+  la voz). Y después de enviar con éxito seguía saliendo «Recuperamos lo que estabas escribiendo».
+- **Causa real:** `rellenarFormulario` se saltaba los grupos con el mismo nombre (radios y casillas),
+  `datosDelFormulario` guardaba solo la última casilla marcada, y `descartar` no apagaba el aviso.
+- **Qué se hizo:** en `src/componentes/useBorrador.ts` los valores de un grupo se guardan juntos y se
+  vuelven a marcar todos; `descartar` también quita el aviso.
+- **Cómo se comprueba:** `npx vitest run pruebas/borrador.test.tsx` (grupos y aviso; las tres pruebas se
+  ponen en rojo con el hook de antes, comprobado el 17 oct 2026).
+- **Qué NO tocar:** no volver a saltar `RadioNodeList` en `rellenarFormulario`.

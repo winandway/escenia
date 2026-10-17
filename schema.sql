@@ -244,3 +244,27 @@ CREATE TABLE IF NOT EXISTS comerciales (
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS comerciales_por_estado ON comerciales(estado, id);
+
+-- Publicidad en Short (docs/PUBLICIDAD.md): el anuncio vertical de un producto con las fotos del
+-- cliente, una voz del banco y un avatar que habla. La Estación lo toma, pide el plan, lo arma y
+-- sube el video (publicidades/<id>/anuncio-<t>.mp4).
+CREATE TABLE IF NOT EXISTS publicidades (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT NOT NULL,
+  narracion TEXT NOT NULL,
+  idioma TEXT NOT NULL DEFAULT 'es',
+  voz TEXT NOT NULL DEFAULT 'venezolana',
+  carpetas TEXT NOT NULL DEFAULT '[]',
+  avatar TEXT NOT NULL DEFAULT '',
+  instrucciones TEXT NOT NULL DEFAULT '',
+  estado TEXT NOT NULL DEFAULT 'subida' CHECK (estado IN ('subida','tomada','lista','error','quitada')),
+  paso TEXT NOT NULL DEFAULT '',
+  error TEXT NOT NULL DEFAULT '',
+  plan TEXT NOT NULL DEFAULT '',
+  video TEXT NOT NULL DEFAULT '',
+  duracion_seg REAL NOT NULL DEFAULT 0,
+  costo_usd REAL NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS publicidades_por_estado ON publicidades(estado, id);

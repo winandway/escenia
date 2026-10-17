@@ -2,7 +2,7 @@
 import { open, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { partesDe, TAMANO_PARTE } from "@compartido/grabaciones";
-import { esquemaGuion, type Guion } from "@compartido/guion";
+import { esquemaGuion, type Guion, VOCES } from "@compartido/guion";
 import { CABECERA_META, metaParaCabecera } from "@compartido/meta";
 import { conReintentos, ErrorDelPanel } from "@compartido/reintentos";
 import { senalDeVida } from "./vigilante";
@@ -49,7 +49,8 @@ const esquemaComercial = z.object({
       nombre: z.string(),
       narracion: z.string(),
       idioma: z.enum(["es", "en"]),
-      voz: z.enum(["richard", "femenina"]),
+      // Todas las voces del banco: una lista escrita a mano dejaba fuera a la venezolana (C-VOCES-2).
+      voz: z.enum(VOCES),
       instrucciones: z.string(),
       carpetas: z.array(z.string()),
       formato: z.enum(ESTILOS_VIDEO),
@@ -57,6 +58,37 @@ const esquemaComercial = z.object({
     .nullable(),
 });
 export type ComercialDelPanel = NonNullable<z.infer<typeof esquemaComercial>["comercial"]>;
+
+// Publicidad en Short (menú «Publicidad»): el anuncio pedido desde el panel.
+export const esquemaPublicidadDelPanel = z.object({
+  publicidad: z
+    .object({
+      id: z.number(),
+      nombre: z.string(),
+      narracion: z.string(),
+      idioma: z.enum(["es", "en"]),
+      voz: z.enum(VOCES),
+      carpetas: z.array(z.string()),
+      avatar: z.string(),
+      instrucciones: z.string(),
+    })
+    .nullable(),
+});
+export type PublicidadDelPanel = NonNullable<z.infer<typeof esquemaPublicidadDelPanel>["publicidad"]>;
+const esquemaPlanDePublicidad = z.object({
+  plan: z.object({
+    momentos: z.array(
+      z.object({
+        frase: z.string(),
+        imagen: z.string().optional(),
+        texto: z.string().optional(),
+        chips: z.array(z.object({ texto: z.string(), palabra: z.string() })).optional(),
+      }),
+    ),
+    cierre: z.object({ frase: z.string(), lineas: z.array(z.string()) }),
+  }),
+});
+export type PlanDePublicidadDelPanel = z.infer<typeof esquemaPlanDePublicidad>["plan"];
 
 const esquemaImagenes = z.object({
   imagenes: z.array(
@@ -215,6 +247,46 @@ export const panel = {
       { accion: "plan", imagenes },
       { esperaMs: 420_000, unSoloIntento: true },
     ) as Promise<{ guion_id: number; trabajo_id: number }>,
+  /** ¿Hay un anuncio por armar (menú «Publicidad»)? Si hay, queda tomado. */
+  async publicidadSiguiente(): Promise<PublicidadDelPanel | null> {
+    return esquemaPublicidadDelPanel.parse(await llamar("/datos/estacion/publicidades/siguiente", {}))
+      .publicidad;
+  },
+  avancePublicidad: (id: number, paso: string) =>
+    llamar(`/datos/estacion/publicidades/${id}`, { accion: "avance", paso }),
+  errorPublicidad: (id: number, error: string) =>
+    llamar(`/datos/estacion/publicidades/${id}`, { accion: "error", error: error.slice(0, 2000) }),
+  gastoPublicidad: (id: number, servicio: string, detalle: string, costo_usd: number) =>
+    llamar(`/datos/estacion/publicidades/${id}`, { accion: "gasto", servicio, detalle, costo_usd }),
+  /** Con las imágenes que hay en la Mac, la IA del panel decide qué foto y qué texto van en cada frase. */
+  async planDePublicidad(
+    id: number,
+    imagenes: { nombre: string; transparente: boolean; ancho: number; alto: number }[],
+  ): Promise<PlanDePublicidadDelPanel> {
+    const r = await llamar(
+      `/datos/estacion/publicidades/${id}`,
+      { accion: "plan", imagenes },
+      { esperaMs: 300_000, unSoloIntento: true },
+    );
+    return esquemaPlanDePublicidad.parse(r).plan;
+  },
+  /** Sube el anuncio terminado: queda listo para ver y descargar en el panel. */
+  async subirVideoPublicidad(id: number, ruta: string, duracionSeg: number) {
+    return llamar(`/datos/estacion/publicidades/${id}/video?duracion=${duracionSeg.toFixed(1)}`, null, {
+      crudo: await readFile(ruta),
+      contentType: "video/mp4",
+      metodo: "PUT",
+      esperaMs: 600_000,
+    });
+  },
+  /** La muestra de una voz del banco, para oírla en el panel antes de elegirla. */
+  async subirMuestraVoz(voz: string, ruta: string) {
+    return llamar(`/datos/estacion/voces/${voz}`, null, {
+      crudo: await readFile(ruta),
+      contentType: "audio/mpeg",
+      metodo: "PUT",
+    });
+  },
   /** ¿Richard subió una grabación desde el panel? Si hay, queda tomada. */
   async grabacionSiguiente(): Promise<GrabacionDelPanel | null> {
     return esquemaGrabacion.parse(await llamar("/datos/estacion/grabaciones/siguiente", {})).grabacion;

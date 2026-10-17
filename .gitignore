@@ -61,7 +61,7 @@ out-deploy
 estacion/.panel-acceso.local
 
 # Sonidos de Richard: licencias mixtas, nunca al repo público
-PACK de SONIDOS*/
+/PACK de SONIDOS*/
 estacion/recursos/sfx-local/
 estacion/recursos/musica-local/
 
@@ -70,23 +70,23 @@ estacion/voz/
 estacion/.cuentas.local.md
 
 # Música de Richard (Suno): nunca al repo público
-music-cortinas-libre-de-copy/
+/music-cortinas-libre-de-copy/
 
 # Detector de caras compilado en la Mac
 estacion/bin/
 
 # Foto de Richard para el avatar (nunca al repositorio)
-avatar/
+/avatar/
 
 # Videos bajados de internet para consulta (nunca al repositorio)
-descargas/
+/descargas/
 
 # Sonidos que Richard sube desde el panel; la Estación los baja a la Mac (C-SONIDOS-1)
 estacion/recursos/musica-panel/
 estacion/recursos/sfx-panel/
 
 # Dibujos y clips de los videos de monigotes animados (pesan; no van al repositorio)
-monigotes/
+/monigotes/
 
 # Material de clientes para la publicidad (fotos, logos, avatar): no va al repo público
-publicidad/
+/publicidad/

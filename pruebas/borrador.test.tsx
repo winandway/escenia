@@ -74,6 +74,64 @@ describe("useBorrador (ningún formulario pierde lo escrito)", () => {
     await usuario.click(screen.getByText("Enviar"));
     expect(leerBorrador("prueba")).toBeNull();
   });
+
+  it("al enviar con éxito se quita el aviso de «Recuperamos…»", async () => {
+    const usuario = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    guardarBorrador("prueba", { titulo: "viejo" });
+    render(<Formulario />);
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(screen.getByText("Recuperamos lo que estabas escribiendo.")).toBeInTheDocument();
+    await usuario.click(screen.getByText("Enviar"));
+    expect(screen.queryByText("Recuperamos lo que estabas escribiendo.")).toBeNull();
+  });
+});
+
+describe("useBorrador con grupos (la voz en radio y las carpetas en casillas)", () => {
+  function FormularioGrupos() {
+    const { ref } = useBorrador("grupos");
+    return (
+      <form ref={ref}>
+        <input type="radio" name="voz" value="richard" aria-label="Richard" defaultChecked />
+        <input type="radio" name="voz" value="venezolana" aria-label="Venezolana" />
+        <input type="checkbox" name="carpetas" value="logos" aria-label="logos" />
+        <input type="checkbox" name="carpetas" value="productos" aria-label="productos" />
+        <input type="checkbox" name="carpetas" value="avatar" aria-label="avatar" />
+      </form>
+    );
+  }
+
+  it("recuerda la voz elegida y TODAS las carpetas marcadas", async () => {
+    const usuario = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { unmount } = render(<FormularioGrupos />);
+    await usuario.click(screen.getByLabelText("Venezolana"));
+    await usuario.click(screen.getByLabelText("logos"));
+    await usuario.click(screen.getByLabelText("avatar"));
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
+    unmount();
+
+    render(<FormularioGrupos />);
+    expect(screen.getByLabelText("Venezolana")).toBeChecked();
+    expect(screen.getByLabelText("Richard")).not.toBeChecked();
+    expect(screen.getByLabelText("logos")).toBeChecked();
+    expect(screen.getByLabelText("productos")).not.toBeChecked();
+    expect(screen.getByLabelText("avatar")).toBeChecked();
+  });
+
+  it("datosDelFormulario junta las casillas del mismo nombre y rellenar las vuelve a marcar", () => {
+    const form = document.createElement("form");
+    form.innerHTML =
+      '<input type="checkbox" name="c" value="a" checked><input type="checkbox" name="c" value="b"><input type="checkbox" name="c" value="d" checked>';
+    const datos = datosDelFormulario(form);
+    const otro = document.createElement("form");
+    otro.innerHTML =
+      '<input type="checkbox" name="c" value="a"><input type="checkbox" name="c" value="b" checked><input type="checkbox" name="c" value="d">';
+    rellenarFormulario(otro, datos);
+    expect(new FormData(otro).getAll("c")).toEqual(["a", "d"]);
+  });
 });
 
 describe("CampoClave", () => {

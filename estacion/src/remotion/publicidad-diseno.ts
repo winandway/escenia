@@ -6,8 +6,19 @@ export const esquemaPublicidad = z.object({
   marca: z.string(),
   acento: z.string().regex(/^#[0-9a-f]{6}$/i),
   logo: z.string(),
-  /** Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. */
-  avatar: z.object({ ruta: z.string(), video: z.boolean(), ancho: z.number(), alto: z.number() }).nullable(),
+  /**
+   * Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. Con
+   * `recuadro`, la persona trae su fondo y va dentro de un marco redondeado del color de la marca.
+   */
+  avatar: z
+    .object({
+      ruta: z.string(),
+      video: z.boolean(),
+      ancho: z.number(),
+      alto: z.number(),
+      recuadro: z.boolean().default(false),
+    })
+    .nullable(),
   audio: z.string(),
   musica: z.string().nullable(),
   duracionMs: z.number(),
@@ -44,5 +55,7 @@ export const ZONA_PUBLICIDAD = {
   tarjeta: { x: 60, y: 390, ancho: 960, alto: 760 },
   subtitulos: { izquierda: 470, derecha: 150, y: 1210 },
   avatar: { x: -30, alto: 1000 },
+  /** La persona con su fondo: un marco abajo a la izquierda, por encima de la franja que tapa YouTube. */
+  recuadro: { x: 40, abajo: 330, alto: 620, borde: 6, radio: 40 },
   limiteAbajo: 1920 * 0.85,
 } as const;

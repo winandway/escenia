@@ -8,8 +8,9 @@ import { COOKIE_SESION, sesionValida } from "@/lib/sesion";
 
 export const dynamic = "force-dynamic";
 
+// También los anuncios de Publicidad y las muestras del banco de voces (docs/PUBLICIDAD.md).
 const RUTA_VALIDA =
-  /^guiones\/\d+\/(voz|subtitulos|miniatura|imagen|clip|screen)-\d+\.[a-z0-9]+$|^guiones\/\d+\/video-(16x9|9x16)-\d+\.mp4$/;
+  /^guiones\/\d+\/(voz|subtitulos|miniatura|imagen|clip|screen)-\d+\.[a-z0-9]+$|^guiones\/\d+\/video-(16x9|9x16)-\d+\.mp4$|^publicidades\/\d+\/anuncio-\d+\.mp4$|^voces\/[a-z]+\.mp3$/;
 
 export async function GET(req: Request, ctx: RouteContext<"/datos/archivos/[...clave]">) {
   const { db, bucket } = await contexto();

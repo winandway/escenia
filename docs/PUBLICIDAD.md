@@ -49,19 +49,50 @@ Piezas: `estacion/src/publicidad-plan.ts` (plan, tiempos y costo; pruebas en
 `estacion/src/remotion/Publicidad.tsx` y `publicidad-diseno.ts` (la plantilla, composición
 «Publicidad»).
 
+## En el panel: menú «Publicidad» (desde el 17 oct 2026)
+
+Richard pide el anuncio desde el panel y la Mac lo arma sola. No hace falta escribir ningún plan.
+
+1. En **Imágenes**, una carpeta por cliente con su logo (que el archivo se llame «logo», mejor sin
+   fondo), las fotos del producto y la foto de la persona que habla.
+2. En **Publicidad**: el nombre, lo que dice la voz (de 30 a 115 palabras; las cifras en número), el
+   idioma, la voz del **banco de voces** (cada una con su botón para oírla antes de elegirla), las
+   carpetas y la persona que habla (sus miniaturas salen al marcar las carpetas; «Sin persona» también
+   vale). Lo escrito se guarda solo mientras se escribe.
+3. La Mac lo toma: baja las imágenes, la IA del panel decide qué foto y qué texto grande van en cada
+   frase, saca el color de la marca del logo, hace la voz, la persona hablando y el video, y lo sube.
+4. En la lista: el video para verlo y el botón para descargarlo, lo que costó, «Armar otra vez» (otro
+   plan con las mismas fotos; la voz y la persona ya pagadas se reutilizan) y «Quitar» en los tres
+   puntos.
+
+Si la foto de la persona no tiene fondo, sale recortada de cuerpo entero abajo a la izquierda (como en el
+prototipo). Si trae su fondo, sale hablando dentro de un recuadro redondeado del color de la marca.
+
+Antes de gastar, el panel calcula el anuncio entero (plan, voz y persona) contra el tope diario.
+
+Piezas: `compartido/publicidad.ts` (el pedido, el plan de la IA y el costo estimado),
+`src/lib/publicidades.ts` y `src/lib/publicidad-ia.ts` (la fila y la IA), `src/app/publicidad/` (la
+página), las rutas `/datos/publicidades` y `/datos/estacion/publicidades/*`,
+`estacion/src/publicidades.ts` (la vuelta de la Mac) y `src/componentes/BancoDeVoces.tsx`.
+
+## El banco de voces
+
+Las tres voces: la de Richard (clonada), la femenina de catálogo y la **venezolana** (chica joven de
+Caracas, diseñada en ElevenLabs el 17 oct 2026; se lee con el modelo v3). El banco sale en Publicidad,
+Comerciales y Nuevo video. Las muestras viven en el almacén del panel (`voces/<voz>.mp3`) y se rehacen
+con `npx tsx src/muestras-voces.ts` desde `estacion/` (unos 2 centavos por voz).
+
 ## Lo que cuesta cada anuncio
 
-| Con qué                                   | 30 segundos |
-| ----------------------------------------- | ----------- |
-| Voz femenina + chica hablando (FlashTalk) | unos 0,62 $ |
-| Voz femenina + la chica quieta (foto)     | unos 0,02 $ |
-| El texto escrito por la IA (si se pide)   | unos 0,03 $ |
+| Con qué                                       | 30 segundos | 45 segundos |
+| --------------------------------------------- | ----------- | ----------- |
+| Voz venezolana + persona hablando (FlashTalk) | unos 0,65 $ | unos 0,97 $ |
+| Voz + sin persona                             | unos 0,05 $ | unos 0,06 $ |
 
-## Lo que falta para que sea parte del panel
+Incluye el plan de la IA del panel (1 o 2 centavos). El prototipo costó 0,5951 $ con la voz femenina y
+0,6152 $ con la venezolana (voz 0,0422 $ + persona 0,573 $).
 
-1. Un menú «Publicidad» en el panel: el cliente, sus carpetas de Imágenes (ya existe la biblioteca), el
-   producto, el texto (escrito a mano o por la IA a partir de las fotos y los datos del producto), la
-   voz y el avatar; y el botón «Generar».
-2. Que la Estación tome esos pedidos como hoy toma los comerciales y suba el anuncio con su miniatura.
-3. La IA escribe el plan (las frases literales y qué foto va en cada una) a partir del texto.
-4. El precio de venta lo decide Richard al ver el prototipo.
+## Lo que falta
+
+1. El precio de venta lo decide Richard.
+2. Que la IA escriba también el texto a partir de las fotos y los datos del producto (hoy lo escribe él).
