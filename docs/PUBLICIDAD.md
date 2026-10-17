@@ -70,6 +70,10 @@ prototipo). Si trae su fondo, sale hablando dentro de un recuadro redondeado del
 
 Antes de gastar, el panel calcula el anuncio entero (plan, voz y persona) contra el tope diario.
 
+**Primer anuncio hecho desde el panel (17 oct 2026):** el generador de Pro In Shop con la voz venezolana
+y la chica hablando, 29,9 s, en 7 minutos de punta a punta. Costó **0,6277 $**: plan 0,0115 $ + voz
+0,0422 $ + persona 0,574 $. El color de la marca salió solo del logo.
+
 Piezas: `compartido/publicidad.ts` (el pedido, el plan de la IA y el costo estimado),
 `src/lib/publicidades.ts` y `src/lib/publicidad-ia.ts` (la fila y la IA), `src/app/publicidad/` (la
 página), las rutas `/datos/publicidades` y `/datos/estacion/publicidades/*`,
