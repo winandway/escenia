@@ -19,7 +19,7 @@ import { buscarFoto, buscarReferencias, type FotoReferencia } from "./fotos";
 import { artistaDelCanal } from "@compartido/cancion";
 import { generarImagen, imagenesActivas } from "./imagenes";
 import { buscarClip, RESERVA_DOCUMENTAL, RESERVA_POR_PARTE } from "./visuales";
-import { fondoDeEscena } from "./fondo-escena";
+import { fondoDeEscena, fotosParaRelleno } from "./fondo-escena";
 import { enfoquesDe } from "./enfoque";
 import { rellenarPlanos, resolverPlanos } from "./planos";
 import { tramosQuietos } from "@compartido/planos";
@@ -419,17 +419,18 @@ export async function producir(
   // Relleno (C-RITMO-1): donde una escena se quedaría quieta, entran fotos del
   // propio video o clips de ambiente. Así también mejoran los guiones sin planos.
   await avisar("revisando que ninguna imagen se quede quieta", 37);
-  const fotosDelVideo = [
-    ...new Map(
-      escenas
-        .flatMap((e) => [
-          ...(e.foto ? [e.foto] : []),
-          ...e.fotos,
-          ...e.planos.flatMap((p) => (p.foto ? [p.foto] : [])),
-        ])
-        .map((f) => [f.ruta, f] as const),
-    ).values(),
-  ];
+  // Solo fotos del protagonista: nunca otra persona ni un lugar fuera de su momento (C-RELLENO-1).
+  const guionConVoz = guion.escenas.filter((_, k) => voz.tramos[k]);
+  const fotosDelVideo = fotosParaRelleno(
+    escenas.map((e, k) => ({
+      foto: e.foto,
+      fotos: e.fotos,
+      busqueda: guionConVoz[k]?.visual.busqueda ?? "",
+      deLugar: guionConVoz[k]?.visual.foto_de === "lugar",
+      planos: e.planos.map((p) => ({ foto: p.foto, texto: p.texto })),
+    })),
+    personaDelTitulo,
+  );
   const turno = { n: 0 };
   for (const [i, escena] of escenas.entries()) {
     // En neón no se rellena con fotos ni clips: el diagrama se mueve solo (pulsos, flechas, objetos).

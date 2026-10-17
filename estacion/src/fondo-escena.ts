@@ -64,3 +64,43 @@ export function idsRecientes(guardado: Record<string, string>, ahora: Date = new
       .map(([id]) => Number(id)),
   );
 }
+
+const normal = (t: string) =>
+  t
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9ñ ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+type FotoDeRelleno = { ruta: string; ancho: number; alto: number; enfoque: unknown };
+
+/**
+ * Las fotos que el relleno automático puede repetir donde una escena se quedaría quieta: SOLO las del
+ * protagonista del video (las rotuladas con su nombre y las de las escenas que lo buscaban a él), más
+ * las imágenes generadas para el video. Nunca las de otras personas ni las de lugares: en el video de
+ * Juan Gabriel el relleno puso al periodista Fernando del Rincón en el momento de su muerte, a Rocío
+ * Dúrcal y La Prieta Linda donde no se hablaba de ellas, y un desfile festivo al contar la muerte de su
+ * madre (17 oct 2026). Sin fotos del protagonista, el relleno usa clips de ambiente.
+ */
+export function fotosParaRelleno<F extends FotoDeRelleno>(
+  escenas: {
+    foto: F | null;
+    fotos: F[];
+    busqueda: string;
+    deLugar: boolean;
+    planos: { foto: F | null; texto: string }[];
+  }[],
+  protagonista: string,
+): F[] {
+  const quien = normal(protagonista);
+  const esDeEl = (t: string) => quien.length > 0 && normal(t).includes(quien);
+  const elegidas = new Map<string, F>();
+  for (const e of escenas) {
+    if (e.foto && !e.deLugar && esDeEl(e.busqueda)) elegidas.set(e.foto.ruta, e.foto);
+    for (const f of e.fotos) elegidas.set(f.ruta, f);
+    for (const p of e.planos) if (p.foto && esDeEl(p.texto)) elegidas.set(p.foto.ruta, p.foto);
+  }
+  return [...elegidas.values()];
+}

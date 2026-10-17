@@ -1592,3 +1592,21 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   izquierda y el nombre de la canción abajo.
 - **Qué NO tocar:** no agrandar el recuadro ni oscurecer la imagen (Richard lo rechazó en los
   monigotes); no hacer opcionales `cancion`/`cancion_artista` en el formato de la IA (C-GUION-3).
+
+## C-RELLENO-1 — El relleno automático solo repite fotos del protagonista (17 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en la biografía de Juan Gabriel, donde una escena se quedaba corta
+  de imágenes, el relleno puso al periodista Fernando del Rincón justo cuando se contaba su muerte, a
+  Rocío Dúrcal y a La Prieta Linda donde no se hablaba de ellas, un desfile festivo de Ciudad Juárez al
+  contar la muerte de su madre, y una iglesia en un hueco de canción.
+- **Causa real:** el relleno (`rellenarPlanos`) tomaba cualquier foto del video, también las de otras
+  personas rotuladas y las de lugares.
+- **Qué se hizo:** `fotosParaRelleno` en `estacion/src/fondo-escena.ts`: solo entran las fotos rotuladas
+  con el nombre del protagonista (el del título, antes de los dos puntos), las de escenas que lo
+  buscaban a él (no de lugar) y las imágenes generadas para el video. Sin fotos suyas, el relleno usa
+  clips de ambiente. El video 20 se corrigió a mano (16 fotos) antes de entregarlo.
+- **Commit:** el de este candado (17 oct 2026, «fix(relleno): …»).
+- **Cómo se comprueba:** `npx vitest run pruebas/fondo-escena.test.ts` («el relleno solo repite fotos
+  del protagonista»; con el relleno de antes se pone en rojo, comprobado el 17 oct 2026). Y en la hoja de
+  cuadros: nadie aparece fuera de su momento.
+- **Qué NO tocar:** no volver a meter todas las fotos del video en el relleno.

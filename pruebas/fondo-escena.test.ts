@@ -54,3 +54,38 @@ describe("la producción y el banco de clips usan estas reglas (C-FONDO-2)", () 
     expect(visuales).toMatch(/anotarReciente\(/);
   });
 });
+
+describe("el relleno solo repite fotos del protagonista (Juan Gabriel, 17 oct 2026)", () => {
+  it("salta las fotos de otras personas y las de lugares; se queda con las del protagonista", async () => {
+    const { fotosParaRelleno } = await import("../estacion/src/fondo-escena");
+    const f = (ruta: string) => ({ ruta, ancho: 1000, alto: 1000, enfoque: null });
+    const pool = fotosParaRelleno(
+      [
+        {
+          foto: f("lecumberri.jpg"),
+          fotos: [],
+          busqueda: "Palacio de Lecumberri cárcel",
+          deLugar: true,
+          planos: [
+            { foto: f("jg-joven.jpg"), texto: "Juan Gabriel" },
+            { foto: f("prieta.jpg"), texto: "La Prieta Linda" },
+            { foto: f("juarez.jpg"), texto: "" },
+          ],
+        },
+        { foto: f("jg-1984.jpg"), fotos: [], busqueda: "Juan Gabriel 1984", deLugar: false, planos: [] },
+        { foto: f("durcal.jpg"), fotos: [], busqueda: "Rocío Dúrcal 1984", deLugar: false, planos: [] },
+      ],
+      "Juan Gabriel",
+    ).map((x) => x.ruta);
+    expect(pool.sort()).toEqual(["jg-1984.jpg", "jg-joven.jpg"]);
+  });
+});
+
+describe("la producción rellena solo con fotos del protagonista (C-RELLENO-1)", () => {
+  it("produccion.ts arma el relleno con fotosParaRelleno y el nombre del título", async () => {
+    const { readFileSync } = await import("node:fs");
+    const produccion = readFileSync("estacion/src/produccion.ts", "utf8");
+    expect(produccion).toMatch(/const fotosDelVideo = fotosParaRelleno\(/);
+    expect(produccion).toMatch(/personaDelTitulo,\s*\);/);
+  });
+});
