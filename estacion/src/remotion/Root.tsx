@@ -20,6 +20,7 @@ const publicidadVacia: PropsPublicidad = {
   acento: "#ff2a2a",
   logo: "",
   tema: "claro",
+  diseno: "centro",
   avatar: null,
   apariciones: [],
   audio: "",

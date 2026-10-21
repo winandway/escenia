@@ -14,8 +14,10 @@ import {
 import {
   formatoCifra,
   mezclarVistas,
+  subtitulosEnPantalla,
   vistaCompleta,
   vistaDeEnfoque,
+  vistaPersonaEn,
 } from "../estacion/src/remotion/publicidad-diseno";
 
 describe("publicidad en Short: el plan, los tiempos y el costo (prototipo, 17 oct 2026)", () => {
@@ -232,5 +234,47 @@ describe("publicidad: capturas de cerca y la persona por tramos (anuncio de QRBo
         cierre: partes.cierre,
       }),
     ).toThrow();
+  });
+});
+
+describe("publicidad, diseño «pantalla»: la persona se mueve alrededor de la captura (QRBott v2, 21 oct 2026)", () => {
+  const tramos = [
+    { inicioMs: 0, vistaPersona: { modo: "grande" as const, lado: "izquierda" as const } },
+    { inicioMs: 5000, vistaPersona: { modo: "cabeza" as const, lado: "izquierda" as const } },
+    { inicioMs: 8000, vistaPersona: null },
+    { inicioMs: 9000, vistaPersona: { modo: "cabeza" as const, lado: "izquierda" as const } },
+    { inicioMs: 12000, vistaPersona: { modo: "cabeza" as const, lado: "derecha" as const } },
+    { inicioMs: 15000, vistaPersona: { modo: "oculta" as const, lado: "izquierda" as const } },
+  ];
+
+  it("manda el último momento que cambió el modo; repetir el mismo no reinicia la entrada", () => {
+    expect(vistaPersonaEn(tramos, "medio", 6000)).toMatchObject({
+      modo: "cabeza",
+      lado: "izquierda",
+      desdeMs: 5000,
+    });
+    // A los 9 s se repite «cabeza izquierda»: no es un cambio, la entrada sigue siendo la de los 5 s.
+    expect(vistaPersonaEn(tramos, "medio", 10000).desdeMs).toBe(5000);
+    expect(vistaPersonaEn(tramos, "medio", 13000)).toMatchObject({
+      modo: "cabeza",
+      lado: "derecha",
+      desdeMs: 12000,
+    });
+    expect(vistaPersonaEn(tramos, "medio", 16000).modo).toBe("oculta");
+    // Sin momentos que lo digan: la de cuerpo completo va grande y la de medio cuerpo, de medio.
+    expect(vistaPersonaEn([], "cuerpo", 1000).modo).toBe("grande");
+    expect(vistaPersonaEn([], "medio", 1000).modo).toBe("medio");
+  });
+
+  it("los subtítulos van del lado contrario a la persona, y al centro si no está", () => {
+    const izq = subtitulosEnPantalla({ modo: "cabeza", lado: "izquierda" });
+    const der = subtitulosEnPantalla({ modo: "cabeza", lado: "derecha" });
+    expect(izq.left).toBeGreaterThan(400);
+    expect(izq.right).toBeLessThan(100);
+    expect(der.right).toBeGreaterThan(400);
+    expect(der.left).toBeLessThan(100);
+    const libre = subtitulosEnPantalla({ modo: "oculta", lado: "izquierda" });
+    expect(libre.left).toBe(libre.right);
+    expect(subtitulosEnPantalla(null)).toEqual(libre);
   });
 });

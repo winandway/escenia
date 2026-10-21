@@ -122,6 +122,22 @@ de la misma foto con Seedream edit (3 ¢ cada una).
 **La portada de WhatsApp:** el primer cuadro ya trae el título completo y la persona quieta (WhatsApp lo
 usa de miniatura).
 
+## Versión dos: las capturas a pantalla completa (QRBott, 21 oct 2026)
+
+Richard se quedó con la primera versión y pidió otra igual donde el protagonista sea el software: la
+captura ocupa toda la pantalla y hace su acercamiento, y la chica se mueve alrededor: grande al empezar,
+solo la cabecita en un círculo abajo, de medio cuerpo señalando hacia la captura, pequeña de cuerpo
+completo, o fuera de la pantalla; entra, sale y cambia de lado.
+
+**No costó nada nuevo:** usa la misma voz y los mismos quince videos de la chica de la primera versión
+(`trabajo_de: "plan-bienvenida"` en `plan-bienvenida-v2.json`; los momentos con `persona` son los mismos).
+Lo que cambia por momento es `vista_persona` (`grande`, `cuerpo`, `medio`, `cabeza` u `oculta`, y el
+`lado`) y el `enfoque`, pensado en vertical: la zona tiene la forma de la pantalla y su tamaño decide el
+acercamiento. El video sale como `plan-bienvenida-v2.mp4` en la carpeta de trabajo de la primera.
+
+Para la cabecita, la Mac busca dónde está la cara en cada pose (`estacion/herramientas/cara.swift`,
+Vision, gratis) y la centra en el círculo. Los subtítulos van del lado contrario a la persona.
+
 ## Lo que cuesta cada anuncio
 
 | Con qué                                       | 30 segundos | 45 segundos |

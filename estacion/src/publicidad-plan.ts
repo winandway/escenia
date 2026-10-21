@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { VOCES } from "@compartido/guion";
 import { COSTO_AVATAR_POR_SEGUNDO } from "@compartido/publicidad";
-import { esquemaRegion } from "./remotion/publicidad-diseno";
+import { esquemaRegion, esquemaVistaPersona } from "./remotion/publicidad-diseno";
 
 /** Lo más largo que puede salir un anuncio: un Short de venta no pasa de 45 segundos. */
 export const SEGUNDOS_MAXIMOS = 45;
@@ -31,6 +31,13 @@ export const esquemaPlanPublicidad = z
     idioma: z.enum(["es", "en"]).default("es"),
     /** «oscuro» para marcas con logo claro: el logo va sobre oscuro y el cierre también. */
     tema: z.enum(["claro", "oscuro"]).default("claro"),
+    /** «pantalla»: la captura ocupa toda la pantalla y la persona se mueve alrededor (ver `vista_persona`). */
+    diseno: z.enum(["centro", "pantalla"]).default("centro"),
+    /**
+     * Otra versión del mismo anuncio: usa la voz y los videos de la persona de ese otro plan (su carpeta
+     * de trabajo), sin pagarlos de nuevo. Los momentos con `persona` tienen que ser los mismos.
+     */
+    trabajo_de: z.string().min(1).optional(),
     /** Lo que dice la voz, entero (o `partes`: la voz se hace por partes y se puede rehacer una sola). */
     texto: z.string().min(20).optional(),
     partes: z.array(z.string().min(2)).min(1).optional(),
@@ -68,6 +75,8 @@ export const esquemaPlanPublicidad = z
           /** La tarjeta baja a oscuro (de noche). */
           oscurecer: z.boolean().optional(),
           entrada: z.enum(["golpe", "barrido"]).optional(),
+          /** Diseño «pantalla»: cómo se ve la persona desde este momento (grande, cuerpo, medio, cabeza u oculta). */
+          vista_persona: esquemaVistaPersona.optional(),
           /**
            * Desde este momento habla esta persona con este encuadre (hasta que otro momento la cambie):
            * «medio» de la cabeza a la cadera abajo a la izquierda, «cuerpo» entera al centro; «ninguna»

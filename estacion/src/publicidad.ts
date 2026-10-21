@@ -227,6 +227,8 @@ export type AparicionGuardada = {
   ancho: number;
   alto: number;
   encuadre: "medio" | "cuerpo";
+  /** Dónde está su cara en el video (fracciones), para mostrar solo la cabecita. */
+  cara: { x: number; y: number; ancho: number; alto: number } | null;
   costoUsd: number;
 };
 
@@ -276,7 +278,7 @@ export async function pasoPersonas(
   const { default: sharp } = await import("sharp");
   const { generarAvatar } = await import("./avatar");
   const { quitarCroma, detectarCroma, medidasDeVideo } = await import("./croma");
-  const { figuraSinFondo } = await import("./quitar-fondo");
+  const { figuraSinFondo, detectarCara } = await import("./quitar-fondo");
   const dir = path.join(trabajo, "personas");
   await mkdir(dir, { recursive: true });
   const salida: AparicionGuardada[] = [];
@@ -289,13 +291,17 @@ export async function pasoPersonas(
       .png()
       .toBuffer();
     const meta = await sharp(figura).metadata();
+    const anchoFigura = meta.width ?? 0;
+    const altoFigura = meta.height ?? 0;
+    const izquierdaFigura = Math.round((896 - anchoFigura) / 2);
+    const arribaFigura = 1536 - altoFigura;
     // Sobre verde parejo, centrada y apoyada abajo: el medio cuerpo sigue fuera de cuadro.
     const verde = await sharp({ create: { width: 896, height: 1536, channels: 3, background: VERDE } })
       .composite([
         {
           input: figura,
-          left: Math.round((896 - (meta.width ?? 0)) / 2),
-          top: 1536 - (meta.height ?? 0),
+          left: izquierdaFigura,
+          top: arribaFigura,
         },
       ])
       .png()
@@ -323,6 +329,21 @@ export async function pasoPersonas(
     const clave = huella(Buffer.concat([verde, await readFile(pedazoWav)]));
     const rutaVerde = path.join(dir, `${clave}-verde.png`);
     if (!existsSync(rutaVerde)) await writeFile(rutaVerde, verde);
+    // La cara, en fracciones de la figura (el video sin fondo queda recortado a la figura).
+    const caraJson = path.join(dir, `${clave}-cara.json`);
+    if (!existsSync(caraJson)) {
+      const c = await detectarCara(rutaVerde);
+      const enFigura = c
+        ? {
+            x: (c.x * 896 - izquierdaFigura) / anchoFigura,
+            y: (c.y * 1536 - arribaFigura) / altoFigura,
+            ancho: (c.ancho * 896) / anchoFigura,
+            alto: (c.alto * 1536) / altoFigura,
+          }
+        : null;
+      await writeFile(caraJson, JSON.stringify(enFigura));
+    }
+    const cara = JSON.parse(await readFile(caraJson, "utf8")) as AparicionGuardada["cara"];
     if (soloPreparar) {
       console.log(
         `  ${k + 1}. ${a.encuadre} ${(a.inicioMs / 1000).toFixed(1)}–${(a.finMs / 1000).toFixed(1)} s → ${rutaVerde}`,
@@ -376,6 +397,7 @@ export async function pasoPersonas(
       ruta: webm,
       ...medidas,
       encuadre: a.encuadre,
+      cara,
       costoUsd,
     });
   }
@@ -484,6 +506,8 @@ export async function pasoArmar(
   plan: PlanPublicidad,
   carpeta: string,
   trabajo: string,
+  /** El nombre del video (otra versión del mismo anuncio no pisa a la primera). */
+  nombre = "anuncio",
 ): Promise<{ salida: string; duracionMs: number; costoUsd: number }> {
   const voz = JSON.parse(await readFile(path.join(trabajo, "voz.json"), "utf8")) as VozGuardada;
   const avatar =
@@ -529,6 +553,7 @@ export async function pasoArmar(
             ancho: a.ancho,
             alto: a.alto,
             encuadre: a.encuadre,
+            cara: a.cara ?? null,
           }),
         ),
       )
@@ -581,6 +606,7 @@ export async function pasoArmar(
         : null,
       oscurecer: Boolean(m.oscurecer),
       entrada: m.entrada ?? "golpe",
+      vistaPersona: m.vista_persona ?? null,
       texto: m.texto ?? null,
       chips: (m.chips ?? []).map((c, k) => ({ texto: c.texto, inicioMs: chipsInicio[k] ?? inicioMs })),
     });
@@ -591,6 +617,7 @@ export async function pasoArmar(
     acento: plan.acento,
     logo,
     tema: plan.tema,
+    diseno: plan.diseno,
     avatar: conPersonas ? null : avatarProps,
     apariciones,
     audio,
@@ -601,12 +628,15 @@ export async function pasoArmar(
     cierre: { inicioMs: cierreMs, lineas: plan.cierre.lineas },
     sfx: { cortes, final },
   };
-  await writeFile(path.join(trabajo, "props.json"), JSON.stringify(props, null, 2));
+  await writeFile(
+    path.join(trabajo, nombre === "anuncio" ? "props.json" : `props-${nombre}.json`),
+    JSON.stringify(props, null, 2),
+  );
   const { empaquetar } = await import("./render");
   const { renderMedia, selectComposition } = await import("@remotion/renderer");
   const serveUrl = await empaquetar(publica);
   const comp = await selectComposition({ serveUrl, id: "Publicidad", inputProps: props });
-  const salida = path.join(trabajo, "anuncio.mp4");
+  const salida = path.join(trabajo, `${nombre}.mp4`);
   await renderMedia({
     composition: comp,
     serveUrl,
@@ -626,7 +656,9 @@ async function principal() {
   if (!rutaPlan) throw new Error("Uso: publicidad.ts plan.json --paso voz|avatar|armar");
   const plan = esquemaPlanPublicidad.parse(JSON.parse(await readFile(path.resolve(rutaPlan), "utf8")));
   const carpeta = path.dirname(path.resolve(rutaPlan));
-  const trabajo = path.join(carpeta, "trabajo", path.basename(rutaPlan, ".json"));
+  const nombre = path.basename(rutaPlan, ".json");
+  // Otra versión del mismo anuncio trabaja en la carpeta del primero: misma voz, misma persona.
+  const trabajo = path.join(carpeta, "trabajo", plan.trabajo_de ?? nombre);
   await mkdir(trabajo, { recursive: true });
   const paso = opcion("--paso") ?? "voz";
   if (paso === "voz") return void (await pasoVoz(plan, trabajo));
@@ -635,7 +667,8 @@ async function principal() {
     return void (plan.momentos.some((m) => m.persona)
       ? await pasoPersonas(plan, carpeta, trabajo)
       : await pasoAvatar(plan, carpeta, trabajo));
-  if (paso === "armar") return void (await pasoArmar(plan, carpeta, trabajo));
+  if (paso === "armar")
+    return void (await pasoArmar(plan, carpeta, trabajo, plan.trabajo_de ? nombre : "anuncio"));
   throw new Error(`Paso desconocido: ${paso}`);
 }
 

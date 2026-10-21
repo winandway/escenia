@@ -11,12 +11,25 @@ export const esquemaRegion = z.object({
 });
 export type Region = z.infer<typeof esquemaRegion>;
 
+/** Los modos de la persona en el diseño «pantalla». */
+export const MODOS_PERSONA = ["grande", "cuerpo", "medio", "cabeza", "oculta"] as const;
+export const esquemaVistaPersona = z.object({
+  modo: z.enum(MODOS_PERSONA),
+  lado: z.enum(["izquierda", "derecha"]).default("izquierda"),
+});
+export type VistaPersona = z.infer<typeof esquemaVistaPersona>;
+
 export const esquemaPublicidad = z.object({
   marca: z.string(),
   acento: z.string().regex(/^#[0-9a-f]{6}$/i),
   logo: z.string(),
   /** «oscuro» para marcas con logo claro (QRBott): el logo va sobre oscuro y el cierre también. */
   tema: z.enum(["claro", "oscuro"]).default("claro"),
+  /**
+   * «centro»: la captura en una tarjeta en el medio (versión 1). «pantalla»: la captura ocupa toda la
+   * pantalla y la persona se mueve alrededor (cabecita, medio cuerpo señalando, cuerpo pequeño o grande).
+   */
+  diseno: z.enum(["centro", "pantalla"]).default("centro"),
   /**
    * Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. Con
    * `recuadro`, la persona trae su fondo y va dentro de un marco redondeado del color de la marca.
@@ -63,6 +76,8 @@ export const esquemaPublicidad = z.object({
       oscurecer: z.boolean().default(false),
       /** Cómo entra la tarjeta: con un golpe de zoom o barriendo de lado. */
       entrada: z.enum(["golpe", "barrido"]).default("golpe"),
+      /** Cómo se ve la persona desde este momento (diseño «pantalla»); null: sigue como venía. */
+      vistaPersona: esquemaVistaPersona.nullable().default(null),
     }),
   ),
   /**
@@ -78,6 +93,8 @@ export const esquemaPublicidad = z.object({
         ancho: z.number(),
         alto: z.number(),
         encuadre: z.enum(["medio", "cuerpo"]),
+        /** Dónde está su cara en el video (fracciones), para mostrar solo la cabecita. */
+        cara: esquemaRegion.nullable().default(null),
       }),
     )
     .default([]),
@@ -113,6 +130,13 @@ export const ZONA_PUBLICIDAD = {
   cuerpo: { alto: 1500 },
   /** Con la persona de cuerpo completo, los subtítulos van sobre sus piernas, a todo lo ancho. */
   subtitulosCuerpo: { y: 1430 },
+  /** Diseño «pantalla»: la persona pequeña abajo, de un lado o del otro. */
+  pantalla: {
+    cabeza: { diametro: 380, abajo: 150, margen: 40, borde: 8 },
+    medio: { alto: 720 },
+    cuerpo: { alto: 780, margen: 10 },
+    subtitulos: { y: 1500, yLibre: 1560 },
+  },
   limiteAbajo: 1920 * 0.85,
 } as const;
 
@@ -172,4 +196,39 @@ export function formatoCifra(valor: number, decimales: number): string {
     minimumFractionDigits: decimales,
     maximumFractionDigits: decimales,
   });
+}
+
+/** El modo de la persona que manda en `ms`: el del último momento que lo fijó (o el que va por encuadre). */
+export function vistaPersonaEn(
+  tramos: { inicioMs: number; vistaPersona: VistaPersona | null }[],
+  encuadre: "medio" | "cuerpo",
+  ms: number,
+): VistaPersona & { desdeMs: number } {
+  let vista: VistaPersona & { desdeMs: number } = {
+    modo: encuadre === "cuerpo" ? "grande" : "medio",
+    lado: "izquierda",
+    desdeMs: 0,
+  };
+  for (const t of tramos) {
+    if (t.inicioMs > ms) break;
+    if (!t.vistaPersona) continue;
+    const cambia = t.vistaPersona.modo !== vista.modo || t.vistaPersona.lado !== vista.lado;
+    if (cambia) vista = { ...t.vistaPersona, desdeMs: t.inicioMs };
+  }
+  return vista;
+}
+
+/** Dónde van los subtítulos en el diseño «pantalla», del lado contrario a la persona. */
+export function subtitulosEnPantalla(vista: VistaPersona | null): {
+  left: number;
+  right: number;
+  top: number;
+} {
+  const P = ZONA_PUBLICIDAD.pantalla;
+  if (!vista || vista.modo === "oculta") return { left: 80, right: 80, top: P.subtitulos.yLibre };
+  if (vista.modo === "grande") return { left: 60, right: 60, top: ZONA_PUBLICIDAD.subtitulosCuerpo.y };
+  const ancho = vista.modo === "cabeza" ? P.cabeza.diametro + P.cabeza.margen + 30 : 470;
+  return vista.lado === "izquierda"
+    ? { left: ancho, right: 40, top: P.subtitulos.y }
+    : { left: 40, right: ancho, top: P.subtitulos.y };
 }

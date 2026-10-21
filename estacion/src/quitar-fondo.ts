@@ -14,6 +14,16 @@ import { detectarTablero, restosDeTablero } from "./tablero";
 const exec = promisify(execFile);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 export const HERRAMIENTA_QUITAR_FONDO = path.resolve(aqui, "../herramientas/quitar-fondo.swift");
+export const HERRAMIENTA_CARA = path.resolve(aqui, "../herramientas/cara.swift");
+
+/** Dónde está la cara más grande de la foto (fracciones, origen arriba a la izquierda); null si no hay. */
+export async function detectarCara(
+  ruta: string,
+): Promise<{ x: number; y: number; ancho: number; alto: number } | null> {
+  const { stdout } = await exec("swift", [HERRAMIENTA_CARA, ruta], { maxBuffer: 1024 * 1024 });
+  const linea = stdout.trim().split("\n").pop() ?? "null";
+  return JSON.parse(linea) as { x: number; y: number; ancho: number; alto: number } | null;
+}
 
 /** ¿La foto ya trae transparencia de verdad (algún punto transparente)? */
 export async function tieneTransparencia(ruta: string): Promise<boolean> {

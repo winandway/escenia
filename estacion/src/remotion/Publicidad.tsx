@@ -20,9 +20,12 @@ import {
   formatoCifra,
   mezclarVistas,
   type PropsPublicidad,
+  subtitulosEnPantalla,
   vistaCompleta,
   vistaDeEnfoque,
   type Vista,
+  type VistaPersona,
+  vistaPersonaEn,
   ZONA_PUBLICIDAD as Z,
 } from "./publicidad-diseno";
 
@@ -47,9 +50,11 @@ const Tarjeta: React.FC<{
   indice: number;
   acento: string;
   fondo: string;
-}> = ({ tramo, anterior, duracion, indice, acento, fondo }) => {
+  /** Diseño «pantalla»: la captura ocupa toda la pantalla, sin marco. */
+  completa?: boolean;
+}> = ({ tramo, anterior, duracion, indice, acento, fondo, completa = false }) => {
   const frame = useCurrentFrame();
-  const caja = { ancho: Z.tarjeta.ancho, alto: Z.tarjeta.alto };
+  const caja = completa ? { ancho: 1080, alto: 1920 } : { ancho: Z.tarjeta.ancho, alto: Z.tarjeta.alto };
   const img = { ancho: tramo.imagenAncho, alto: tramo.imagenAlto };
   const misma = anterior?.imagen === tramo.imagen && anterior !== null;
   const conEnfoque = Boolean(tramo.enfoque && img.ancho > 0 && img.alto > 0);
@@ -109,15 +114,15 @@ const Tarjeta: React.FC<{
     <div
       style={{
         position: "absolute",
-        left: Z.tarjeta.x + barrido,
-        top: Z.tarjeta.y,
-        width: Z.tarjeta.ancho,
-        height: Z.tarjeta.alto,
-        borderRadius: 40,
+        left: (completa ? 0 : Z.tarjeta.x) + barrido,
+        top: completa ? 0 : Z.tarjeta.y,
+        width: caja.ancho,
+        height: caja.alto,
+        borderRadius: completa ? 0 : 40,
         overflow: "hidden",
-        border: `6px solid ${acento}`,
-        boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
-        background: fondo,
+        border: completa ? undefined : `6px solid ${acento}`,
+        boxShadow: completa ? undefined : "0 30px 80px rgba(0,0,0,0.55)",
+        background: completa ? "transparent" : fondo,
         opacity: entra,
       }}
     >
@@ -182,6 +187,94 @@ const Aparicion: React.FC<{ a: PropsPublicidad["apariciones"][number]; entra: bo
       }}
     >
       <OffthreadVideo src={staticFile(a.ruta)} transparent muted style={{ width: "100%", height: "100%" }} />
+    </div>
+  );
+};
+
+/**
+ * La persona en el diseño «pantalla»: grande al centro, pequeña de cuerpo completo, de medio cuerpo
+ * señalando hacia la captura, solo la cabecita en un círculo, o fuera. Cada cambio de modo o de lado
+ * entra con un salto; el video sigue corriendo debajo (la voz no se corta).
+ */
+const PersonaEnPantalla: React.FC<{
+  a: PropsPublicidad["apariciones"][number];
+  vista: VistaPersona & { desdeMs: number };
+  desdeAparicionMs: number;
+  acento: string;
+  /** La aparición anterior terminó justo aquí con el mismo modo y lado: no se vuelve a entrar. */
+  sigue: boolean;
+}> = ({ a, vista, desdeAparicionMs, acento, sigue }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const P = Z.pantalla;
+  // Cuadros desde que entró este modo (dentro de la aparición).
+  const desde =
+    sigue && vista.desdeMs <= desdeAparicionMs
+      ? -100
+      : f(Math.max(vista.desdeMs, desdeAparicionMs) - desdeAparicionMs);
+  const s = spring({ frame: frame - desde, fps, config: { damping: 13, stiffness: 160 } });
+  const video = (estilo: React.CSSProperties) => (
+    <OffthreadVideo src={staticFile(a.ruta)} transparent muted style={estilo} />
+  );
+  if (vista.modo === "oculta") return null;
+  if (vista.modo === "cabeza") {
+    const d = P.cabeza.diametro;
+    const cara = a.cara ?? { x: 0.35, y: 0.08, ancho: 0.3, alto: 0.16 };
+    // La cara ocupa algo menos de la mitad del círculo, un poco arriba del centro.
+    const altoVideo = (d * 0.46) / (cara.alto * 1);
+    const anchoVideo = (altoVideo * a.ancho) / a.alto;
+    const izquierda = vista.lado === "izquierda";
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: izquierda ? P.cabeza.margen : 1080 - P.cabeza.margen - d,
+          bottom: P.cabeza.abajo,
+          width: d,
+          height: d,
+          borderRadius: "50%",
+          overflow: "hidden",
+          border: `${P.cabeza.borde}px solid ${acento}`,
+          boxShadow: "0 18px 50px rgba(0,0,0,0.55)",
+          background: "radial-gradient(circle at 50% 35%, #2b3a31 0%, #0b120e 75%)",
+          transform: `scale(${0.4 + 0.6 * s})`,
+          opacity: Math.min(1, s * 1.6),
+        }}
+      >
+        {video({
+          position: "absolute",
+          width: anchoVideo,
+          height: altoVideo,
+          left: d / 2 - (cara.x + cara.ancho / 2) * anchoVideo,
+          top: d * 0.46 - (cara.y + cara.alto / 2) * altoVideo,
+        })}
+      </div>
+    );
+  }
+  const alto =
+    vista.modo === "grande" ? Z.cuerpo.alto : vista.modo === "cuerpo" ? P.cuerpo.alto : P.medio.alto;
+  const ancho = (alto * a.ancho) / a.alto;
+  const left =
+    vista.modo === "grande"
+      ? (1080 - ancho) / 2
+      : vista.lado === "izquierda"
+        ? vista.modo === "cuerpo"
+          ? P.cuerpo.margen
+          : -10
+        : 1080 - ancho - (vista.modo === "cuerpo" ? P.cuerpo.margen : -10);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left,
+        bottom: 0,
+        height: alto,
+        width: ancho,
+        transform: `translateY(${(1 - s) * 320}px)`,
+        opacity: Math.min(1, 0.2 + s),
+      }}
+    >
+      {video({ width: "100%", height: "100%" })}
     </div>
   );
 };
@@ -317,14 +410,17 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
   const sub = p.subtitulos.find((s) => ms >= s.inicioMs && ms < s.finMs);
   const enCierre = ms >= p.cierre.inicioMs;
   const oscuro = p.tema === "oscuro";
+  const pantalla = p.diseno === "pantalla";
   // Cada tramo con imagen abre una tarjeta; dura hasta la próxima imagen, un tramo «sin tarjeta» o el cierre.
   const cortes = p.tramos.filter((t) => t.imagen || t.sinTarjeta);
   const imagenes = p.tramos.filter((t) => t.imagen);
   const actual = [...imagenes].reverse().find((t) => t.inicioMs <= ms) ?? imagenes[0];
   const aparicion = p.apariciones.find((a) => ms >= a.inicioMs && ms < a.finMs) ?? null;
   const conPersona = aparicion !== null || (p.avatar !== null && p.apariciones.length === 0);
-  const subtitulosEn =
-    aparicion?.encuadre === "cuerpo"
+  const vistaActual = aparicion ? vistaPersonaEn(p.tramos, aparicion.encuadre, ms) : null;
+  const subtitulosEn = pantalla
+    ? subtitulosEnPantalla(vistaActual)
+    : aparicion?.encuadre === "cuerpo"
       ? { left: 60, right: 60, top: Z.subtitulosCuerpo.y }
       : conPersona
         ? { left: Z.subtitulos.izquierda, right: Z.subtitulos.derecha, top: Z.subtitulos.y }
@@ -362,10 +458,20 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
               indice={i}
               acento={p.acento}
               fondo={oscuro ? "#0b120e" : "#fff"}
+              completa={pantalla}
             />
           </Sequence>
         );
       })}
+      {/* Diseño «pantalla»: sombras arriba y abajo para leer el texto y ver a la persona sobre la captura. */}
+      {pantalla && (
+        <AbsoluteFill
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 66%, rgba(0,0,0,0.78) 100%)",
+          }}
+        />
+      )}
       {/* El texto grande o las etiquetas de cada momento. */}
       {p.tramos.map((t, i) => {
         if (!t.texto && !t.chips.length && !t.cifra) return null;
@@ -416,7 +522,22 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           previa !== undefined && previa.encuadre === a.encuadre && Math.abs(previa.finMs - a.inicioMs) < 60;
         return (
           <Sequence key={`persona-${i}`} from={desde} durationInFrames={hasta - desde} layout="none">
-            <Aparicion a={a} entra={!seguida && a.inicioMs > 0} />
+            {pantalla ? (
+              <PersonaEnPantalla
+                a={a}
+                vista={vistaPersonaEn(p.tramos, a.encuadre, Math.max(ms, a.inicioMs))}
+                desdeAparicionMs={a.inicioMs}
+                acento={p.acento}
+                sigue={(() => {
+                  if (!previa || Math.abs(previa.finMs - a.inicioMs) >= 60) return false;
+                  const antes = vistaPersonaEn(p.tramos, previa.encuadre, a.inicioMs - 1);
+                  const ahora = vistaPersonaEn(p.tramos, a.encuadre, a.inicioMs);
+                  return antes.modo === ahora.modo && antes.lado === ahora.lado;
+                })()}
+              />
+            ) : (
+              <Aparicion a={a} entra={!seguida && a.inicioMs > 0} />
+            )}
           </Sequence>
         );
       })}
