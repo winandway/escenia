@@ -86,6 +86,42 @@ Caracas, diseñada en ElevenLabs el 17 oct 2026; se lee con el modelo v3). El ba
 Comerciales y Nuevo video. Las muestras viven en el almacén del panel (`voces/<voz>.mp3`) y se rehacen
 con `npx tsx src/muestras-voces.ts` desde `estacion/` (unos 2 centavos por voz).
 
+## Anuncio largo con capturas: la bienvenida de QRBott (21 oct 2026)
+
+Richard pidió un anuncio vertical de unos 90 segundos que se le manda al cliente cuando pide más
+información: la chica venezolana explica todas las herramientas de QRBott una detrás de otra, con las
+capturas del sistema bien de cerca, y cierra con las tres opciones para conocerlo («responde 1, 2 o 3»)
+y la garantía de 30 días. El guion es el de Richard (el PDF «tomas del video de 90 segundos»).
+
+Material en `publicidad/qrbott/` (fuera de git): `capturas/` (sacadas del PDF en su calidad original con
+`pdfimages -j`), `avatar/` (la foto original, su recorte y las poses), `logo/`, `plan-bienvenida.json`.
+
+Lo que el plan admite ahora (todo opcional; el anuncio de Pro In Shop sigue igual):
+
+| Campo                          | Para qué                                                                                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `partes`                       | La voz por partes: cada una se hace y se guarda aparte; rehacer una sola no cambia las otras ni obliga a pagar de nuevo la persona de las demás.                                                                   |
+| `maximo_seg`, `cola_ms`        | Lo largo que puede durar la voz (110 s aquí) y cuánto queda la tarjeta final.                                                                                                                                      |
+| `tema: "oscuro"`               | Marcas con logo claro: el logo va sobre oscuro y el cierre también.                                                                                                                                                |
+| momento `enfoque`              | La zona de la captura que se ve de cerca (fracciones de 0 a 1). La cámara viaja desde la imagen entera, o desde la zona anterior si es la misma captura.                                                           |
+| momento `persona`              | Desde ese momento habla esa foto, de `medio` cuerpo (abajo a la izquierda) o de `cuerpo` completo (al centro, sin tarjeta). Cada tramo es su propio video de FlashTalk con su pedazo de voz; ninguno pasa de 35 s. |
+| momento `sin_tarjeta`          | Ese momento va sin captura (la persona de cuerpo completo ocupa la pantalla).                                                                                                                                      |
+| momento `sonido`               | El efecto de ese momento (caja registradora, cámara, teclado, reloj…), de `recursos/sfx*`.                                                                                                                         |
+| momento `cifra`                | Un número que sube como contador (la utilidad neta).                                                                                                                                                               |
+| momento `oscurecer`, `entrada` | La captura baja a oscuro («mientras tú duermes»); la tarjeta entra con golpe o barriendo de lado.                                                                                                                  |
+
+Pasos (desde `estacion/`): `--paso voz`, `--paso verdes` (deja las figuras sobre verde para revisarlas
+antes de pagar), `--paso avatar` y `--paso armar`.
+
+**Quitar el fondo sin costo:** si la foto de la persona no es transparente, la Mac le quita el fondo con
+su propio reconocimiento (`estacion/herramientas/quitar-fondo.swift`, Vision) y limpia el borde. Si la
+foto traía el «tablero de cuadritos» pintado (no es transparencia de verdad), lo reconoce y borra lo que
+quedó de él pegado a la persona (C-FONDO-3). Las poses nuevas (señalando, mostrando el número uno) salen
+de la misma foto con Seedream edit (3 ¢ cada una).
+
+**La portada de WhatsApp:** el primer cuadro ya trae el título completo y la persona quieta (WhatsApp lo
+usa de miniatura).
+
 ## Lo que cuesta cada anuncio
 
 | Con qué                                       | 30 segundos | 45 segundos |

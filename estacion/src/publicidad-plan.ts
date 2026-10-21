@@ -4,50 +4,163 @@
 // raíz (C-CI-1). Los pasos están en `publicidad.ts` y la plantilla en `remotion/Publicidad.tsx`.
 import { z } from "zod";
 import { VOCES } from "@compartido/guion";
+import { COSTO_AVATAR_POR_SEGUNDO } from "@compartido/publicidad";
+import { esquemaRegion } from "./remotion/publicidad-diseno";
 
 /** Lo más largo que puede salir un anuncio: un Short de venta no pasa de 45 segundos. */
 export const SEGUNDOS_MAXIMOS = 45;
-import { COSTO_AVATAR_POR_SEGUNDO } from "@compartido/publicidad";
 
 /** El avatar que habla (FlashTalk): 2 centavos por segundo de voz (el valor vive en compartido). */
 export { COSTO_AVATAR_POR_SEGUNDO };
 
-export const esquemaPlanPublicidad = z.object({
-  /** El nombre de la tienda, como sale escrito. */
-  marca: z.string().min(2),
-  /** El color de la marca (cajas de los textos y de la palabra que se dice). */
-  acento: z
-    .string()
-    .regex(/^#[0-9a-f]{6}$/i)
-    .default("#ff2a2a"),
-  /** Rutas relativas a la carpeta del cliente. */
-  logo: z.string().min(1),
-  avatar: z.string().optional(),
-  musica: z.string().optional(),
-  /** La venezolana por defecto: con la femenina de catálogo «suena a extranjera» (Richard, 17 oct 2026). */
-  voz: z.enum(VOCES).default("venezolana"),
-  idioma: z.enum(["es", "en"]).default("es"),
-  /** Lo que dice la voz, entero. */
-  texto: z.string().min(20),
-  /** Cada cambio de imagen o de texto entra cuando la voz dice su `frase` (palabras literales). */
-  momentos: z
-    .array(
-      z.object({
-        frase: z.string().min(2),
-        imagen: z.string().optional(),
-        texto: z.string().max(40).optional(),
-        /** Etiquetas que entran una a una, cada una cuando se dice su palabra. */
-        chips: z
-          .array(z.object({ texto: z.string().max(24), palabra: z.string().min(2) }))
-          .max(6)
-          .optional(),
-      }),
-    )
-    .min(3),
-  /** La tarjeta final con el logo: entra cuando se dice `frase`. */
-  cierre: z.object({ frase: z.string().min(2), lineas: z.array(z.string().max(32)).max(4) }),
-});
+export const esquemaPlanPublicidad = z
+  .object({
+    /** El nombre de la tienda, como sale escrito. */
+    marca: z.string().min(2),
+    /** El color de la marca (cajas de los textos y de la palabra que se dice). */
+    acento: z
+      .string()
+      .regex(/^#[0-9a-f]{6}$/i)
+      .default("#ff2a2a"),
+    /** Rutas relativas a la carpeta del cliente. */
+    logo: z.string().min(1),
+    avatar: z.string().optional(),
+    musica: z.string().optional(),
+    /** La venezolana por defecto: con la femenina de catálogo «suena a extranjera» (Richard, 17 oct 2026). */
+    voz: z.enum(VOCES).default("venezolana"),
+    idioma: z.enum(["es", "en"]).default("es"),
+    /** «oscuro» para marcas con logo claro: el logo va sobre oscuro y el cierre también. */
+    tema: z.enum(["claro", "oscuro"]).default("claro"),
+    /** Lo que dice la voz, entero (o `partes`: la voz se hace por partes y se puede rehacer una sola). */
+    texto: z.string().min(20).optional(),
+    partes: z.array(z.string().min(2)).min(1).optional(),
+    /** Lo más largo que puede durar la voz (el anuncio de bienvenida de QRBott dura 90 s). */
+    maximo_seg: z.number().min(10).max(120).default(SEGUNDOS_MAXIMOS),
+    /** Cuánto queda la tarjeta final después de la última palabra. */
+    cola_ms: z.number().min(0).max(6000).default(1200),
+    /** Cada cambio de imagen o de texto entra cuando la voz dice su `frase` (palabras literales). */
+    momentos: z
+      .array(
+        z.object({
+          frase: z.string().min(2),
+          imagen: z.string().optional(),
+          texto: z.string().max(40).optional(),
+          /** Etiquetas que entran una a una, cada una cuando se dice su palabra. */
+          chips: z
+            .array(z.object({ texto: z.string().max(24), palabra: z.string().min(2) }))
+            .max(6)
+            .optional(),
+          /** La zona de la imagen que se acerca (fracciones de 0 a 1): la captura se ve de cerca. */
+          enfoque: esquemaRegion.optional(),
+          /** Sin tarjeta: la persona de cuerpo completo ocupa la pantalla. */
+          sin_tarjeta: z.boolean().optional(),
+          /** El efecto de este momento (un archivo de recursos/sfx o una ruta). */
+          sonido: z.string().optional(),
+          /** Una cifra que sube como contador. */
+          cifra: z
+            .object({
+              valor: z.number(),
+              prefijo: z.string().max(4).optional(),
+              sufijo: z.string().max(8).optional(),
+              decimales: z.number().int().min(0).max(2).optional(),
+            })
+            .optional(),
+          /** La tarjeta baja a oscuro (de noche). */
+          oscurecer: z.boolean().optional(),
+          entrada: z.enum(["golpe", "barrido"]).optional(),
+          /**
+           * Desde este momento habla esta persona con este encuadre (hasta que otro momento la cambie):
+           * «medio» de la cabeza a la cadera abajo a la izquierda, «cuerpo» entera al centro; «ninguna»
+           * la saca. `corte`: hasta qué fracción de su figura llega el medio cuerpo (0,56 = la cadera).
+           */
+          persona: z
+            .union([
+              z.literal("ninguna"),
+              z.object({
+                imagen: z.string().min(1),
+                encuadre: z.enum(["medio", "cuerpo"]),
+                corte: z.number().min(0.3).max(0.9).optional(),
+              }),
+            ])
+            .optional(),
+        }),
+      )
+      .min(3),
+    /** La tarjeta final con el logo: entra cuando se dice `frase`. */
+    cierre: z.object({ frase: z.string().min(2), lineas: z.array(z.string().max(32)).max(4) }),
+  })
+  .superRefine((p, ctx) => {
+    if (!p.texto && !p.partes)
+      ctx.addIssue({ code: "custom", message: "Falta lo que dice la voz: `texto` o `partes`." });
+  });
 export type PlanPublicidad = z.infer<typeof esquemaPlanPublicidad>;
+
+/** Lo que dice la voz, entero (las partes van seguidas). */
+export const textoDelPlan = (plan: Pick<PlanPublicidad, "texto" | "partes">): string =>
+  plan.partes ? plan.partes.join(" ") : (plan.texto ?? "");
+
+/** Lo más largo que puede durar UN video de la persona hablando (FlashTalk admite 40 s). */
+export const TRAMO_PERSONA_MAX_MS = 35_000;
+
+export type Persona = { imagen: string; encuadre: "medio" | "cuerpo"; corte?: number };
+export type Aparicion = Persona & { inicioMs: number; finMs: number };
+
+/**
+ * Cuándo sale cada persona: cada momento que trae `persona` la cambia desde que empieza; «ninguna» la
+ * saca. Todo termina al entrar el cierre. Un tramo largo se parte en los cambios de momento para que
+ * ningún video pase de `topeMs` (y, si un solo momento es más largo, se parte en pedazos iguales).
+ */
+export function aparicionesDelPlan(
+  momentos: { inicioMs: number; persona?: Persona | "ninguna" }[],
+  cierreMs: number,
+  topeMs = TRAMO_PERSONA_MAX_MS,
+): Aparicion[] {
+  // 1) Los tramos de cada persona, de cambio a cambio.
+  const tramos: (Aparicion & { cortes: number[] })[] = [];
+  let actual: (Aparicion & { cortes: number[] }) | null = null;
+  for (const m of momentos) {
+    if (m.inicioMs >= cierreMs) break;
+    if (m.persona === undefined) {
+      actual?.cortes.push(m.inicioMs);
+      continue;
+    }
+    if (actual) {
+      actual.finMs = m.inicioMs;
+      tramos.push(actual);
+      actual = null;
+    }
+    if (m.persona !== "ninguna") actual = { ...m.persona, inicioMs: m.inicioMs, finMs: cierreMs, cortes: [] };
+  }
+  if (actual) tramos.push(actual);
+  // 2) Ninguno pasa del tope: se corta en el último cambio de momento que cabe.
+  const salida: Aparicion[] = [];
+  for (const t of tramos) {
+    const { cortes, ...persona } = t;
+    let inicio = t.inicioMs;
+    while (t.finMs - inicio > topeMs) {
+      const cabe = cortes.filter((c) => c > inicio + 1500 && c - inicio <= topeMs).pop();
+      const piezas = Math.ceil((t.finMs - inicio) / topeMs);
+      const corte = cabe ?? Math.round(inicio + (t.finMs - inicio) / piezas);
+      salida.push({ ...persona, inicioMs: inicio, finMs: corte });
+      inicio = corte;
+    }
+    if (t.finMs - inicio > 0) salida.push({ ...persona, inicioMs: inicio, finMs: t.finMs });
+  }
+  return salida;
+}
+
+/**
+ * El recorte de la figura para cada encuadre, en puntos de la imagen: «cuerpo» es toda la figura;
+ * «medio» va desde arriba (la gorra o la mano levantada) hasta `corte` de su alto (la cadera).
+ */
+export function recorteDeEncuadre(
+  figura: { x: number; y: number; ancho: number; alto: number },
+  encuadre: "medio" | "cuerpo",
+  corte = 0.56,
+): { x: number; y: number; ancho: number; alto: number } {
+  if (encuadre === "cuerpo") return figura;
+  return { ...figura, alto: Math.round(figura.alto * corte) };
+}
 
 const normal = (t: string) =>
   t

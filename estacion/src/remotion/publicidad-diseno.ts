@@ -2,10 +2,21 @@
 // va cada cosa en la pantalla de 1080×1920. Lo prueban las pruebas de la raíz (C-CI-1).
 import { z } from "zod";
 
+/** Una zona de la imagen, en fracciones de su ancho y su alto (0 a 1): la parte que se acerca. */
+export const esquemaRegion = z.object({
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+  ancho: z.number().min(0.02).max(1),
+  alto: z.number().min(0.02).max(1),
+});
+export type Region = z.infer<typeof esquemaRegion>;
+
 export const esquemaPublicidad = z.object({
   marca: z.string(),
   acento: z.string().regex(/^#[0-9a-f]{6}$/i),
   logo: z.string(),
+  /** «oscuro» para marcas con logo claro (QRBott): el logo va sobre oscuro y el cierre también. */
+  tema: z.enum(["claro", "oscuro"]).default("claro"),
   /**
    * Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. Con
    * `recuadro`, la persona trae su fondo y va dentro de un marco redondeado del color de la marca.
@@ -29,8 +40,47 @@ export const esquemaPublicidad = z.object({
       imagen: z.string().nullable(),
       texto: z.string().nullable(),
       chips: z.array(z.object({ texto: z.string(), inicioMs: z.number() })),
+      /** Las medidas de la imagen (para acercar una zona sin deformarla). */
+      imagenAncho: z.number().default(0),
+      imagenAlto: z.number().default(0),
+      /** La zona de la imagen que llena la tarjeta (una captura de pantalla se ve de cerca). */
+      enfoque: esquemaRegion.nullable().default(null),
+      /** Este momento va sin tarjeta (la persona de cuerpo completo ocupa la pantalla). */
+      sinTarjeta: z.boolean().default(false),
+      /** El efecto que suena al empezar (una caja registradora, una cámara…), en vez del corte. */
+      sonido: z.string().nullable().default(null),
+      /** Una cifra que sube como contador en vez del texto grande. */
+      cifra: z
+        .object({
+          valor: z.number(),
+          prefijo: z.string().default(""),
+          sufijo: z.string().default(""),
+          decimales: z.number().int().min(0).max(2).default(0),
+        })
+        .nullable()
+        .default(null),
+      /** La tarjeta baja a oscuro (de noche: «mientras tú duermes»). */
+      oscurecer: z.boolean().default(false),
+      /** Cómo entra la tarjeta: con un golpe de zoom o barriendo de lado. */
+      entrada: z.enum(["golpe", "barrido"]).default("golpe"),
     }),
   ),
+  /**
+   * La persona que habla por tramos: de medio cuerpo abajo a la izquierda, o de cuerpo completo en el
+   * centro. Cada aparición es su propio video (transparente) con la voz de ese tramo.
+   */
+  apariciones: z
+    .array(
+      z.object({
+        inicioMs: z.number(),
+        finMs: z.number(),
+        ruta: z.string(),
+        ancho: z.number(),
+        alto: z.number(),
+        encuadre: z.enum(["medio", "cuerpo"]),
+      }),
+    )
+    .default([]),
   subtitulos: z.array(
     z.object({
       inicioMs: z.number(),
@@ -57,5 +107,69 @@ export const ZONA_PUBLICIDAD = {
   avatar: { x: -30, alto: 1000 },
   /** La persona con su fondo: un marco abajo a la izquierda, por encima de la franja que tapa YouTube. */
   recuadro: { x: 40, abajo: 330, alto: 620, borde: 6, radio: 40 },
+  /** La persona de medio cuerpo (de la cabeza a la cadera), abajo a la izquierda. */
+  medio: { x: -10, alto: 800 },
+  /** La persona de cuerpo completo, centrada, de los pies hasta debajo del texto grande. */
+  cuerpo: { alto: 1500 },
+  /** Con la persona de cuerpo completo, los subtítulos van sobre sus piernas, a todo lo ancho. */
+  subtitulosCuerpo: { y: 1430 },
   limiteAbajo: 1920 * 0.85,
 } as const;
+
+/** Dónde se dibuja una imagen dentro de una caja: posición y tamaño en puntos de la caja. */
+export type Vista = { left: number; top: number; width: number; height: number };
+
+/** La imagen entera dentro de la caja, sin cortar nada (como «contain»). */
+export function vistaCompleta(
+  caja: { ancho: number; alto: number },
+  img: { ancho: number; alto: number },
+): Vista {
+  const s = Math.min(caja.ancho / img.ancho, caja.alto / img.alto);
+  const width = img.ancho * s;
+  const height = img.alto * s;
+  return { left: (caja.ancho - width) / 2, top: (caja.alto - height) / 2, width, height };
+}
+
+/**
+ * La zona `region` de la imagen, entera y lo más grande posible dentro de la caja (como «contain» de
+ * esa zona), centrada; lo que sobra se llena con lo que rodea a la zona en la imagen, nunca deformado.
+ * Si la imagen no alcanza a llenar la caja por un lado, queda centrada por ese lado.
+ */
+export function vistaDeEnfoque(
+  caja: { ancho: number; alto: number },
+  img: { ancho: number; alto: number },
+  region: Region,
+): Vista {
+  const s = Math.min(caja.ancho / (region.ancho * img.ancho), caja.alto / (region.alto * img.alto));
+  const width = img.ancho * s;
+  const height = img.alto * s;
+  const centroX = (region.x + region.ancho / 2) * width;
+  const centroY = (region.y + region.alto / 2) * height;
+  const acomodar = (lado: number, tamano: number, centro: number) =>
+    tamano <= lado ? (lado - tamano) / 2 : Math.min(0, Math.max(lado - tamano, lado / 2 - centro));
+  return {
+    left: acomodar(caja.ancho, width, centroX),
+    top: acomodar(caja.alto, height, centroY),
+    width,
+    height,
+  };
+}
+
+/** Un punto intermedio entre dos vistas (t de 0 a 1). */
+export function mezclarVistas(a: Vista, b: Vista, t: number): Vista {
+  const m = (x: number, y: number) => x + (y - x) * t;
+  return {
+    left: m(a.left, b.left),
+    top: m(a.top, b.top),
+    width: m(a.width, b.width),
+    height: m(a.height, b.height),
+  };
+}
+
+/** Una cifra con separador de miles y sus decimales: 3394.44 → «3,394.44». */
+export function formatoCifra(valor: number, decimales: number): string {
+  return valor.toLocaleString("en-US", {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  });
+}

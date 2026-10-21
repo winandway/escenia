@@ -15,7 +15,7 @@
 - Formato Presentador (Richard grabado, encima de los gráficos): [docs/PRESENTADOR.md](docs/PRESENTADOR.md).
 - Formato Canción (Richard cantando con su fondo real, un boceto a lápiz por verso arriba y la letra en el pecho; solo vertical): [docs/CANCION.md](docs/CANCION.md).
 - Comerciales (el video publicitario de un cliente con sus logos y capturas) y la biblioteca de Imágenes: [docs/COMERCIALES.md](docs/COMERCIALES.md).
-- Publicidad en Short (anuncio vertical de un producto con su voz y un avatar que habla; prototipo de Pro In Shop): [docs/PUBLICIDAD.md](docs/PUBLICIDAD.md).
+- Publicidad en Short (anuncio vertical con la voz del banco y una persona que habla; menú «Publicidad» del panel; el anuncio largo de capturas de QRBott y cómo se le quita el fondo a una foto con la Mac): [docs/PUBLICIDAD.md](docs/PUBLICIDAD.md).
 - Estilos de video (clásico, ilustrado con las personas dibujadas, y neón con diagramas): [docs/ESTILOS.md](docs/ESTILOS.md).
 - Portadas de impacto (la miniatura llamativa del video largo y la de cada Short; salen solas): [docs/PORTADA.md](docs/PORTADA.md).
 - La marca de cada canal en el video (Full Código) y el separador de canales: [docs/MARCA.md](docs/MARCA.md).

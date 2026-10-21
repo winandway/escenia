@@ -6,17 +6,25 @@
 //   armar  → el video con la plantilla «Publicidad».
 // Uso (desde estacion/): npx tsx src/publicidad.ts ../publicidad/proinshop/plan-generador.json --paso voz|avatar|armar
 // Los mismos pasos los usa `publicidades.ts` para los anuncios pedidos desde el panel (rutas absolutas).
+import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import { bloquesDeSubtitulos } from "./monigotes-plan";
 import {
+  aparicionesDelPlan,
   costoPublicidadUsd,
   esquemaPlanPublicidad,
   type PlanPublicidad,
-  SEGUNDOS_MAXIMOS,
+  recorteDeEncuadre,
+  textoDelPlan,
   tiemposDeFrases,
 } from "./publicidad-plan";
+
+const exec = promisify(execFile);
+const huella = (dato: string | Buffer) => createHash("sha1").update(dato).digest("hex").slice(0, 12);
 
 const opcion = (nombre: string): string | null => {
   const i = process.argv.indexOf(nombre);
@@ -26,6 +34,7 @@ const opcion = (nombre: string): string | null => {
 export type VozGuardada = {
   texto: string;
   voz: string;
+  /** La voz entera (MP3, o WAV cuando se hizo por partes). */
   rutaMp3: string;
   palabras: { text: string; startMs: number; endMs: number }[];
   duracionMs: number;
@@ -43,44 +52,338 @@ export type AvatarGuardado = {
 const RECURSOS = path.resolve("recursos");
 const VERDE = "#00b140";
 
-/** La voz con sus tiempos. Si ya se hizo con el mismo texto y la misma voz, no se paga otra vez. */
+/** Pausa entre una parte y la siguiente cuando la voz se hace por partes. */
+const PAUSA_ENTRE_PARTES_MS = 280;
+
+/** Duración exacta de un audio, en milisegundos. */
+async function duracionAudioMs(ruta: string): Promise<number> {
+  const { stdout } = await exec("ffprobe", [
+    "-v",
+    "error",
+    "-show_entries",
+    "format=duration",
+    "-of",
+    "csv=p=0",
+    ruta,
+  ]);
+  return Math.round(Number(stdout.trim()) * 1000);
+}
+
+/**
+ * La voz con sus tiempos. Si ya se hizo con el mismo texto y la misma voz, no se paga otra vez. Con
+ * `partes`, cada parte se hace y se guarda aparte (rehacer una sola no cambia las demás) y se juntan en
+ * un WAV con una pausa corta entre ellas.
+ */
 export async function pasoVoz(
   plan: PlanPublicidad,
   trabajo: string,
   avisar: (t: string) => unknown = (t) => console.log(`  ${t}`),
-  maximoSeg = SEGUNDOS_MAXIMOS,
+  maximoSeg = plan.maximo_seg,
 ): Promise<VozGuardada & { nueva: boolean }> {
+  const texto = textoDelPlan(plan);
   const archivo = path.join(trabajo, "voz.json");
   if (existsSync(archivo)) {
     const ya = JSON.parse(await readFile(archivo, "utf8")) as VozGuardada;
-    if (ya.texto === plan.texto && ya.voz === plan.voz && existsSync(ya.rutaMp3))
-      return { ...ya, nueva: false };
+    if (ya.texto === texto && ya.voz === plan.voz && existsSync(ya.rutaMp3)) return { ...ya, nueva: false };
   }
   const { generarVoz } = await import("./voz");
-  const r = await generarVoz(
-    [{ texto: plan.texto }],
-    path.join(trabajo, "voz"),
-    async (paso) => {
-      await avisar(paso);
-    },
-    plan.voz,
-    plan.idioma,
-  );
-  const seg = r.duracionMs / 1000;
-  const guardada: VozGuardada = {
-    texto: plan.texto,
-    voz: plan.voz,
-    rutaMp3: r.rutaMp3,
-    palabras: r.palabras,
-    duracionMs: r.duracionMs,
-    costoUsd: r.costoUsd,
+  const aviso = async (paso: string) => {
+    await avisar(paso);
   };
+  let guardada: VozGuardada;
+  let nueva = 0;
+  if (!plan.partes) {
+    const r = await generarVoz([{ texto }], path.join(trabajo, "voz"), aviso, plan.voz, plan.idioma);
+    nueva = r.costoUsd;
+    guardada = {
+      texto,
+      voz: plan.voz,
+      rutaMp3: r.rutaMp3,
+      palabras: r.palabras,
+      duracionMs: r.duracionMs,
+      costoUsd: r.costoUsd,
+    };
+  } else {
+    const partes: { wav: string; palabras: VozGuardada["palabras"]; duracionMs: number; costoUsd: number }[] =
+      [];
+    for (const [k, parte] of plan.partes.entries()) {
+      const carpetaParte = path.join(
+        trabajo,
+        "voz-partes",
+        `${k + 1}-${huella(`${plan.voz}|${plan.idioma}|${parte}`)}`,
+      );
+      const json = path.join(carpetaParte, "parte.json");
+      if (!existsSync(json)) {
+        await avisar(`voz: parte ${k + 1} de ${plan.partes.length}`);
+        const r = await generarVoz([{ texto: parte }], carpetaParte, aviso, plan.voz, plan.idioma);
+        const wav = path.join(carpetaParte, "parte.wav");
+        await exec("ffmpeg", [
+          "-y",
+          "-v",
+          "error",
+          "-i",
+          r.rutaMp3,
+          "-ar",
+          "44100",
+          "-ac",
+          "1",
+          "-c:a",
+          "pcm_s16le",
+          wav,
+        ]);
+        await writeFile(
+          json,
+          JSON.stringify(
+            { wav, palabras: r.palabras, duracionMs: await duracionAudioMs(wav), costoUsd: r.costoUsd },
+            null,
+            2,
+          ),
+        );
+        nueva += r.costoUsd;
+      }
+      partes.push(JSON.parse(await readFile(json, "utf8")) as (typeof partes)[number]);
+    }
+    // Se juntan en un solo WAV, con una pausa igual entre parte y parte.
+    const silencio = path.join(trabajo, "voz-partes", "pausa.wav");
+    await exec("ffmpeg", [
+      "-y",
+      "-v",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
+      "anullsrc=r=44100:cl=mono",
+      "-t",
+      String(PAUSA_ENTRE_PARTES_MS / 1000),
+      "-c:a",
+      "pcm_s16le",
+      silencio,
+    ]);
+    const lista = path.join(trabajo, "voz-partes", "lista.txt");
+    await writeFile(
+      lista,
+      partes
+        .flatMap((p, k) => [`file '${p.wav}'`, ...(k < partes.length - 1 ? [`file '${silencio}'`] : [])])
+        .join("\n"),
+    );
+    const wav = path.join(trabajo, "voz.wav");
+    await exec("ffmpeg", [
+      "-y",
+      "-v",
+      "error",
+      "-f",
+      "concat",
+      "-safe",
+      "0",
+      "-i",
+      lista,
+      "-c:a",
+      "pcm_s16le",
+      wav,
+    ]);
+    const palabras: VozGuardada["palabras"] = [];
+    let desde = 0;
+    for (const p of partes) {
+      for (const w of p.palabras) palabras.push({ ...w, startMs: w.startMs + desde, endMs: w.endMs + desde });
+      desde += p.duracionMs + PAUSA_ENTRE_PARTES_MS;
+    }
+    guardada = {
+      texto,
+      voz: plan.voz,
+      rutaMp3: wav,
+      palabras,
+      duracionMs: await duracionAudioMs(wav),
+      costoUsd: partes.reduce((t, p) => t + p.costoUsd, 0),
+    };
+  }
   // Se guarda antes de mirar el largo: la voz ya se pagó y no se vuelve a pedir.
   await writeFile(archivo, JSON.stringify(guardada, null, 2));
+  const seg = guardada.duracionMs / 1000;
   if (seg > maximoSeg)
     throw new Error(`La voz dura ${seg.toFixed(1)} s: un anuncio no pasa de ${maximoSeg}. Acorta el texto.`);
-  console.log(`  voz: ${seg.toFixed(1)} s · $${r.costoUsd.toFixed(3)}`);
-  return { ...guardada, nueva: true };
+  console.log(`  voz: ${seg.toFixed(1)} s · $${nueva.toFixed(4)} nuevos`);
+  return { ...guardada, costoUsd: nueva, nueva: nueva > 0 };
+}
+
+/** Dónde entra cada momento y el cierre en la voz; revienta si una frase no está tal cual. */
+export function tiemposDelPlan(
+  plan: PlanPublicidad,
+  voz: Pick<VozGuardada, "palabras" | "duracionMs">,
+): { inicios: number[]; cierreMs: number } {
+  const frases = [...plan.momentos.map((m) => m.frase), plan.cierre.frase];
+  const encontrados = tiemposDeFrases(frases, voz.palabras);
+  const faltan = frases.filter((_, i) => encontrados[i] === null);
+  if (faltan.length)
+    throw new Error(`Estas frases no están en la voz (tienen que ser literales): ${faltan.join(" · ")}`);
+  const inicios = plan.momentos.map((_, i) => (i === 0 ? 0 : (encontrados[i] ?? 0)));
+  return { inicios, cierreMs: encontrados[plan.momentos.length] ?? voz.duracionMs };
+}
+
+/** La persona por tramos, ya hecha: un video transparente por aparición. */
+export type AparicionGuardada = {
+  inicioMs: number;
+  finMs: number;
+  ruta: string;
+  ancho: number;
+  alto: number;
+  encuadre: "medio" | "cuerpo";
+  costoUsd: number;
+};
+
+/** El recuadro que ocupa la figura (lo que no es transparente) en un PNG sin fondo. */
+async function cajaDeFigura(ruta: string): Promise<{ x: number; y: number; ancho: number; alto: number }> {
+  const { default: sharp } = await import("sharp");
+  const { data, info } = await sharp(ruta)
+    .ensureAlpha()
+    .extractChannel(3)
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let x1 = info.width;
+  let y1 = info.height;
+  let x2 = -1;
+  let y2 = -1;
+  for (let y = 0; y < info.height; y++)
+    for (let x = 0; x < info.width; x++)
+      if ((data[y * info.width + x] ?? 0) > 40) {
+        if (x < x1) x1 = x;
+        if (x > x2) x2 = x;
+        if (y < y1) y1 = y;
+        if (y > y2) y2 = y;
+      }
+  if (x2 < 0) throw new Error(`No hay ninguna figura en ${path.basename(ruta)}.`);
+  return { x: x1, y: y1, ancho: x2 - x1 + 1, alto: y2 - y1 + 1 };
+}
+
+/**
+ * La persona por tramos (momentos con `persona`): cada aparición es su propio video de FlashTalk con
+ * la voz de ese tramo, sobre verde, y el verde quitado. Si la foto trae fondo, se le quita antes con
+ * la Mac (gratis). Lo ya hecho (misma figura y mismo pedazo de voz) no se vuelve a pagar.
+ */
+export async function pasoPersonas(
+  plan: PlanPublicidad,
+  carpeta: string,
+  trabajo: string,
+  avisar: (t: string) => unknown = (t) => console.log(`  ${t}`),
+  /** Solo deja las figuras sobre verde (para revisarlas antes de pagar el avatar). */
+  soloPreparar = false,
+): Promise<AparicionGuardada[]> {
+  const voz = JSON.parse(await readFile(path.join(trabajo, "voz.json"), "utf8")) as VozGuardada;
+  const { inicios, cierreMs } = tiemposDelPlan(plan, voz);
+  const apariciones = aparicionesDelPlan(
+    plan.momentos.map((m, i) => ({ inicioMs: inicios[i] ?? 0, persona: m.persona })),
+    cierreMs,
+  );
+  const { default: sharp } = await import("sharp");
+  const { generarAvatar } = await import("./avatar");
+  const { quitarCroma, detectarCroma, medidasDeVideo } = await import("./croma");
+  const { figuraSinFondo } = await import("./quitar-fondo");
+  const dir = path.join(trabajo, "personas");
+  await mkdir(dir, { recursive: true });
+  const salida: AparicionGuardada[] = [];
+  for (const [k, a] of apariciones.entries()) {
+    const sinFondo = await figuraSinFondo(path.resolve(carpeta, a.imagen), dir);
+    const r = recorteDeEncuadre(await cajaDeFigura(sinFondo), a.encuadre, a.corte);
+    const figura = await sharp(sinFondo)
+      .extract({ left: r.x, top: r.y, width: r.ancho, height: r.alto })
+      .resize({ width: 856, height: 1496, fit: "inside" })
+      .png()
+      .toBuffer();
+    const meta = await sharp(figura).metadata();
+    // Sobre verde parejo, centrada y apoyada abajo: el medio cuerpo sigue fuera de cuadro.
+    const verde = await sharp({ create: { width: 896, height: 1536, channels: 3, background: VERDE } })
+      .composite([
+        {
+          input: figura,
+          left: Math.round((896 - (meta.width ?? 0)) / 2),
+          top: 1536 - (meta.height ?? 0),
+        },
+      ])
+      .png()
+      .toBuffer();
+    // El pedazo de voz de esta aparición.
+    const pedazoWav = path.join(dir, `pedazo-${k + 1}.wav`);
+    await exec("ffmpeg", [
+      "-y",
+      "-v",
+      "error",
+      "-i",
+      voz.rutaMp3,
+      "-ss",
+      String(a.inicioMs / 1000),
+      "-to",
+      String(a.finMs / 1000),
+      "-ar",
+      "44100",
+      "-ac",
+      "1",
+      "-c:a",
+      "pcm_s16le",
+      pedazoWav,
+    ]);
+    const clave = huella(Buffer.concat([verde, await readFile(pedazoWav)]));
+    const rutaVerde = path.join(dir, `${clave}-verde.png`);
+    if (!existsSync(rutaVerde)) await writeFile(rutaVerde, verde);
+    if (soloPreparar) {
+      console.log(
+        `  ${k + 1}. ${a.encuadre} ${(a.inicioMs / 1000).toFixed(1)}–${(a.finMs / 1000).toFixed(1)} s → ${rutaVerde}`,
+      );
+      continue;
+    }
+    const clip = path.join(dir, `${clave}.mp4`);
+    let costoUsd = 0;
+    if (!existsSync(clip)) {
+      const pedazoMp3 = path.join(dir, `${clave}.mp3`);
+      await exec("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        pedazoWav,
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        "192k",
+        pedazoMp3,
+      ]);
+      await avisar(
+        `persona ${k + 1} de ${apariciones.length} (${a.encuadre}, ${((a.finMs - a.inicioMs) / 1000).toFixed(1)} s)`,
+      );
+      const res = await generarAvatar({
+        imagen: rutaVerde,
+        audio: pedazoMp3,
+        modelo: "fal-ai/flashtalk",
+        salida: clip,
+        avisar: (t) => void avisar(t),
+      });
+      costoUsd = res.costoUsd;
+    }
+    const webm = path.join(dir, `${clave}.webm`);
+    let medidas: { ancho: number; alto: number };
+    const medidasJson = path.join(dir, `${clave}.json`);
+    if (existsSync(webm) && existsSync(medidasJson)) {
+      medidas = JSON.parse(await readFile(medidasJson, "utf8")) as { ancho: number; alto: number };
+    } else {
+      const m = await medidasDeVideo(clip);
+      const croma = await detectarCroma(clip, m.duracionSeg);
+      medidas = await quitarCroma(clip, webm, croma?.color ?? VERDE, {
+        alto: a.encuadre === "cuerpo" ? 1500 : 900,
+      });
+      await writeFile(medidasJson, JSON.stringify(medidas));
+    }
+    salida.push({
+      inicioMs: a.inicioMs,
+      finMs: a.finMs,
+      ruta: webm,
+      ...medidas,
+      encuadre: a.encuadre,
+      costoUsd,
+    });
+  }
+  if (soloPreparar) return salida;
+  await writeFile(path.join(trabajo, "personas.json"), JSON.stringify(salida, null, 2));
+  const total = salida.reduce((t, x) => t + x.costoUsd, 0);
+  console.log(`  personas: ${salida.length} apariciones · $${total.toFixed(3)} nuevos`);
+  return salida;
 }
 
 /**
@@ -194,7 +497,7 @@ export async function pasoArmar(
     return nombre;
   };
   const logo = await copiar(path.resolve(carpeta, plan.logo), `logo${path.extname(plan.logo)}`);
-  await copiar(voz.rutaMp3, "voz.mp3");
+  const audio = await copiar(voz.rutaMp3, `voz${path.extname(voz.rutaMp3)}`);
   const musica = plan.musica ? await copiar(path.resolve(carpeta, plan.musica), "musica.mp3") : null;
   const cortes: string[] = [];
   for (const n of ["whoosh-1.mp3", "corte-2.mp3", "whoosh-2.mp3", "corte-4.mp3"]) {
@@ -214,16 +517,43 @@ export async function pasoArmar(
       }
     : null;
 
-  const inicios = tiemposDeFrases([...plan.momentos.map((m) => m.frase), plan.cierre.frase], voz.palabras);
-  const faltan = [...plan.momentos.map((m) => m.frase), plan.cierre.frase].filter(
-    (_, i) => inicios[i] === null,
-  );
-  if (faltan.length)
-    throw new Error(`Estas frases no están en la voz (tienen que ser literales): ${faltan.join(" · ")}`);
-  const cierreMs = inicios[plan.momentos.length] ?? voz.duracionMs;
+  const { inicios, cierreMs } = tiemposDelPlan(plan, voz);
+  const conPersonas = plan.momentos.some((m) => m.persona);
+  const apariciones = conPersonas
+    ? await Promise.all(
+        (JSON.parse(await readFile(path.join(trabajo, "personas.json"), "utf8")) as AparicionGuardada[]).map(
+          async (a, k) => ({
+            inicioMs: a.inicioMs,
+            finMs: a.finMs,
+            ruta: await copiar(a.ruta, `persona-${k + 1}.webm`),
+            ancho: a.ancho,
+            alto: a.alto,
+            encuadre: a.encuadre,
+          }),
+        ),
+      )
+    : [];
+  const { default: sharp } = await import("sharp");
+  // La misma imagen va con el mismo nombre: así la tarjeta viaja de una zona a otra sin cortar.
+  const imagenEnPublico = async (relativa: string) => {
+    const origen = path.resolve(carpeta, relativa);
+    const nombre = `img-${huella(origen)}${path.extname(origen)}`;
+    if (!existsSync(path.join(publica, nombre))) await copiar(origen, nombre);
+    const m = await sharp(origen).metadata();
+    return { nombre, ancho: m.width ?? 0, alto: m.height ?? 0 };
+  };
+  const sonidoEnPublico = async (nombre: string) => {
+    const opciones = [
+      path.resolve(carpeta, nombre),
+      ...["sfx", "sfx-local", "sfx-panel"].map((c) => path.join(RECURSOS, c, nombre)),
+    ];
+    const origen = opciones.find((o) => existsSync(o));
+    if (!origen) throw new Error(`No encuentro el efecto «${nombre}».`);
+    return copiar(origen, `sfx-m-${path.basename(origen)}`);
+  };
   const tramos = [];
   for (const [i, m] of plan.momentos.entries()) {
-    const inicioMs = i === 0 ? 0 : (inicios[i] ?? 0);
+    const inicioMs = inicios[i] ?? 0;
     const finMs = inicios[i + 1] ?? cierreMs;
     const chipsInicio = m.chips
       ? tiemposDeFrases(
@@ -231,23 +561,39 @@ export async function pasoArmar(
           voz.palabras.filter((p) => p.startMs >= inicioMs),
         )
       : [];
+    const img = m.imagen ? await imagenEnPublico(m.imagen) : null;
     tramos.push({
       inicioMs,
       finMs,
-      imagen: m.imagen
-        ? await copiar(path.resolve(carpeta, m.imagen), `img-${i + 1}${path.extname(m.imagen)}`)
+      imagen: img?.nombre ?? null,
+      imagenAncho: img?.ancho ?? 0,
+      imagenAlto: img?.alto ?? 0,
+      enfoque: m.enfoque ?? null,
+      sinTarjeta: Boolean(m.sin_tarjeta),
+      sonido: m.sonido ? await sonidoEnPublico(m.sonido) : null,
+      cifra: m.cifra
+        ? {
+            valor: m.cifra.valor,
+            prefijo: m.cifra.prefijo ?? "",
+            sufijo: m.cifra.sufijo ?? "",
+            decimales: m.cifra.decimales ?? 0,
+          }
         : null,
+      oscurecer: Boolean(m.oscurecer),
+      entrada: m.entrada ?? "golpe",
       texto: m.texto ?? null,
       chips: (m.chips ?? []).map((c, k) => ({ texto: c.texto, inicioMs: chipsInicio[k] ?? inicioMs })),
     });
   }
-  const duracionMs = voz.duracionMs + 1200;
+  const duracionMs = voz.duracionMs + plan.cola_ms;
   const props = {
     marca: plan.marca,
     acento: plan.acento,
     logo,
-    avatar: avatarProps,
-    audio: "voz.mp3",
+    tema: plan.tema,
+    avatar: conPersonas ? null : avatarProps,
+    apariciones,
+    audio,
     musica,
     duracionMs,
     tramos,
@@ -268,7 +614,7 @@ export async function pasoArmar(
     outputLocation: salida,
     inputProps: props,
   });
-  const costo = costoPublicidadUsd(voz.duracionMs / 1000, Boolean(avatar), voz.costoUsd);
+  const costo = costoPublicidadUsd(voz.duracionMs / 1000, Boolean(avatar) || conPersonas, voz.costoUsd);
   console.log(
     `Listo: ${salida} · ${(duracionMs / 1000).toFixed(1)} s · costo calculado $${costo.toFixed(2)}`,
   );
@@ -284,7 +630,11 @@ async function principal() {
   await mkdir(trabajo, { recursive: true });
   const paso = opcion("--paso") ?? "voz";
   if (paso === "voz") return void (await pasoVoz(plan, trabajo));
-  if (paso === "avatar") return void (await pasoAvatar(plan, carpeta, trabajo));
+  if (paso === "verdes") return void (await pasoPersonas(plan, carpeta, trabajo, undefined, true));
+  if (paso === "avatar")
+    return void (plan.momentos.some((m) => m.persona)
+      ? await pasoPersonas(plan, carpeta, trabajo)
+      : await pasoAvatar(plan, carpeta, trabajo));
   if (paso === "armar") return void (await pasoArmar(plan, carpeta, trabajo));
   throw new Error(`Paso desconocido: ${paso}`);
 }

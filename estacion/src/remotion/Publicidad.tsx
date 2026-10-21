@@ -16,7 +16,15 @@ import {
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Anton";
 import { textoSobre } from "./monigotes-diseno";
-import { type PropsPublicidad, ZONA_PUBLICIDAD as Z } from "./publicidad-diseno";
+import {
+  formatoCifra,
+  mezclarVistas,
+  type PropsPublicidad,
+  vistaCompleta,
+  vistaDeEnfoque,
+  type Vista,
+  ZONA_PUBLICIDAD as Z,
+} from "./publicidad-diseno";
 
 export * from "./publicidad-diseno";
 
@@ -25,42 +33,69 @@ const FPS = 30;
 const f = (ms: number) => Math.round((ms / 1000) * FPS);
 const sombra = "0 0 18px rgba(0,0,0,0.85), 0 4px 0 #000, 0 -2px 0 #000, 3px 0 0 #000, -3px 0 0 #000";
 
-/** La foto del momento en la tarjeta: entra con un golpe de zoom y sigue acercándose despacio. */
-const Tarjeta: React.FC<{ imagen: string; duracion: number; indice: number; acento: string }> = ({
-  imagen,
-  duracion,
-  indice,
-  acento,
-}) => {
+type Tramo = PropsPublicidad["tramos"][number];
+
+/**
+ * La foto del momento en la tarjeta: entra con un golpe de zoom (o barriendo de lado) y sigue
+ * acercándose despacio. Con `enfoque`, la cámara viaja hasta esa zona de la imagen (una captura de
+ * pantalla se ve de cerca): desde la imagen entera, o desde la zona anterior si es la misma imagen.
+ */
+const Tarjeta: React.FC<{
+  tramo: Tramo;
+  anterior: Tramo | null;
+  duracion: number;
+  indice: number;
+  acento: string;
+  fondo: string;
+}> = ({ tramo, anterior, duracion, indice, acento, fondo }) => {
   const frame = useCurrentFrame();
-  const golpe = interpolate(frame, [0, 7], [1.12, 1], {
+  const caja = { ancho: Z.tarjeta.ancho, alto: Z.tarjeta.alto };
+  const img = { ancho: tramo.imagenAncho, alto: tramo.imagenAlto };
+  const misma = anterior?.imagen === tramo.imagen && anterior !== null;
+  const conEnfoque = Boolean(tramo.enfoque && img.ancho > 0 && img.alto > 0);
+  const vistaDe = (t: Tramo | null): Vista =>
+    t?.enfoque ? vistaDeEnfoque(caja, img, t.enfoque) : vistaCompleta(caja, img);
+  const lento = interpolate(frame, [0, Math.max(1, duracion)], [1, conEnfoque ? 1.04 : 1.08], {
     extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
   });
-  const lento = interpolate(frame, [0, Math.max(1, duracion)], [1, 1.08], { extrapolateRight: "clamp" });
-  const lado = indice % 2 === 0 ? 1 : -1;
-  const x = interpolate(frame, [0, Math.max(1, duracion)], [-14 * lado, 14 * lado], {
-    extrapolateRight: "clamp",
-  });
-  const entra = interpolate(frame, [0, 5], [0, 1], { extrapolateRight: "clamp" });
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: Z.tarjeta.x,
-        top: Z.tarjeta.y,
-        width: Z.tarjeta.ancho,
-        height: Z.tarjeta.alto,
-        borderRadius: 40,
-        overflow: "hidden",
-        border: `6px solid ${acento}`,
-        boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
-        background: "#fff",
-        opacity: entra,
-      }}
-    >
+  const golpe = misma
+    ? 1
+    : interpolate(frame, [0, 7], [1.12, 1], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+  const barrido =
+    tramo.entrada === "barrido" && !misma
+      ? interpolate(frame, [0, 9], [1100, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) })
+      : 0;
+  const entra =
+    misma || tramo.entrada === "barrido"
+      ? 1
+      : interpolate(frame, [0, 5], [0, 1], { extrapolateRight: "clamp" });
+  const noche = tramo.oscurecer ? interpolate(frame, [0, 14], [0, 0.72], { extrapolateRight: "clamp" }) : 0;
+  let contenido: React.ReactNode;
+  if (conEnfoque && tramo.enfoque) {
+    const desde = misma ? vistaDe(anterior) : vistaCompleta(caja, img);
+    const hasta = vistaDeEnfoque(caja, img, tramo.enfoque);
+    const t = interpolate(frame, [misma ? 0 : 6, misma ? 14 : 22], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.inOut(Easing.cubic),
+    });
+    const v = mezclarVistas(desde, hasta, t);
+    contenido = (
+      <div style={{ position: "absolute", inset: 0, transform: `scale(${golpe * lento})` }}>
+        <Img
+          src={staticFile(tramo.imagen ?? "")}
+          style={{ position: "absolute", left: v.left, top: v.top, width: v.width, height: v.height }}
+        />
+      </div>
+    );
+  } else {
+    const lado = indice % 2 === 0 ? 1 : -1;
+    const x = interpolate(frame, [0, Math.max(1, duracion)], [-14 * lado, 14 * lado], {
+      extrapolateRight: "clamp",
+    });
+    contenido = (
       <Img
-        src={staticFile(imagen)}
+        src={staticFile(tramo.imagen ?? "")}
         style={{
           width: "100%",
           height: "100%",
@@ -68,15 +103,99 @@ const Tarjeta: React.FC<{ imagen: string; duracion: number; indice: number; acen
           transform: `translateX(${x}px) scale(${golpe * lento})`,
         }}
       />
+    );
+  }
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: Z.tarjeta.x + barrido,
+        top: Z.tarjeta.y,
+        width: Z.tarjeta.ancho,
+        height: Z.tarjeta.alto,
+        borderRadius: 40,
+        overflow: "hidden",
+        border: `6px solid ${acento}`,
+        boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
+        background: fondo,
+        opacity: entra,
+      }}
+    >
+      {contenido}
+      {noche > 0 && <AbsoluteFill style={{ background: `rgba(2,4,12,${noche})` }} />}
+    </div>
+  );
+};
+
+/** Una cifra grande que sube como contador (la utilidad neta, por ejemplo). */
+const Cifra: React.FC<{ cifra: NonNullable<Tramo["cifra"]>; acento: string }> = ({ cifra, acento }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({ frame, fps, config: { damping: 12, stiffness: 160 } });
+  const avance = interpolate(frame, [0, 34], [0, 1], {
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+  const texto = `${cifra.prefijo}${formatoCifra(cifra.valor * avance, cifra.decimales)}${cifra.sufijo}`;
+  return (
+    <AbsoluteFill
+      style={{ top: Z.texto.y, height: Z.texto.alto, alignItems: "center", justifyContent: "center" }}
+    >
+      <div
+        style={{
+          transform: `scale(${0.6 + 0.4 * s})`,
+          background: acento,
+          color: textoSobre(acento),
+          fontSize: 124,
+          lineHeight: 1.05,
+          padding: "8px 36px",
+          borderRadius: 18,
+          boxShadow: "0 12px 30px rgba(0,0,0,0.45)",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {texto}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/** La persona que habla en un tramo: de medio cuerpo abajo a la izquierda, o de cuerpo completo al centro. */
+const Aparicion: React.FC<{ a: PropsPublicidad["apariciones"][number]; entra: boolean }> = ({ a, entra }) => {
+  const frame = useCurrentFrame();
+  const cuerpo = a.encuadre === "cuerpo";
+  const alto = cuerpo ? Z.cuerpo.alto : Z.medio.alto;
+  const ancho = (alto * a.ancho) / a.alto;
+  const mov = entra
+    ? interpolate(frame, [0, 9], [1, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) })
+    : 0;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: (cuerpo ? (1080 - ancho) / 2 : Z.medio.x) - (cuerpo ? 0 : 420 * mov),
+        bottom: 0,
+        height: alto,
+        width: ancho,
+        transform: cuerpo ? `translateY(${260 * mov}px)` : undefined,
+        opacity: cuerpo ? 1 - mov * 0.8 : 1,
+      }}
+    >
+      <OffthreadVideo src={staticFile(a.ruta)} transparent muted style={{ width: "100%", height: "100%" }} />
     </div>
   );
 };
 
 /** El texto grande del momento, en la caja del color de la marca: entra con un rebote. */
-const TextoGrande: React.FC<{ texto: string; acento: string }> = ({ texto, acento }) => {
+const TextoGrande: React.FC<{ texto: string; acento: string; quieto?: boolean }> = ({
+  texto,
+  acento,
+  quieto = false,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 11, stiffness: 170 } });
+  // `quieto`: el primer cuadro es la miniatura de WhatsApp; el título ya está completo desde ahí.
+  const s = quieto ? 1 : spring({ frame, fps, config: { damping: 11, stiffness: 170 } });
   const tamano = Math.max(64, Math.min(118, Math.floor(1700 / Math.max(1, texto.length * 1.05))));
   return (
     <AbsoluteFill
@@ -148,13 +267,25 @@ const Etiquetas: React.FC<{ chips: { texto: string; inicioMs: number }[]; desdeM
 };
 
 /** La tarjeta final: el logo grande y las líneas de contacto, sobre blanco. */
-const Cierre: React.FC<{ logo: string; lineas: string[]; acento: string }> = ({ logo, lineas, acento }) => {
+const Cierre: React.FC<{ logo: string; lineas: string[]; acento: string; oscuro: boolean }> = ({
+  logo,
+  lineas,
+  acento,
+  oscuro,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = spring({ frame, fps, config: { damping: 13, stiffness: 140 } });
   return (
     <AbsoluteFill
-      style={{ background: "#fff", alignItems: "center", paddingTop: 130, opacity: Math.min(1, frame / 6) }}
+      style={{
+        background: oscuro
+          ? `radial-gradient(circle at 50% 30%, ${acento}33 0%, #06110b 55%, #030805 100%)`
+          : "#fff",
+        alignItems: "center",
+        paddingTop: 130,
+        opacity: Math.min(1, frame / 6),
+      }}
     >
       <Img src={staticFile(logo)} style={{ width: 920, transform: `scale(${0.7 + 0.3 * s})` }} />
       <div style={{ height: 50 }} />
@@ -167,7 +298,7 @@ const Cierre: React.FC<{ logo: string; lineas: string[]; acento: string }> = ({ 
               transform: `translateY(${(1 - si) * 40}px)`,
               opacity: si,
               fontSize: i === 0 ? 92 : 60,
-              color: i === 0 ? acento : "#111",
+              color: i === 0 ? acento : oscuro ? "#fff" : "#111",
               marginTop: 18,
               textAlign: "center",
             }}
@@ -185,10 +316,21 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
   const ms = (frame / FPS) * 1000;
   const sub = p.subtitulos.find((s) => ms >= s.inicioMs && ms < s.finMs);
   const enCierre = ms >= p.cierre.inicioMs;
+  const oscuro = p.tema === "oscuro";
+  // Cada tramo con imagen abre una tarjeta; dura hasta la próxima imagen, un tramo «sin tarjeta» o el cierre.
+  const cortes = p.tramos.filter((t) => t.imagen || t.sinTarjeta);
   const imagenes = p.tramos.filter((t) => t.imagen);
   const actual = [...imagenes].reverse().find((t) => t.inicioMs <= ms) ?? imagenes[0];
+  const aparicion = p.apariciones.find((a) => ms >= a.inicioMs && ms < a.finMs) ?? null;
+  const conPersona = aparicion !== null || (p.avatar !== null && p.apariciones.length === 0);
+  const subtitulosEn =
+    aparicion?.encuadre === "cuerpo"
+      ? { left: 60, right: 60, top: Z.subtitulosCuerpo.y }
+      : conPersona
+        ? { left: Z.subtitulos.izquierda, right: Z.subtitulos.derecha, top: Z.subtitulos.y }
+        : { left: 80, right: 80, top: Z.subtitulos.y };
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0b0b0b", fontFamily }}>
+    <AbsoluteFill style={{ backgroundColor: oscuro ? "#050b07" : "#0b0b0b", fontFamily }}>
       {/* Fondo: la misma foto difuminada y oscura (nunca un clip ajeno, C-FONDO-2). */}
       {actual?.imagen && (
         <AbsoluteFill style={{ filter: "blur(28px) brightness(0.45)", transform: "scale(1.2)" }}>
@@ -204,29 +346,40 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
         }}
       />
       {/* La foto de cada momento, una detrás de otra. */}
-      {imagenes.map((t, i) => {
-        const siguiente = imagenes[i + 1];
+      {cortes.map((t, i) => {
+        if (!t.imagen) return null;
+        const siguiente = cortes[i + 1];
         const desde = f(t.inicioMs);
         const hasta = siguiente ? f(siguiente.inicioMs) : f(p.cierre.inicioMs);
         if (hasta <= desde) return null;
+        const anterior = cortes[i - 1] ?? null;
         return (
           <Sequence key={`img-${i}`} from={desde} durationInFrames={hasta - desde} layout="none">
-            <Tarjeta imagen={t.imagen ?? ""} duracion={hasta - desde} indice={i} acento={p.acento} />
+            <Tarjeta
+              tramo={t}
+              anterior={anterior?.imagen ? anterior : null}
+              duracion={hasta - desde}
+              indice={i}
+              acento={p.acento}
+              fondo={oscuro ? "#0b120e" : "#fff"}
+            />
           </Sequence>
         );
       })}
       {/* El texto grande o las etiquetas de cada momento. */}
       {p.tramos.map((t, i) => {
-        if (!t.texto && !t.chips.length) return null;
+        if (!t.texto && !t.chips.length && !t.cifra) return null;
         const desde = f(t.inicioMs);
         const hasta = Math.min(f(t.finMs), f(p.cierre.inicioMs));
         if (hasta <= desde) return null;
         return (
           <Sequence key={`txt-${i}`} from={desde} durationInFrames={hasta - desde} layout="none">
-            {t.chips.length ? (
+            {t.cifra ? (
+              <Cifra cifra={t.cifra} acento={p.acento} />
+            ) : t.chips.length ? (
               <Etiquetas chips={t.chips} desdeMs={t.inicioMs} />
             ) : (
-              <TextoGrande texto={t.texto ?? ""} acento={p.acento} />
+              <TextoGrande texto={t.texto ?? ""} acento={p.acento} quieto={t.inicioMs === 0} />
             )}
           </Sequence>
         );
@@ -239,7 +392,8 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
             left: Z.logo.x,
             top: Z.logo.y,
             height: Z.logo.alto,
-            background: "rgba(255,255,255,0.95)",
+            background: oscuro ? "rgba(4,10,7,0.88)" : "rgba(255,255,255,0.95)",
+            border: oscuro ? `2px solid ${p.acento}88` : undefined,
             borderRadius: 18,
             padding: "10px 18px",
             boxShadow: "0 8px 22px rgba(0,0,0,0.35)",
@@ -250,46 +404,24 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
       )}
       {/* Tarjeta final con el logo. */}
       <Sequence from={f(p.cierre.inicioMs)} layout="none">
-        <Cierre logo={p.logo} lineas={p.cierre.lineas} acento={p.acento} />
+        <Cierre logo={p.logo} lineas={p.cierre.lineas} acento={p.acento} oscuro={oscuro} />
       </Sequence>
-      {/* Subtítulos al estilo CapCut, a la derecha de la cabeza del avatar. */}
-      {sub && !enCierre && (
-        <div
-          style={{
-            position: "absolute",
-            left: p.avatar ? Z.subtitulos.izquierda : 80,
-            right: p.avatar ? Z.subtitulos.derecha : 80,
-            top: Z.subtitulos.y,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 14,
-            justifyContent: "center",
-          }}
-        >
-          {sub.palabras.map((w, i) =>
-            i === sub.resaltada ? (
-              <span
-                key={i}
-                style={{
-                  background: p.acento,
-                  color: textoSobre(p.acento),
-                  fontSize: 76,
-                  padding: "0 14px",
-                  borderRadius: 10,
-                }}
-              >
-                {w}
-              </span>
-            ) : (
-              <span key={i} style={{ color: "#fff", fontSize: 76, textShadow: sombra }}>
-                {w}
-              </span>
-            ),
-          )}
-        </div>
-      )}
+      {/* La persona por tramos (medio cuerpo o cuerpo completo); fuera del cierre. */}
+      {p.apariciones.map((a, i) => {
+        const desde = f(a.inicioMs);
+        const hasta = Math.min(f(a.finMs), f(p.cierre.inicioMs));
+        if (hasta <= desde) return null;
+        const previa = p.apariciones[i - 1];
+        const seguida =
+          previa !== undefined && previa.encuadre === a.encuadre && Math.abs(previa.finMs - a.inicioMs) < 60;
+        return (
+          <Sequence key={`persona-${i}`} from={desde} durationInFrames={hasta - desde} layout="none">
+            <Aparicion a={a} entra={!seguida && a.inicioMs > 0} />
+          </Sequence>
+        );
+      })}
       {/* La persona con su fondo, en un recuadro del color de la marca (abajo a la izquierda). */}
-      {p.avatar?.recuadro && (
+      {p.apariciones.length === 0 && p.avatar?.recuadro && (
         <div
           style={{
             position: "absolute",
@@ -317,7 +449,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
         </div>
       )}
       {/* El avatar sin fondo, abajo a la izquierda: habla todo el anuncio. */}
-      {p.avatar && !p.avatar.recuadro && (
+      {p.apariciones.length === 0 && p.avatar && !p.avatar.recuadro && (
         <div
           style={{
             position: "absolute",
@@ -347,6 +479,42 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           )}
         </div>
       )}
+      {/* Subtítulos al estilo CapCut, encima de todo (también de la persona de cuerpo completo). */}
+      {sub && !enCierre && (
+        <div
+          style={{
+            position: "absolute",
+            left: subtitulosEn.left,
+            right: subtitulosEn.right,
+            top: subtitulosEn.top,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 14,
+            justifyContent: "center",
+          }}
+        >
+          {sub.palabras.map((w, i) =>
+            i === sub.resaltada ? (
+              <span
+                key={i}
+                style={{
+                  background: p.acento,
+                  color: textoSobre(p.acento),
+                  fontSize: 76,
+                  padding: "0 14px",
+                  borderRadius: 10,
+                }}
+              >
+                {w}
+              </span>
+            ) : (
+              <span key={i} style={{ color: "#fff", fontSize: 76, textShadow: sombra }}>
+                {w}
+              </span>
+            ),
+          )}
+        </div>
+      )}
       {/* Sonido: la voz, la música bajita (sube al final) y un golpe en cada cambio de imagen. */}
       <Audio src={staticFile(p.audio)} />
       {p.musica && (
@@ -361,8 +529,10 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           }}
         />
       )}
-      {imagenes.slice(1).map((t, i) => {
-        const sfx = p.sfx.cortes[i % Math.max(1, p.sfx.cortes.length)];
+      {p.tramos.map((t, i) => {
+        // Cada cambio de imagen suena (un corte); el tramo con su propio efecto suena con ese.
+        if (i === 0 && !t.sonido) return null;
+        const sfx = t.sonido ?? (t.imagen ? p.sfx.cortes[i % Math.max(1, p.sfx.cortes.length)] : undefined);
         return sfx ? (
           <Sequence
             key={`sfx-${i}`}
@@ -370,7 +540,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
             durationInFrames={30}
             layout="none"
           >
-            <Audio src={staticFile(sfx)} volume={0.35} />
+            <Audio src={staticFile(sfx)} volume={t.sonido ? 0.5 : 0.35} />
           </Sequence>
         ) : null;
       })}

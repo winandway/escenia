@@ -1654,3 +1654,20 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Cómo se comprueba:** `npx vitest run pruebas/borrador.test.tsx` (grupos y aviso; las tres pruebas se
   ponen en rojo con el hook de antes, comprobado el 17 oct 2026).
 - **Qué NO tocar:** no volver a saltar `RadioNodeList` en `rellenarFormulario`.
+
+## C-FONDO-3 — El «tablero de cuadritos» pintado no queda pegado a la persona (21 oct 2026)
+
+- **Qué se rompió y cómo se veía:** la foto de la chica de QRBott parecía transparente pero traía el
+  tablero de cuadros grises pintado. Al quitarle el fondo con Vision, entre el brazo y la cintura quedó un
+  pedazo de cuadros blancos y negros, que se habría visto en todo el anuncio.
+- **Causa real:** en un hueco angosto, Vision toma el pedazo de fondo como parte de la persona.
+- **Qué se hizo:** `estacion/src/tablero.ts` reconoce el tablero en el borde de la foto (tamaño de celda
+  exacto contando las celdas de cada tramo; redondear el total corría el dibujo una celda) y borra dentro
+  de la figura solo las manchas que siguen el dibujo de cuadros y tienen los dos tonos; por contagio, las
+  de un solo tono pegadas a lo ya borrado; y el borde gris borroso. `quitarFondo` lo hace siempre.
+- **Cómo se comprueba:** `npx vitest run pruebas/tablero.test.ts` (foto inventada con tablero, piel, pelo
+  con mechones y un resto de tablero: borra más del 95 % del resto, nada de la piel y menos del 5 % del
+  pelo; sin la limpieza se pone en rojo, comprobado el 21 oct 2026). En la foto real: hoja de la figura
+  sobre magenta, el hueco del brazo queda limpio.
+- **Qué NO tocar:** no borrar grises sueltos «porque se parecen al tablero»: el pelo y la camisa también
+  son grises; lo que decide es que sigan el dibujo de las celdas.
