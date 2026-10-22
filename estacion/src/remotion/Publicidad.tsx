@@ -21,6 +21,7 @@ import {
   mezclarVistas,
   type PropsPublicidad,
   subtitulosEnPantalla,
+  tarjetaTelefono,
   vistaCompleta,
   vistaDeEnfoque,
   type Vista,
@@ -67,16 +68,18 @@ const Tarjeta: React.FC<{
       extrapolateRight: "clamp",
       easing: Easing.out(Easing.cubic),
     });
-    const v = vistaCompleta(caja, { ancho: tramo.imagenAncho || 1, alto: tramo.imagenAlto || 1 });
+    // La tarjeta toma la forma de la pantalla (alta de celular o ancha de computadora): se ve entera.
+    const t = tarjetaTelefono({ ancho: tramo.imagenAncho || 1, alto: tramo.imagenAlto || 1 });
+    const v = { left: 0, top: 0, width: t.ancho, height: t.alto };
     const noche = tramo.oscurecer ? interpolate(frame, [0, 14], [0, 0.72], { extrapolateRight: "clamp" }) : 0;
     return (
       <div
         style={{
           position: "absolute",
-          left: Z.telefono.x,
-          top: Z.telefono.y,
-          width: caja.ancho,
-          height: caja.alto,
+          left: t.x - 6,
+          top: t.y - 6,
+          width: t.ancho + 12,
+          height: t.alto + 12,
           borderRadius: Z.telefono.radio,
           overflow: "hidden",
           border: `6px solid ${acento}`,
@@ -323,6 +326,103 @@ const PersonaEnPantalla: React.FC<{
   );
 };
 
+/** El fondo de la paleta: degradado y un dibujo suave (puntos o líneas) que se desliza despacio. */
+const FondoDePaleta: React.FC<{ paleta: NonNullable<PropsPublicidad["paleta"]> }> = ({ paleta }) => {
+  const frame = useCurrentFrame();
+  const corre = (frame * 0.4) % 60;
+  const dibujo =
+    paleta.patron === "puntos"
+      ? {
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.10) 2px, transparent 2.5px)",
+          backgroundSize: "60px 60px",
+        }
+      : paleta.patron === "lineas"
+        ? {
+            backgroundImage:
+              "repeating-linear-gradient(135deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 38px)",
+            backgroundSize: "60px 60px",
+          }
+        : null;
+  return (
+    <>
+      <AbsoluteFill
+        style={{ background: `linear-gradient(165deg, ${paleta.fondo[0]} 0%, ${paleta.fondo[1]} 100%)` }}
+      />
+      {dibujo && <AbsoluteFill style={{ ...dibujo, backgroundPosition: `${corre}px ${corre}px` }} />}
+    </>
+  );
+};
+
+/**
+ * La portada: la etiqueta arriba a la derecha y el título en una o dos líneas grandes (la segunda en el
+ * color de la marca), quietos desde el cuadro 0 para que la miniatura de WhatsApp los muestre completos;
+ * al llegar `hastaMs` suben y se van.
+ */
+const Portada: React.FC<{ portada: NonNullable<PropsPublicidad["portada"]>; acento: string }> = ({
+  portada,
+  acento,
+}) => {
+  const frame = useCurrentFrame();
+  const sale = interpolate(frame, [f(portada.hastaMs), f(portada.hastaMs) + 10], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.in(Easing.cubic),
+  });
+  return (
+    <AbsoluteFill style={{ opacity: 1 - sale, transform: `translateY(${-160 * sale}px)` }}>
+      {portada.etiqueta && (
+        <div
+          style={{
+            position: "absolute",
+            right: 40,
+            top: 64,
+            background: "#fff",
+            color: "#111",
+            fontSize: 44,
+            padding: "6px 22px",
+            borderRadius: 999,
+            transform: "rotate(3deg)",
+            boxShadow: "0 8px 22px rgba(0,0,0,0.4)",
+          }}
+        >
+          {portada.etiqueta}
+        </div>
+      )}
+      <div
+        style={{
+          position: "absolute",
+          top: 170,
+          left: 0,
+          right: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        {portada.lineas.map((l, i) => (
+          <div
+            key={l}
+            style={{
+              fontSize: 116,
+              lineHeight: 1.02,
+              padding: "4px 30px",
+              borderRadius: 18,
+              color: i === 1 ? textoSobre(acento) : "#fff",
+              background: i === 1 ? acento : "transparent",
+              textShadow: i === 1 ? undefined : sombra,
+              transform: `rotate(${i === 1 ? -2 : 0}deg)`,
+              boxShadow: i === 1 ? "0 12px 30px rgba(0,0,0,0.45)" : undefined,
+            }}
+          >
+            {l}
+          </div>
+        ))}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 /** El texto grande del momento, en la caja del color de la marca: entra con un rebote. */
 const TextoGrande: React.FC<{ texto: string; acento: string; quieto?: boolean }> = ({
   texto,
@@ -476,9 +576,17 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           : { left: 80, right: 80, top: Z.subtitulos.y };
   return (
     <AbsoluteFill style={{ backgroundColor: oscuro ? "#050b07" : "#0b0b0b", fontFamily }}>
+      {/* Fondo con la armonía propia del video: degradado de su paleta y su dibujo. */}
+      {p.paleta && <FondoDePaleta paleta={p.paleta} />}
       {/* Fondo: la misma foto difuminada y oscura (nunca un clip ajeno, C-FONDO-2). */}
       {actual?.imagen && (
-        <AbsoluteFill style={{ filter: "blur(28px) brightness(0.45)", transform: "scale(1.2)" }}>
+        <AbsoluteFill
+          style={{
+            filter: "blur(28px) brightness(0.45)",
+            transform: "scale(1.2)",
+            opacity: p.paleta ? 0.28 : 1,
+          }}
+        >
           <Img
             src={staticFile(actual.imagen)}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -654,8 +762,10 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           )}
         </div>
       )}
+      {/* La portada del primer cuadro: el título grande, quieto desde el cuadro 0. */}
+      {p.portada && ms < p.portada.hastaMs + 400 && <Portada portada={p.portada} acento={p.acento} />}
       {/* Subtítulos al estilo CapCut, encima de todo (también de la persona de cuerpo completo). */}
-      {sub && !enCierre && (
+      {sub && !enCierre && !(p.portada && ms < p.portada.hastaMs) && (
         <div
           style={{
             position: "absolute",

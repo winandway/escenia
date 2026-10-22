@@ -2,6 +2,7 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Ver el video de Cashea de QRBott (la chica con su look nuevo, paleta morada y portada en el primer cuadro) y decir si así se ven distintos los videos → la armonía nueva se usa en los próximos.
 - 👤 Ver el comercial «Vende desde el celular» de QRBott (la chica venezolana con las pantallas del celular enteras) y decir qué le cambiarías → cambiar una frase solo rehace ese pedacito.
 - 👤 Confirmar que la garantía de 30 días («si no te convence, te devolvemos tu dinero») es la política real de QRBott y que quede escrita en sus términos → el anuncio la promete.
 - 👤 Probar el menú «Publicidad» del panel (docs/PUBLICIDAD.md): oír las tres voces en el banco de voces, ver el anuncio de prueba del generador de Pro In Shop hecho desde el panel (anuncio 1, 30 s, costó 63 ¢; las fotos del cliente ya están en Imágenes, carpeta «Pro In Shop») y decir a qué precio se vende cada anuncio.

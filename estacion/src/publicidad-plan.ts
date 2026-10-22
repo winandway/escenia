@@ -33,6 +33,21 @@ export const esquemaPlanPublicidad = z
     tema: z.enum(["claro", "oscuro"]).default("claro"),
     /** «pantalla»: la captura ocupa toda la pantalla y la persona se mueve alrededor (ver `vista_persona`). */
     diseno: z.enum(["centro", "pantalla", "telefono"]).default("centro"),
+    /** La armonía propia del video: el fondo en degradado (dos colores) y su dibujo. */
+    paleta: z
+      .object({
+        fondo: z.tuple([z.string().regex(/^#[0-9a-f]{6}$/i), z.string().regex(/^#[0-9a-f]{6}$/i)]),
+        patron: z.enum(["puntos", "lineas", "ninguno"]).default("puntos"),
+      })
+      .optional(),
+    /** La portada del primer cuadro (la miniatura de WhatsApp): título en una o dos líneas y etiqueta. */
+    portada: z
+      .object({
+        lineas: z.array(z.string().max(26)).min(1).max(2),
+        etiqueta: z.string().max(24).default(""),
+        hasta_ms: z.number().min(500).max(6000).default(2200),
+      })
+      .optional(),
     /** Letras por segundo de la voz (11,6 es el ritmo de los documentales; un comercial va a 13,5). */
     letras_por_segundo: z.number().min(8).max(16).optional(),
     /** La pausa entre una parte y la siguiente, en milisegundos. */

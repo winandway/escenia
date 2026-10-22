@@ -21,6 +21,8 @@ const publicidadVacia: PropsPublicidad = {
   logo: "",
   tema: "claro",
   diseno: "centro",
+  paleta: null,
+  portada: null,
   avatar: null,
   apariciones: [],
   audio: "",

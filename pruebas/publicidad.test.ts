@@ -15,6 +15,7 @@ import {
   formatoCifra,
   mezclarVistas,
   subtitulosEnPantalla,
+  tarjetaTelefono,
   vistaCompleta,
   vistaDeEnfoque,
   vistaPersonaEn,
@@ -303,5 +304,50 @@ describe("C-PUBLICIDAD-ENTERA: en el diseño «teléfono» la pantalla se ve ent
     expect(t.x + t.ancho).toBeLessThanOrEqual(1080);
     expect(t.y + t.alto).toBeLessThan(t.subtitulos);
     expect(t.y).toBeGreaterThanOrEqual(ZONA_PUBLICIDAD.texto.y + ZONA_PUBLICIDAD.texto.alto);
+  });
+});
+
+describe("publicidad: cada video con su armonía y su portada (Cashea, 22 oct 2026)", () => {
+  it("la tarjeta del teléfono toma la forma de la pantalla y la muestra entera, sin franjas", () => {
+    for (const [ancho, alto] of [
+      [1400, 875],
+      [1400, 615],
+      [955, 1400],
+      [637, 1400],
+      [1170, 1992],
+    ] as const) {
+      const t = tarjetaTelefono({ ancho, alto });
+      // Misma forma que la imagen.
+      expect(t.ancho / t.alto).toBeCloseTo(ancho / alto, 1);
+      // Dentro del video, debajo del texto grande y encima de los subtítulos.
+      expect(t.x).toBeGreaterThanOrEqual(0);
+      expect(t.x + t.ancho).toBeLessThanOrEqual(1080);
+      expect(t.y).toBeGreaterThanOrEqual(ZONA_PUBLICIDAD.texto.y + ZONA_PUBLICIDAD.texto.alto);
+      expect(t.y + t.alto).toBeLessThan(ZONA_PUBLICIDAD.telefono.subtitulos);
+    }
+    // La ancha va arriba a lo ancho; la alta, a la derecha.
+    expect(tarjetaTelefono({ ancho: 1400, alto: 875 }).ancho).toBe(960);
+    const alta = tarjetaTelefono({ ancho: 637, alto: 1400 });
+    expect(alta.x + alta.ancho).toBe(ZONA_PUBLICIDAD.telefono.x + ZONA_PUBLICIDAD.telefono.ancho);
+  });
+
+  it("el plan admite paleta y portada, y la portada no pasa de dos líneas", () => {
+    const base = {
+      marca: "QRBott",
+      logo: "l.png",
+      partes: ["¿Tu tienda es aliada de Cashea? Con QRBott cobras con Cashea."],
+      momentos: [{ frase: "Tu tienda" }, { frase: "aliada de" }, { frase: "Con QRBott" }],
+      cierre: { frase: "cobras con", lineas: [] },
+    };
+    const p = esquemaPlanPublicidad.parse({
+      ...base,
+      paleta: { fondo: ["#3b1470", "#12052a"], patron: "lineas" },
+      portada: { lineas: ["¿ACEPTAS CASHEA?", "COBRA CON QRBOTT"], etiqueta: "PASO A PASO" },
+    });
+    expect(p.portada?.hasta_ms).toBe(2200);
+    expect(() => esquemaPlanPublicidad.parse({ ...base, portada: { lineas: ["A", "B", "C"] } })).toThrow();
+    expect(() =>
+      esquemaPlanPublicidad.parse({ ...base, paleta: { fondo: ["morado", "#000000"] } }),
+    ).toThrow();
   });
 });

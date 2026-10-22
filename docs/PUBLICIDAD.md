@@ -122,6 +122,30 @@ de la misma foto con Seedream edit (3 ¢ cada una).
 **La portada de WhatsApp:** el primer cuadro ya trae el título completo y la persona quieta (WhatsApp lo
 usa de miniatura).
 
+## Cada anuncio con su armonía y su portada: el video de Cashea (QRBott, 22 oct 2026)
+
+Richard: «todos los videos salen iguales… da la sensación de que ese video uno ya lo vio». Desde ese
+día cada anuncio lleva su propia armonía y una portada en el primer cuadro:
+
+- **`paleta`**: el fondo en degradado de dos colores con su dibujo (`puntos`, `lineas` o `ninguno`),
+  en vez del verde y negro de siempre.
+- **`portada`**: una o dos líneas de título grandes (la segunda en el color de la marca) y una etiqueta
+  arriba a la derecha, quietas desde el cuadro 0 hasta `hasta_ms`: WhatsApp y las redes usan ese cuadro
+  de miniatura.
+- **El look de la persona**: la misma cara, otra ropa y otro peinado, hechos con Seedream edit desde su
+  foto de referencia (3 ¢ por pose).
+- **Otra música** y otro `acento`.
+- En el diseño «teléfono», la tarjeta toma la forma de cada pantalla: una alta (celular) a la derecha,
+  una ancha (computadora) arriba a lo ancho; siempre entera.
+
+Registro para no repetir:
+
+| Anuncio                         | Paleta                           | Acento  | Look de la chica                                  | Música           |
+| ------------------------------- | -------------------------------- | ------- | ------------------------------------------------- | ---------------- |
+| Bienvenida QRBott (21 oct)      | verde y negro (sin paleta)       | #2ED66E | gorra de Venezuela, franela blanca, jeans         | bombo y bajo     |
+| Vende desde el celular (22 oct) | verde y negro (sin paleta)       | #2ED66E | la misma                                          | bombo y bajo     |
+| Cashea (22 oct)                 | morado #3b1470 → #12052a, líneas | #A855F7 | sin gorra, pelo suelto, blusa lila, jeans blancos | electrónica tech |
+
 ## Comercial «Vende desde el celular» y el diseño «teléfono» (QRBott, 22 oct 2026)
 
 **Lo que dijo Richard de la versión dos (abajo):** «se salían de la pantalla y el cliente no lo veía; el

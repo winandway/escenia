@@ -31,6 +31,30 @@ export const esquemaPublicidad = z.object({
    */
   diseno: z.enum(["centro", "pantalla", "telefono"]).default("centro"),
   /**
+   * La armonía propia del video (Richard, 22 oct 2026: «todos los videos salen iguales… da la sensación
+   * de que ese video uno ya lo vio»): el fondo en degradado con su dibujo, en vez del verde y negro de
+   * siempre. Sin paleta, el fondo es el de antes.
+   */
+  paleta: z
+    .object({
+      fondo: z.tuple([z.string().regex(/^#[0-9a-f]{6}$/i), z.string().regex(/^#[0-9a-f]{6}$/i)]),
+      patron: z.enum(["puntos", "lineas", "ninguno"]).default("puntos"),
+    })
+    .nullable()
+    .default(null),
+  /**
+   * La portada en el primer cuadro (WhatsApp y las redes lo usan de miniatura): el título grande en una o
+   * dos líneas y una etiqueta arriba, quietos desde el cuadro 0, hasta `hastaMs`.
+   */
+  portada: z
+    .object({
+      lineas: z.array(z.string().max(26)).min(1).max(2),
+      etiqueta: z.string().max(24).default(""),
+      hastaMs: z.number().min(500).max(6000).default(2200),
+    })
+    .nullable()
+    .default(null),
+  /**
    * Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. Con
    * `recuadro`, la persona trae su fondo y va dentro de un marco redondeado del color de la marca.
    */
@@ -136,6 +160,8 @@ export const ZONA_PUBLICIDAD = {
    * de medio cuerpo abajo a la izquierda y los subtítulos debajo de la tarjeta.
    */
   telefono: { x: 410, y: 380, ancho: 655, alto: 1115, radio: 46, subtitulos: 1525, persona: 760 },
+  /** Diseño «teléfono» con una pantalla ancha (de computadora): tarjeta a lo ancho, arriba. */
+  telefonoAncha: { x: 60, y: 390, ancho: 960, alto: 760 },
   /** Diseño «pantalla»: la persona pequeña abajo, de un lado o del otro. */
   pantalla: {
     cabeza: { diametro: 380, abajo: 150, margen: 40, borde: 8 },
@@ -237,4 +263,36 @@ export function subtitulosEnPantalla(vista: VistaPersona | null): {
   return vista.lado === "izquierda"
     ? { left: ancho, right: 40, top: P.subtitulos.y }
     : { left: 40, right: ancho, top: P.subtitulos.y };
+}
+
+/**
+ * La tarjeta del diseño «teléfono» con la forma de la pantalla: una alta (de celular) va a la derecha
+ * y llega hasta 655×1115; una ancha (de computadora) va arriba, a lo ancho, hasta 960×760. Siempre
+ * del tamaño justo de la imagen: se ve entera y sin franjas.
+ */
+export function tarjetaTelefono(img: { ancho: number; alto: number }): {
+  x: number;
+  y: number;
+  ancho: number;
+  alto: number;
+} {
+  const t = ZONA_PUBLICIDAD.telefono;
+  const a = ZONA_PUBLICIDAD.telefonoAncha;
+  const ancho = img.ancho || 1;
+  const alto = img.alto || 1;
+  if (ancho >= alto) {
+    const s = Math.min(a.ancho / ancho, a.alto / alto);
+    const w = Math.round(ancho * s);
+    const h = Math.round(alto * s);
+    return {
+      x: a.x + Math.round((a.ancho - w) / 2),
+      y: a.y + Math.round((a.alto - h) / 2),
+      ancho: w,
+      alto: h,
+    };
+  }
+  const s = Math.min(t.ancho / ancho, t.alto / alto);
+  const w = Math.round(ancho * s);
+  const h = Math.round(alto * s);
+  return { x: t.x + t.ancho - w, y: t.y + Math.round((t.alto - h) / 2), ancho: w, alto: h };
 }
