@@ -52,9 +52,48 @@ const Tarjeta: React.FC<{
   fondo: string;
   /** Diseño «pantalla»: la captura ocupa toda la pantalla, sin marco. */
   completa?: boolean;
-}> = ({ tramo, anterior, duracion, indice, acento, fondo, completa = false }) => {
+  /** Diseño «teléfono»: la pantalla entera en una tarjeta alta, quieta (sin acercar ni mover). */
+  telefono?: boolean;
+}> = ({ tramo, anterior, duracion, indice, acento, fondo, completa = false, telefono = false }) => {
   const frame = useCurrentFrame();
-  const caja = completa ? { ancho: 1080, alto: 1920 } : { ancho: Z.tarjeta.ancho, alto: Z.tarjeta.alto };
+  const caja = completa
+    ? { ancho: 1080, alto: 1920 }
+    : telefono
+      ? { ancho: Z.telefono.ancho, alto: Z.telefono.alto }
+      : { ancho: Z.tarjeta.ancho, alto: Z.tarjeta.alto };
+  if (telefono) {
+    // Entra creciendo hasta su tamaño (nunca más grande) y se queda quieta: la pantalla se ve entera.
+    const entra = interpolate(frame, [0, 7], [0, 1], {
+      extrapolateRight: "clamp",
+      easing: Easing.out(Easing.cubic),
+    });
+    const v = vistaCompleta(caja, { ancho: tramo.imagenAncho || 1, alto: tramo.imagenAlto || 1 });
+    const noche = tramo.oscurecer ? interpolate(frame, [0, 14], [0, 0.72], { extrapolateRight: "clamp" }) : 0;
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: Z.telefono.x,
+          top: Z.telefono.y,
+          width: caja.ancho,
+          height: caja.alto,
+          borderRadius: Z.telefono.radio,
+          overflow: "hidden",
+          border: `6px solid ${acento}`,
+          boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
+          background: "#fff",
+          opacity: entra,
+          transform: `scale(${0.9 + 0.1 * entra})`,
+        }}
+      >
+        <Img
+          src={staticFile(tramo.imagen ?? "")}
+          style={{ position: "absolute", left: v.left, top: v.top, width: v.width, height: v.height }}
+        />
+        {noche > 0 && <AbsoluteFill style={{ background: `rgba(2,4,12,${noche})` }} />}
+      </div>
+    );
+  }
   const img = { ancho: tramo.imagenAncho, alto: tramo.imagenAlto };
   const misma = anterior?.imagen === tramo.imagen && anterior !== null;
   const conEnfoque = Boolean(tramo.enfoque && img.ancho > 0 && img.alto > 0);
@@ -166,10 +205,15 @@ const Cifra: React.FC<{ cifra: NonNullable<Tramo["cifra"]>; acento: string }> = 
 };
 
 /** La persona que habla en un tramo: de medio cuerpo abajo a la izquierda, o de cuerpo completo al centro. */
-const Aparicion: React.FC<{ a: PropsPublicidad["apariciones"][number]; entra: boolean }> = ({ a, entra }) => {
+const Aparicion: React.FC<{
+  a: PropsPublicidad["apariciones"][number];
+  entra: boolean;
+  /** Alto del medio cuerpo (en el diseño «teléfono» va un poco más chica para no tapar la tarjeta). */
+  altoMedio?: number;
+}> = ({ a, entra, altoMedio = Z.medio.alto }) => {
   const frame = useCurrentFrame();
   const cuerpo = a.encuadre === "cuerpo";
-  const alto = cuerpo ? Z.cuerpo.alto : Z.medio.alto;
+  const alto = cuerpo ? Z.cuerpo.alto : altoMedio;
   const ancho = (alto * a.ancho) / a.alto;
   const mov = entra
     ? interpolate(frame, [0, 9], [1, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) })
@@ -411,6 +455,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
   const enCierre = ms >= p.cierre.inicioMs;
   const oscuro = p.tema === "oscuro";
   const pantalla = p.diseno === "pantalla";
+  const telefono = p.diseno === "telefono";
   // Cada tramo con imagen abre una tarjeta; dura hasta la próxima imagen, un tramo «sin tarjeta» o el cierre.
   const cortes = p.tramos.filter((t) => t.imagen || t.sinTarjeta);
   const imagenes = p.tramos.filter((t) => t.imagen);
@@ -420,11 +465,15 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
   const vistaActual = aparicion ? vistaPersonaEn(p.tramos, aparicion.encuadre, ms) : null;
   const subtitulosEn = pantalla
     ? subtitulosEnPantalla(vistaActual)
-    : aparicion?.encuadre === "cuerpo"
-      ? { left: 60, right: 60, top: Z.subtitulosCuerpo.y }
-      : conPersona
-        ? { left: Z.subtitulos.izquierda, right: Z.subtitulos.derecha, top: Z.subtitulos.y }
-        : { left: 80, right: 80, top: Z.subtitulos.y };
+    : telefono
+      ? aparicion?.encuadre === "medio"
+        ? { left: Z.subtitulos.izquierda, right: 40, top: Z.telefono.subtitulos }
+        : { left: 60, right: 60, top: Z.telefono.subtitulos }
+      : aparicion?.encuadre === "cuerpo"
+        ? { left: 60, right: 60, top: Z.subtitulosCuerpo.y }
+        : conPersona
+          ? { left: Z.subtitulos.izquierda, right: Z.subtitulos.derecha, top: Z.subtitulos.y }
+          : { left: 80, right: 80, top: Z.subtitulos.y };
   return (
     <AbsoluteFill style={{ backgroundColor: oscuro ? "#050b07" : "#0b0b0b", fontFamily }}>
       {/* Fondo: la misma foto difuminada y oscura (nunca un clip ajeno, C-FONDO-2). */}
@@ -459,6 +508,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
               acento={p.acento}
               fondo={oscuro ? "#0b120e" : "#fff"}
               completa={pantalla}
+              telefono={telefono}
             />
           </Sequence>
         );
@@ -536,7 +586,11 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
                 })()}
               />
             ) : (
-              <Aparicion a={a} entra={!seguida && a.inicioMs > 0} />
+              <Aparicion
+                a={a}
+                entra={!seguida && a.inicioMs > 0}
+                altoMedio={telefono ? Z.telefono.persona : Z.medio.alto}
+              />
             )}
           </Sequence>
         );

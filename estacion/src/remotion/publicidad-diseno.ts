@@ -29,7 +29,7 @@ export const esquemaPublicidad = z.object({
    * «centro»: la captura en una tarjeta en el medio (versión 1). «pantalla»: la captura ocupa toda la
    * pantalla y la persona se mueve alrededor (cabecita, medio cuerpo señalando, cuerpo pequeño o grande).
    */
-  diseno: z.enum(["centro", "pantalla"]).default("centro"),
+  diseno: z.enum(["centro", "pantalla", "telefono"]).default("centro"),
   /**
    * Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. Con
    * `recuadro`, la persona trae su fondo y va dentro de un marco redondeado del color de la marca.
@@ -130,6 +130,12 @@ export const ZONA_PUBLICIDAD = {
   cuerpo: { alto: 1500 },
   /** Con la persona de cuerpo completo, los subtítulos van sobre sus piernas, a todo lo ancho. */
   subtitulosCuerpo: { y: 1430 },
+  /**
+   * Diseño «teléfono»: la pantalla del celular ENTERA en una tarjeta alta a la derecha, sin acercar ni
+   * mover (Richard, 22 oct 2026: «no tienes que hacerle zoom porque si no se sale del borde»); la persona
+   * de medio cuerpo abajo a la izquierda y los subtítulos debajo de la tarjeta.
+   */
+  telefono: { x: 410, y: 380, ancho: 655, alto: 1115, radio: 46, subtitulos: 1525, persona: 760 },
   /** Diseño «pantalla»: la persona pequeña abajo, de un lado o del otro. */
   pantalla: {
     cabeza: { diametro: 380, abajo: 150, margen: 40, borde: 8 },

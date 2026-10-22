@@ -122,7 +122,25 @@ de la misma foto con Seedream edit (3 ¢ cada una).
 **La portada de WhatsApp:** el primer cuadro ya trae el título completo y la persona quieta (WhatsApp lo
 usa de miniatura).
 
-## Versión dos: las capturas a pantalla completa (QRBott, 21 oct 2026)
+## Comercial «Vende desde el celular» y el diseño «teléfono» (QRBott, 22 oct 2026)
+
+**Lo que dijo Richard de la versión dos (abajo):** «se salían de la pantalla y el cliente no lo veía; el
+último quedó mal hecho». Se quedó con la versión uno. Regla desde ese día: **cada pantalla se presenta
+entera**; la chica habla de esa pantalla y sigue. El diseño «pantalla» no se vuelve a usar salvo que él
+lo pida sabiendo esto.
+
+Para las pantallas de celular (verticales) está el diseño `"telefono"`: la pantalla entera en una tarjeta
+alta a la derecha (655×1115, con las esquinas redondeadas), quieta, que entra creciendo hasta su tamaño
+y nunca más grande; la chica de medio cuerpo abajo a la izquierda, de cuerpo completo al empezar y al
+cerrar; los subtítulos debajo de la tarjeta. La prueba «C-PUBLICIDAD-ENTERA» comprueba que cualquier
+pantalla cabe completa en la tarjeta.
+
+El comercial (guion de Richard acortado para que no tenga baches, 25 partes, ~1 min 55 s): plan
+`publicidad/qrbott/plan-vende-celular.json`, pantallas en `publicidad/qrbott/celular/pantallas/`. Para
+que vaya «violento», la voz se lleva a 13,5 letras por segundo (`letras_por_segundo`; los documentales
+van a 11,6) y la pausa entre partes es de 120 ms (`pausa_ms`).
+
+## Versión dos: las capturas a pantalla completa (QRBott, 21 oct 2026) — NO GUSTÓ
 
 Richard se quedó con la primera versión y pidió otra igual donde el protagonista sea el software: la
 captura ocupa toda la pantalla y hace su acercamiento, y la chica se mueve alrededor: grande al empezar,

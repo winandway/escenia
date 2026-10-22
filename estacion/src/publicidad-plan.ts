@@ -32,7 +32,11 @@ export const esquemaPlanPublicidad = z
     /** «oscuro» para marcas con logo claro: el logo va sobre oscuro y el cierre también. */
     tema: z.enum(["claro", "oscuro"]).default("claro"),
     /** «pantalla»: la captura ocupa toda la pantalla y la persona se mueve alrededor (ver `vista_persona`). */
-    diseno: z.enum(["centro", "pantalla"]).default("centro"),
+    diseno: z.enum(["centro", "pantalla", "telefono"]).default("centro"),
+    /** Letras por segundo de la voz (11,6 es el ritmo de los documentales; un comercial va a 13,5). */
+    letras_por_segundo: z.number().min(8).max(16).optional(),
+    /** La pausa entre una parte y la siguiente, en milisegundos. */
+    pausa_ms: z.number().min(0).max(1000).default(280),
     /**
      * Otra versión del mismo anuncio: usa la voz y los videos de la persona de ese otro plan (su carpeta
      * de trabajo), sin pagarlos de nuevo. Los momentos con `persona` tienen que ser los mismos.

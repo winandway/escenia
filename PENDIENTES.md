@@ -2,7 +2,7 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 Ver la versión dos del video de bienvenida de QRBott (capturas a pantalla completa, la chica alrededor; no costó nada nuevo) y decir cuál se queda para cada uso → la versión uno ya la usa.
+- 👤 Ver el comercial «Vende desde el celular» de QRBott (la chica venezolana con las pantallas del celular enteras) y decir qué le cambiarías → cambiar una frase solo rehace ese pedacito.
 - 👤 Confirmar que la garantía de 30 días («si no te convence, te devolvemos tu dinero») es la política real de QRBott y que quede escrita en sus términos → el anuncio la promete.
 - 👤 Probar el menú «Publicidad» del panel (docs/PUBLICIDAD.md): oír las tres voces en el banco de voces, ver el anuncio de prueba del generador de Pro In Shop hecho desde el panel (anuncio 1, 30 s, costó 63 ¢; las fotos del cliente ya están en Imágenes, carpeta «Pro In Shop») y decir a qué precio se vende cada anuncio.
 - 👤 Descargar del panel (guion 20) la biografía de Juan Gabriel, «el preso de Lecumberri» (5 min 10 s, tres Shorts y sus miniaturas; costó 35 ¢) y pegar las canciones en sus huecos de 5 s (recuadro arriba a la izquierda). Largo: «No tengo dinero» 1:42.6 · «Amor eterno» 2:16.7 · «Querida» 2:44.5 · «Abrázame muy fuerte» 3:53.9. Short 2: 0:29.6 · 1:03.8 · 1:31.5 (las mismas tres primeras). Short 3: 0:25.9 («Abrázame muy fuerte»). Short 1 no lleva huecos. Ideal subirlo antes del desfile de Día de Muertos del 31 de octubre. La opinión la escribió la IA en su nombre: si no le gusta, la cambia en el panel.

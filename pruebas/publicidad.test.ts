@@ -18,6 +18,7 @@ import {
   vistaCompleta,
   vistaDeEnfoque,
   vistaPersonaEn,
+  ZONA_PUBLICIDAD,
 } from "../estacion/src/remotion/publicidad-diseno";
 
 describe("publicidad en Short: el plan, los tiempos y el costo (prototipo, 17 oct 2026)", () => {
@@ -276,5 +277,31 @@ describe("publicidad, diseño «pantalla»: la persona se mueve alrededor de la 
     const libre = subtitulosEnPantalla({ modo: "oculta", lado: "izquierda" });
     expect(libre.left).toBe(libre.right);
     expect(subtitulosEnPantalla(null)).toEqual(libre);
+  });
+});
+
+describe("C-PUBLICIDAD-ENTERA: en el diseño «teléfono» la pantalla se ve entera (22 oct 2026)", () => {
+  // Richard, sobre la versión dos de QRBott: las capturas «se salían de la pantalla y el cliente no lo
+  // veía». En el diseño «teléfono» cada pantalla se presenta entera, sin acercar.
+  const caja = { ancho: ZONA_PUBLICIDAD.telefono.ancho, alto: ZONA_PUBLICIDAD.telefono.alto };
+  it.each([
+    [1170, 1992],
+    [1236, 2517],
+    [1236, 2745],
+    [1170, 2532],
+    [2400, 1500],
+  ])("una pantalla de %i×%i cabe completa en la tarjeta", (ancho, alto) => {
+    const v = vistaCompleta(caja, { ancho, alto });
+    expect(v.left).toBeGreaterThanOrEqual(-0.01);
+    expect(v.top).toBeGreaterThanOrEqual(-0.01);
+    expect(v.left + v.width).toBeLessThanOrEqual(caja.ancho + 0.01);
+    expect(v.top + v.height).toBeLessThanOrEqual(caja.alto + 0.01);
+  });
+
+  it("la tarjeta del teléfono queda dentro del video y debajo del texto grande", () => {
+    const t = ZONA_PUBLICIDAD.telefono;
+    expect(t.x + t.ancho).toBeLessThanOrEqual(1080);
+    expect(t.y + t.alto).toBeLessThan(t.subtitulos);
+    expect(t.y).toBeGreaterThanOrEqual(ZONA_PUBLICIDAD.texto.y + ZONA_PUBLICIDAD.texto.alto);
   });
 });

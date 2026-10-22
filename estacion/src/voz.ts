@@ -15,7 +15,7 @@ import type { Voz } from "@compartido/guion";
 import { emparejarConLetras, numerosEnLetras } from "@compartido/numeros";
 import { cortesDePausas, tiempoTrasCortes, trozosQueQuedan, type Silencio } from "@compartido/pausas";
 import { textoParaLaVoz } from "@compartido/pronunciacion";
-import { escalarAlineacion, factorDeRitmo } from "@compartido/ritmo";
+import { escalarAlineacion, factorDeRitmo, LETRAS_POR_SEGUNDO_OBJETIVO } from "@compartido/ritmo";
 import { asegurarModeloVoz, costoVozUsd } from "@compartido/modelos";
 import { elegirIdDeVoz, modeloDeVoz } from "@compartido/voces";
 import { config } from "./config";
@@ -42,6 +42,8 @@ export async function generarVoz(
   narrador: Voz = "richard",
   /** En inglés no se tocan las cifras ni la H: esos arreglos son del español (C-COMERCIAL-1). */
   idioma: "es" | "en" = "es",
+  /** Letras por segundo a las que se lleva la voz (un comercial va más rápido que un documental). */
+  ritmoObjetivo = LETRAS_POR_SEGUNDO_OBJETIVO,
 ): Promise<ResultadoVoz> {
   await mkdir(carpeta, { recursive: true });
   const usaElevenLabs = Boolean(config.ELEVENLABS_API_KEY);
@@ -110,7 +112,8 @@ export async function generarVoz(
       // Ritmo parejo (C-VOZ-4): cada generación lee a su velocidad; se lleva
       // toda pieza al mismo ritmo (sin cambiar el tono) y se reescalan los tiempos.
       // (La medida de letras por segundo es del español: en inglés la voz se deja como sale.)
-      const factor = idioma === "es" ? factorDeRitmo(textoVoz, (await duracionMs(rutaPieza)) / 1000) : 1;
+      const factor =
+        idioma === "es" ? factorDeRitmo(textoVoz, (await duracionMs(rutaPieza)) / 1000, ritmoObjetivo) : 1;
       if (Math.abs(factor - 1) > 0.03) {
         await cambiarTempo(rutaPieza, factor);
         alineacion = escalarAlineacion(alineacion, factor);

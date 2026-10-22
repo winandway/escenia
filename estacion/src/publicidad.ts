@@ -52,9 +52,6 @@ export type AvatarGuardado = {
 const RECURSOS = path.resolve("recursos");
 const VERDE = "#00b140";
 
-/** Pausa entre una parte y la siguiente cuando la voz se hace por partes. */
-const PAUSA_ENTRE_PARTES_MS = 280;
-
 /** Duración exacta de un audio, en milisegundos. */
 async function duracionAudioMs(ruta: string): Promise<number> {
   const { stdout } = await exec("ffprobe", [
@@ -93,7 +90,14 @@ export async function pasoVoz(
   let guardada: VozGuardada;
   let nueva = 0;
   if (!plan.partes) {
-    const r = await generarVoz([{ texto }], path.join(trabajo, "voz"), aviso, plan.voz, plan.idioma);
+    const r = await generarVoz(
+      [{ texto }],
+      path.join(trabajo, "voz"),
+      aviso,
+      plan.voz,
+      plan.idioma,
+      plan.letras_por_segundo,
+    );
     nueva = r.costoUsd;
     guardada = {
       texto,
@@ -110,12 +114,19 @@ export async function pasoVoz(
       const carpetaParte = path.join(
         trabajo,
         "voz-partes",
-        `${k + 1}-${huella(`${plan.voz}|${plan.idioma}|${parte}`)}`,
+        `${k + 1}-${huella(`${plan.voz}|${plan.idioma}|${parte}${plan.letras_por_segundo ? `|${plan.letras_por_segundo}` : ""}`)}`,
       );
       const json = path.join(carpetaParte, "parte.json");
       if (!existsSync(json)) {
         await avisar(`voz: parte ${k + 1} de ${plan.partes.length}`);
-        const r = await generarVoz([{ texto: parte }], carpetaParte, aviso, plan.voz, plan.idioma);
+        const r = await generarVoz(
+          [{ texto: parte }],
+          carpetaParte,
+          aviso,
+          plan.voz,
+          plan.idioma,
+          plan.letras_por_segundo,
+        );
         const wav = path.join(carpetaParte, "parte.wav");
         await exec("ffmpeg", [
           "-y",
@@ -154,7 +165,7 @@ export async function pasoVoz(
       "-i",
       "anullsrc=r=44100:cl=mono",
       "-t",
-      String(PAUSA_ENTRE_PARTES_MS / 1000),
+      String(Math.max(0.01, plan.pausa_ms / 1000)),
       "-c:a",
       "pcm_s16le",
       silencio,
@@ -185,7 +196,7 @@ export async function pasoVoz(
     let desde = 0;
     for (const p of partes) {
       for (const w of p.palabras) palabras.push({ ...w, startMs: w.startMs + desde, endMs: w.endMs + desde });
-      desde += p.duracionMs + PAUSA_ENTRE_PARTES_MS;
+      desde += p.duracionMs + plan.pausa_ms;
     }
     guardada = {
       texto,
