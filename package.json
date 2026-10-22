@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
-    "@opennextjs/cloudflare": "^1.20.9",
-    "next": "16.3.8",
+    "@opennextjs/cloudflare": "^1.20.13",
+    "next": "16.4.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.6.5"
@@ -41,7 +41,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "esbuild": "^0.25.4",
     "eslint": "^9",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-security": "^4.0.1",
     "husky": "^9.1.7",
@@ -54,9 +54,12 @@
     "typescript": "^5",
     "vite": "^7.3.6",
     "vitest": "^4.1.11",
-    "wrangler": "^4.141.0"
+    "wrangler": "^4.152.0"
   },
   "overrides": {
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "@node-minify/core": {
+      "glob": "^10.5.0"
+    }
   }
 }

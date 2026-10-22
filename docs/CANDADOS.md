@@ -1398,6 +1398,13 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué NO tocar:** no subir Next a 16.4 hasta que el adaptador lo soporte de verdad (probar con
   `npm run preview` antes, no fiarse del rango de versiones); no quitar el paso de humo; no
   volver a mover `yapanel-build` a mano salvo en una emergencia como esta.
+- **Actualización (22 oct 2026):** salió un aviso crítico de Next (ejecución de código remota en la
+  optimización de imágenes con SVG, y un ataque de denegación con Server Actions) para 16.0.0–16.4.0.
+  Se subió a **Next 16.4.2** con el adaptador **1.20.13**, que ya pide Next ≥ 16.4.1 (soporta el
+  manifiesto nuevo). Probado antes de publicar: build + empaquetado + `wrangler dev` local, con
+  `/datos/salud` en «ok», `/entrar` 200 y las páginas protegidas redirigiendo, sin errores en el
+  registro. El adaptador nuevo trae `glob` 10.4.5 (aviso alto del comando `glob -c`) por
+  `@node-minify/core`: se fuerza `glob ^10.5.0` en `overrides` del `package.json`.
 
 ## C-AVATAR-2 — Cada video de Chase cambia de escenografía: la misma foto no se repite (8 oct 2026)
 
