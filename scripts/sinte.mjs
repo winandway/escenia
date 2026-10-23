@@ -135,6 +135,87 @@ export function crearLienzo(segundos, { bucle = false, semilla = 1 } = {}) {
     }
   }
 
+  /**
+   * Piano (síntesis aditiva): cada nota suma sus parciales un poco desafinados hacia arriba, como una
+   * cuerda de piano de verdad; los agudos se apagan antes que los graves, el golpe se apaga rápido y
+   * queda una cola larga, y un golpecito de martillo al empezar. `dur` es lo que la sostiene el pedal.
+   */
+  function piano({ t0, f, amp, dur, pan = 0.5, brillo = 0.5 }) {
+    const i0 = Math.round(t0 * SR);
+    const suelta = 0.35;
+    const n = Math.round((dur + suelta) * SR);
+    // Los graves suenan más tiempo que los agudos.
+    const tau = 1.2 + 2.8 * Math.exp(-(f - 60) / 260);
+    const parciales = [];
+    for (let k = 1; k <= 10; k++) {
+      const fk = f * k * Math.sqrt(1 + 0.00035 * k * k);
+      if (fk > SR / 2.5) break;
+      const tk = tau / (1 + 0.55 * (k - 1));
+      parciales.push({
+        inc: (2 * Math.PI * fk) / SR,
+        a: k === 1 ? 1 : (brillo * 0.9) / k ** 1.35,
+        fase: azar() * 2 * Math.PI,
+        // Dos caídas: el golpe (rápida) y la cola (lenta).
+        rapida: 1,
+        lenta: 1,
+        dR: Math.exp(-1 / (tk * 0.3 * SR)),
+        dL: Math.exp(-1 / (tk * 1.6 * SR)),
+      });
+    }
+    for (let i = 0; i < n; i++) {
+      const t = i / SR;
+      const ataque = t < 0.004 ? t / 0.004 : 1;
+      const soltar = t < dur ? 1 : Math.max(0, 1 - (t - dur) / suelta);
+      let y = 0;
+      for (const p of parciales) {
+        y += p.a * (0.55 * p.rapida + 0.45 * p.lenta) * Math.sin(p.fase + p.inc * i);
+        p.rapida *= p.dR;
+        p.lenta *= p.dL;
+      }
+      if (t < 0.012) y += (azar() * 2 - 1) * 0.06 * (1 - t / 0.012);
+      poner(i0 + i, y * amp * ataque * soltar, pan);
+    }
+  }
+
+  /**
+   * Una sala (reverberación de Schroeder: cuatro peines y dos pasatodo), mezclada con `mojado`: el piano
+   * suena en un cuarto y no pegado al oído.
+   */
+  function sala(mojado = 0.22) {
+    for (const canal of [izq, der]) {
+      const seco = Float32Array.from(canal);
+      const salida = new Float32Array(N);
+      const desplazar = canal === der ? 1.07 : 1;
+      for (const ms of [29.7, 37.1, 41.1, 43.7]) {
+        const d = Math.round((ms * desplazar * SR) / 1000);
+        const buf = new Float32Array(d);
+        let k = 0;
+        let filtro = 0;
+        for (let i = 0; i < N; i++) {
+          const y = buf[k];
+          filtro = y * 0.6 + filtro * 0.4;
+          buf[k] = seco[i] + filtro * 0.8;
+          k = (k + 1) % d;
+          salida[i] += y / 4;
+        }
+      }
+      for (const ms of [5, 1.7]) {
+        const d = Math.round((ms * SR) / 1000);
+        const buf = new Float32Array(d);
+        let k = 0;
+        for (let i = 0; i < N; i++) {
+          const b = buf[k];
+          const x = salida[i];
+          const y = -0.7 * x + b;
+          buf[k] = x + 0.7 * y;
+          k = (k + 1) % d;
+          salida[i] = y;
+        }
+      }
+      for (let i = 0; i < N; i++) canal[i] = seco[i] * (1 - mojado) + salida[i] * mojado * 2.2;
+    }
+  }
+
   /** Límite suave, pico a -1 dB, y a MP3. */
   function guardar(ruta, { ganancia = 1.3 } = {}) {
     let pico = 0;
@@ -174,5 +255,5 @@ export function crearLienzo(segundos, { bucle = false, semilla = 1 } = {}) {
     );
   }
 
-  return { N, nota, bombo, ruido, cuerda, guardar, segundos };
+  return { N, nota, bombo, ruido, cuerda, piano, sala, guardar, segundos };
 }

@@ -23,6 +23,7 @@
 - Estrategia de temas (dónde el clic es más caro): [docs/ESTRATEGIA-TEMAS.md](docs/ESTRATEGIA-TEMAS.md).
 - Noticias de Losupe para los videos cortos (el prompt para la sesión de Losupe): [docs/NOTICIAS-LOSUPE.md](docs/NOTICIAS-LOSUPE.md).
 - Monigotes animados (videos de intriga con dibujos de línea que se mueven, Wan 2.2): [docs/MONIGOTES.md](docs/MONIGOTES.md).
+- Locución sobre un video ya editado (la voz de Richard con piano suave debajo; quince años, homenajes): [docs/LOCUCION.md](docs/LOCUCION.md). El material de personas va en `encargos/`, fuera de git.
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro

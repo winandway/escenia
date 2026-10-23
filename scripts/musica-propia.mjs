@@ -6,6 +6,9 @@
 //  2. Una BACHATA provisional (requinto, bongó, güira y bajo), para que una
 //     historia de bachata no salga con otra cosa debajo mientras Richard sube
 //     una bachata suya desde el panel (Sonidos).
+//  3. Un PIANO suave (balada en Re, arpegios lentos), para las locuciones
+//     emotivas: quince años, bodas, homenajes (Richard, 23 oct 2026: «un pianito
+//     de fondo bien suavecito»).
 //
 // El nombre de cada archivo ES su ficha: con esas palabras la elige la Estación.
 // Uso (desde la raíz):  node scripts/musica-propia.mjs
@@ -200,4 +203,82 @@ const carpeta = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../e
   }
   l.guardar(path.join(carpeta, "bachata-guitar-requinto-bongos-guira-romantic-warm.mp3"), { ganancia: 1.2 });
 }
+
+// ───────────────────────── 3. El piano suave ─────────────────────────
+{
+  const BPM = 66;
+  const T = 60 / BPM;
+  const COMPAS = 4 * T;
+  const DURACION = 192;
+  const l = crearLienzo(DURACION, { semilla: 20261023 });
+  const azar = (() => {
+    let s = 7;
+    return () => (s = (s * 16807) % 2147483647) / 2147483647;
+  })();
+  // Cada acorde: el bajo (mano izquierda) y cuatro notas de la derecha, de grave a agudo.
+  const A = {
+    D: [38, [62, 66, 69, 74]],
+    "A/C#": [37, [64, 69, 73, 76]],
+    Bm: [35, [62, 66, 71, 74]],
+    G: [31, [62, 67, 71, 74]],
+    Em7: [40, [62, 67, 71, 76]],
+    A: [33, [64, 69, 73, 76]],
+    "D/F#": [42, [62, 66, 69, 74]],
+    "F#m": [42, [61, 66, 69, 73]],
+  };
+  const frase1 = ["D", "A/C#", "Bm", "G"];
+  const frase2 = ["Em7", "A", "D", "D/F#"];
+  const frase3 = ["G", "A", "F#m", "Bm"];
+  const frase4 = ["Em7", "A", "D", "D"];
+  const compases = ["D", "G", "D", "A"];
+  while (compases.length * COMPAS < DURACION - 14) compases.push(...frase1, ...frase2, ...frase3, ...frase4);
+  // Se corta donde cabe y se cierra con «G, A» y el acorde final.
+  const caben = Math.floor((DURACION - 10) / COMPAS) - 2;
+  compases.length = caben;
+  compases.push("G", "A");
+  const PATRON = [0, 2, 1, 3, 2, 1, 3, 2];
+  compases.forEach((nombre, c) => {
+    const [bajo, mano] = A[nombre];
+    const t = c * COMPAS;
+    const suave = c < 4 ? 0.7 : 1; // la entrada, más bajita
+    const fin = t + COMPAS + 0.25; // el pedal se levanta al cambiar de acorde
+    l.piano({ t0: t, f: hz(bajo + 12), amp: 0.19 * suave, dur: fin - t, pan: 0.42, brillo: 0.35 });
+    l.piano({
+      t0: t + 2 * T,
+      f: hz(bajo + 19),
+      amp: 0.08 * suave,
+      dur: fin - t - 2 * T,
+      pan: 0.45,
+      brillo: 0.3,
+    });
+    PATRON.forEach((k, j) => {
+      const t0 = t + (j * T) / 2 + (azar() - 0.5) * 0.016;
+      const amp = (j === 0 ? 0.12 : 0.095) * (0.88 + azar() * 0.24) * suave;
+      l.piano({
+        t0,
+        f: hz(mano[k]),
+        amp,
+        dur: Math.max(0.3, fin - t0),
+        pan: 0.5 + (mano[k] - 68) / 60,
+        brillo: 0.45,
+      });
+    });
+  });
+  // El acorde final, arpegiado despacio, que se queda sonando.
+  const tf = compases.length * COMPAS;
+  [38, 50, 57, 62, 66, 69, 74].forEach((m, k) => {
+    l.piano({
+      t0: tf + k * 0.09,
+      f: hz(m),
+      amp: m < 50 ? 0.17 : 0.1,
+      dur: DURACION - tf - 1.2 - k * 0.09,
+      pan: 0.5 + (m - 60) / 60,
+      brillo: 0.4,
+    });
+  });
+  l.sala(0.24);
+  l.guardar(path.join(carpeta, "piano-ballad-soft-gentle-emotional.mp3"), { ganancia: 1.1 });
+  console.log("piano-ballad-soft-gentle-emotional.mp3");
+}
+
 console.log(`Pistas listas en ${carpeta}`);

@@ -90,3 +90,6 @@ estacion/recursos/sfx-panel/
 
 # Material de clientes para la publicidad (fotos, logos, avatar): no va al repo público
 /publicidad/
+
+# Encargos de video de personas (fotos, nombres, voces): datos privados, nunca al repo público
+/encargos/
