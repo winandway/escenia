@@ -1693,9 +1693,7 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   C-PUBLICIDAD-ENTERA): una captura que se sale o se deforma es un anuncio que no se entiende.
 - **Qué se hizo:** diseño `"pizarra"` en `estacion/src/remotion/publicidad-diseno.ts` y
   `Publicidad.tsx`. Un teléfono dibujado (marco, isla, la hora) del lado contrario a la persona; la
-  captura entera y centrada en su pantalla (`capturaEnTelefono`, como «contain» con un margen). La
-  persona se apoya abajo con su mano entrando unos 30 px sobre el borde del teléfono (46 px la de
-  espaldas, con un destello donde toca); si así su cara se saliera del video, se corre hacia adentro
+  captura entera y centrada en su pantalla (`capturaEnTelefono`, como «contain» con un margen). El teléfono es grande (660×1240) y la persona se apoya abajo delante de él, tapando un pedazo (110 px; 170 px la de espaldas, con un destello donde toca): Richard lo pidió así el mismo día, «que el cuerpo de ella quede por arriba como si fuese una pizarra… taparía una parte… eso no importa»; si así su cara se saliera del video, se corre hacia adentro
   (`personaEnPizarra`). El teléfono sigue a la persona y cruza deslizándose cuando ella cambia de lado
   (`ladoDelTelefonoEn`). La foto se voltea sola para que la mano apunte al teléfono (`vaVolteada`), y la
   pose de espaldas es una foto quieta (`quieta: true`), sin avatar que pagar.

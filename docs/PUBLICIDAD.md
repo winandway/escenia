@@ -130,10 +130,13 @@ capturas «bien centradas en la pantalla del teléfono de forma vertical», y el
 corta y otras alta, señalando la pantalla, y a veces de espaldas «como cuando uno está apuntando a una
 pizarra».
 
-- **`diseno: "pizarra"`**: un teléfono dibujado (marco oscuro, la isla y la hora arriba) con la captura
+- **`diseno: "pizarra"`**: un teléfono grande (660×1240) dibujado (marco oscuro, la isla y la hora arriba) con la captura
   entera y centrada en su pantalla. Va del lado contrario a la persona y cruza la pantalla deslizándose
   cuando ella cambia de lado; sin nadie, se queda al centro. Cada captura nueva entra subiendo un poco,
   como al cambiar de pantalla en una app. Nunca se acerca.
+- **Ella va delante del teléfono y puede taparle un pedazo** (Richard, al ver la primera prueba con el
+  teléfono más chico: «estirar un poquito más la pantalla… que el cuerpo de ella quede por arriba como si
+  fuese una pizarra… eso no importa»). Su mano entra 110 px sobre el teléfono; la de espaldas, 170 px.
 - **momento `persona.lado`** (`izquierda` o `derecha`): de qué lado está ella. La foto se voltea sola para
   que su mano apunte al teléfono (`apunta` dice hacia dónde apunta en la foto original; por defecto, a la
   derecha). `encuadre: "medio"` es la corta (880 px de alto) y `"cuerpo"` la alta (1300 px).

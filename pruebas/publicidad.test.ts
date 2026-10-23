@@ -388,6 +388,15 @@ describe("C-PIZARRA-1: el diseño «pizarra», el teléfono y la persona que lo 
     expect(v.width / v.height).toBeCloseTo(ancho / alto, 3);
   });
 
+  it("el teléfono es grande y ella va delante tapándole un pedazo, como en una pizarra (23 oct 2026)", () => {
+    // Richard, al ver el teléfono de 520 px: «estirar un poquito más la pantalla… que el cuerpo de ella
+    // quede por arriba como si fuese una pizarra… eso no importa».
+    expect(contenidoDelTelefono().ancho).toBeGreaterThanOrEqual(620);
+    expect(contenidoDelTelefono().alto).toBeGreaterThanOrEqual(1100);
+    expect(Z.solape).toBeGreaterThanOrEqual(100);
+    expect(Z.solapeQuieta).toBeGreaterThan(Z.solape);
+  });
+
   it("el teléfono va del lado contrario a la persona, dentro del video y debajo del texto grande", () => {
     const izq = telefonoPizarra("izquierda");
     const der = telefonoPizarra("derecha");

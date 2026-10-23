@@ -183,15 +183,17 @@ export const ZONA_PUBLICIDAD = {
    * apuntando a una pizarra»): un teléfono dibujado de un lado y la persona del otro, señalándolo.
    */
   pizarra: {
-    telefono: { ancho: 520, alto: 1040, y: 380, margen: 40, bisel: 16, radio: 74, barra: 54, relleno: 10 },
+    // Grande (Richard, 23 oct 2026: «estirar un poquito más la pantalla… que el cuerpo de ella quede por
+    // arriba como si fuese una pizarra»): ella puede tapar un pedazo del teléfono.
+    telefono: { ancho: 660, alto: 1240, y: 370, margen: 30, bisel: 16, radio: 80, barra: 54, relleno: 10 },
     /** Alto de la persona: «medio» (corta) y «cuerpo» (alta, de la cabeza a los pies). */
     persona: { medio: 880, cuerpo: 1300 },
-    /** Cuánto entra su mano sobre el borde del teléfono (la de espaldas lo toca, como en una pizarra). */
-    solape: 30,
-    solapeQuieta: 46,
+    /** Cuánto entra su cuerpo sobre el teléfono (la de espaldas más, como quien toca la pizarra). */
+    solape: 110,
+    solapeQuieta: 170,
     /** Su cara nunca queda a menos de esto del borde del video. */
     margenCara: 24,
-    subtitulos: 1446,
+    subtitulos: 1626,
   },
   limiteAbajo: 1920 * 0.85,
 } as const;
