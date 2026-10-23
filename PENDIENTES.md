@@ -2,6 +2,7 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Ver el video de la tarjeta de saldo de QRBott (diseño «pizarra»: el teléfono con la captura entera, la chica con moño y blusa mostaza señalándolo, a veces de espaldas) y decir si así quiere los próximos → el diseño queda para los demás videos de funciones.
 - 👤 Ver el video de Cashea de QRBott (la chica con su look nuevo, paleta morada y portada en el primer cuadro) y decir si así se ven distintos los videos → la armonía nueva se usa en los próximos.
 - 👤 Ver el comercial «Vende desde el celular» de QRBott (la chica venezolana con las pantallas del celular enteras) y decir qué le cambiarías → cambiar una frase solo rehace ese pedacito.
 - 👤 Confirmar que la garantía de 30 días («si no te convence, te devolvemos tu dinero») es la política real de QRBott y que quede escrita en sus términos → el anuncio la promete.

@@ -308,9 +308,22 @@ export async function pasoPersonas(
     const espejo = vaVolteada(a);
     if (a.quieta) {
       // De espaldas y señalando: una foto quieta, sin voz que poner en la boca (gratis).
-      const png = await sharp(sinFondo)
+      const recorte = await sharp(sinFondo)
         .extract({ left: r.x, top: r.y, width: r.ancho, height: r.alto })
         .resize({ height: 1500, fit: "inside" })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      // El borde del recorte de Vision sale en escalones: se suaviza un poco el canal alfa.
+      const { width: w, height: h } = recorte.info;
+      const alfaSuave = await sharp(recorte.data, { raw: { width: w, height: h, channels: 4 } })
+        .extractChannel(3)
+        .blur(1.2)
+        .raw()
+        .toBuffer();
+      const rgba = Buffer.from(recorte.data);
+      for (let i = 0; i < w * h; i++) rgba[i * 4 + 3] = alfaSuave[i] ?? 0;
+      const png = await sharp(rgba, { raw: { width: w, height: h, channels: 4 } })
         .png()
         .toBuffer();
       const ruta = path.join(dir, `${huella(png)}-quieta.png`);
