@@ -1678,3 +1678,28 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   sobre magenta, el hueco del brazo queda limpio.
 - **Qué NO tocar:** no borrar grises sueltos «porque se parecen al tablero»: el pelo y la camisa también
   son grises; lo que decide es que sigan el dibujo de las celdas.
+
+## C-PIZARRA-1 — En el diseño «pizarra» la captura va entera en el teléfono y la chica lo señala sin taparle la cara (23 oct 2026)
+
+- **Qué se pidió y por qué es candado:** Richard, con el video de la tarjeta de saldo de QRBott: «poner las
+  capturas de pantalla bien centradas en la pantalla del teléfono de forma vertical… que la mano apunte
+  hacia la pantalla… que ella en algunos momentos se ponga como de espalda y apunte como cuando uno está
+  apuntando a una pizarra». Ya se había roto una vez lo de las capturas enteras (la v2 de la bienvenida,
+  C-PUBLICIDAD-ENTERA): una captura que se sale o se deforma es un anuncio que no se entiende.
+- **Qué se hizo:** diseño `"pizarra"` en `estacion/src/remotion/publicidad-diseno.ts` y
+  `Publicidad.tsx`. Un teléfono dibujado (marco, isla, la hora) del lado contrario a la persona; la
+  captura entera y centrada en su pantalla (`capturaEnTelefono`, como «contain» con un margen). La
+  persona se apoya abajo con su mano entrando unos 30 px sobre el borde del teléfono (46 px la de
+  espaldas, con un destello donde toca); si así su cara se saliera del video, se corre hacia adentro
+  (`personaEnPizarra`). El teléfono sigue a la persona y cruza deslizándose cuando ella cambia de lado
+  (`ladoDelTelefonoEn`). La foto se voltea sola para que la mano apunte al teléfono (`vaVolteada`), y la
+  pose de espaldas es una foto quieta (`quieta: true`), sin avatar que pagar.
+- **Cómo se comprueba:** `npx vitest run pruebas/publicidad.test.ts` (bloque C-PIZARRA-1: siete medidas de
+  captura caben enteras, centradas y sin deformar; el teléfono del lado contrario y dentro del video; la
+  mano sobre el borde; la cara dentro del video; el volteo; la punta del dedo). Se pone en rojo si se
+  quita el margen de la captura, el ajuste de la cara o se invierte el volteo (comprobado el 23 oct 2026).
+  A ojo: `npx tsx src/publicidad.ts <plan> --paso cuadros --en 0,300,900` (desde `estacion/`) deja cuadros
+  sueltos sin armar el video.
+- **Qué NO tocar:** no acercar la captura dentro del teléfono para «que se lea mejor»: si una captura de
+  computadora es muy ancha, se recorta antes la parte que importa (la ventana de cobro, el recibo, el
+  menú) en una imagen aparte, entera.

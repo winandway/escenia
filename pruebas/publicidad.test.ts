@@ -6,16 +6,24 @@ import {
   elegirLogo,
   esquemaPlanPublicidad,
   planParaArmar,
+  puntaDelDedo,
   recorteDeEncuadre,
   textoDelPlan,
   SEGUNDOS_MAXIMOS,
   tiemposDeFrases,
+  vaVolteada,
 } from "../estacion/src/publicidad-plan";
 import {
+  capturaEnTelefono,
+  contenidoDelTelefono,
+  esquemaPublicidad,
   formatoCifra,
+  ladoDelTelefonoEn,
   mezclarVistas,
+  personaEnPizarra,
   subtitulosEnPantalla,
   tarjetaTelefono,
+  telefonoPizarra,
   vistaCompleta,
   vistaDeEnfoque,
   vistaPersonaEn,
@@ -349,5 +357,163 @@ describe("publicidad: cada video con su armonía y su portada (Cashea, 22 oct 20
     expect(() =>
       esquemaPlanPublicidad.parse({ ...base, paleta: { fondo: ["morado", "#000000"] } }),
     ).toThrow();
+  });
+});
+
+describe("C-PIZARRA-1: el diseño «pizarra», el teléfono y la persona que lo señala (23 oct 2026)", () => {
+  // Richard: «poner las capturas de pantalla bien centradas en la pantalla del teléfono de forma
+  // vertical… que la mano apunte hacia la pantalla… que ella en algunos momentos se ponga como de
+  // espalda y apunte como cuando uno está apuntando a una pizarra».
+  const Z = ZONA_PUBLICIDAD.pizarra;
+
+  it.each([
+    [1170, 1992],
+    [1024, 1320],
+    [896, 1736],
+    [510, 1472],
+    [816, 632],
+    [1052, 358],
+    [2880, 1800],
+  ])("una captura de %i×%i cabe entera y centrada en la pantalla del teléfono", (ancho, alto) => {
+    const c = contenidoDelTelefono();
+    const v = capturaEnTelefono({ ancho, alto });
+    expect(v.left).toBeGreaterThanOrEqual(-0.01);
+    expect(v.top).toBeGreaterThanOrEqual(-0.01);
+    expect(v.left + v.width).toBeLessThanOrEqual(c.ancho + 0.01);
+    expect(v.top + v.height).toBeLessThanOrEqual(c.alto + 0.01);
+    // Centrada: el mismo espacio a cada lado.
+    expect(Math.abs(v.left - (c.ancho - v.left - v.width))).toBeLessThan(0.5);
+    expect(Math.abs(v.top - (c.alto - v.top - v.height))).toBeLessThan(0.5);
+    // Nunca deformada.
+    expect(v.width / v.height).toBeCloseTo(ancho / alto, 3);
+  });
+
+  it("el teléfono va del lado contrario a la persona, dentro del video y debajo del texto grande", () => {
+    const izq = telefonoPizarra("izquierda");
+    const der = telefonoPizarra("derecha");
+    const centro = telefonoPizarra(null);
+    expect(izq.x + izq.ancho / 2).toBeGreaterThan(540);
+    expect(der.x + der.ancho / 2).toBeLessThan(540);
+    expect(centro.x * 2 + centro.ancho).toBe(1080);
+    for (const t of [izq, der, centro]) {
+      expect(t.x).toBeGreaterThanOrEqual(0);
+      expect(t.x + t.ancho).toBeLessThanOrEqual(1080);
+      expect(t.y).toBeGreaterThanOrEqual(ZONA_PUBLICIDAD.texto.y + ZONA_PUBLICIDAD.texto.alto);
+      expect(t.y + t.alto).toBeLessThan(Z.subtitulos);
+    }
+  });
+
+  const figura = {
+    ancho: 700,
+    alto: 1300,
+    encuadre: "cuerpo" as const,
+    espejo: false,
+    quieta: false,
+    cara: { x: 0.3, y: 0.05, ancho: 0.15, alto: 0.1 },
+  };
+
+  it("a la izquierda, su mano (el borde derecho) entra sobre el borde del teléfono", () => {
+    const tel = telefonoPizarra("izquierda");
+    const p = personaEnPizarra({ ...figura, ancho: 520, lado: "izquierda" }, tel);
+    expect(p.left + p.ancho).toBe(tel.x + Z.solape);
+    expect(p.alto).toBe(Z.persona.cuerpo);
+  });
+
+  it("a la derecha y volteada, su mano (el borde izquierdo) entra sobre el borde del teléfono", () => {
+    const tel = telefonoPizarra("derecha");
+    const p = personaEnPizarra({ ...figura, ancho: 520, lado: "derecha", espejo: true }, tel);
+    expect(p.left).toBe(tel.x + tel.ancho - Z.solape);
+  });
+
+  it("la de espaldas toca más adentro, como en una pizarra", () => {
+    const tel = telefonoPizarra("izquierda");
+    const p = personaEnPizarra({ ...figura, ancho: 520, lado: "izquierda", quieta: true }, tel);
+    expect(p.left + p.ancho).toBe(tel.x + Z.solapeQuieta);
+  });
+
+  it("si la figura es muy ancha, se corre hacia adentro para que su cara no se salga del video", () => {
+    for (const lado of ["izquierda", "derecha"] as const) {
+      const espejo = lado === "derecha";
+      const p = personaEnPizarra({ ...figura, ancho: 1200, lado, espejo }, telefonoPizarra(lado));
+      const cara = espejo
+        ? { desde: 1 - figura.cara.x - figura.cara.ancho, hasta: 1 - figura.cara.x }
+        : { desde: figura.cara.x, hasta: figura.cara.x + figura.cara.ancho };
+      expect(p.left + cara.desde * p.ancho).toBeGreaterThanOrEqual(Z.margenCara - 1);
+      expect(p.left + cara.hasta * p.ancho).toBeLessThanOrEqual(1080 - Z.margenCara + 1);
+    }
+  });
+
+  it("la de medio cuerpo es más corta que la de cuerpo entero", () => {
+    const tel = telefonoPizarra("izquierda");
+    const medio = personaEnPizarra({ ...figura, encuadre: "medio", lado: "izquierda" }, tel);
+    const cuerpo = personaEnPizarra({ ...figura, lado: "izquierda" }, tel);
+    expect(medio.alto).toBeLessThan(cuerpo.alto);
+  });
+
+  it("el teléfono sigue a la persona y recuerda de qué lado viene para cruzar deslizándose", () => {
+    const ap = [
+      { inicioMs: 0, finMs: 10_000, lado: "izquierda" as const },
+      { inicioMs: 10_000, finMs: 15_000, lado: "izquierda" as const },
+      { inicioMs: 15_000, finMs: 20_000, lado: "derecha" as const },
+    ];
+    expect(ladoDelTelefonoEn(ap, 5_000)).toEqual({ lado: "izquierda", antes: "izquierda", desdeMs: 0 });
+    // Dos apariciones seguidas del mismo lado no mueven el teléfono.
+    expect(ladoDelTelefonoEn(ap, 12_000)).toEqual({ lado: "izquierda", antes: "izquierda", desdeMs: 0 });
+    expect(ladoDelTelefonoEn(ap, 16_000)).toEqual({ lado: "derecha", antes: "izquierda", desdeMs: 15_000 });
+    // Sin nadie, vuelve al centro.
+    expect(ladoDelTelefonoEn(ap, 21_000)).toEqual({ lado: null, antes: "derecha", desdeMs: 20_000 });
+  });
+
+  it("la foto se voltea solo cuando su mano no apunta al teléfono", () => {
+    expect(vaVolteada({})).toBe(false);
+    expect(vaVolteada({ lado: "izquierda" })).toBe(false);
+    expect(vaVolteada({ lado: "derecha" })).toBe(true);
+    expect(vaVolteada({ lado: "izquierda", apunta: "izquierda" })).toBe(true);
+    expect(vaVolteada({ lado: "derecha", apunta: "izquierda" })).toBe(false);
+  });
+
+  it("la punta del dedo es la figura más metida hacia donde apunta", () => {
+    // Una figura de 10×10: el cuerpo en las columnas 2 a 5 y el brazo que llega a la columna 8, en la fila 3.
+    const alfa = new Uint8Array(100);
+    for (let y = 0; y < 10; y++) for (let x = 2; x <= 5; x++) alfa[y * 10 + x] = 255;
+    for (let x = 6; x <= 8; x++) {
+      alfa[3 * 10 + x] = 255;
+      alfa[2 * 10 + x] = 255;
+    }
+    const d = puntaDelDedo(alfa, 10, 10, "derecha");
+    expect(d?.x).toBeCloseTo(0.85, 5);
+    expect(d?.y).toBeCloseTo(0.3, 5);
+    expect(puntaDelDedo(alfa, 10, 10, "izquierda")?.x).toBeCloseTo(0.25, 5);
+    expect(puntaDelDedo(new Uint8Array(100), 10, 10)).toBeNull();
+  });
+
+  it("las apariciones viejas (sin lado ni espejo) siguen valiendo: a la izquierda y sin voltear", () => {
+    const props = esquemaPublicidad.shape.apariciones.parse([
+      { inicioMs: 0, finMs: 1000, ruta: "p.webm", ancho: 10, alto: 20, encuadre: "medio" },
+    ]);
+    expect(props[0]).toMatchObject({ lado: "izquierda", espejo: false, quieta: false, dedo: null });
+  });
+
+  it("el plan acepta la persona quieta de espaldas con su lado, y la lleva a su aparición", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      marca: "QRBott",
+      logo: "logo.png",
+      diseno: "pizarra",
+      texto: "Tu número es tu celular y trae su código para pagar.",
+      momentos: [
+        { frase: "Tu número", persona: { imagen: "a.png", encuadre: "cuerpo", lado: "derecha" } },
+        { frase: "y trae", persona: { imagen: "b.png", encuadre: "cuerpo", lado: "derecha", quieta: true } },
+        { frase: "para pagar" },
+      ],
+      cierre: { frase: "para pagar", lineas: [] },
+    });
+    const ap = aparicionesDelPlan(
+      plan.momentos.map((m, i) => ({ inicioMs: i * 1000, persona: m.persona })),
+      5000,
+    );
+    expect(ap.map((a) => [a.lado, a.quieta ?? false])).toEqual([
+      ["derecha", false],
+      ["derecha", true],
+    ]);
   });
 });

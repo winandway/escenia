@@ -18,9 +18,11 @@ import {
   costoPublicidadUsd,
   esquemaPlanPublicidad,
   type PlanPublicidad,
+  puntaDelDedo,
   recorteDeEncuadre,
   textoDelPlan,
   tiemposDeFrases,
+  vaVolteada,
 } from "./publicidad-plan";
 
 const exec = promisify(execFile);
@@ -240,6 +242,12 @@ export type AparicionGuardada = {
   encuadre: "medio" | "cuerpo";
   /** Dónde está su cara en el video (fracciones), para mostrar solo la cabecita. */
   cara: { x: number; y: number; ancho: number; alto: number } | null;
+  /** Diseño «pizarra»: su lado, si va volteada y si es una foto quieta (de espaldas). */
+  lado?: "izquierda" | "derecha";
+  espejo?: boolean;
+  quieta?: boolean;
+  /** La punta del dedo en la figura (fracciones, sin voltear). */
+  dedo?: { x: number; y: number } | null;
   costoUsd: number;
 };
 
@@ -296,6 +304,40 @@ export async function pasoPersonas(
   for (const [k, a] of apariciones.entries()) {
     const sinFondo = await figuraSinFondo(path.resolve(carpeta, a.imagen), dir);
     const r = recorteDeEncuadre(await cajaDeFigura(sinFondo), a.encuadre, a.corte);
+    const lado = a.lado ?? "izquierda";
+    const espejo = vaVolteada(a);
+    if (a.quieta) {
+      // De espaldas y señalando: una foto quieta, sin voz que poner en la boca (gratis).
+      const png = await sharp(sinFondo)
+        .extract({ left: r.x, top: r.y, width: r.ancho, height: r.alto })
+        .resize({ height: 1500, fit: "inside" })
+        .png()
+        .toBuffer();
+      const ruta = path.join(dir, `${huella(png)}-quieta.png`);
+      if (!existsSync(ruta)) await writeFile(ruta, png);
+      const { data, info } = await sharp(png).ensureAlpha().extractChannel(3).raw().toBuffer({
+        resolveWithObject: true,
+      });
+      const dedo = puntaDelDedo(new Uint8Array(data), info.width, info.height, a.apunta ?? "derecha");
+      console.log(
+        `  ${k + 1}. quieta ${a.encuadre} ${(a.inicioMs / 1000).toFixed(1)}–${(a.finMs / 1000).toFixed(1)} s → ${ruta}`,
+      );
+      salida.push({
+        inicioMs: a.inicioMs,
+        finMs: a.finMs,
+        ruta,
+        ancho: info.width,
+        alto: info.height,
+        encuadre: a.encuadre,
+        cara: null,
+        lado,
+        espejo,
+        quieta: true,
+        dedo,
+        costoUsd: 0,
+      });
+      continue;
+    }
     const figura = await sharp(sinFondo)
       .extract({ left: r.x, top: r.y, width: r.ancho, height: r.alto })
       .resize({ width: 856, height: 1496, fit: "inside" })
@@ -409,6 +451,10 @@ export async function pasoPersonas(
       ...medidas,
       encuadre: a.encuadre,
       cara,
+      lado,
+      espejo,
+      quieta: false,
+      dedo: null,
       costoUsd,
     });
   }
@@ -519,6 +565,8 @@ export async function pasoArmar(
   trabajo: string,
   /** El nombre del video (otra versión del mismo anuncio no pisa a la primera). */
   nombre = "anuncio",
+  /** Solo estos cuadros sueltos (PNG), para revisar el diseño antes de armar el video entero. */
+  cuadros?: number[],
 ): Promise<{ salida: string; duracionMs: number; costoUsd: number }> {
   const voz = JSON.parse(await readFile(path.join(trabajo, "voz.json"), "utf8")) as VozGuardada;
   const avatar =
@@ -560,11 +608,15 @@ export async function pasoArmar(
           async (a, k) => ({
             inicioMs: a.inicioMs,
             finMs: a.finMs,
-            ruta: await copiar(a.ruta, `persona-${k + 1}.webm`),
+            ruta: await copiar(a.ruta, `persona-${k + 1}${path.extname(a.ruta)}`),
             ancho: a.ancho,
             alto: a.alto,
             encuadre: a.encuadre,
             cara: a.cara ?? null,
+            lado: a.lado ?? "izquierda",
+            espejo: a.espejo ?? false,
+            quieta: a.quieta ?? false,
+            dedo: a.dedo ?? null,
           }),
         ),
       )
@@ -651,6 +703,17 @@ export async function pasoArmar(
   const { renderMedia, selectComposition } = await import("@remotion/renderer");
   const serveUrl = await empaquetar(publica);
   const comp = await selectComposition({ serveUrl, id: "Publicidad", inputProps: props });
+  if (cuadros) {
+    const { renderStill } = await import("@remotion/renderer");
+    const dir = path.join(trabajo, `cuadros-${nombre}`);
+    await mkdir(dir, { recursive: true });
+    for (const c of cuadros) {
+      const salida = path.join(dir, `${String(c).padStart(5, "0")}.png`);
+      await renderStill({ composition: comp, serveUrl, output: salida, frame: c, inputProps: props });
+    }
+    console.log(`Cuadros en ${dir}`);
+    return { salida: dir, duracionMs, costoUsd: 0 };
+  }
   const salida = path.join(trabajo, `${nombre}.mp4`);
   await renderMedia({
     composition: comp,
@@ -668,7 +731,7 @@ export async function pasoArmar(
 
 async function principal() {
   const rutaPlan = process.argv[2];
-  if (!rutaPlan) throw new Error("Uso: publicidad.ts plan.json --paso voz|avatar|armar");
+  if (!rutaPlan) throw new Error("Uso: publicidad.ts plan.json --paso voz|verdes|avatar|armar|cuadros");
   const plan = esquemaPlanPublicidad.parse(JSON.parse(await readFile(path.resolve(rutaPlan), "utf8")));
   const carpeta = path.dirname(path.resolve(rutaPlan));
   const nombre = path.basename(rutaPlan, ".json");
@@ -684,6 +747,14 @@ async function principal() {
       : await pasoAvatar(plan, carpeta, trabajo));
   if (paso === "armar")
     return void (await pasoArmar(plan, carpeta, trabajo, plan.trabajo_de ? nombre : "anuncio"));
+  if (paso === "cuadros") {
+    // Cuadros sueltos para revisar el diseño: --en 0,60,300 (números de cuadro, a 30 por segundo).
+    const en = (opcion("--en") ?? "0")
+      .split(",")
+      .map(Number)
+      .filter((n) => Number.isFinite(n));
+    return void (await pasoArmar(plan, carpeta, trabajo, plan.trabajo_de ? nombre : "anuncio", en));
+  }
   throw new Error(`Paso desconocido: ${paso}`);
 }
 

@@ -122,6 +122,33 @@ de la misma foto con Seedream edit (3 ¢ cada una).
 **La portada de WhatsApp:** el primer cuadro ya trae el título completo y la persona quieta (WhatsApp lo
 usa de miniatura).
 
+## La tarjeta de saldo y el diseño «pizarra» (QRBott, 23 oct 2026)
+
+Richard pidió el video de la tarjeta de saldo «como lo que ya estamos haciendo pero los fondos los vamos
+a ir cambiando», la chica con el moño amarrado, otra ropa y las piernas un poco más gorditas, las
+capturas «bien centradas en la pantalla del teléfono de forma vertical», y ella a un lado, unas veces
+corta y otras alta, señalando la pantalla, y a veces de espaldas «como cuando uno está apuntando a una
+pizarra».
+
+- **`diseno: "pizarra"`**: un teléfono dibujado (marco oscuro, la isla y la hora arriba) con la captura
+  entera y centrada en su pantalla. Va del lado contrario a la persona y cruza la pantalla deslizándose
+  cuando ella cambia de lado; sin nadie, se queda al centro. Cada captura nueva entra subiendo un poco,
+  como al cambiar de pantalla en una app. Nunca se acerca.
+- **momento `persona.lado`** (`izquierda` o `derecha`): de qué lado está ella. La foto se voltea sola para
+  que su mano apunte al teléfono (`apunta` dice hacia dónde apunta en la foto original; por defecto, a la
+  derecha). `encuadre: "medio"` es la corta (880 px de alto) y `"cuerpo"` la alta (1300 px).
+- **momento `persona.quieta`**: una foto quieta que no habla, para la pose de espaldas señalando la
+  pantalla. Se mece despacio, respira, y un destello del color de la marca late donde su dedo toca el
+  teléfono. No paga avatar; la voz sigue sonando como si explicara de cara a la pizarra.
+- **Capturas de computadora**: una pantalla ancha no cabe derecha en un teléfono. Se recorta antes la
+  parte que importa en una imagen aparte (la ventana de cobro, el recibo, el menú de la izquierda), entera.
+- **Paso `cuadros`**: `npx tsx src/publicidad.ts <plan> --paso cuadros --en 0,300,900` deja cuadros
+  sueltos (sin armar el video) en la carpeta de trabajo. Con todas las personas marcadas `quieta` en una
+  copia del plan, se revisa la composición entera antes de pagar el avatar.
+
+Plan `publicidad/qrbott/plan-tarjeta.json`, pantallas y recortes en `publicidad/qrbott/tarjeta/pantallas/`,
+poses en `publicidad/qrbott/avatar/tarjeta-*.png` (cuatro con Seedream, 12 ¢). Candado C-PIZARRA-1.
+
 ## Cada anuncio con su armonía y su portada: el video de Cashea (QRBott, 22 oct 2026)
 
 Richard: «todos los videos salen iguales… da la sensación de que ese video uno ya lo vio». Desde ese
@@ -140,11 +167,12 @@ día cada anuncio lleva su propia armonía y una portada en el primer cuadro:
 
 Registro para no repetir:
 
-| Anuncio                         | Paleta                           | Acento  | Look de la chica                                  | Música           |
-| ------------------------------- | -------------------------------- | ------- | ------------------------------------------------- | ---------------- |
-| Bienvenida QRBott (21 oct)      | verde y negro (sin paleta)       | #2ED66E | gorra de Venezuela, franela blanca, jeans         | bombo y bajo     |
-| Vende desde el celular (22 oct) | verde y negro (sin paleta)       | #2ED66E | la misma                                          | bombo y bajo     |
-| Cashea (22 oct)                 | morado #3b1470 → #12052a, líneas | #A855F7 | sin gorra, pelo suelto, blusa lila, jeans blancos | electrónica tech |
+| Anuncio                         | Paleta                               | Acento  | Look de la chica                                           | Música            |
+| ------------------------------- | ------------------------------------ | ------- | ---------------------------------------------------------- | ----------------- |
+| Bienvenida QRBott (21 oct)      | verde y negro (sin paleta)           | #2ED66E | gorra de Venezuela, franela blanca, jeans                  | bombo y bajo      |
+| Vende desde el celular (22 oct) | verde y negro (sin paleta)           | #2ED66E | la misma                                                   | bombo y bajo      |
+| Cashea (22 oct)                 | morado #3b1470 → #12052a, líneas     | #A855F7 | sin gorra, pelo suelto, blusa lila, jeans blancos          | electrónica tech  |
+| Tarjeta de saldo (23 oct)       | azul noche #0b2a4a → #030d1c, puntos | #F5B83D | moño alto, blusa mostaza, pantalón crema ancho, más curvas | salsa con metales |
 
 ## Comercial «Vende desde el celular» y el diseño «teléfono» (QRBott, 22 oct 2026)
 

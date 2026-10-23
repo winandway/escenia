@@ -29,7 +29,7 @@ export const esquemaPublicidad = z.object({
    * «centro»: la captura en una tarjeta en el medio (versión 1). «pantalla»: la captura ocupa toda la
    * pantalla y la persona se mueve alrededor (cabecita, medio cuerpo señalando, cuerpo pequeño o grande).
    */
-  diseno: z.enum(["centro", "pantalla", "telefono"]).default("centro"),
+  diseno: z.enum(["centro", "pantalla", "telefono", "pizarra"]).default("centro"),
   /**
    * La armonía propia del video (Richard, 22 oct 2026: «todos los videos salen iguales… da la sensación
    * de que ese video uno ya lo vio»): el fondo en degradado con su dibujo, en vez del verde y negro de
@@ -119,6 +119,14 @@ export const esquemaPublicidad = z.object({
         encuadre: z.enum(["medio", "cuerpo"]),
         /** Dónde está su cara en el video (fracciones), para mostrar solo la cabecita. */
         cara: esquemaRegion.nullable().default(null),
+        /** Diseño «pizarra»: el lado de la pantalla donde está (el teléfono va del otro lado). */
+        lado: z.enum(["izquierda", "derecha"]).default("izquierda"),
+        /** Se dibuja volteada (su mano apunta al otro lado). */
+        espejo: z.boolean().default(false),
+        /** Una foto quieta (PNG) en vez del video que habla: de espaldas, señalando la pantalla. */
+        quieta: z.boolean().default(false),
+        /** La punta del dedo en la figura (fracciones, sin voltear), para el destello donde señala. */
+        dedo: z.object({ x: z.number(), y: z.number() }).nullable().default(null),
       }),
     )
     .default([]),
@@ -168,6 +176,22 @@ export const ZONA_PUBLICIDAD = {
     medio: { alto: 720 },
     cuerpo: { alto: 780, margen: 10 },
     subtitulos: { y: 1500, yLibre: 1560 },
+  },
+  /**
+   * Diseño «pizarra» (Richard, 23 oct 2026: «las capturas bien centradas en la pantalla del teléfono de
+   * forma vertical… ella en algunos momentos se ponga como de espalda y apunte como cuando uno está
+   * apuntando a una pizarra»): un teléfono dibujado de un lado y la persona del otro, señalándolo.
+   */
+  pizarra: {
+    telefono: { ancho: 520, alto: 1040, y: 380, margen: 40, bisel: 16, radio: 74, barra: 54, relleno: 10 },
+    /** Alto de la persona: «medio» (corta) y «cuerpo» (alta, de la cabeza a los pies). */
+    persona: { medio: 880, cuerpo: 1300 },
+    /** Cuánto entra su mano sobre el borde del teléfono (la de espaldas lo toca, como en una pizarra). */
+    solape: 30,
+    solapeQuieta: 46,
+    /** Su cara nunca queda a menos de esto del borde del video. */
+    margenCara: 24,
+    subtitulos: 1446,
   },
   limiteAbajo: 1920 * 0.85,
 } as const;
@@ -295,4 +319,104 @@ export function tarjetaTelefono(img: { ancho: number; alto: number }): {
   const w = Math.round(ancho * s);
   const h = Math.round(alto * s);
   return { x: t.x + t.ancho - w, y: t.y + Math.round((t.alto - h) / 2), ancho: w, alto: h };
+}
+
+type Caja = { x: number; y: number; ancho: number; alto: number };
+
+/** El teléfono del diseño «pizarra»: del lado contrario a la persona, o al centro si no hay nadie. */
+export function telefonoPizarra(ladoPersona: "izquierda" | "derecha" | null): Caja {
+  const t = ZONA_PUBLICIDAD.pizarra.telefono;
+  const x =
+    ladoPersona === "izquierda"
+      ? 1080 - t.margen - t.ancho
+      : ladoPersona === "derecha"
+        ? t.margen
+        : Math.round((1080 - t.ancho) / 2);
+  return { x, y: t.y, ancho: t.ancho, alto: t.alto };
+}
+
+/** La zona de la pantalla del teléfono donde va la captura (debajo de la barra de la hora), relativa a él. */
+export function contenidoDelTelefono(): Caja {
+  const t = ZONA_PUBLICIDAD.pizarra.telefono;
+  return {
+    x: t.bisel,
+    y: t.bisel + t.barra,
+    ancho: t.ancho - 2 * t.bisel,
+    alto: t.alto - 2 * t.bisel - t.barra,
+  };
+}
+
+/** La captura entera y centrada en la pantalla del teléfono (relativa a la zona del contenido). */
+export function capturaEnTelefono(img: { ancho: number; alto: number }): Vista {
+  const c = contenidoDelTelefono();
+  const r = ZONA_PUBLICIDAD.pizarra.telefono.relleno;
+  const v = vistaCompleta(
+    { ancho: c.ancho - 2 * r, alto: c.alto - 2 * r },
+    {
+      ancho: img.ancho || 1,
+      alto: img.alto || 1,
+    },
+  );
+  return { ...v, left: v.left + r, top: v.top + r };
+}
+
+/**
+ * Dónde va la persona en el diseño «pizarra»: apoyada abajo, de su lado, con la mano (el borde de la
+ * figura que mira al teléfono) entrando un poco sobre el borde del teléfono. Si así su cara quedara
+ * fuera del video, se corre hacia adentro (la mano entra más) hasta que la cara se vea entera.
+ */
+export function personaEnPizarra(
+  a: {
+    ancho: number;
+    alto: number;
+    encuadre: "medio" | "cuerpo";
+    lado: "izquierda" | "derecha";
+    espejo: boolean;
+    quieta: boolean;
+    cara: Region | null;
+  },
+  telefono: Caja,
+): { left: number; ancho: number; alto: number } {
+  const Z = ZONA_PUBLICIDAD.pizarra;
+  const alto = a.encuadre === "cuerpo" ? Z.persona.cuerpo : Z.persona.medio;
+  const ancho = Math.round((alto * a.ancho) / Math.max(1, a.alto));
+  const solape = a.quieta ? Z.solapeQuieta : Z.solape;
+  // La cara en el video ya volteado (fracciones del ancho).
+  const cara = a.cara
+    ? a.espejo
+      ? { desde: 1 - a.cara.x - a.cara.ancho, hasta: 1 - a.cara.x }
+      : { desde: a.cara.x, hasta: a.cara.x + a.cara.ancho }
+    : { desde: 0.3, hasta: 0.6 };
+  if (a.lado === "izquierda") {
+    const left = telefono.x + solape - ancho;
+    return { left: Math.round(Math.max(left, Z.margenCara - cara.desde * ancho)), ancho, alto };
+  }
+  const left = telefono.x + telefono.ancho - solape;
+  return { left: Math.round(Math.min(left, 1080 - Z.margenCara - cara.hasta * ancho)), ancho, alto };
+}
+
+/**
+ * El lado del teléfono en `ms` y desde cuándo: sigue a la persona que está hablando (o al centro si no
+ * hay nadie); `antes` es de dónde viene, para que cruce la pantalla deslizándose.
+ */
+export function ladoDelTelefonoEn(
+  apariciones: { inicioMs: number; finMs: number; lado: "izquierda" | "derecha" }[],
+  ms: number,
+): { lado: "izquierda" | "derecha" | null; antes: "izquierda" | "derecha" | null; desdeMs: number } {
+  const ladoEn = (t: number) => apariciones.find((a) => t >= a.inicioMs && t < a.finMs)?.lado ?? null;
+  // Los momentos donde el lado puede cambiar: cada entrada y cada salida, en orden.
+  const marcas = [...new Set(apariciones.flatMap((a) => [a.inicioMs, a.finMs]))].sort((x, y) => x - y);
+  let lado = ladoEn(0);
+  let antes = lado;
+  let desdeMs = 0;
+  for (const m of marcas) {
+    if (m > ms) break;
+    const nuevo = ladoEn(m);
+    if (nuevo !== lado) {
+      antes = lado;
+      lado = nuevo;
+      desdeMs = m;
+    }
+  }
+  return { lado, antes, desdeMs };
 }

@@ -17,11 +17,16 @@ import {
 import { loadFont } from "@remotion/google-fonts/Anton";
 import { textoSobre } from "./monigotes-diseno";
 import {
+  capturaEnTelefono,
+  contenidoDelTelefono,
   formatoCifra,
+  ladoDelTelefonoEn,
   mezclarVistas,
+  personaEnPizarra,
   type PropsPublicidad,
   subtitulosEnPantalla,
   tarjetaTelefono,
+  telefonoPizarra,
   vistaCompleta,
   vistaDeEnfoque,
   type Vista,
@@ -326,6 +331,216 @@ const PersonaEnPantalla: React.FC<{
   );
 };
 
+/**
+ * El teléfono del diseño «pizarra»: dibujado (marco oscuro, la isla y la hora arriba) con la captura
+ * entera y centrada en su pantalla. Cada captura nueva entra subiendo un poco, como al cambiar de
+ * pantalla en una app; nunca se acerca ni se sale del borde.
+ */
+const TelefonoPizarra: React.FC<{
+  x: number;
+  tramo: Tramo | null;
+  /** Cuadros desde que entró esta captura (null: sin animación, como en el primer cuadro). */
+  cuadros: number | null;
+  acento: string;
+}> = ({ x, tramo, cuadros, acento }) => {
+  const T = Z.pizarra.telefono;
+  const c = contenidoDelTelefono();
+  const v = tramo?.imagen ? capturaEnTelefono({ ancho: tramo.imagenAncho, alto: tramo.imagenAlto }) : null;
+  const entra =
+    cuadros === null
+      ? 1
+      : interpolate(cuadros, [0, 8], [0, 1], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+  const texto: React.CSSProperties = {
+    fontFamily: "Helvetica, Arial, sans-serif",
+    fontWeight: 700,
+    color: "#111",
+  };
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: T.y,
+        width: T.ancho,
+        height: T.alto,
+        borderRadius: T.radio,
+        background: "linear-gradient(145deg, #3a3f4b 0%, #14161c 40%, #07080b 100%)",
+        boxShadow: `0 40px 90px rgba(0,0,0,0.6), 0 0 0 3px ${acento}66, 0 0 70px ${acento}33`,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: T.bisel,
+          top: T.bisel,
+          right: T.bisel,
+          bottom: T.bisel,
+          borderRadius: T.radio - T.bisel,
+          overflow: "hidden",
+          background: "#eef2f7",
+        }}
+      >
+        {/* La barra de arriba: la hora, la isla y la batería. */}
+        <div style={{ position: "absolute", left: 34, top: 14, fontSize: 24, ...texto }}>9:41</div>
+        <div
+          style={{
+            position: "absolute",
+            left: (T.ancho - 2 * T.bisel - 124) / 2,
+            top: 12,
+            width: 124,
+            height: 34,
+            borderRadius: 17,
+            background: "#000",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            right: 30,
+            top: 18,
+            display: "flex",
+            gap: 6,
+            alignItems: "flex-end",
+          }}
+        >
+          {[8, 12, 16, 20].map((h) => (
+            <div key={h} style={{ width: 5, height: h, borderRadius: 2, background: "#111" }} />
+          ))}
+          <div
+            style={{
+              marginLeft: 8,
+              width: 38,
+              height: 18,
+              borderRadius: 5,
+              border: "2px solid #111",
+              padding: 2,
+              boxSizing: "border-box",
+            }}
+          >
+            <div style={{ width: "78%", height: "100%", borderRadius: 2, background: "#111" }} />
+          </div>
+        </div>
+        {v && tramo?.imagen && (
+          <div
+            style={{
+              position: "absolute",
+              left: c.x - T.bisel,
+              top: c.y - T.bisel,
+              width: c.ancho,
+              height: c.alto,
+              opacity: entra,
+              transform: `translateY(${(1 - entra) * 40}px)`,
+            }}
+          >
+            <Img
+              src={staticFile(tramo.imagen)}
+              style={{
+                position: "absolute",
+                left: v.left,
+                top: v.top,
+                width: v.width,
+                height: v.height,
+                borderRadius: 14,
+                boxShadow: "0 8px 22px rgba(0,0,0,0.14)",
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * La persona del diseño «pizarra», de su lado y señalando el teléfono: la que habla (video) de medio
+ * cuerpo o de cuerpo completo, o la de espaldas (foto quieta) que se mece despacio, con un destello
+ * donde su dedo toca la pantalla, como en una pizarra.
+ */
+const PersonaEnPizarra: React.FC<{
+  a: PropsPublicidad["apariciones"][number];
+  entra: boolean;
+  acento: string;
+}> = ({ a, entra, acento }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const pos = personaEnPizarra(a, telefonoPizarra(a.lado));
+  const s = entra ? spring({ frame, fps, config: { damping: 14, stiffness: 150 } }) : 1;
+  const fuera = a.lado === "izquierda" ? -(pos.left + pos.ancho) - 40 : 1080 - pos.left + 40;
+  const left = pos.left + (1 - s) * fuera;
+  const giro = a.quieta ? Math.sin(frame / 22) * 0.7 : 0;
+  const respira = a.quieta ? 1 + Math.sin(frame / 15) * 0.006 : 1;
+  // La punta del dedo, girada y escalada igual que la figura (el pivote es el centro de los pies).
+  let dedo: { x: number; y: number } | null = null;
+  if (a.quieta && a.dedo) {
+    const fx = a.espejo ? 1 - a.dedo.x : a.dedo.x;
+    const ox = (fx - 0.5) * pos.ancho * respira;
+    const oy = -(1 - a.dedo.y) * pos.alto * respira;
+    const r = (giro * Math.PI) / 180;
+    dedo = {
+      x: left + pos.ancho / 2 + ox * Math.cos(r) - oy * Math.sin(r),
+      y: 1920 + ox * Math.sin(r) + oy * Math.cos(r),
+    };
+  }
+  const fase = (frame % 26) / 26;
+  return (
+    <>
+      <div
+        style={{
+          position: "absolute",
+          left,
+          bottom: 0,
+          width: pos.ancho,
+          height: pos.alto,
+          transform: `rotate(${giro}deg) scale(${respira})`,
+          transformOrigin: "50% 100%",
+        }}
+      >
+        {a.quieta ? (
+          <Img
+            src={staticFile(a.ruta)}
+            style={{ width: "100%", height: "100%", transform: a.espejo ? "scaleX(-1)" : undefined }}
+          />
+        ) : (
+          <OffthreadVideo
+            src={staticFile(a.ruta)}
+            transparent
+            muted
+            style={{ width: "100%", height: "100%", transform: a.espejo ? "scaleX(-1)" : undefined }}
+          />
+        )}
+      </div>
+      {dedo && s > 0.95 && (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              left: dedo.x - (18 + 46 * fase),
+              top: dedo.y - (18 + 46 * fase),
+              width: 2 * (18 + 46 * fase),
+              height: 2 * (18 + 46 * fase),
+              borderRadius: "50%",
+              border: `6px solid ${acento}`,
+              opacity: 1 - fase,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: dedo.x - 11,
+              top: dedo.y - 11,
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              background: "#fff",
+              boxShadow: `0 0 18px 8px ${acento}`,
+            }}
+          />
+        </>
+      )}
+    </>
+  );
+};
+
 /** El fondo de la paleta: degradado y un dibujo suave (puntos o líneas) que se desliza despacio. */
 const FondoDePaleta: React.FC<{ paleta: NonNullable<PropsPublicidad["paleta"]> }> = ({ paleta }) => {
   const frame = useCurrentFrame();
@@ -556,6 +771,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
   const oscuro = p.tema === "oscuro";
   const pantalla = p.diseno === "pantalla";
   const telefono = p.diseno === "telefono";
+  const pizarra = p.diseno === "pizarra";
   // Cada tramo con imagen abre una tarjeta; dura hasta la próxima imagen, un tramo «sin tarjeta» o el cierre.
   const cortes = p.tramos.filter((t) => t.imagen || t.sinTarjeta);
   const imagenes = p.tramos.filter((t) => t.imagen);
@@ -563,23 +779,44 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
   const aparicion = p.apariciones.find((a) => ms >= a.inicioMs && ms < a.finMs) ?? null;
   const conPersona = aparicion !== null || (p.avatar !== null && p.apariciones.length === 0);
   const vistaActual = aparicion ? vistaPersonaEn(p.tramos, aparicion.encuadre, ms) : null;
-  const subtitulosEn = pantalla
-    ? subtitulosEnPantalla(vistaActual)
-    : telefono
-      ? aparicion?.encuadre === "medio"
-        ? { left: Z.subtitulos.izquierda, right: 40, top: Z.telefono.subtitulos }
-        : { left: 60, right: 60, top: Z.telefono.subtitulos }
-      : aparicion?.encuadre === "cuerpo"
-        ? { left: 60, right: 60, top: Z.subtitulosCuerpo.y }
-        : conPersona
-          ? { left: Z.subtitulos.izquierda, right: Z.subtitulos.derecha, top: Z.subtitulos.y }
-          : { left: 80, right: 80, top: Z.subtitulos.y };
+  // Diseño «pizarra»: el teléfono sigue a la persona (del otro lado) y cruza deslizándose al cambiar.
+  const tel = (() => {
+    if (!pizarra) return null;
+    const l = ladoDelTelefonoEn(p.apariciones, ms);
+    const desde = telefonoPizarra(l.antes).x;
+    const hasta = telefonoPizarra(l.lado);
+    const t = interpolate(ms - l.desdeMs, [0, 450], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.inOut(Easing.cubic),
+    });
+    return { ...hasta, x: desde + (hasta.x - desde) * t };
+  })();
+  const subtitulosEn = tel
+    ? aparicion
+      ? {
+          left: Math.max(20, tel.x - 40),
+          right: Math.max(20, 1080 - tel.x - tel.ancho - 40),
+          top: Z.pizarra.subtitulos,
+        }
+      : { left: 60, right: 60, top: Z.pizarra.subtitulos }
+    : pantalla
+      ? subtitulosEnPantalla(vistaActual)
+      : telefono
+        ? aparicion?.encuadre === "medio"
+          ? { left: Z.subtitulos.izquierda, right: 40, top: Z.telefono.subtitulos }
+          : { left: 60, right: 60, top: Z.telefono.subtitulos }
+        : aparicion?.encuadre === "cuerpo"
+          ? { left: 60, right: 60, top: Z.subtitulosCuerpo.y }
+          : conPersona
+            ? { left: Z.subtitulos.izquierda, right: Z.subtitulos.derecha, top: Z.subtitulos.y }
+            : { left: 80, right: 80, top: Z.subtitulos.y };
   return (
     <AbsoluteFill style={{ backgroundColor: oscuro ? "#050b07" : "#0b0b0b", fontFamily }}>
       {/* Fondo con la armonía propia del video: degradado de su paleta y su dibujo. */}
       {p.paleta && <FondoDePaleta paleta={p.paleta} />}
       {/* Fondo: la misma foto difuminada y oscura (nunca un clip ajeno, C-FONDO-2). */}
-      {actual?.imagen && (
+      {actual?.imagen && !pizarra && (
         <AbsoluteFill
           style={{
             filter: "blur(28px) brightness(0.45)",
@@ -598,9 +835,30 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           background: `linear-gradient(180deg, ${p.acento}55 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 100%)`,
         }}
       />
+      {/* Diseño «pizarra»: un foco de luz detrás del teléfono y el teléfono con la captura de cada momento. */}
+      {tel && !enCierre && (
+        <>
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(circle at ${tel.x + tel.ancho / 2}px ${tel.y + tel.alto / 2}px, ${p.acento}40 0%, rgba(0,0,0,0) 46%)`,
+            }}
+          />
+          <TelefonoPizarra
+            x={tel.x}
+            tramo={actual ?? null}
+            cuadros={(() => {
+              if (!actual || actual.inicioMs === 0) return null;
+              const i = imagenes.indexOf(actual);
+              const previa = imagenes[i - 1];
+              return previa?.imagen === actual.imagen ? null : frame - f(actual.inicioMs);
+            })()}
+            acento={p.acento}
+          />
+        </>
+      )}
       {/* La foto de cada momento, una detrás de otra. */}
       {cortes.map((t, i) => {
-        if (!t.imagen) return null;
+        if (!t.imagen || pizarra) return null;
         const siguiente = cortes[i + 1];
         const desde = f(t.inicioMs);
         const hasta = siguiente ? f(siguiente.inicioMs) : f(p.cierre.inicioMs);
@@ -680,7 +938,21 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           previa !== undefined && previa.encuadre === a.encuadre && Math.abs(previa.finMs - a.inicioMs) < 60;
         return (
           <Sequence key={`persona-${i}`} from={desde} durationInFrames={hasta - desde} layout="none">
-            {pantalla ? (
+            {pizarra ? (
+              <PersonaEnPizarra
+                a={a}
+                entra={
+                  !(
+                    previa !== undefined &&
+                    Math.abs(previa.finMs - a.inicioMs) < 60 &&
+                    previa.lado === a.lado &&
+                    previa.encuadre === a.encuadre &&
+                    previa.quieta === a.quieta
+                  ) && a.inicioMs > 0
+                }
+                acento={p.acento}
+              />
+            ) : pantalla ? (
               <PersonaEnPantalla
                 a={a}
                 vista={vistaPersonaEn(p.tramos, a.encuadre, Math.max(ms, a.inicioMs))}

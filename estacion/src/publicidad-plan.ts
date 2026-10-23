@@ -32,7 +32,7 @@ export const esquemaPlanPublicidad = z
     /** «oscuro» para marcas con logo claro: el logo va sobre oscuro y el cierre también. */
     tema: z.enum(["claro", "oscuro"]).default("claro"),
     /** «pantalla»: la captura ocupa toda la pantalla y la persona se mueve alrededor (ver `vista_persona`). */
-    diseno: z.enum(["centro", "pantalla", "telefono"]).default("centro"),
+    diseno: z.enum(["centro", "pantalla", "telefono", "pizarra"]).default("centro"),
     /** La armonía propia del video: el fondo en degradado (dos colores) y su dibujo. */
     paleta: z
       .object({
@@ -108,6 +108,12 @@ export const esquemaPlanPublicidad = z
                 imagen: z.string().min(1),
                 encuadre: z.enum(["medio", "cuerpo"]),
                 corte: z.number().min(0.3).max(0.9).optional(),
+                /** Diseño «pizarra»: de qué lado está (el teléfono va del otro). */
+                lado: z.enum(["izquierda", "derecha"]).optional(),
+                /** Hacia dónde apunta su mano en la foto (para voltearla y que señale el teléfono). */
+                apunta: z.enum(["izquierda", "derecha"]).optional(),
+                /** Foto quieta que no habla (de espaldas, señalando): no se paga el avatar. */
+                quieta: z.boolean().optional(),
               }),
             ])
             .optional(),
@@ -130,7 +136,14 @@ export const textoDelPlan = (plan: Pick<PlanPublicidad, "texto" | "partes">): st
 /** Lo más largo que puede durar UN video de la persona hablando (FlashTalk admite 40 s). */
 export const TRAMO_PERSONA_MAX_MS = 35_000;
 
-export type Persona = { imagen: string; encuadre: "medio" | "cuerpo"; corte?: number };
+export type Persona = {
+  imagen: string;
+  encuadre: "medio" | "cuerpo";
+  corte?: number;
+  lado?: "izquierda" | "derecha";
+  apunta?: "izquierda" | "derecha";
+  quieta?: boolean;
+};
 export type Aparicion = Persona & { inicioMs: number; finMs: number };
 
 /**
@@ -175,6 +188,35 @@ export function aparicionesDelPlan(
     if (t.finMs - inicio > 0) salida.push({ ...persona, inicioMs: inicio, finMs: t.finMs });
   }
   return salida;
+}
+
+/**
+ * Si la figura se dibuja volteada: su mano tiene que apuntar al teléfono, que está del lado contrario
+ * al de ella (a la derecha si ella está a la izquierda). Sin `apunta`, la foto apunta a la derecha.
+ */
+export function vaVolteada(p: Pick<Persona, "lado" | "apunta">): boolean {
+  const apunta = p.apunta ?? "derecha";
+  return (p.lado ?? "izquierda") === "izquierda" ? apunta === "izquierda" : apunta === "derecha";
+}
+
+/**
+ * La punta del dedo que señala: el punto de la figura más metido hacia el lado donde apunta (la columna
+ * de más afuera con figura, en su centro). Recibe el canal alfa de la figura ya recortada y devuelve
+ * fracciones de su ancho y su alto.
+ */
+export function puntaDelDedo(
+  alfa: Uint8Array,
+  ancho: number,
+  alto: number,
+  apunta: "izquierda" | "derecha" = "derecha",
+): { x: number; y: number } | null {
+  const columnas = Array.from({ length: ancho }, (_, i) => (apunta === "derecha" ? ancho - 1 - i : i));
+  for (const x of columnas) {
+    const ys: number[] = [];
+    for (let y = 0; y < alto; y++) if ((alfa[y * ancho + x] ?? 0) > 40) ys.push(y);
+    if (ys.length >= 2) return { x: (x + 0.5) / ancho, y: (ys[Math.floor(ys.length / 2)] ?? 0) / alto };
+  }
+  return null;
 }
 
 /**
