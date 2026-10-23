@@ -1405,6 +1405,11 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   `/datos/salud` en «ok», `/entrar` 200 y las páginas protegidas redirigiendo, sin errores en el
   registro. El adaptador nuevo trae `glob` 10.4.5 (aviso alto del comando `glob -c`) por
   `@node-minify/core`: se fuerza `glob ^10.5.0` en `overrides` del `package.json`.
+- **23 oct 2026:** el aviso alto de zod (GHSA-mrhx-c7xc-m3w5, versiones menores a 4.6.6) frenó la
+  subida en el `pre-push`. Se subió zod a 4.6.7 en el panel y en la Estación; en la Estación, Remotion
+  trae zod 4.5.4 fijo y se fuerza con `"overrides": { "zod": "$zod" }` en `estacion/package.json`.
+  También `source-map-js` 1.2.2 (aviso alto). Comprobado: la Estación arma cuadros con Remotion y
+  `npm run verify` da verde.
 
 ## C-AVATAR-2 — Cada video de Chase cambia de escenografía: la misma foto no se repite (8 oct 2026)
 
