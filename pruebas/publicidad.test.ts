@@ -526,3 +526,21 @@ describe("C-PIZARRA-1: el diseño «pizarra», el teléfono y la persona que lo 
     ]);
   });
 });
+
+describe("publicidad sin marca: el anuncio que crea expectativa (franquicias, 25 oct 2026)", () => {
+  // Richard: «acá no estamos revelando el nombre de la empresa todavía en este comercial». Sin logo, no
+  // sale ninguna marca: ni arriba a la izquierda ni en el cierre (que señala hacia abajo, al formulario).
+  it("el plan acepta un anuncio sin logo", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      marca: "Franquicias",
+      texto: "¿Conoces una app así? Toca aquí abajo y llena el formulario.",
+      momentos: [{ frase: "Conoces una" }, { frase: "app así" }, { frase: "Toca aquí" }],
+      cierre: { frase: "Toca aquí", lineas: ["TOCA AQUÍ ABAJO"] },
+    });
+    expect(plan.logo).toBe("");
+  });
+
+  it("las props del video aceptan el logo vacío", () => {
+    expect(esquemaPublicidad.shape.logo.parse("")).toBe("");
+  });
+});

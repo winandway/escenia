@@ -22,8 +22,11 @@ export const esquemaPlanPublicidad = z
       .string()
       .regex(/^#[0-9a-f]{6}$/i)
       .default("#ff2a2a"),
-    /** Rutas relativas a la carpeta del cliente. */
-    logo: z.string().min(1),
+    /**
+     * Rutas relativas a la carpeta del cliente. Sin logo (vacío), el anuncio no muestra ninguna marca:
+     * para crear expectativa antes de decir el nombre (franquicias, 25 oct 2026).
+     */
+    logo: z.string().default(""),
     avatar: z.string().optional(),
     musica: z.string().optional(),
     /** La venezolana por defecto: con la femenina de catálogo «suena a extranjera» (Richard, 17 oct 2026). */

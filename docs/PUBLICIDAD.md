@@ -122,6 +122,27 @@ de la misma foto con Seedream edit (3 ¢ cada una).
 **La portada de WhatsApp:** el primer cuadro ya trae el título completo y la persona quieta (WhatsApp lo
 usa de miniatura).
 
+## Maggie y el comercial de franquicias sin marca (25 oct 2026)
+
+**Maggie** es el nombre de la chica de los anuncios (la del moño, con más curvas, desde la tarjeta de
+saldo); habla con la voz venezolana. Sus fotos viven en `publicidad/maggie/` (fuera de git): el look de
+la tarjeta (`tarjeta-*.png`) y el de ejecutiva de ventas (`ejecutiva-*.png`: blazer negro, vestido vino
+hasta la rodilla, tacones; poses señalando, presentando, segura con las manos juntas y de espaldas).
+
+El comercial de franquicias (la «opción 2, directa» de Richard: tú, gancho en el primer segundo) **no
+dice la marca**: crea expectativa y lleva a un formulario.
+
+- **`logo: ""`**: el anuncio no muestra ninguna marca, ni arriba a la izquierda ni en el cierre. El cierre
+  pone las líneas al centro y una flecha que late hacia abajo, donde está el botón del anuncio: «toca aquí
+  abajo y llena el formulario» sirve igual para el formulario de Facebook que para un enlace a la web.
+- Las pantallas de la app vienen con «SU MARCA» en la cabecera (la app sale con la marca del dueño de la
+  franquicia). Traían su propio marco de teléfono: se recortan 66 px por lado para que no quede un teléfono
+  dentro de otro.
+- Música propia corporativa: `corporate-inspiring-piano-pulse-business.mp3` (piano en corcheas, pulso
+  de bombo, bajo; `node scripts/musica-propia.mjs`).
+
+Plan `publicidad/franquicias/plan-maggie-directa.json`, pantallas en `publicidad/franquicias/pantallas/`.
+
 ## La tarjeta de saldo y el diseño «pizarra» (QRBott, 23 oct 2026)
 
 Richard pidió el video de la tarjeta de saldo «como lo que ya estamos haciendo pero los fondos los vamos
@@ -170,12 +191,13 @@ día cada anuncio lleva su propia armonía y una portada en el primer cuadro:
 
 Registro para no repetir:
 
-| Anuncio                         | Paleta                               | Acento  | Look de la chica                                           | Música            |
-| ------------------------------- | ------------------------------------ | ------- | ---------------------------------------------------------- | ----------------- |
-| Bienvenida QRBott (21 oct)      | verde y negro (sin paleta)           | #2ED66E | gorra de Venezuela, franela blanca, jeans                  | bombo y bajo      |
-| Vende desde el celular (22 oct) | verde y negro (sin paleta)           | #2ED66E | la misma                                                   | bombo y bajo      |
-| Cashea (22 oct)                 | morado #3b1470 → #12052a, líneas     | #A855F7 | sin gorra, pelo suelto, blusa lila, jeans blancos          | electrónica tech  |
-| Tarjeta de saldo (23 oct)       | azul noche #0b2a4a → #030d1c, puntos | #F5B83D | moño alto, blusa mostaza, pantalón crema ancho, más curvas | salsa con metales |
+| Anuncio                         | Paleta                               | Acento  | Look de la chica                                           | Música             |
+| ------------------------------- | ------------------------------------ | ------- | ---------------------------------------------------------- | ------------------ |
+| Bienvenida QRBott (21 oct)      | verde y negro (sin paleta)           | #2ED66E | gorra de Venezuela, franela blanca, jeans                  | bombo y bajo       |
+| Vende desde el celular (22 oct) | verde y negro (sin paleta)           | #2ED66E | la misma                                                   | bombo y bajo       |
+| Cashea (22 oct)                 | morado #3b1470 → #12052a, líneas     | #A855F7 | sin gorra, pelo suelto, blusa lila, jeans blancos          | electrónica tech   |
+| Tarjeta de saldo (23 oct)       | azul noche #0b2a4a → #030d1c, puntos | #F5B83D | moño alto, blusa mostaza, pantalón crema ancho, más curvas | salsa con metales  |
+| Franquicias, Maggie (25 oct)    | carbón #1c1c20 → #050506, líneas     | #F20D20 | Maggie de ejecutiva: blazer negro, vestido vino, tacones   | corporativa propia |
 
 ## Comercial «Vende desde el celular» y el diseño «teléfono» (QRBott, 22 oct 2026)
 

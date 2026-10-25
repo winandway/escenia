@@ -9,6 +9,8 @@
 //  3. Un PIANO suave (balada en Re, arpegios lentos), para las locuciones
 //     emotivas: quince años, bodas, homenajes (Richard, 23 oct 2026: «un pianito
 //     de fondo bien suavecito»).
+//  4. Una pista CORPORATIVA (piano en corcheas, pulso de bombo, bajo y platillo
+//     suave), para los anuncios de negocios e inversión (franquicias, 25 oct 2026).
 //
 // El nombre de cada archivo ES su ficha: con esas palabras la elige la Estación.
 // Uso (desde la raíz):  node scripts/musica-propia.mjs
@@ -279,6 +281,60 @@ const carpeta = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../e
   l.sala(0.24);
   l.guardar(path.join(carpeta, "piano-ballad-soft-gentle-emotional.mp3"), { ganancia: 1.1 });
   console.log("piano-ballad-soft-gentle-emotional.mp3");
+}
+
+// ───────────────────────── 4. La corporativa ─────────────────────────
+{
+  const BPM = 100;
+  const T = 60 / BPM;
+  const COMPAS = 4 * T;
+  const COMPASES = 40; // 96 s, en bucle
+  const l = crearLienzo(COMPASES * COMPAS, { bucle: true, semilla: 20261025 });
+  const azar = (() => {
+    let s = 11;
+    return () => (s = (s * 16807) % 2147483647) / 2147483647;
+  })();
+  // La menor, Fa, Do, Sol: serio y con impulso hacia adelante.
+  const ACORDES = [
+    [45, [64, 69, 72, 76]],
+    [41, [65, 69, 72, 77]],
+    [48, [64, 67, 72, 76]],
+    [43, [62, 67, 71, 74]],
+  ];
+  for (let c = 0; c < COMPASES; c++) {
+    const t = c * COMPAS;
+    const [bajo, mano] = ACORDES[c % 4];
+    const seccion = Math.floor(c / 8) % 5; // 0 entrada, 1-3 cuerpo, 4 respiro
+    const lleno = seccion >= 1 && seccion <= 3;
+    // El piano en corcheas: la mano derecha repite el acorde, con acento en cada tiempo.
+    for (let j = 0; j < 8; j++) {
+      const t0 = t + (j * T) / 2 + (azar() - 0.5) * 0.01;
+      const nota = mano[[0, 2, 1, 3, 2, 1, 3, 2][j]];
+      const amp = (j % 2 === 0 ? 0.1 : 0.075) * (0.9 + azar() * 0.2);
+      l.piano({ t0, f: hz(nota), amp, dur: T * 0.9, pan: 0.5 + (nota - 70) / 50, brillo: 0.5 });
+    }
+    // El bajo, largo, y una octava abajo del piano.
+    l.nota({
+      t0: t,
+      dur: COMPAS * 0.95,
+      f: hz(bajo - 12),
+      amp: lleno ? 0.22 : 0.14,
+      onda: "tri",
+      ataque: 0.02,
+      cola: 0.2,
+      corte: 400,
+    });
+    // El pulso: bombo en 1 y 3 (en las partes llenas, en los cuatro tiempos), suave.
+    for (let k = 0; k < 4; k++) {
+      if (!lleno && k % 2 === 1) continue;
+      l.bombo(t + k * T, lleno ? 0.42 : 0.3, { desde: 140, hasta: 50, caida: 0.18 });
+      // Platillo suave a contratiempo en las partes llenas.
+      if (lleno) l.ruido(t + k * T + T / 2, { amp: 0.035, dur: 0.12, centro: 8000, ancho: 0.5, pan: 0.6 });
+    }
+  }
+  l.sala(0.14);
+  l.guardar(path.join(carpeta, "corporate-inspiring-piano-pulse-business.mp3"), { ganancia: 1.15 });
+  console.log("corporate-inspiring-piano-pulse-business.mp3");
 }
 
 console.log(`Pistas listas en ${carpeta}`);

@@ -592,7 +592,9 @@ export async function pasoArmar(
     await copyFile(origen, path.join(publica, nombre));
     return nombre;
   };
-  const logo = await copiar(path.resolve(carpeta, plan.logo), `logo${path.extname(plan.logo)}`);
+  const logo = plan.logo
+    ? await copiar(path.resolve(carpeta, plan.logo), `logo${path.extname(plan.logo)}`)
+    : "";
   const audio = await copiar(voz.rutaMp3, `voz${path.extname(voz.rutaMp3)}`);
   const musica = plan.musica ? await copiar(path.resolve(carpeta, plan.musica), "musica.mp3") : null;
   const cortes: string[] = [];

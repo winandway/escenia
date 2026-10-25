@@ -1411,6 +1411,10 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   También `source-map-js` 1.2.2 (aviso alto). Comprobado: la Estación arma cuadros con Remotion y
   `npm run verify` da verde.
 
+- **25 oct 2026:** aviso alto de undici (7.0 a 7.30.0, tres avisos) dentro de miniflare, que trae
+  wrangler. `npm audit fix` pedía bajar wrangler a una versión vieja; en vez de eso se fuerza undici
+  7.30.1 solo para miniflare (`"overrides": { "miniflare": { "undici": "^7.30.1" } }`).
+
 ## C-AVATAR-2 — Cada video de Chase cambia de escenografía: la misma foto no se repite (8 oct 2026)
 
 - **Qué se rompió y cómo se veía:** los clips «presentación» y «el jalón de pelo» salieron con la

@@ -718,29 +718,42 @@ const Etiquetas: React.FC<{ chips: { texto: string; inicioMs: number }[]; desdeM
   );
 };
 
-/** La tarjeta final: el logo grande y las líneas de contacto, sobre blanco. */
-const Cierre: React.FC<{ logo: string; lineas: string[]; acento: string; oscuro: boolean }> = ({
-  logo,
-  lineas,
-  acento,
-  oscuro,
-}) => {
+/**
+ * La tarjeta final: el logo grande y las líneas de contacto, sobre blanco. Sin logo (un anuncio que
+ * todavía no dice la marca), las líneas van al centro y una flecha late hacia abajo, donde está el botón
+ * del anuncio: «toca aquí abajo y llena el formulario». Con paleta, el fondo oscuro es el de su paleta.
+ */
+const Cierre: React.FC<{
+  logo: string;
+  lineas: string[];
+  acento: string;
+  oscuro: boolean;
+  paleta: PropsPublicidad["paleta"];
+}> = ({ logo, lineas, acento, oscuro, paleta }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = spring({ frame, fps, config: { damping: 13, stiffness: 140 } });
+  const fondoOscuro = paleta
+    ? `radial-gradient(circle at 50% 30%, ${acento}40 0%, ${paleta.fondo[0]} 50%, ${paleta.fondo[1]} 100%)`
+    : `radial-gradient(circle at 50% 30%, ${acento}33 0%, #06110b 55%, #030805 100%)`;
+  const salto = Math.abs(Math.sin((frame / fps) * Math.PI * 1.6));
   return (
     <AbsoluteFill
       style={{
-        background: oscuro
-          ? `radial-gradient(circle at 50% 30%, ${acento}33 0%, #06110b 55%, #030805 100%)`
-          : "#fff",
+        background: oscuro ? fondoOscuro : "#fff",
         alignItems: "center",
-        paddingTop: 130,
+        justifyContent: logo ? undefined : "center",
+        paddingTop: logo ? 130 : 0,
+        paddingBottom: logo ? 0 : 260,
         opacity: Math.min(1, frame / 6),
       }}
     >
-      <Img src={staticFile(logo)} style={{ width: 920, transform: `scale(${0.7 + 0.3 * s})` }} />
-      <div style={{ height: 50 }} />
+      {logo && (
+        <>
+          <Img src={staticFile(logo)} style={{ width: 920, transform: `scale(${0.7 + 0.3 * s})` }} />
+          <div style={{ height: 50 }} />
+        </>
+      )}
       {lineas.map((l, i) => {
         const si = spring({ frame: frame - 6 - i * 5, fps, config: { damping: 12 } });
         return (
@@ -749,16 +762,41 @@ const Cierre: React.FC<{ logo: string; lineas: string[]; acento: string; oscuro:
             style={{
               transform: `translateY(${(1 - si) * 40}px)`,
               opacity: si,
-              fontSize: i === 0 ? 92 : 60,
+              fontSize: i === 0 ? (logo ? 92 : 118) : logo ? 60 : 72,
               color: i === 0 ? acento : oscuro ? "#fff" : "#111",
               marginTop: 18,
               textAlign: "center",
+              padding: "0 40px",
             }}
           >
             {l}
           </div>
         );
       })}
+      {!logo && (
+        <svg
+          width={200}
+          height={240}
+          viewBox="0 0 200 240"
+          style={{
+            position: "absolute",
+            bottom: 300 - 40 * salto,
+            left: 440,
+            opacity: Math.min(1, Math.max(0, (frame - 16) / 8)),
+            filter: `drop-shadow(0 0 24px ${acento})`,
+          }}
+        >
+          <path d="M100 10 V170" stroke={acento} strokeWidth={30} strokeLinecap="round" />
+          <path
+            d="M30 120 L100 200 L170 120"
+            stroke={acento}
+            strokeWidth={30}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      )}
     </AbsoluteFill>
   );
 };
@@ -906,8 +944,8 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           </Sequence>
         );
       })}
-      {/* Logo fijo arriba a la izquierda (fuera del cierre). */}
-      {!enCierre && (
+      {/* Logo fijo arriba a la izquierda (fuera del cierre); sin logo, nada. */}
+      {!enCierre && p.logo && (
         <div
           style={{
             position: "absolute",
@@ -926,7 +964,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
       )}
       {/* Tarjeta final con el logo. */}
       <Sequence from={f(p.cierre.inicioMs)} layout="none">
-        <Cierre logo={p.logo} lineas={p.cierre.lineas} acento={p.acento} oscuro={oscuro} />
+        <Cierre logo={p.logo} lineas={p.cierre.lineas} acento={p.acento} oscuro={oscuro} paleta={p.paleta} />
       </Sequence>
       {/* La persona por tramos (medio cuerpo o cuerpo completo); fuera del cierre. */}
       {p.apariciones.map((a, i) => {

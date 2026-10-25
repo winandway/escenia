@@ -22,6 +22,7 @@ export type VistaPersona = z.infer<typeof esquemaVistaPersona>;
 export const esquemaPublicidad = z.object({
   marca: z.string(),
   acento: z.string().regex(/^#[0-9a-f]{6}$/i),
+  /** El logo; vacío en un anuncio que todavía no dice la marca (no sale ni arriba ni en el cierre). */
   logo: z.string(),
   /** «oscuro» para marcas con logo claro (QRBott): el logo va sobre oscuro y el cierre también. */
   tema: z.enum(["claro", "oscuro"]).default("claro"),
