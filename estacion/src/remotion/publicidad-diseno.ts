@@ -171,11 +171,15 @@ export const ZONA_PUBLICIDAD = {
   telefono: { x: 410, y: 380, ancho: 655, alto: 1115, radio: 46, subtitulos: 1525, persona: 760 },
   /** Diseño «teléfono» con una pantalla ancha (de computadora): tarjeta a lo ancho, arriba. */
   telefonoAncha: { x: 60, y: 390, ancho: 960, alto: 760 },
-  /** Diseño «pantalla»: la persona pequeña abajo, de un lado o del otro. */
+  /**
+   * Diseño «pantalla»: la foto a pantalla completa y la persona delante, de un lado o del otro. Desde el
+   * comercial de franquicias (25 oct 2026) es para FOTOS (nunca capturas de software, que se ven
+   * enteras: C-PUBLICIDAD-ENTERA) y la persona va más grande: es la que presenta.
+   */
   pantalla: {
     cabeza: { diametro: 380, abajo: 150, margen: 40, borde: 8 },
-    medio: { alto: 720 },
-    cuerpo: { alto: 780, margen: 10 },
+    medio: { alto: 820 },
+    cuerpo: { alto: 1150, margen: 10 },
     subtitulos: { y: 1500, yLibre: 1560 },
   },
   /**

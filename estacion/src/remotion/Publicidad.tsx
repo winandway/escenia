@@ -110,15 +110,21 @@ const Tarjeta: React.FC<{
   const lento = interpolate(frame, [0, Math.max(1, duracion)], [1, conEnfoque ? 1.04 : 1.08], {
     extrapolateRight: "clamp",
   });
-  const golpe = misma
-    ? 1
-    : interpolate(frame, [0, 7], [1.12, 1], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+  // El primer momento ya está quieto en el cuadro 0: es la miniatura del anuncio (WhatsApp, Facebook).
+  const primero = tramo.inicioMs === 0;
+  const golpe =
+    misma || primero
+      ? 1
+      : interpolate(frame, [0, 7], [1.12, 1], {
+          extrapolateRight: "clamp",
+          easing: Easing.out(Easing.cubic),
+        });
   const barrido =
     tramo.entrada === "barrido" && !misma
       ? interpolate(frame, [0, 9], [1100, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) })
       : 0;
   const entra =
-    misma || tramo.entrada === "barrido"
+    misma || primero || tramo.entrada === "barrido"
       ? 1
       : interpolate(frame, [0, 5], [0, 1], { extrapolateRight: "clamp" });
   const noche = tramo.oscurecer ? interpolate(frame, [0, 14], [0, 0.72], { extrapolateRight: "clamp" }) : 0;
@@ -264,10 +270,17 @@ const PersonaEnPantalla: React.FC<{
     sigue && vista.desdeMs <= desdeAparicionMs
       ? -100
       : f(Math.max(vista.desdeMs, desdeAparicionMs) - desdeAparicionMs);
-  const s = spring({ frame: frame - desde, fps, config: { damping: 13, stiffness: 160 } });
-  const video = (estilo: React.CSSProperties) => (
-    <OffthreadVideo src={staticFile(a.ruta)} transparent muted style={estilo} />
-  );
+  // Al empezar el anuncio ya está en su sitio (el cuadro 0 es la miniatura).
+  const s =
+    desdeAparicionMs === 0 && vista.desdeMs === 0
+      ? 1
+      : spring({ frame: frame - desde, fps, config: { damping: 13, stiffness: 160 } });
+  const video = (estilo: React.CSSProperties) =>
+    a.quieta ? (
+      <Img src={staticFile(a.ruta)} style={estilo} />
+    ) : (
+      <OffthreadVideo src={staticFile(a.ruta)} transparent muted style={estilo} />
+    );
   if (vista.modo === "oculta") return null;
   if (vista.modo === "cabeza") {
     const d = P.cabeza.diametro;
@@ -314,6 +327,8 @@ const PersonaEnPantalla: React.FC<{
           ? P.cuerpo.margen
           : -10
         : 1080 - ancho - (vista.modo === "cuerpo" ? P.cuerpo.margen : -10);
+  // La de espaldas (foto quieta) se mece despacio; volteada si su mano tiene que apuntar al otro lado.
+  const giro = a.quieta ? Math.sin(frame / 22) * 0.7 : 0;
   return (
     <div
       style={{
@@ -322,11 +337,12 @@ const PersonaEnPantalla: React.FC<{
         bottom: 0,
         height: alto,
         width: ancho,
-        transform: `translateY(${(1 - s) * 320}px)`,
+        transform: `translateY(${(1 - s) * 320}px) rotate(${giro}deg)`,
+        transformOrigin: "50% 100%",
         opacity: Math.min(1, 0.2 + s),
       }}
     >
-      {video({ width: "100%", height: "100%" })}
+      {video({ width: "100%", height: "100%", transform: a.espejo ? "scaleX(-1)" : undefined })}
     </div>
   );
 };

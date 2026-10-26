@@ -143,6 +143,15 @@ dice la marca**: crea expectativa y lleva a un formulario.
 
 Plan `publicidad/franquicias/plan-maggie-directa.json`, pantallas en `publicidad/franquicias/pantallas/`.
 
+**Versión 2, con fotos (25 oct 2026):** Richard preparó una secuencia de fotos de cine (una por frase) en
+vez de las pantallas de la app, porque el comercial pide socios con 50.000 a 100.000 dólares y tiene que
+verse a esa altura. Plan `plan-maggie-fotos.json`, fotos en `publicidad/franquicias/fotos/` y el estudio
+escena por escena en `ESTUDIO-IMAGENES-FRANQUICIAS.md`. Usa `trabajo_de` con el plan de la versión 1: la
+misma voz y los mismos videos de Maggie, sin pagar de nuevo. Diseño `pantalla` (la foto a pantalla
+completa y Maggie delante, más grande que antes y volteada para señalar la foto). Ese diseño es solo para
+fotos: las capturas de software van enteras (C-PUBLICIDAD-ENTERA). Las fotos con logos de otras marcas,
+cifras inventadas o promesas de ganancia («crecimiento garantizado», «ingresos recurrentes») no entran.
+
 ## La tarjeta de saldo y el diseño «pizarra» (QRBott, 23 oct 2026)
 
 Richard pidió el video de la tarjeta de saldo «como lo que ya estamos haciendo pero los fondos los vamos
