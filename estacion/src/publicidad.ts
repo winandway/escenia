@@ -17,11 +17,13 @@ import {
   aparicionesDelPlan,
   costoPublicidadUsd,
   esquemaPlanPublicidad,
+  gananciaDeVoz,
   type PlanPublicidad,
   puntaDelDedo,
   recorteDeEncuadre,
   textoDelPlan,
   tiemposDeFrases,
+  tramoConVoz,
   vaVolteada,
 } from "./publicidad-plan";
 
@@ -66,6 +68,75 @@ async function duracionAudioMs(ruta: string): Promise<number> {
     ruta,
   ]);
   return Math.round(Number(stdout.trim()) * 1000);
+}
+
+/** Los silencios de un audio (por debajo de −45 dB durante 40 ms o más), en milisegundos. */
+async function silenciosDe(ruta: string): Promise<{ desdeMs: number; hastaMs: number }[]> {
+  const r = await exec("ffmpeg", [
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    ruta,
+    "-af",
+    "silencedetect=noise=-45dB:d=0.04",
+    "-f",
+    "null",
+    "-",
+  ]);
+  const duracion = await duracionAudioMs(ruta);
+  const salida: { desdeMs: number; hastaMs: number }[] = [];
+  let inicio: number | null = null;
+  for (const linea of r.stderr.split("\n")) {
+    const a = /silence_start: (-?[\d.]+)/.exec(linea);
+    const b = /silence_end: (-?[\d.]+)/.exec(linea);
+    if (a) inicio = Math.max(0, Number(a[1]) * 1000);
+    if (b && inicio !== null) {
+      salida.push({ desdeMs: inicio, hastaMs: Number(b[1]) * 1000 });
+      inicio = null;
+    }
+  }
+  if (inicio !== null) salida.push({ desdeMs: inicio, hastaMs: duracion });
+  return salida;
+}
+
+/** Cuán fuerte suena un audio (LUFS integrados). */
+async function volumenLufs(ruta: string): Promise<number> {
+  const r = await exec("ffmpeg", [
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    ruta,
+    "-af",
+    "ebur128",
+    "-f",
+    "null",
+    "-",
+  ]);
+  const m = [...r.stderr.matchAll(/I:\s+(-?[\d.]+) LUFS/g)].pop();
+  return m ? Number(m[1]) : Number.NaN;
+}
+
+/**
+ * La voz al volumen de las redes (`objetivo` LUFS) con una ganancia simple; un limitador muy suave solo
+ * toca los picos sueltos que pasarían de −1,5 dB (no cambia cómo suena la voz).
+ */
+async function vozAlVolumen(origen: string, destino: string, objetivo: number): Promise<number> {
+  const ganancia = gananciaDeVoz(await volumenLufs(origen), objetivo);
+  await exec("ffmpeg", [
+    "-y",
+    "-v",
+    "error",
+    "-i",
+    origen,
+    "-af",
+    `volume=${ganancia}dB,alimiter=limit=0.84:attack=3:release=60:level=false`,
+    "-ar",
+    "44100",
+    "-c:a",
+    "pcm_s16le",
+    destino,
+  ]);
+  return ganancia;
 }
 
 /**
@@ -156,6 +227,35 @@ export async function pasoVoz(
       }
       partes.push(JSON.parse(await readFile(json, "utf8")) as (typeof partes)[number]);
     }
+    // Cada parte sin el silencio de sus puntas: así la pausa entre parte y parte es la del plan, pareja
+    // con las de adentro de cada parte, y la persona no se queda quieta esperando en el cambio de escena.
+    for (const [k, p] of partes.entries()) {
+      const t = tramoConVoz(await silenciosDe(p.wav), p.duracionMs);
+      if (t.desdeMs === 0 && t.hastaMs >= p.duracionMs) continue;
+      const recortada = path.join(path.dirname(p.wav), "parte-recortada.wav");
+      await exec("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        p.wav,
+        "-af",
+        `atrim=start=${t.desdeMs / 1000}:end=${t.hastaMs / 1000},asetpts=N/SR/TB`,
+        "-c:a",
+        "pcm_s16le",
+        recortada,
+      ]);
+      partes[k] = {
+        ...p,
+        wav: recortada,
+        duracionMs: await duracionAudioMs(recortada),
+        palabras: p.palabras.map((w) => ({
+          ...w,
+          startMs: Math.max(0, w.startMs - t.desdeMs),
+          endMs: Math.max(0, w.endMs - t.desdeMs),
+        })),
+      };
+    }
     // Se juntan en un solo WAV, con una pausa igual entre parte y parte.
     const silencio = path.join(trabajo, "voz-partes", "pausa.wav");
     await exec("ffmpeg", [
@@ -180,6 +280,14 @@ export async function pasoVoz(
         .join("\n"),
     );
     const wav = path.join(trabajo, "voz.wav");
+    // La voz y la persona de antes quedan en «anterior/»: si solo cambian las pausas, los videos de la
+    // persona ya pagados se recortan en vez de pagarse otra vez (ver `recortarDeAnterior`).
+    if (existsSync(wav) && existsSync(path.join(trabajo, "personas.json"))) {
+      const anterior = path.join(trabajo, "anterior");
+      await mkdir(anterior, { recursive: true });
+      await copyFile(wav, path.join(anterior, "voz.wav"));
+      await copyFile(path.join(trabajo, "personas.json"), path.join(anterior, "personas.json"));
+    }
     await exec("ffmpeg", [
       "-y",
       "-v",
@@ -273,6 +381,97 @@ async function cajaDeFigura(ruta: string): Promise<{ x: number; y: number; ancho
       }
   if (x2 < 0) throw new Error(`No hay ninguna figura en ${path.basename(ruta)}.`);
   return { x: x1, y: y1, ancho: x2 - x1 + 1, alto: y2 - y1 + 1 };
+}
+
+/** Las muestras de un WAV de 16 bits (sin la cabecera). */
+async function muestras(wav: string): Promise<Int16Array> {
+  const b = await readFile(wav);
+  const i = b.indexOf("data") + 8;
+  const largo = Math.floor((b.length - i) / 2);
+  return new Int16Array(b.buffer.slice(b.byteOffset + i, b.byteOffset + i + largo * 2));
+}
+
+/**
+ * Si un video de la persona ya pagado dice lo mismo (la misma figura y el mismo habla, muestra por
+ * muestra) y solo cambió el silencio de las puntas, se recorta ese video al pedazo nuevo: gratis. Sale
+ * de «anterior/» (la voz y la persona de antes de rehacer la voz). Devuelve si lo pudo hacer.
+ */
+export async function recortarDeAnterior(
+  trabajo: string,
+  dir: string,
+  verde: Buffer,
+  pedazoWav: string,
+  clip: string,
+): Promise<boolean> {
+  const anterior = path.join(trabajo, "anterior");
+  if (!existsSync(path.join(anterior, "personas.json")) || !existsSync(path.join(anterior, "voz.wav")))
+    return false;
+  const viejas = JSON.parse(
+    await readFile(path.join(anterior, "personas.json"), "utf8"),
+  ) as AparicionGuardada[];
+  const nuevo = await muestras(pedazoWav);
+  const umbral = 400;
+  const primera = (x: Int16Array) => x.findIndex((v) => Math.abs(v) > umbral);
+  let ultima = nuevo.length - 1;
+  while (ultima > 0 && Math.abs(nuevo[ultima] ?? 0) <= umbral) ultima--;
+  for (const [j, v] of viejas.entries()) {
+    if (v.quieta) continue;
+    const clave = path.basename(v.ruta).replace(/\.webm$/, "");
+    const verdeViejo = path.join(dir, `${clave}-verde.png`);
+    const mp4Viejo = path.join(dir, `${clave}.mp4`);
+    if (!existsSync(verdeViejo) || !existsSync(mp4Viejo)) continue;
+    if (!verde.equals(await readFile(verdeViejo))) continue;
+    const pedazoViejo = path.join(anterior, `pedazo-${j + 1}.wav`);
+    await exec("ffmpeg", [
+      "-y",
+      "-v",
+      "error",
+      "-i",
+      path.join(anterior, "voz.wav"),
+      "-ss",
+      String(v.inicioMs / 1000),
+      "-to",
+      String(v.finMs / 1000),
+      "-ar",
+      "44100",
+      "-ac",
+      "1",
+      "-c:a",
+      "pcm_s16le",
+      pedazoViejo,
+    ]);
+    const viejo = await muestras(pedazoViejo);
+    const d = primera(viejo) - primera(nuevo);
+    if (d < 0 || ultima + d >= viejo.length) continue;
+    let igual = true;
+    for (let i = Math.max(0, primera(nuevo)); i <= ultima && igual; i++)
+      igual = Math.abs((viejo[i + d] ?? 0) - (nuevo[i] ?? 0)) <= 2;
+    if (!igual) continue;
+    await exec("ffmpeg", [
+      "-y",
+      "-v",
+      "error",
+      "-ss",
+      String(d / 44100),
+      "-i",
+      mp4Viejo,
+      "-t",
+      String(nuevo.length / 44100),
+      "-c:v",
+      "libx264",
+      "-preset",
+      "medium",
+      "-crf",
+      "16",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      clip,
+    ]);
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -418,6 +617,8 @@ export async function pasoPersonas(
     }
     const clip = path.join(dir, `${clave}.mp4`);
     let costoUsd = 0;
+    if (!existsSync(clip) && (await recortarDeAnterior(trabajo, dir, verde, pedazoWav, clip)))
+      console.log(`  persona ${k + 1}: recortada del video de antes (gratis)`);
     if (!existsSync(clip)) {
       const pedazoMp3 = path.join(dir, `${clave}.mp3`);
       await exec("ffmpeg", [
@@ -595,7 +796,10 @@ export async function pasoArmar(
   const logo = plan.logo
     ? await copiar(path.resolve(carpeta, plan.logo), `logo${path.extname(plan.logo)}`)
     : "";
-  const audio = await copiar(voz.rutaMp3, `voz${path.extname(voz.rutaMp3)}`);
+  // La voz al volumen de las redes, con una ganancia simple (Richard: «su volumen está bajo»).
+  const audio = "voz.wav";
+  const ganancia = await vozAlVolumen(voz.rutaMp3, path.join(publica, audio), plan.voz_lufs);
+  console.log(`  voz: ${ganancia >= 0 ? "+" : ""}${ganancia} dB para sonar a ${plan.voz_lufs} LUFS`);
   const musica = plan.musica ? await copiar(path.resolve(carpeta, plan.musica), "musica.mp3") : null;
   const cortes: string[] = [];
   for (const n of ["whoosh-1.mp3", "corte-2.mp3", "whoosh-2.mp3", "corte-4.mp3"]) {

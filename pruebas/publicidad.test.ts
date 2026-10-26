@@ -5,12 +5,14 @@ import {
   costoPublicidadUsd,
   elegirLogo,
   esquemaPlanPublicidad,
+  gananciaDeVoz,
   planParaArmar,
   puntaDelDedo,
   recorteDeEncuadre,
   textoDelPlan,
   SEGUNDOS_MAXIMOS,
   tiemposDeFrases,
+  tramoConVoz,
   vaVolteada,
 } from "../estacion/src/publicidad-plan";
 import {
@@ -542,5 +544,48 @@ describe("publicidad sin marca: el anuncio que crea expectativa (franquicias, 25
 
   it("las props del video aceptan el logo vacío", () => {
     expect(esquemaPublicidad.shape.logo.parse("")).toBe("");
+  });
+});
+
+describe("C-VOZ-PUBLICIDAD: sin pausas largas entre escenas y la voz al volumen de las redes (25 oct 2026)", () => {
+  // Richard, con el comercial de franquicias: «en los cambios de escena hay una pausa, como que se queda
+  // un poquito allí» y «su volumen está bajo… nada de efectos». Cada parte traía medio segundo de
+  // silencio en las puntas (dentro de las frases las pausas son de 50 a 100 ms) y la voz sonaba a −17.
+  it("cada parte se queda sin el silencio de sus puntas, con un margen corto", () => {
+    const t = tramoConVoz(
+      [
+        { desdeMs: 0, hastaMs: 120 },
+        { desdeMs: 2000, hastaMs: 2080 },
+        { desdeMs: 4600, hastaMs: 5000 },
+      ],
+      5000,
+    );
+    expect(t).toEqual({ desdeMs: 100, hastaMs: 4670 });
+  });
+
+  it("sin silencio en una punta, esa punta se queda entera", () => {
+    expect(tramoConVoz([{ desdeMs: 2000, hastaMs: 2100 }], 4000)).toEqual({ desdeMs: 0, hastaMs: 4000 });
+  });
+
+  it("una parte que fuera casi todo silencio no se recorta (no se tira voz pagada)", () => {
+    expect(tramoConVoz([{ desdeMs: 0, hastaMs: 3000 }], 3100)).toEqual({ desdeMs: 0, hastaMs: 3100 });
+  });
+
+  it("la voz se sube lo que le falta para −14 LUFS, con tope", () => {
+    expect(gananciaDeVoz(-17.1)).toBe(3.1);
+    expect(gananciaDeVoz(-12)).toBe(-2);
+    expect(gananciaDeVoz(-40)).toBe(12);
+    expect(gananciaDeVoz(Number.NaN)).toBe(0);
+  });
+
+  it("la pausa entre partes por defecto es corta y el volumen por defecto es el de las redes", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      marca: "Marca",
+      texto: "Una frase de prueba para el plan.",
+      momentos: [{ frase: "Una frase" }, { frase: "de prueba" }, { frase: "para el" }],
+      cierre: { frase: "para el", lineas: [] },
+    });
+    expect(plan.pausa_ms).toBeLessThanOrEqual(150);
+    expect(plan.voz_lufs).toBe(-14);
   });
 });

@@ -1710,3 +1710,25 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué NO tocar:** no acercar la captura dentro del teléfono para «que se lea mejor»: si una captura de
   computadora es muy ancha, se recorta antes la parte que importa (la ventana de cobro, el recibo, el
   menú) en una imagen aparte, entera.
+
+## C-VOZ-PUBLICIDAD — Sin pausas largas entre escenas y la voz al volumen de las redes (25 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en el comercial de franquicias, Richard: «en los cambios de escena
+  hay una pausa, como que se queda un poquito allí» y «su volumen está bajo». Entre parte y parte de la
+  voz había 550 ms de silencio (dentro de las frases, de 50 a 100 ms): la persona se quedaba quieta
+  esperando y la foto nueva entraba con un fundido desde negro. La voz sonaba a −17 LUFS.
+- **Causa real:** cada parte de la voz trae su silencio al principio y al final, y al juntarlas se le
+  sumaba la pausa del plan. El volumen era el que entrega ElevenLabs.
+- **Qué se hizo:** `pasoVoz` recorta el silencio de las puntas de cada parte (`tramoConVoz`: −45 dB,
+  margen de 20 ms antes y 70 ms después) y la pausa por defecto bajó a 150 ms. `pasoArmar` sube la voz a
+  −14 LUFS con una ganancia simple (`gananciaDeVoz`) y un limitador suave solo para los picos sueltos;
+  sin efectos (Richard: «lo más natural»). A pantalla completa la foto entra con corte directo (sin
+  fundido) y la persona entra más rápido. Si solo cambian las pausas, los videos de la persona ya pagados
+  se recortan (`recortarDeAnterior`, desde `anterior/`) en vez de pagarse otra vez: en el comercial se
+  pagaron 2 de 10 tramos (23 ¢ en vez de 94).
+- **Cómo se comprueba:** `npx vitest run pruebas/publicidad.test.ts` (bloque C-VOZ-PUBLICIDAD; se pone
+  en rojo si no se recorta la punta, si la pausa vuelve a 280 o si la voz no se sube; comprobado el 25 oct
+  2026). En el video: `ffmpeg -i voz.wav -af silencedetect=noise=-40dB:d=0.25` no debe encontrar ningún
+  silencio (antes, 9), y el `ebur128` del video da cerca de −14 LUFS.
+- **Qué NO tocar:** no meterle compresor, ecualizador ni reverberación a la voz para «que suene más»;
+  solo ganancia. No volver al fundido desde negro entre fotos a pantalla completa.

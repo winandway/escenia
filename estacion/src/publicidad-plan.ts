@@ -53,8 +53,14 @@ export const esquemaPlanPublicidad = z
       .optional(),
     /** Letras por segundo de la voz (11,6 es el ritmo de los documentales; un comercial va a 13,5). */
     letras_por_segundo: z.number().min(8).max(16).optional(),
-    /** La pausa entre una parte y la siguiente, en milisegundos. */
-    pausa_ms: z.number().min(0).max(1000).default(280),
+    /**
+     * La pausa entre una parte y la siguiente, en milisegundos, SIN contar el silencio que traiga cada
+     * parte al principio y al final (se recorta: Richard, 25 oct 2026, «en los cambios de escena hay una
+     * pausa, como que se queda un poquito allí»).
+     */
+    pausa_ms: z.number().min(0).max(1000).default(150),
+    /** El volumen de la voz (LUFS integrados); las redes suenan a −14. Solo se sube o baja, sin efectos. */
+    voz_lufs: z.number().min(-24).max(-10).default(-14),
     /**
      * Otra versión del mismo anuncio: usa la voz y los videos de la persona de ese otro plan (su carpeta
      * de trabajo), sin pagarlos de nuevo. Los momentos con `persona` tienen que ser los mismos.
@@ -131,6 +137,39 @@ export const esquemaPlanPublicidad = z
       ctx.addIssue({ code: "custom", message: "Falta lo que dice la voz: `texto` o `partes`." });
   });
 export type PlanPublicidad = z.infer<typeof esquemaPlanPublicidad>;
+
+/** Lo que queda de cada parte de la voz al juntarlas: un poco antes de la primera palabra y un poco después de la última. */
+export const MARGEN_VOZ = { antesMs: 20, despuesMs: 70 } as const;
+
+/**
+ * El tramo de una parte que se queda al juntarla con las otras: desde donde empieza a sonar la voz
+ * hasta donde deja de sonar, con un margen corto (el silencio de las puntas es lo que hacía la pausa
+ * larga entre escena y escena). `silencios` en milisegundos; si no hay silencio en una punta, se queda
+ * entera por ese lado.
+ */
+export function tramoConVoz(
+  silencios: { desdeMs: number; hastaMs: number }[],
+  duracionMs: number,
+  margen: { antesMs: number; despuesMs: number } = MARGEN_VOZ,
+): { desdeMs: number; hastaMs: number } {
+  const inicial = silencios.find((x) => x.desdeMs <= 1);
+  const final = [...silencios].reverse().find((x) => x.hastaMs >= duracionMs - 1);
+  const desde = inicial ? Math.max(0, inicial.hastaMs - margen.antesMs) : 0;
+  const hasta = final ? Math.min(duracionMs, final.desdeMs + margen.despuesMs) : duracionMs;
+  // Una parte que fuera todo silencio se queda entera (no se tira la voz pagada por un mal cálculo).
+  return hasta - desde > 200
+    ? { desdeMs: Math.round(desde), hastaMs: Math.round(hasta) }
+    : { desdeMs: 0, hastaMs: duracionMs };
+}
+
+/**
+ * Cuánto hay que subir (o bajar) la voz para que suene a `objetivo` LUFS: una ganancia simple, sin
+ * efectos (Richard: «nada de efectos, lo más natural»). Nunca más de 12 dB arriba ni 8 abajo.
+ */
+export function gananciaDeVoz(lufs: number, objetivo = -14): number {
+  if (!Number.isFinite(lufs)) return 0;
+  return Math.round(Math.min(12, Math.max(-8, objetivo - lufs)) * 10) / 10;
+}
 
 /** Lo que dice la voz, entero (las partes van seguidas). */
 export const textoDelPlan = (plan: Pick<PlanPublicidad, "texto" | "partes">): string =>

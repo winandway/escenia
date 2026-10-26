@@ -123,8 +123,10 @@ const Tarjeta: React.FC<{
     tramo.entrada === "barrido" && !misma
       ? interpolate(frame, [0, 9], [1100, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) })
       : 0;
+  // A pantalla completa, corte directo (sin fundido): un fundido desde negro se veía como un parpadeo
+  // oscuro entre foto y foto, una pausa en el cambio de escena (Richard, 25 oct 2026).
   const entra =
-    misma || primero || tramo.entrada === "barrido"
+    misma || primero || completa || tramo.entrada === "barrido"
       ? 1
       : interpolate(frame, [0, 5], [0, 1], { extrapolateRight: "clamp" });
   const noche = tramo.oscurecer ? interpolate(frame, [0, 14], [0, 0.72], { extrapolateRight: "clamp" }) : 0;
@@ -274,7 +276,7 @@ const PersonaEnPantalla: React.FC<{
   const s =
     desdeAparicionMs === 0 && vista.desdeMs === 0
       ? 1
-      : spring({ frame: frame - desde, fps, config: { damping: 13, stiffness: 160 } });
+      : spring({ frame: frame - desde, fps, config: { damping: 15, stiffness: 260 } });
   const video = (estilo: React.CSSProperties) =>
     a.quieta ? (
       <Img src={staticFile(a.ruta)} style={estilo} />
@@ -337,9 +339,9 @@ const PersonaEnPantalla: React.FC<{
         bottom: 0,
         height: alto,
         width: ancho,
-        transform: `translateY(${(1 - s) * 320}px) rotate(${giro}deg)`,
+        transform: `translateY(${(1 - s) * 150}px) rotate(${giro}deg)`,
         transformOrigin: "50% 100%",
-        opacity: Math.min(1, 0.2 + s),
+        opacity: Math.min(1, 0.5 + s),
       }}
     >
       {video({ width: "100%", height: "100%", transform: a.espejo ? "scaleX(-1)" : undefined })}

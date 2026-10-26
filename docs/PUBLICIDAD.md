@@ -152,6 +152,14 @@ completa y Maggie delante, más grande que antes y volteada para señalar la fot
 fotos: las capturas de software van enteras (C-PUBLICIDAD-ENTERA). Las fotos con logos de otras marcas,
 cifras inventadas o promesas de ganancia («crecimiento garantizado», «ingresos recurrentes») no entran.
 
+**Pausas y volumen (25 oct 2026, C-VOZ-PUBLICIDAD):** al juntar la voz por partes se recorta el silencio
+de las puntas de cada parte, así la pausa entre escena y escena es como las de adentro de las frases
+(`pausa_ms`, 150 por defecto; el comercial va con 120). La voz se sube a `voz_lufs` (−14, como suenan las
+redes) solo con ganancia, sin efectos. Para rehacer solo la unión de una voz ya pagada: mover su
+`voz.json` fuera de la carpeta de trabajo y correr `--paso voz` (no paga: las partes están guardadas).
+Lo de antes queda en `anterior/`, y `--paso avatar` recorta de ahí los videos de la persona que dicen lo
+mismo; solo paga los tramos que cambiaron por dentro.
+
 ## La tarjeta de saldo y el diseño «pizarra» (QRBott, 23 oct 2026)
 
 Richard pidió el video de la tarjeta de saldo «como lo que ya estamos haciendo pero los fondos los vamos
