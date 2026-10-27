@@ -1789,3 +1789,30 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   quita la regla, comprobado el 27 oct 2026). En vivo: el mismo pedido del generador sale con la chica de
   la pijama como persona y sin cualidades inventadas.
 - **Qué NO tocar:** no volver a «tú decides todo» sin la excepción de lo pedido.
+
+## C-DIRECTOR-3 — El Director con el video del cliente: lo mira antes de proponer, y la prueba va sin cortes (27 oct 2026)
+
+- **Qué se pidió:** la segunda parte del Director: que desde el chat salgan también la prueba en vivo con
+  el video real del cliente (como la del agua de Pro In Shop) y la locución con la voz de Richard sobre un
+  video ya editado (como la de los quince años).
+- **Qué se hizo:** los videos se suben en el chat por partes (las mismas piezas de Grabaciones, con sus
+  rutas en `/datos/director/[id]/videos`). La Mac los **mira** aparte del ciclo grande, cada diez
+  segundos (`vigilarVideosDelDirector`): duración, sonido, si es vertical y hasta cuatro hojas con un
+  cuadro cada pocos segundos y su hora en amarillo (`director/videos/<id>/hoja-N.jpg`). La IA las ve con
+  `ver_video` y propone con `proponer_demostracion` o `proponer_locucion`; cada frase de la prueba lleva
+  el segundo del video en que pasa lo que dice. Antes de guardar la tarjeta se revisa que el video sea del
+  encargo y esté mirado, que las frases vayan en orden y alcancen a decirse antes de la siguiente, que no
+  pase de 120 segundos, y que la locución quepa estirando el video hasta un 35 %. Al aprobar nace UNA fila
+  en `director_trabajos` (UNIQUE por propuesta) y la Mac la arma con los mismos pasos de siempre
+  (`publicidad.ts` y `locucion.ts`, a través de `estacion/src/director-plan.ts`) y la entrega por partes.
+- **Dos trampas que ya quedaron cerradas:** (1) la última frase es el cierre y NO lleva momento propio: si
+  lo llevara, su frase se buscaría dos veces en la voz y el armado fallaba; (2) la portada ocupa arriba
+  los primeros segundos: el título de la primera frase entra a la mitad de esa frase, o se montaba
+  encima de la portada (visto en los cuadros de la prueba local del 27 oct 2026).
+- **Cómo se comprueba:** `npx vitest run pruebas/director-videos.test.ts` (en rojo si la última frase
+  vuelve a tener momento o si un doble clic crea dos trabajos; comprobado el 27 oct 2026). En la Mac: un
+  video sintético de 20 s se subió por partes al panel local, la Mac lo miró (20 cuadros en 2 hojas), y
+  se armaron una locución (1 centavo) y una prueba en vivo sin persona (1 centavo), ambas entregadas al
+  chat y reproducidas en la tarjeta.
+- **Qué NO tocar:** no meter cortes ni otro video en la prueba en vivo; no dejar que la IA proponga sin
+  mirar el video; no subir el resultado en una sola petición (pasa de cien megas).

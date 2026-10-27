@@ -5,57 +5,70 @@ import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
 import { latidoEstacion } from "@/lib/consultas";
 import {
-  datosDePropuesta,
   encargoPorId,
+  leerPropuesta,
   mensajesDelEncargo,
   propuestasDelEncargo,
+  resultadoDePropuesta,
   type FilaPropuesta,
 } from "@/lib/director";
-import { dinero } from "@/lib/director-prompt";
+import { dinero, reloj, type PropuestaLeida } from "@/lib/director-prompt";
+import { claveDeHoja, videosDelEncargo, type FilaVideoDirector } from "@/lib/director-videos";
 import { contexto } from "@/lib/entorno";
 import { estacionViva } from "@/lib/estacion-estado";
 import { imagenesActivas, type FilaImagen } from "@/lib/imagenes";
-import { publicidadPorId, type FilaPublicidad } from "@/lib/publicidades";
+import { segundosDeTexto, textoDeDemostracion } from "@compartido/director";
 import { contarPalabras } from "@compartido/grabaciones";
 import { ETIQUETA_VOZ } from "@compartido/guion";
-import { aprobar } from "../acciones";
+import { aprobar, intentarOtraVez } from "../acciones";
 import { BotonCambiar } from "./BotonCambiar";
 import { Charla } from "./Charla";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Director" };
 
-function EstadoDelAnuncio({ a, macEncendida }: { a: FilaPublicidad; macEncendida: boolean }) {
-  if (a.estado === "lista")
+type Resultado = NonNullable<Awaited<ReturnType<typeof resultadoDePropuesta>>>;
+
+function EstadoDelResultado({ r, macEncendida }: { r: Resultado; macEncendida: boolean }) {
+  if (r.estado === "lista")
     return (
       <div className="mt-3">
         <p className="text-sm text-emerald-300">
-          Listo: {Math.round(a.duracion_seg)} segundos. Costó {dinero(a.costo_usd)}.
+          Listo: {Math.round(r.duracionSeg)} segundos. Costó {dinero(r.costoUsd)}.
         </p>
-        {a.video && (
+        {r.video && (
           <>
             <video
               controls
               preload="metadata"
-              src={`/datos/archivos/${a.video}`}
-              className="mt-3 aspect-[9/16] w-full max-w-[260px] rounded-lg bg-black"
+              src={`/datos/archivos/${r.video}`}
+              className="mt-3 aspect-[9/16] w-full max-w-[260px] rounded-lg bg-black object-contain"
             />
-            <a href={`/datos/archivos/${a.video}?descargar=1`} className="boton mt-3">
+            <a href={`/datos/archivos/${r.video}?descargar=1`} className="boton mt-3">
               Descargar el video
             </a>
           </>
         )}
       </div>
     );
-  if (a.estado === "error")
+  if (r.estado === "error")
     return (
-      <p className="mt-3 text-sm text-red-300">
-        No salió: {a.error || "error sin detalle"}. Cuéntaselo al Director o inténtalo otra vez desde
-        Publicidad.
-      </p>
+      <div className="mt-3 text-sm text-red-300">
+        <p>No salió: {r.error || "error sin detalle"}.</p>
+        {r.trabajo ? (
+          <form action={intentarOtraVez} className="mt-2">
+            <input type="hidden" name="id" value={r.trabajo.id} />
+            <button type="submit" className="boton-suave">
+              Intentar otra vez
+            </button>
+          </form>
+        ) : (
+          <p className="mt-1">Cuéntaselo al Director o inténtalo otra vez desde Publicidad.</p>
+        )}
+      </div>
     );
-  if (a.estado === "tomada")
-    return <p className="mt-3 text-sm text-amber-300">La Mac lo está armando: {a.paso || "empezando"}.</p>;
+  if (r.estado === "tomada")
+    return <p className="mt-3 text-sm text-amber-300">La Mac lo está armando: {r.paso || "empezando"}.</p>;
   return (
     <p className="mt-3 text-sm text-neutral-300">
       {macEncendida
@@ -65,23 +78,94 @@ function EstadoDelAnuncio({ a, macEncendida }: { a: FilaPublicidad; macEncendida
   );
 }
 
-/** La propuesta del Director: el precio primero, el texto entero y el botón de aprobar (C-DIRECTOR-1). */
+const TITULO_DE_TIPO = {
+  anuncio: "Anuncio con fotos",
+  demostracion: "Prueba en vivo, sin cortes",
+  locucion: "Locución sobre tu video",
+} as const;
+
+function Detalle({ l, videos }: { l: PropuestaLeida; videos: FilaVideoDirector[] }) {
+  if (l.tipo === "anuncio")
+    return (
+      <p className="mt-2 whitespace-pre-line border-l-2 border-neutral-700 pl-3 text-sm text-neutral-200">
+        {l.datos.narracion}
+      </p>
+    );
+  const video = videos.find((v) => v.id === l.datos.video_id);
+  if (l.tipo === "demostracion")
+    return (
+      <>
+        <ol className="mt-2 space-y-1.5 border-l-2 border-neutral-700 pl-3 text-sm text-neutral-200">
+          {l.datos.partes.map((p, i) => (
+            <li key={i}>
+              <span className="mr-2 font-mono text-xs text-amber-300">{reloj(p.en_s)}</span>
+              {p.texto}
+              {p.titulo && <span className="ml-2 chip bg-neutral-800 text-neutral-300">{p.titulo}</span>}
+            </li>
+          ))}
+        </ol>
+        <p className="mt-2 text-xs text-neutral-400">
+          El video {video ? `«${video.nombre}»` : `V${l.datos.video_id}`} va entero desde el{" "}
+          {reloj(l.datos.desde_s)}, sin cortes. Portada: {l.datos.portada.lineas.join(" / ")}. Cierre:{" "}
+          {l.datos.cierre.lineas.join(" · ")}.
+        </p>
+      </>
+    );
+  return (
+    <>
+      <div className="mt-2 space-y-2 border-l-2 border-neutral-700 pl-3 text-sm text-neutral-200">
+        {l.datos.partes.map((p, i) => (
+          <p key={i} className="whitespace-pre-line">
+            {p.en_s !== undefined && (
+              <span className="mr-2 font-mono text-xs text-amber-300">desde {reloj(p.en_s)}</span>
+            )}
+            {p.texto}
+          </p>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-neutral-400">
+        El video {video ? `«${video.nombre}»` : `V${l.datos.video_id}`} no se toca; si la voz no cabe con
+        calma, se estira un poco.
+      </p>
+    </>
+  );
+}
+
+function resumen(l: PropuestaLeida, videos: FilaVideoDirector[]): string {
+  const voz = ETIQUETA_VOZ[l.datos.voz];
+  if (l.tipo === "anuncio")
+    return `Unos ${Math.round(contarPalabras(l.datos.narracion) / 2.6)} segundos · ${voz} · ${l.datos.avatar ? "con persona que habla" : "sin persona"}`;
+  if (l.tipo === "demostracion") {
+    const ultima = l.datos.partes[l.datos.partes.length - 1];
+    const fin = ultima ? ultima.en_s - l.datos.desde_s + segundosDeTexto(ultima.texto) + 3 : 0;
+    return `Unos ${Math.round(fin)} segundos · ${voz} · ${l.datos.avatar ? "con persona que narra" : "sin persona"} · ${textoDeDemostracion(l.datos).length} letras de voz`;
+  }
+  const video = videos.find((v) => v.id === l.datos.video_id);
+  return `${video ? `Video de ${reloj(video.duracion_seg)}` : "Su video"} · ${voz} · ${l.datos.musica === "piano" ? "con piano suave" : "sin música"}`;
+}
+
+/** La propuesta del Director: el precio primero, todo lo que va a decir y el botón de aprobar (C-DIRECTOR-1). */
 function TarjetaPropuesta({
   p,
-  anuncio,
+  resultado,
   imagenes,
+  videos,
   macEncendida,
 }: {
   p: FilaPropuesta;
-  anuncio: FilaPublicidad | null;
+  resultado: Resultado | null;
   imagenes: FilaImagen[];
+  videos: FilaVideoDirector[];
   macEncendida: boolean;
 }) {
-  const d = datosDePropuesta(p);
-  const segundos = Math.round(contarPalabras(d.narracion) / 2.6);
-  const persona = d.avatar
-    ? imagenes.find((i) => i.nombre === d.avatar && d.carpetas.includes(i.carpeta))
+  const l = leerPropuesta(p);
+  const carpetas = l.tipo === "locucion" ? [] : l.datos.carpetas;
+  const avatar = l.tipo === "locucion" ? "" : l.datos.avatar;
+  const persona = avatar
+    ? imagenes.find((i) => i.nombre === avatar && carpetas.includes(i.carpeta))
     : undefined;
+  const video =
+    l.tipo === "anuncio" ? undefined : videos.find((v) => v.id === l.datos.video_id && v.hojas > 0);
   const reemplazada = p.estado === "reemplazada";
   return (
     <section
@@ -93,39 +177,44 @@ function TarjetaPropuesta({
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium uppercase tracking-wide text-amber-300">
-            {reemplazada
-              ? "Propuesta anterior"
-              : p.estado === "aprobada"
-                ? "Propuesta aprobada"
-                : "Propuesta"}
+            {TITULO_DE_TIPO[l.tipo]}
+            {reemplazada ? " · anterior" : p.estado === "aprobada" ? " · aprobada" : ""}
           </p>
           <p className="mt-1 text-2xl font-semibold text-white">{dinero(p.precio_usd)}</p>
-          <p className="text-xs text-neutral-400">
-            Unos {segundos} segundos · {ETIQUETA_VOZ[d.voz]} ·{" "}
-            {d.avatar ? "con persona que habla" : "sin persona"}
-          </p>
+          <p className="text-xs text-neutral-400">{resumen(l, videos)}</p>
         </div>
-        {persona && (
+        {persona ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={`/datos/imagenes/${persona.id}`}
             alt={`La persona que habla: ${persona.nombre}`}
             className="h-24 w-16 shrink-0 rounded-md object-cover"
           />
+        ) : (
+          video && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/datos/archivos/${claveDeHoja(video.id, 1)}`}
+              alt={`Cuadros del video ${video.nombre}`}
+              className="h-24 w-24 shrink-0 rounded-md object-cover"
+            />
+          )
         )}
       </div>
-      <p className="mt-3 font-medium text-neutral-100">{d.nombre}</p>
-      <p className="mt-2 whitespace-pre-line border-l-2 border-neutral-700 pl-3 text-sm text-neutral-200">
-        {d.narracion}
-      </p>
-      <p className="mt-3 flex flex-wrap gap-1.5">
-        {d.carpetas.map((c) => (
-          <span key={c} className="chip bg-neutral-800 text-neutral-300">
-            {c}
-          </span>
-        ))}
-      </p>
-      {d.instrucciones && <p className="mt-2 text-xs text-neutral-400">Cómo se arma: {d.instrucciones}</p>}
+      <p className="mt-3 font-medium text-neutral-100">{l.datos.nombre}</p>
+      <Detalle l={l} videos={videos} />
+      {carpetas.length > 0 && (
+        <p className="mt-3 flex flex-wrap gap-1.5">
+          {carpetas.map((c) => (
+            <span key={c} className="chip bg-neutral-800 text-neutral-300">
+              {c}
+            </span>
+          ))}
+        </p>
+      )}
+      {l.tipo === "anuncio" && l.datos.instrucciones && (
+        <p className="mt-2 text-xs text-neutral-400">Cómo se arma: {l.datos.instrucciones}</p>
+      )}
       {p.estado === "propuesta" && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <form action={aprobar}>
@@ -140,9 +229,18 @@ function TarjetaPropuesta({
       {reemplazada && (
         <p className="mt-3 text-xs text-neutral-400">La cambiaste por una más nueva, más abajo.</p>
       )}
-      {p.estado === "aprobada" && anuncio && <EstadoDelAnuncio a={anuncio} macEncendida={macEncendida} />}
+      {p.estado === "aprobada" && resultado && (
+        <EstadoDelResultado r={resultado} macEncendida={macEncendida} />
+      )}
     </section>
   );
+}
+
+function EstadoDelVideo({ v }: { v: FilaVideoDirector }) {
+  if (v.estado === "listo")
+    return <span className="text-emerald-300">{reloj(v.duracion_seg)} · el Director ya lo puede ver</span>;
+  if (v.estado === "error") return <span className="text-red-300">no se pudo mirar: {v.error}</span>;
+  return <span className="text-amber-300">la Mac lo está mirando…</span>;
 }
 
 export default async function PaginaEncargo(props: PageProps<"/director/[id]">) {
@@ -152,21 +250,23 @@ export default async function PaginaEncargo(props: PageProps<"/director/[id]">) 
   const { db } = await contexto();
   const encargo = await encargoPorId(db, id);
   if (!encargo) notFound();
-  const [mensajes, propuestas, imagenes, latido] = await Promise.all([
+  const [mensajes, propuestas, imagenes, videos, latido] = await Promise.all([
     mensajesDelEncargo(db, id),
     propuestasDelEncargo(db, id),
     imagenesActivas(db),
+    videosDelEncargo(db, id),
     latidoEstacion(db),
   ]);
-  const anuncios = new Map<number, FilaPublicidad>();
-  for (const p of propuestas)
-    if (p.publicidad_id) {
-      const a = await publicidadPorId(db, p.publicidad_id);
-      if (a) anuncios.set(p.id, a);
-    }
+  const resultados = new Map<number, Resultado>();
+  for (const p of propuestas) {
+    const r = await resultadoDePropuesta(db, p);
+    if (r) resultados.set(p.id, r);
+  }
   const porId = new Map(propuestas.map((p) => [p.id, p]));
   const viva = estacionViva(latido);
-  const enCurso = [...anuncios.values()].some((a) => a.estado === "subida" || a.estado === "tomada");
+  const enCurso =
+    [...resultados.values()].some((r) => r.estado === "subida" || r.estado === "tomada") ||
+    videos.some((v) => v.estado === "subido" || v.estado === "mirando");
   return (
     <Marco titulo={encargo.titulo}>
       <RefrescoSolo activo={enCurso} />
@@ -180,6 +280,18 @@ export default async function PaginaEncargo(props: PageProps<"/director/[id]">) 
           {dinero(encargo.costo_usd)}
         </span>
       </p>
+      {videos.length > 0 && (
+        <ul aria-label="Videos de este chat" className="mx-auto mb-5 max-w-2xl space-y-1 text-sm">
+          {videos.map((v) => (
+            <li key={v.id} className="tarjeta flex flex-wrap items-center gap-x-2 py-2">
+              <span className="font-medium text-neutral-100">
+                V{v.id} · {v.nombre}
+              </span>
+              <EstadoDelVideo v={v} />
+            </li>
+          ))}
+        </ul>
+      )}
       <ol aria-label="Conversación con el Director" className="mx-auto max-w-2xl space-y-4">
         {mensajes.map((m) => {
           if (m.rol === "aviso")
@@ -206,8 +318,9 @@ export default async function PaginaEncargo(props: PageProps<"/director/[id]">) 
               {p && (
                 <TarjetaPropuesta
                   p={p}
-                  anuncio={anuncios.get(p.id) ?? null}
+                  resultado={resultados.get(p.id) ?? null}
                   imagenes={imagenes}
+                  videos={videos}
                   macEncendida={viva}
                 />
               )}

@@ -49,13 +49,43 @@ export async function iniciarSubida(
   return { archivo, id: inicio.id, uploadId: inicio.uploadId, partes: [] };
 }
 
+/** Paso 1 de un video del chat del Director: se anota en su encargo y se abre la subida. */
+export async function iniciarSubidaDeVideo(
+  archivo: File,
+  base: string,
+  pedir: typeof fetch = fetch,
+): Promise<SubidaEnCurso> {
+  let r: Response;
+  try {
+    r = await pedir(base, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ archivo: archivo.name, bytes: archivo.size }),
+    });
+  } catch {
+    throw new FalloDeSubida("No hay conexión con el panel. Revisa tu internet y vuelve a intentarlo.", false);
+  }
+  if (!r.ok) throw new FalloDeSubida(await leerError(r, "No se pudo empezar a subir el video."), false);
+  const inicio = (await r.json()) as { id: number; uploadId: string };
+  return { archivo, id: inicio.id, uploadId: inicio.uploadId, partes: [] };
+}
+
 /** Pasos 2 y 3: sube los trozos que falten (cada uno con sus reintentos) y cierra. */
 export async function seguirSubida(
   s: SubidaEnCurso,
   avisar: (subidos: number, total: number) => void,
-  opciones: { pedir?: typeof fetch; dormir?: (ms: number) => Promise<void> } = {},
+  opciones: {
+    pedir?: typeof fetch;
+    dormir?: (ms: number) => Promise<void>;
+    /** Dónde van los trozos y el cierre (los videos del chat del Director usan las suyas). */
+    rutas?: { parte: string; terminar: string };
+  } = {},
 ): Promise<void> {
   const pedir = opciones.pedir ?? fetch;
+  const rutas = opciones.rutas ?? {
+    parte: "/datos/grabaciones/parte",
+    terminar: "/datos/grabaciones/terminar",
+  };
   const dormir = opciones.dormir ?? dormirDeVerdad;
   const total = s.archivo.size;
   for (const p of partesDe(total, TAMANO_PARTE)) {
@@ -64,7 +94,7 @@ export async function seguirSubida(
     for (let intento = 0; ; intento++) {
       let r: Response | null = null;
       try {
-        r = await pedir(`/datos/grabaciones/parte?${q}`, {
+        r = await pedir(`${rutas.parte}?${q}`, {
           method: "PUT",
           headers: { "content-type": "application/octet-stream" },
           body: s.archivo.slice(p.desde, p.hasta),
@@ -92,7 +122,7 @@ export async function seguirSubida(
   }
   let r: Response;
   try {
-    r = await pedir("/datos/grabaciones/terminar", {
+    r = await pedir(rutas.terminar, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({

@@ -76,31 +76,25 @@ async function grabarParte(
   return { ruta, costoUsd: costoVozUsd(modelo, texto.length) };
 }
 
-async function principal() {
-  const rutaPlan = process.argv[2];
-  if (!rutaPlan) throw new Error("Uso: locucion.ts plan.json [--muestra N]");
-  const carpeta = path.dirname(path.resolve(rutaPlan));
-  const plan = esquemaPlanLocucion.parse(JSON.parse(await readFile(path.resolve(rutaPlan), "utf8")));
+/**
+ * La locución entera: la voz párrafo por párrafo (lo ya grabado no se paga otra vez), el video estirado
+ * si hace falta, la mezcla con la música y la versión para WhatsApp. `carpeta` es donde vive el plan
+ * (ahí queda el video y su carpeta «trabajo»). La usan la herramienta de la terminal y el Director.
+ */
+export async function armarLocucion(
+  plan: PlanLocucion,
+  carpeta: string,
+  avisar: (texto: string) => unknown = (t) => console.log(`  ${t}`),
+): Promise<{ salida: string; liviana: string; costoUsd: number; duracionMs: number }> {
   const trabajo = path.join(carpeta, "trabajo");
   const dir = path.join(trabajo, "partes");
   await mkdir(dir, { recursive: true });
-  const iMuestra = process.argv.indexOf("--muestra");
-  if (iMuestra !== -1) {
-    const i = Number(process.argv[iMuestra + 1] ?? "1") - 1;
-    const { ruta, costoUsd } = await grabarParte(plan, i, dir);
-    const ms = await duracionMs(ruta);
-    const letras = plan.partes[i]?.texto.length ?? 0;
-    console.log(
-      `Muestra ${i + 1}: ${(ms / 1000).toFixed(1)} s · ${((letras * 1000) / ms).toFixed(1)} letras/s · $${costoUsd.toFixed(4)} → ${ruta}`,
-    );
-    return;
-  }
   const original = path.resolve(carpeta, plan.video);
   const largoOriginalMs = await duracionMs(original);
   let costo = 0;
   const grabadas: { ruta: string; duracionMs: number; desdeMs?: number }[] = [];
   for (const [i, p] of plan.partes.entries()) {
-    console.log(`  voz: párrafo ${i + 1} de ${plan.partes.length}`);
+    await avisar(`haciendo la voz: párrafo ${i + 1} de ${plan.partes.length}`);
     const g = await grabarParte(plan, i, dir);
     costo += g.costoUsd;
     grabadas.push({ ruta: g.ruta, duracionMs: await duracionMs(g.ruta), desdeMs: p.desde_ms });
@@ -122,7 +116,7 @@ async function principal() {
   if (factor > 1) {
     video = path.join(trabajo, `video-x${factor}.mp4`);
     if (!existsSync(video)) {
-      console.log(`  el video se estira ×${factor} para que la voz quepa con calma`);
+      await avisar(`estirando el video ×${factor} para que la voz quepa con calma`);
       await exec("ffmpeg", [
         "-y",
         "-v",
@@ -264,7 +258,30 @@ async function principal() {
     "+faststart",
     liviana,
   ]);
-  console.log(`Listo: ${salida} (y su versión de WhatsApp) · voz nueva $${costo.toFixed(4)}`);
+  return { salida, liviana, costoUsd: costo, duracionMs: largoMs };
+}
+
+async function principal() {
+  const rutaPlan = process.argv[2];
+  if (!rutaPlan) throw new Error("Uso: locucion.ts plan.json [--muestra N]");
+  const carpeta = path.dirname(path.resolve(rutaPlan));
+  const plan = esquemaPlanLocucion.parse(JSON.parse(await readFile(path.resolve(rutaPlan), "utf8")));
+  const trabajo = path.join(carpeta, "trabajo");
+  const dir = path.join(trabajo, "partes");
+  await mkdir(dir, { recursive: true });
+  const iMuestra = process.argv.indexOf("--muestra");
+  if (iMuestra !== -1) {
+    const i = Number(process.argv[iMuestra + 1] ?? "1") - 1;
+    const { ruta, costoUsd } = await grabarParte(plan, i, dir);
+    const ms = await duracionMs(ruta);
+    const letras = plan.partes[i]?.texto.length ?? 0;
+    console.log(
+      `Muestra ${i + 1}: ${(ms / 1000).toFixed(1)} s · ${((letras * 1000) / ms).toFixed(1)} letras/s · $${costoUsd.toFixed(4)} → ${ruta}`,
+    );
+    return;
+  }
+  const r = await armarLocucion(plan, carpeta);
+  console.log(`Listo: ${r.salida} (y su versión de WhatsApp) · voz nueva $${r.costoUsd.toFixed(4)}`);
 }
 
 if (process.argv[1] && /^locucion\.(ts|js|mjs)$/.test(path.basename(process.argv[1]))) {

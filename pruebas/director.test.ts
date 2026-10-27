@@ -93,8 +93,15 @@ const opciones = (falso: typeof fetch, almacen: AlmacenDeLectura | null = null) 
 
 describe("Director: la IA propone, solo Richard aprueba (C-DIRECTOR-1)", () => {
   it("las herramientas de la IA son mirar una foto y proponer; ninguna aprueba, gasta ni pide un video", () => {
-    expect(HERRAMIENTAS.map((h) => h.name)).toEqual(["ver_imagen", "proponer_anuncio"]);
-    for (const h of HERRAMIENTAS) expect(h.name).not.toMatch(/aprob|pag|gast|crear|publicidad|video/i);
+    expect(HERRAMIENTAS.map((h) => h.name)).toEqual([
+      "ver_imagen",
+      "ver_video",
+      "proponer_anuncio",
+      "proponer_demostracion",
+      "proponer_locucion",
+    ]);
+    for (const h of HERRAMIENTAS) expect(h.name).toMatch(/^(ver|proponer)_/);
+    for (const h of HERRAMIENTAS) expect(h.name).not.toMatch(/aprob|pag|gast|crear|armar|entreg/i);
   });
 
   it("un encargo nuevo trae su propia carpeta de fotos", async () => {

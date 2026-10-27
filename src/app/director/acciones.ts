@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { exigirSesion } from "@/lib/auth";
 import { aprobarPropuesta, archivarEncargo, crearEncargo } from "@/lib/director";
+import { otraVezTrabajo, trabajoDelDirector } from "@/lib/director-videos";
 import { contexto } from "@/lib/entorno";
 
 const idDe = (datos: FormData) => z.coerce.number().int().positive().parse(datos.get("id"));
@@ -32,4 +33,14 @@ export async function archivar(datos: FormData): Promise<void> {
   const { db } = await contexto();
   await archivarEncargo(db, idDe(datos));
   revalidatePath("/director");
+}
+
+/** «Intentar otra vez»: el trabajo que falló vuelve a la fila (lo ya pagado en la Mac no se paga dos veces). */
+export async function intentarOtraVez(datos: FormData): Promise<void> {
+  await exigirSesion();
+  const { db } = await contexto();
+  const t = await trabajoDelDirector(db, idDe(datos));
+  if (!t) return;
+  await otraVezTrabajo(db, t.id);
+  revalidatePath(`/director/${t.encargo_id}`);
 }

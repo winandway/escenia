@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AvisoBorrador } from "@/componentes/AvisoBorrador";
 import { useBorrador } from "@/componentes/useBorrador";
-import { notaDeFotos } from "@/lib/director-prompt";
+import { iniciarSubidaDeVideo, seguirSubida, FalloDeSubida } from "@/app/grabaciones/subida";
+import { notaDeFotos, notaDeVideos } from "@/lib/director-prompt";
+import { MAX_BYTES_VIDEO_DIRECTOR } from "@compartido/director";
+import { EXTENSIONES_VIDEO } from "@compartido/grabaciones";
 import { extensionDeImagen, MAX_BYTES_IMAGEN } from "@compartido/imagenes";
 
 /** Los atajos llenan el cuadro de escribir; no reemplazan la conversación. */
@@ -18,13 +21,32 @@ const ATAJOS = [
     texto: "Quiero un anuncio con una persona que lo presente, para: … Se compra o se pide por: …",
   },
   {
+    titulo: "Prueba en vivo con mi video",
+    texto:
+      "Quiero un anuncio con este video de la prueba, sin cortes, explicando cada paso: … Te subo el video. Se compra o se pide por: …",
+  },
+  {
+    titulo: "Ponle mi voz a este video",
+    texto: "Quiero ponerle mi voz a este video, con un piano suave. Este es el texto: …",
+  },
+  {
     titulo: "Mi app con capturas",
     texto:
       "Quiero un anuncio de mi aplicación: … Te subo las capturas de pantalla. Lo que más le sirve a la gente es: …",
   },
 ];
 
-type Subida = { nombre: string; estado: "subiendo" | "lista" | "error"; error?: string };
+type Subida = {
+  nombre: string;
+  tipo: "foto" | "video";
+  estado: "subiendo" | "lista" | "error";
+  error?: string;
+  /** Cuánto lleva un video (los videos suben por partes). */
+  pct?: number;
+};
+
+const esVideo = (nombre: string) =>
+  (EXTENSIONES_VIDEO as readonly string[]).includes(nombre.toLowerCase().split(".").pop() ?? "");
 type Estado = { fase: "listo" | "enviando"; error: string; enviado: string };
 
 export function Charla({
@@ -58,30 +80,71 @@ export function Charla({
     c.focus();
   }
 
+  const anotar = (s: Subida) => setSubidas((antes) => [...antes.filter((x) => x.nombre !== s.nombre), s]);
+
+  /** Un video sube por partes de 8 MB, con reintentos; al terminar, la Mac lo mira sola. */
+  async function subirVideo(archivo: File) {
+    if (archivo.size > MAX_BYTES_VIDEO_DIRECTOR)
+      return anotar({ nombre: archivo.name, tipo: "video", estado: "error", error: "pasa de 2 GB" });
+    anotar({ nombre: archivo.name, tipo: "video", estado: "subiendo", pct: 0 });
+    try {
+      const base = `/datos/director/${encargoId}/videos`;
+      const s = await iniciarSubidaDeVideo(archivo, base);
+      await seguirSubida(
+        s,
+        (subidos, total) =>
+          anotar({
+            nombre: archivo.name,
+            tipo: "video",
+            estado: "subiendo",
+            pct: Math.round((subidos / total) * 100),
+          }),
+        { rutas: { parte: `${base}/parte`, terminar: `${base}/terminar` } },
+      );
+      anotar({ nombre: archivo.name, tipo: "video", estado: "lista" });
+      router.refresh();
+    } catch (e) {
+      anotar({
+        nombre: archivo.name,
+        tipo: "video",
+        estado: "error",
+        error: e instanceof FalloDeSubida ? e.message : "se cortó la conexión",
+      });
+    }
+  }
+
   async function subir(archivos: FileList | null) {
     for (const archivo of Array.from(archivos ?? [])) {
+      if (esVideo(archivo.name)) {
+        await subirVideo(archivo);
+        continue;
+      }
       const extension = extensionDeImagen(archivo.name);
-      const anotar = (s: Subida) => setSubidas((antes) => [...antes.filter((x) => x.nombre !== s.nombre), s]);
       if (!extension || extension === "pdf") {
-        anotar({ nombre: archivo.name, estado: "error", error: "solo fotos PNG, JPG o WEBP" });
+        anotar({
+          nombre: archivo.name,
+          tipo: "foto",
+          estado: "error",
+          error: "solo fotos (PNG, JPG, WEBP) o videos",
+        });
         continue;
       }
       if (archivo.size > MAX_BYTES_IMAGEN) {
-        anotar({ nombre: archivo.name, estado: "error", error: "pesa demasiado" });
+        anotar({ nombre: archivo.name, tipo: "foto", estado: "error", error: "pesa demasiado" });
         continue;
       }
-      anotar({ nombre: archivo.name, estado: "subiendo" });
+      anotar({ nombre: archivo.name, tipo: "foto", estado: "subiendo" });
       try {
         const consulta = new URLSearchParams({ carpeta, nombre: archivo.name, extension });
         const r = await fetch(`/datos/imagenes?${consulta}`, { method: "POST", body: archivo });
         const j = (await r.json().catch(() => ({}))) as { error?: string };
         anotar(
           r.ok
-            ? { nombre: archivo.name, estado: "lista" }
-            : { nombre: archivo.name, estado: "error", error: j.error ?? "no se pudo subir" },
+            ? { nombre: archivo.name, tipo: "foto", estado: "lista" }
+            : { nombre: archivo.name, tipo: "foto", estado: "error", error: j.error ?? "no se pudo subir" },
         );
       } catch {
-        anotar({ nombre: archivo.name, estado: "error", error: "se cortó la conexión" });
+        anotar({ nombre: archivo.name, tipo: "foto", estado: "error", error: "se cortó la conexión" });
       }
     }
   }
@@ -121,12 +184,17 @@ export function Charla({
     evento.preventDefault();
     if (estado.fase === "enviando" || subidas.some((s) => s.estado === "subiendo")) return;
     const escrito = String(new FormData(evento.currentTarget).get("texto") ?? "").trim();
-    const nota = notaDeFotos(
-      subidas.filter((s) => s.estado === "lista").map((s) => s.nombre),
-      carpeta,
-    );
-    const texto = [escrito, nota].filter(Boolean).join("\n\n");
-    if (!texto) return setEstado({ ...estado, error: "Escribe qué anuncio quieres, o sube las fotos." });
+    const listas = subidas.filter((s) => s.estado === "lista");
+    const notas = [
+      notaDeFotos(
+        listas.filter((s) => s.tipo === "foto").map((s) => s.nombre),
+        carpeta,
+      ),
+      notaDeVideos(listas.filter((s) => s.tipo === "video").map((s) => s.nombre)),
+    ];
+    const texto = [escrito, ...notas].filter(Boolean).join("\n\n");
+    if (!texto)
+      return setEstado({ ...estado, error: "Escribe qué video quieres, o sube las fotos o el video." });
     void mandar(texto);
   }
 
@@ -144,7 +212,7 @@ export function Charla({
       {vacio && estado.fase !== "enviando" && (
         <div className="mb-4">
           <p className="mb-2 text-sm text-neutral-300">
-            Cuéntale qué quieres vender y súbele las fotos. Si prefieres, empieza con uno de estos:
+            Cuéntale qué quieres y súbele las fotos o el video. Si prefieres, empieza con uno de estos:
           </p>
           <div className="flex flex-wrap gap-2">
             {ATAJOS.map((a) => (
@@ -175,7 +243,7 @@ export function Charla({
       >
         <AvisoBorrador visible={recuperado} alEmpezarDeNuevo={empezarDeNuevo} />
         {subidas.length > 0 && (
-          <ul className="mb-2 flex flex-wrap gap-1.5" aria-label="Fotos para el Director">
+          <ul className="mb-2 flex flex-wrap gap-1.5" aria-label="Fotos y videos para el Director">
             {subidas.map((s) => (
               <li
                 key={s.nombre}
@@ -189,10 +257,12 @@ export function Charla({
               >
                 {s.nombre}
                 {s.estado === "subiendo"
-                  ? " · subiendo…"
+                  ? ` · subiendo${s.pct !== undefined ? ` ${s.pct} %` : "…"}`
                   : s.estado === "error"
                     ? ` · ${s.error}`
-                    : " · lista"}
+                    : s.tipo === "video"
+                      ? " · subido; la Mac lo está mirando"
+                      : " · lista"}
               </li>
             ))}
           </ul>
@@ -219,7 +289,7 @@ export function Charla({
           <label className="boton-suave cursor-pointer">
             <input
               type="file"
-              accept="image/png,image/jpeg,image/webp"
+              accept="image/png,image/jpeg,image/webp,video/*,.mov,.mp4,.m4v"
               multiple
               className="sr-only"
               onChange={(e) => {
@@ -227,7 +297,7 @@ export function Charla({
                 e.currentTarget.value = "";
               }}
             />
-            Subir fotos
+            Subir fotos o videos
           </label>
           <button type="submit" className="boton ml-auto" disabled={estado.fase === "enviando" || subiendo}>
             {estado.fase === "enviando" ? "Mandando…" : subiendo ? "Subiendo fotos…" : "Mandar"}

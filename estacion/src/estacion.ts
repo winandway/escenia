@@ -6,6 +6,7 @@ import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEn
 import { atenderComercial, materialDeComercial } from "./comerciales";
 import { atenderGrabacion, materialDeGrabacion } from "./grabaciones";
 import { atenderPublicidad } from "./publicidades";
+import { atenderTrabajoDelDirector, vigilarVideosDelDirector } from "./director";
 import { panel } from "./panel";
 import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas";
 import { catalogoMusica } from "./musica";
@@ -207,6 +208,8 @@ async function principal() {
       : "Música de fondo: NINGUNA (deja las pistas en music-cortinas-libre-de-copy; ver docs/MUSICA.md)",
   );
   console.log("Lista. Esperando trabajos.");
+  // Los videos que suben en el chat del Director se miran aparte, cada 10 s (C-DIRECTOR-3).
+  vigilarVideosDelDirector();
   // Si se queda 10 minutos sin hablar con el panel, se sale y launchd la vuelve a arrancar.
   vigilar((minutos) => {
     console.error(`[${hora()}] La Estación lleva ${minutos} min sin señal de vida: se reinicia sola.`);
@@ -216,13 +219,14 @@ async function principal() {
     senalDeVida();
     let espera = ESPERA_MS;
     try {
-      // Primero los videos ya aprobados; si no hay, las grabaciones que Richard subió, los comerciales
-      // y los anuncios de Publicidad.
+      // Primero los videos ya aprobados; si no hay, las grabaciones que Richard subió, los comerciales,
+      // los anuncios de Publicidad y lo que aprobó en el chat del Director.
       const hubo =
         (await unaVuelta()) ||
         (await atenderGrabacion()) ||
         (await atenderComercial()) ||
-        (await atenderPublicidad());
+        (await atenderPublicidad()) ||
+        (await atenderTrabajoDelDirector());
       if (hubo) espera = 1000;
     } catch (e) {
       console.error(`[${hora()}] No se pudo hablar con el panel:`, e instanceof Error ? e.message : e);

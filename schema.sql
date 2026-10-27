@@ -304,3 +304,44 @@ CREATE TABLE IF NOT EXISTS director_mensajes (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS director_mensajes_por_encargo ON director_mensajes(encargo_id, id);
+
+-- Los videos que se suben en el chat del Director (por partes, como las grabaciones). La Mac los «mira»:
+-- saca su duración y unas hojas con un cuadro cada pocos segundos y su hora, para que la IA vea qué pasa
+-- y cuándo (C-DIRECTOR-3).
+CREATE TABLE IF NOT EXISTS director_videos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  encargo_id INTEGER NOT NULL REFERENCES director_encargos(id),
+  nombre TEXT NOT NULL,
+  clave TEXT NOT NULL,
+  bytes INTEGER NOT NULL DEFAULT 0,
+  estado TEXT NOT NULL DEFAULT 'subiendo' CHECK (estado IN ('subiendo','subido','mirando','listo','error')),
+  duracion_seg REAL NOT NULL DEFAULT 0,
+  con_sonido INTEGER NOT NULL DEFAULT 0,
+  vertical INTEGER NOT NULL DEFAULT 1,
+  hojas INTEGER NOT NULL DEFAULT 0,          -- cuántas hojas de cuadros hay (director/videos/<id>/hoja-N.jpg)
+  segundos_por_cuadro REAL NOT NULL DEFAULT 0,
+  error TEXT NOT NULL DEFAULT '',
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS director_videos_por_estado ON director_videos(estado, id);
+CREATE INDEX IF NOT EXISTS director_videos_por_encargo ON director_videos(encargo_id, id);
+
+-- Lo que la Mac arma de una propuesta aprobada que no es un anuncio de fotos: la prueba en vivo y la
+-- locución. Una sola fila por propuesta (UNIQUE): un doble clic no pide dos videos (C-DIRECTOR-1).
+CREATE TABLE IF NOT EXISTS director_trabajos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  propuesta_id INTEGER NOT NULL UNIQUE REFERENCES director_propuestas(id),
+  encargo_id INTEGER NOT NULL REFERENCES director_encargos(id),
+  tipo TEXT NOT NULL CHECK (tipo IN ('demostracion','locucion')),
+  datos TEXT NOT NULL,
+  estado TEXT NOT NULL DEFAULT 'subida' CHECK (estado IN ('subida','tomada','lista','error')),
+  paso TEXT NOT NULL DEFAULT '',
+  error TEXT NOT NULL DEFAULT '',
+  video TEXT NOT NULL DEFAULT '',            -- director/trabajos/<id>/video-<t>.mp4
+  duracion_seg REAL NOT NULL DEFAULT 0,
+  costo_usd REAL NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS director_trabajos_por_estado ON director_trabajos(estado, id);

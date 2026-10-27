@@ -3,7 +3,7 @@
 ## 👤 Esperando por Richard
 
 - 👤 Pro In Shop, comercial del agua (hecho con la asesora de camisa roja, 30 s): verlo y mandárselo al cliente → si cambia una frase, se rehace solo ese pedazo.
-- 👤 Probar el **Director** (menú Director del panel, docs/DIRECTOR.md): abrir un encargo, pedir un anuncio con sus palabras y aprobar o cambiar la tarjeta → con lo que diga se ajustan sus reglas, y siguen la locución y el video real de fondo desde el chat.
+- 👤 Probar el **Director** (menú Director del panel, docs/DIRECTOR.md) con un encargo de verdad: un anuncio con fotos, una prueba en vivo subiendo su video, o una locución con su voz → con lo que diga se ajustan sus reglas.
 - 👤 Poner el precio del servicio para los primeros clientes (planes/ESCENIA-COMO-PRODUCTO.md, sección de clientes) → con eso se arrancan esta semana como servicio hecho por Windoce.
 - 👤 Ver el video de la tarjeta de saldo de QRBott (diseño «pizarra»: el teléfono con la captura entera, la chica con moño y blusa mostaza señalándolo, a veces de espaldas) y decir si así quiere los próximos → el diseño queda para los demás videos de funciones.
 - 👤 Ver el video de Cashea de QRBott (la chica con su look nuevo, paleta morada y portada en el primer cuadro) y decir si así se ven distintos los videos → la armonía nueva se usa en los próximos.
@@ -43,7 +43,7 @@
 ## Fila (lo hace la IA)
 
 - [x] El Director, primera parte (27 oct 2026): chat en el panel que propone el anuncio en una tarjeta con su precio; la IA mira las fotos y propone; solo el botón de Richard aprueba y gasta (C-DIRECTOR-1). Guía docs/DIRECTOR.md.
-- [ ] Director, segunda parte: la locución sobre un video y el anuncio con el video real del cliente de fondo, desde el chat.
+- [x] Director, segunda parte (27 oct 2026): videos en el chat (la Mac los mira y arma hojas de cuadros con su hora), la prueba en vivo sin cortes y la locución con tu voz, con su tarjeta y su precio (C-DIRECTOR-3).
 - [ ] Taller en la nube: la Estación en un contenedor (Cloudflare Containers o Modal; gana el que arme el video del agua en menos de cinco minutos y más barato), cuentas de cliente y créditos prepago.
 - [x] El formato del video de Prince Royce quedó como el de todos los videos: skill `formato-escenia` en el proyecto (2 oct 2026).
 - [x] Ritmo (2 oct 2026, la gente decía que los videos aburrían): cambios de imagen dentro de cada escena pegados a la frase que se dice, cifras en grande, nombre de cada persona, relleno automático (nada quieto más de 5 s), sonido en cada corte, subtítulos al estilo CapCut (C-RITMO-1); pausas de la voz parejas y voz más rápida desde el origen (C-VOZ-6); biblioteca de Sonidos en el panel (C-SONIDOS-1); pistas propias de bombo y de bachata; botón «Crear versión nueva». Guía: docs/RITMO.md.

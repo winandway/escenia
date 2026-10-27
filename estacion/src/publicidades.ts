@@ -16,7 +16,7 @@ const MAXIMO_SEG_PANEL = 60;
 const MUSICA_DE_ANUNCIO = "upbeat kick bass driving pulse";
 
 /** El color de la marca, sacado del logo (en chiquito); null si el logo no tiene color. */
-async function acentoDelArchivo(ruta: string): Promise<string | null> {
+export async function acentoDelArchivo(ruta: string): Promise<string | null> {
   const { default: sharp } = await import("sharp");
   const datos = await sharp(ruta).resize(80, 80, { fit: "inside" }).ensureAlpha().raw().toBuffer();
   return acentoDeLogo(new Uint8Array(datos));

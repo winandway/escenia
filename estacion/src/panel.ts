@@ -455,4 +455,124 @@ export const panel = {
       cabeceras: { [CABECERA_META]: metaParaCabecera(meta) },
     });
   },
+
+  // ——— El Director con el video del cliente (docs/DIRECTOR.md, C-DIRECTOR-3) ———
+
+  /** ¿Hay un video del chat del Director por mirar? Si hay, queda tomado. */
+  async videoDelDirectorPorMirar(): Promise<{ id: number; nombre: string; bytes: number } | null> {
+    const r = await llamar("/datos/estacion/director/videos/siguiente", {});
+    return z
+      .object({ video: z.object({ id: z.number(), nombre: z.string(), bytes: z.number() }).nullable() })
+      .parse(r).video;
+  },
+  /** Baja un video del chat a la Mac por rangos (si quedó a medias, sigue desde donde iba). */
+  bajarVideoDelDirector: (id: number, destino: string, total: number) =>
+    bajarPorRangos(`/datos/estacion/director/videos/${id}`, destino, total),
+  subirHojaDelVideo: async (id: number, n: number, ruta: string) =>
+    llamar(`/datos/estacion/director/videos/${id}?hoja=${n}`, null, {
+      crudo: await readFile(ruta),
+      contentType: "image/jpeg",
+      metodo: "PUT",
+    }),
+  videoMirado: (
+    id: number,
+    d: {
+      duracion_seg: number;
+      con_sonido: boolean;
+      vertical: boolean;
+      hojas: number;
+      segundos_por_cuadro: number;
+    },
+  ) => llamar(`/datos/estacion/director/videos/${id}`, { accion: "listo", ...d }),
+  videoSinMirar: (id: number, error: string) =>
+    llamar(`/datos/estacion/director/videos/${id}`, { accion: "error", error: error.slice(0, 1000) }),
+  /** ¿Hay un trabajo del Director por armar (prueba en vivo o locución)? Si hay, queda tomado. */
+  async trabajoDelDirectorSiguiente(): Promise<TrabajoDelDirector | null> {
+    return esquemaTrabajoDelDirector.parse(await llamar("/datos/estacion/director/trabajos/siguiente", {}))
+      .trabajo;
+  },
+  avanceTrabajoDelDirector: (id: number, paso: string) =>
+    llamar(`/datos/estacion/director/trabajos/${id}`, { accion: "avance", paso }),
+  errorTrabajoDelDirector: (id: number, error: string) =>
+    llamar(`/datos/estacion/director/trabajos/${id}`, { accion: "error", error: error.slice(0, 2000) }),
+  gastoTrabajoDelDirector: (id: number, servicio: string, detalle: string, costo_usd: number) =>
+    llamar(`/datos/estacion/director/trabajos/${id}`, { accion: "gasto", servicio, detalle, costo_usd }),
+  /** Entrega el video terminado por partes de 8 MB: queda listo para ver y descargar en el chat. */
+  async entregarTrabajoDelDirector(id: number, ruta: string, duracionSeg: number): Promise<void> {
+    const base = `/datos/estacion/director/trabajos/${id}/video`;
+    const { uploadId } = (await llamar(base, { accion: "iniciar" }, { unSoloIntento: true })) as {
+      uploadId: string;
+    };
+    const total = (await stat(ruta)).size;
+    const archivo = await open(ruta, "r");
+    const partes: { partNumber: number; etag: string }[] = [];
+    try {
+      for (const p of partesDe(total, TAMANO_PARTE)) {
+        const trozo = Buffer.alloc(p.hasta - p.desde);
+        await archivo.read(trozo, 0, trozo.length, p.desde);
+        const q = new URLSearchParams({ uploadId, n: String(p.n) });
+        const r = (await llamar(`${base}?${q}`, null, {
+          crudo: trozo,
+          contentType: "application/octet-stream",
+          metodo: "PUT",
+        })) as { partNumber: number; etag: string };
+        partes.push({ partNumber: r.partNumber, etag: r.etag });
+      }
+    } finally {
+      await archivo.close();
+    }
+    await llamar(base, {
+      accion: "terminar",
+      uploadId,
+      partes,
+      duracion_seg: Math.round(duracionSeg * 10) / 10,
+    });
+  },
 };
+
+const esquemaTrabajoDelDirector = z.object({
+  trabajo: z
+    .object({
+      id: z.number(),
+      tipo: z.enum(["demostracion", "locucion"]),
+      datos: z.unknown(),
+      video: z
+        .object({ id: z.number(), nombre: z.string(), bytes: z.number(), duracion_seg: z.number() })
+        .nullable(),
+    })
+    .nullable(),
+});
+export type TrabajoDelDirector = NonNullable<z.infer<typeof esquemaTrabajoDelDirector>["trabajo"]>;
+
+/** Baja un archivo del panel por rangos de 16 MB; si quedó a medias de un intento anterior, sigue. */
+async function bajarPorRangos(ruta: string, destino: string, total: number): Promise<number> {
+  const RANGO = 16 * 1024 * 1024;
+  let posicion = await stat(destino).then(
+    (s) => s.size,
+    () => 0,
+  );
+  if (posicion > total) posicion = 0;
+  const archivo = await open(destino, posicion === 0 ? "w" : "r+");
+  try {
+    while (posicion < total) {
+      const hasta = Math.min(total, posicion + RANGO) - 1;
+      const desde = posicion;
+      const trozo = await conReintentos(async () => {
+        senalDeVida();
+        const r = await fetch(`${config.PANEL_URL}${ruta}`, {
+          headers: { authorization: `Bearer ${config.ESTACION_SECRETO}`, range: `bytes=${desde}-${hasta}` },
+          signal: AbortSignal.timeout(180_000),
+        });
+        if (r.status !== 206 && r.status !== 200)
+          throw new ErrorDelPanel(`El panel respondió ${r.status} al bajar ${ruta}.`, r.status);
+        return Buffer.from(await r.arrayBuffer());
+      });
+      if (trozo.length === 0) throw new Error(`${ruta} llegó cortado del panel.`);
+      await archivo.write(trozo, 0, trozo.length, posicion);
+      posicion += trozo.length;
+    }
+  } finally {
+    await archivo.close();
+  }
+  return posicion;
+}
