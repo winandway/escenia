@@ -2,6 +2,8 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Pro In Shop, comercial del agua: decir si la ejecutiva de Pro In Shop sirve y aprobar o cambiar el guion (publicidad/proinshop/agua/GUION-AGUA.md) → con eso se hace la voz y el video (cerca de un dólar).
+- 👤 Leer «Escenia como producto» (planes/ESCENIA-COMO-PRODUCTO.md) y decir si arrancamos por el Director dentro del panel → es el primer paso para la extensión en Beellon.
 - 👤 Ver el video de la tarjeta de saldo de QRBott (diseño «pizarra»: el teléfono con la captura entera, la chica con moño y blusa mostaza señalándolo, a veces de espaldas) y decir si así quiere los próximos → el diseño queda para los demás videos de funciones.
 - 👤 Ver el video de Cashea de QRBott (la chica con su look nuevo, paleta morada y portada en el primer cuadro) y decir si así se ven distintos los videos → la armonía nueva se usa en los próximos.
 - 👤 Ver el comercial «Vende desde el celular» de QRBott (la chica venezolana con las pantallas del celular enteras) y decir qué le cambiarías → cambiar una frase solo rehace ese pedacito.
