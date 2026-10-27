@@ -27,6 +27,7 @@ const publicidadVacia: PropsPublicidad = {
   apariciones: [],
   audio: "",
   musica: null,
+  musicaVolumen: 0.13,
   duracionMs: 3000,
   tramos: [],
   subtitulos: [],

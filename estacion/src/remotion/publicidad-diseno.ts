@@ -70,6 +70,8 @@ export const esquemaPublicidad = z.object({
     .nullable(),
   audio: z.string(),
   musica: z.string().nullable(),
+  /** El volumen de la música debajo de la voz (sube a 0,35 en el cierre). */
+  musicaVolumen: z.number().min(0).max(1).default(0.13),
   duracionMs: z.number(),
   tramos: z.array(
     z.object({
@@ -109,7 +111,13 @@ export const esquemaPublicidad = z.object({
        * miniatura). Sin sonido: suena la voz, la música y los efectos del anuncio.
        */
       video: z
-        .object({ ruta: z.string(), desdeMs: z.number().min(0), velocidad: z.number().min(0.25).max(4) })
+        .object({
+          ruta: z.string(),
+          desdeMs: z.number().min(0),
+          velocidad: z.number().min(0.25).max(4),
+          /** El sonido real del video, de 0 a 1 (0 = mudo). */
+          volumen: z.number().min(0).max(1).default(0),
+        })
         .nullable()
         .default(null),
     }),

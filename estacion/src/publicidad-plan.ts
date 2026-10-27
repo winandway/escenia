@@ -68,7 +68,18 @@ export const esquemaPlanPublicidad = z
     trabajo_de: z.string().min(1).optional(),
     /** Lo que dice la voz, entero (o `partes`: la voz se hace por partes y se puede rehacer una sola). */
     texto: z.string().min(20).optional(),
-    partes: z.array(z.string().min(2)).min(1).optional(),
+    /**
+     * Cada parte es un texto, o `{ texto, desde_ms }` para que empiece en ese milisegundo del anuncio
+     * (una demostración en vivo: la voz va donde pasa cada cosa en el video, no seguida).
+     */
+    partes: z
+      .array(
+        z.union([z.string().min(2), z.object({ texto: z.string().min(2), desde_ms: z.number().min(0) })]),
+      )
+      .min(1)
+      .optional(),
+    /** El volumen de la música debajo de la voz (0,13 de siempre; más bajo si el video trae su sonido). */
+    musica_volumen: z.number().min(0).max(1).default(0.13),
     /** Lo más largo que puede durar la voz (el anuncio de bienvenida de QRBott dura 90 s). */
     maximo_seg: z.number().min(10).max(120).default(SEGUNDOS_MAXIMOS),
     /** Cuánto queda la tarjeta final después de la última palabra. */
@@ -106,12 +117,14 @@ export const esquemaPlanPublicidad = z
           /**
            * Un video real de fondo (diseño «pantalla»): el archivo, desde qué segundo y a qué velocidad
            * (1,5 = más rápido, para quitar tiempos muertos). Gira solo si el teléfono lo grabó acostado.
+           * `sonido`: el sonido real del video (el chorro del agua), de 0 a 1; 0 = mudo.
            */
           video: z
             .object({
               archivo: z.string().min(1),
               desde_s: z.number().min(0).default(0),
               velocidad: z.number().min(0.25).max(4).default(1),
+              sonido: z.number().min(0).max(1).default(0),
             })
             .optional(),
           /** Diseño «pantalla»: cómo se ve la persona desde este momento (grande, cuerpo, medio, cabeza u oculta). */
@@ -187,9 +200,32 @@ export function gananciaDeVoz(lufs: number, objetivo = -14): number {
   return Math.round(Math.min(12, Math.max(-8, objetivo - lufs)) * 10) / 10;
 }
 
+/** El texto de una parte de la voz (puede venir sola o con su hora). */
+export const textoDeParte = (p: string | { texto: string }): string => (typeof p === "string" ? p : p.texto);
+
 /** Lo que dice la voz, entero (las partes van seguidas). */
 export const textoDelPlan = (plan: Pick<PlanPublicidad, "texto" | "partes">): string =>
-  plan.partes ? plan.partes.join(" ") : (plan.texto ?? "");
+  plan.partes ? plan.partes.map(textoDeParte).join(" ") : (plan.texto ?? "");
+
+/**
+ * Dónde empieza cada parte de la voz: seguida de la anterior con `pausaMs`, salvo que tenga su hora
+ * (`desdeMs`), y entonces espera hasta esa hora; si la anterior todavía habla a esa hora, entra apenas
+ * termine (nunca se pisan).
+ */
+export function iniciosDePartes(
+  partes: { duracionMs: number; desdeMs?: number }[],
+  pausaMs: number,
+): number[] {
+  const inicios: number[] = [];
+  let fin = -pausaMs;
+  for (const p of partes) {
+    const seguida = fin + pausaMs;
+    const inicio = p.desdeMs === undefined ? Math.max(0, seguida) : Math.max(seguida, p.desdeMs);
+    inicios.push(Math.round(inicio));
+    fin = inicio + p.duracionMs;
+  }
+  return inicios;
+}
 
 /** Lo más largo que puede durar UN video de la persona hablando (FlashTalk admite 40 s). */
 export const TRAMO_PERSONA_MAX_MS = 35_000;

@@ -143,6 +143,18 @@ un avatar hablando delante.
 Plan `publicidad/proinshop/plan-agua.json`; costó 49 ¢ (voz 4 ¢ y la asesora 45 ¢), más 27 ¢ de
 imágenes del avatar.
 
+### La versión «demostración en vivo» (27 oct 2026, C-DEMO-1)
+
+Richard: el comercial corto es una promo; para un producto que se demuestra hace falta la prueba entera,
+sin cortes, con el sonido del agua y la chica narrando encima. Plan `plan-agua-demo.json` (1 min 47 s):
+
+- La prueba corre de un solo momento con `video.sonido: 1`; los demás momentos de la prueba solo cambian
+  el texto grande.
+- Cada frase con su hora: `{ "texto": "Rojo. Míralo de cerca…", "desde_ms": 28500 }` (la hora del anuncio
+  = el segundo del video donde el medidor se pone en rojo, más lo que dura la presentación).
+- La asesora en el círculo de abajo durante la prueba; de cuerpo entero al presentar y al cerrar.
+- `musica_volumen: 0.05`: la música casi no se oye; se oye el agua.
+
 ## Maggie y el comercial de franquicias sin marca (25 oct 2026)
 
 **Maggie** es el nombre de la chica de los anuncios (la del moño, con más curvas, desde la tarjeta de

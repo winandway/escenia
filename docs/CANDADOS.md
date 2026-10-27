@@ -1732,3 +1732,21 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   silencio (antes, 9), y el `ebur128` del video da cerca de −14 LUFS.
 - **Qué NO tocar:** no meterle compresor, ecualizador ni reverberación a la voz para «que suene más»;
   solo ganancia. No volver al fundido desde negro entre fotos a pantalla completa.
+
+## C-DEMO-1 — La demostración en vivo va sin cortes, con su sonido y la voz a su hora (27 oct 2026)
+
+- **Qué se pidió y por qué es candado:** Richard, con el video de Pro In Shop: «el video se grabó con la
+  intención de que no hubiera un corte de video en el momento de hacer las pruebas… esa parte no se
+  puede cortar… que el agua suene… y la chica diga allí». Una demostración cortada pierde la prueba: el
+  que mira cree que hubo truco.
+- **Qué se hizo:** las partes de la voz aceptan `{ texto, desde_ms }`: cada frase empieza en el
+  milisegundo del anuncio donde pasa lo que dice (`iniciosDePartes`; si la anterior todavía habla, entra
+  apenas termine, nunca se pisan). El video del momento corre entero desde un solo momento (los momentos
+  siguientes solo cambian el texto), no se desliza ni se acerca, y suena (`video.sonido`, llevado a −24
+  LUFS con ganancia simple, debajo de la voz). La música baja con `musica_volumen`. La persona va en el
+  círculo de abajo (`vista_persona: cabeza`) para no tapar la prueba.
+- **Cómo se comprueba:** `npx vitest run pruebas/publicidad.test.ts` (bloque C-DEMO-1; se pone en rojo si
+  una frase con hora pisa a la anterior, comprobado el 27 oct 2026). En el video: de la primera frase de
+  la prueba al cierre no hay ningún corte de imagen, y se oye el chorro del agua.
+- **Qué NO tocar:** no meter una imagen ni otro video en medio de la prueba; los textos y la persona sí
+  pueden cambiar encima.

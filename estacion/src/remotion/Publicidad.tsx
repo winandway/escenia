@@ -107,9 +107,11 @@ const Tarjeta: React.FC<{
   const conEnfoque = Boolean(tramo.enfoque && img.ancho > 0 && img.alto > 0);
   const vistaDe = (t: Tramo | null): Vista =>
     t?.enfoque ? vistaDeEnfoque(caja, img, t.enfoque) : vistaCompleta(caja, img);
-  const lento = interpolate(frame, [0, Math.max(1, duracion)], [1, conEnfoque ? 1.04 : 1.08], {
-    extrapolateRight: "clamp",
-  });
+  const lento = tramo.video
+    ? 1
+    : interpolate(frame, [0, Math.max(1, duracion)], [1, conEnfoque ? 1.04 : 1.08], {
+        extrapolateRight: "clamp",
+      });
   // El primer momento ya está quieto en el cuadro 0: es la miniatura del anuncio (WhatsApp, Facebook).
   const primero = tramo.inicioMs === 0;
   const golpe =
@@ -149,7 +151,8 @@ const Tarjeta: React.FC<{
       </div>
     );
   } else {
-    const lado = indice % 2 === 0 ? 1 : -1;
+    // Un video real no se desliza: ya se mueve solo (y una demostración tiene que verse tal cual).
+    const lado = tramo.video ? 0 : indice % 2 === 0 ? 1 : -1;
     const x = interpolate(frame, [0, Math.max(1, duracion)], [-14 * lado, 14 * lado], {
       extrapolateRight: "clamp",
     });
@@ -165,7 +168,8 @@ const Tarjeta: React.FC<{
           src={staticFile(tramo.video.ruta)}
           trimBefore={f(tramo.video.desdeMs)}
           playbackRate={tramo.video.velocidad}
-          muted
+          muted={!tramo.video.volumen}
+          volume={tramo.video.volumen || 0}
           style={estilo}
         />
       ) : (
@@ -1164,7 +1168,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           src={staticFile(p.musica)}
           volume={(fr) => {
             const t = (fr / FPS) * 1000;
-            const base = t >= p.cierre.inicioMs ? 0.35 : 0.13;
+            const base = t >= p.cierre.inicioMs ? 0.35 : p.musicaVolumen;
             const entrada = Math.min(1, t / 800);
             const salida = Math.min(1, Math.max(0, (p.duracionMs - t) / 900));
             return base * entrada * salida;

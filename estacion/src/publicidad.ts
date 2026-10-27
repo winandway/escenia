@@ -18,9 +18,11 @@ import {
   costoPublicidadUsd,
   esquemaPlanPublicidad,
   gananciaDeVoz,
+  iniciosDePartes,
   type PlanPublicidad,
   puntaDelDedo,
   recorteDeEncuadre,
+  textoDeParte,
   textoDelPlan,
   tiemposDeFrases,
   tramoConVoz,
@@ -183,7 +185,8 @@ export async function pasoVoz(
   } else {
     const partes: { wav: string; palabras: VozGuardada["palabras"]; duracionMs: number; costoUsd: number }[] =
       [];
-    for (const [k, parte] of plan.partes.entries()) {
+    for (const [k, conHora] of plan.partes.entries()) {
+      const parte = textoDeParte(conHora);
       const carpetaParte = path.join(
         trabajo,
         "voz-partes",
@@ -256,29 +259,46 @@ export async function pasoVoz(
         })),
       };
     }
-    // Se juntan en un solo WAV, con una pausa igual entre parte y parte.
-    const silencio = path.join(trabajo, "voz-partes", "pausa.wav");
-    await exec("ffmpeg", [
-      "-y",
-      "-v",
-      "error",
-      "-f",
-      "lavfi",
-      "-i",
-      "anullsrc=r=44100:cl=mono",
-      "-t",
-      String(Math.max(0.01, plan.pausa_ms / 1000)),
-      "-c:a",
-      "pcm_s16le",
-      silencio,
-    ]);
-    const lista = path.join(trabajo, "voz-partes", "lista.txt");
-    await writeFile(
-      lista,
-      partes
-        .flatMap((p, k) => [`file '${p.wav}'`, ...(k < partes.length - 1 ? [`file '${silencio}'`] : [])])
-        .join("\n"),
+    // Se juntan en un solo WAV: seguidas con la pausa del plan, o cada una a su hora si la trae.
+    const inicios = iniciosDePartes(
+      partes.map((p, k) => {
+        const conHora = plan.partes?.[k];
+        return {
+          duracionMs: p.duracionMs,
+          desdeMs: typeof conHora === "object" ? conHora.desde_ms : undefined,
+        };
+      }),
+      plan.pausa_ms,
     );
+    const silencio = async (ms: number) => {
+      const ruta = path.join(trabajo, "voz-partes", `silencio-${ms}.wav`);
+      if (!existsSync(ruta))
+        await exec("ffmpeg", [
+          "-y",
+          "-v",
+          "error",
+          "-f",
+          "lavfi",
+          "-i",
+          "anullsrc=r=44100:cl=mono",
+          "-t",
+          String(Math.max(0.01, ms / 1000)),
+          "-c:a",
+          "pcm_s16le",
+          ruta,
+        ]);
+      return ruta;
+    };
+    const renglones: string[] = [];
+    let finAnterior = 0;
+    for (const [k, p] of partes.entries()) {
+      const hueco = (inicios[k] ?? 0) - finAnterior;
+      if (hueco > 0) renglones.push(`file '${await silencio(hueco)}'`);
+      renglones.push(`file '${p.wav}'`);
+      finAnterior = (inicios[k] ?? 0) + p.duracionMs;
+    }
+    const lista = path.join(trabajo, "voz-partes", "lista.txt");
+    await writeFile(lista, renglones.join("\n"));
     const wav = path.join(trabajo, "voz.wav");
     // La voz y la persona de antes quedan en «anterior/»: si solo cambian las pausas, los videos de la
     // persona ya pagados se recortan en vez de pagarse otra vez (ver `recortarDeAnterior`).
@@ -303,10 +323,9 @@ export async function pasoVoz(
       wav,
     ]);
     const palabras: VozGuardada["palabras"] = [];
-    let desde = 0;
-    for (const p of partes) {
+    for (const [k, p] of partes.entries()) {
+      const desde = inicios[k] ?? 0;
       for (const w of p.palabras) palabras.push({ ...w, startMs: w.startMs + desde, endMs: w.endMs + desde });
-      desde += p.duracionMs + plan.pausa_ms;
     }
     guardada = {
       texto,
@@ -851,10 +870,20 @@ export async function pasoArmar(
   };
   // Un video real de fondo: se pasa una vez a vertical 1080×1920 (girado si venía acostado), sin sonido,
   // y se saca su cuadro en el segundo pedido para el fondo difuminado y la miniatura.
-  const videoEnPublico = async (v: { archivo: string; desde_s: number; velocidad: number }) => {
+  const videoEnPublico = async (v: {
+    archivo: string;
+    desde_s: number;
+    velocidad: number;
+    sonido: number;
+  }) => {
     const origen = path.resolve(carpeta, v.archivo);
-    const nombre = `vid-${huella(origen)}.mp4`;
+    const conSonido = v.sonido > 0;
+    const nombre = `vid-${huella(origen)}${conSonido ? "-sonido" : ""}.mp4`;
     const destino = path.join(publica, nombre);
+    // El sonido real (el chorro del agua) se lleva a −24 LUFS con una ganancia simple: se oye, debajo de la voz.
+    const audio = conSonido
+      ? ["-af", `volume=${gananciaDeVoz(await volumenLufs(origen), -24)}dB`, "-c:a", "aac", "-b:a", "160k"]
+      : ["-an"];
     if (!existsSync(destino))
       await exec("ffmpeg", [
         "-y",
@@ -862,7 +891,7 @@ export async function pasoArmar(
         "error",
         "-i",
         origen,
-        "-an",
+        ...audio,
         "-vf",
         "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30",
         "-c:v",
@@ -940,7 +969,12 @@ export async function pasoArmar(
       vistaPersona: m.vista_persona ?? null,
       video:
         vid && m.video
-          ? { ruta: vid.nombre, desdeMs: m.video.desde_s * 1000, velocidad: m.video.velocidad }
+          ? {
+              ruta: vid.nombre,
+              desdeMs: m.video.desde_s * 1000,
+              velocidad: m.video.velocidad,
+              volumen: m.video.sonido,
+            }
           : null,
       texto: m.texto ?? null,
       chips: (m.chips ?? []).map((c, k) => ({ texto: c.texto, inicioMs: chipsInicio[k] ?? inicioMs })),
@@ -961,6 +995,7 @@ export async function pasoArmar(
     apariciones,
     audio,
     musica,
+    musicaVolumen: plan.musica_volumen,
     duracionMs,
     tramos,
     subtitulos: bloquesDeSubtitulos(voz.palabras),

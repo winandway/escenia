@@ -6,10 +6,12 @@ import {
   elegirLogo,
   esquemaPlanPublicidad,
   gananciaDeVoz,
+  iniciosDePartes,
   planParaArmar,
   puntaDelDedo,
   recorteDeEncuadre,
   textoDelPlan,
+  textoDeParte,
   SEGUNDOS_MAXIMOS,
   tiemposDeFrases,
   tramoConVoz,
@@ -608,7 +610,12 @@ describe("publicidad con el video real del cliente de fondo (Pro In Shop, 27 oct
         ...base.momentos.slice(1),
       ],
     });
-    expect(plan.momentos[0]?.video).toEqual({ archivo: "videos/prueba.mp4", desde_s: 18, velocidad: 1 });
+    expect(plan.momentos[0]?.video).toEqual({
+      archivo: "videos/prueba.mp4",
+      desde_s: 18,
+      velocidad: 1,
+      sonido: 0,
+    });
   });
 
   it("la velocidad tiene tope (ni cámara lenta extrema ni un borrón)", () => {
@@ -641,5 +648,53 @@ describe("publicidad con el video real del cliente de fondo (Pro In Shop, 27 oct
       chips: [],
     });
     expect(tramo.video).toBeNull();
+  });
+});
+
+describe("C-DEMO-1: la demostración en vivo, sin cortes y con la voz a su hora (Pro In Shop, 27 oct 2026)", () => {
+  // Richard: «el video se grabó con la intención de que no hubiera un corte… esa parte no se puede
+  // cortar… que el agua suene, que el chorro está cayendo, y la chica diga allí». La voz va donde pasa
+  // cada cosa en el video, no seguida; el video corre entero y suena.
+  it("una parte con hora espera hasta esa hora; sin hora, va seguida", () => {
+    expect(
+      iniciosDePartes([{ duracionMs: 5000 }, { duracionMs: 3000, desdeMs: 9000 }, { duracionMs: 2000 }], 150),
+    ).toEqual([0, 9000, 12150]);
+  });
+
+  it("si la anterior todavía habla a esa hora, entra apenas termine: nunca se pisan", () => {
+    expect(iniciosDePartes([{ duracionMs: 10_000 }, { duracionMs: 2000, desdeMs: 4000 }], 150)).toEqual([
+      0, 10_150,
+    ]);
+  });
+
+  it("la primera parte también puede tener su hora", () => {
+    expect(iniciosDePartes([{ duracionMs: 1000, desdeMs: 2500 }], 150)).toEqual([2500]);
+  });
+
+  it("el plan acepta partes con hora y el texto entero las junta", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      marca: "Pro In Shop",
+      partes: ["Hola, te habla la tienda.", { texto: "Rojo. Mira de cerca.", desde_ms: 28_500 }],
+      momentos: [{ frase: "Hola te" }, { frase: "la tienda" }, { frase: "Rojo Mira" }],
+      cierre: { frase: "Mira de cerca", lineas: [] },
+    });
+    expect(textoDelPlan(plan)).toBe("Hola, te habla la tienda. Rojo. Mira de cerca.");
+    expect(textoDeParte(plan.partes![1]!)).toBe("Rojo. Mira de cerca.");
+    expect(plan.musica_volumen).toBe(0.13);
+  });
+
+  it("el video del momento puede sonar (el chorro del agua) y por defecto va mudo", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      marca: "Pro In Shop",
+      texto: "Mira la prueba con el agua del grifo ahora.",
+      momentos: [
+        { frase: "Mira la", video: { archivo: "v.mp4", sonido: 1 } },
+        { frase: "prueba con", video: { archivo: "v.mp4" } },
+        { frase: "agua del" },
+      ],
+      cierre: { frase: "grifo ahora", lineas: [] },
+    });
+    expect(plan.momentos[0]?.video?.sonido).toBe(1);
+    expect(plan.momentos[1]?.video?.sonido).toBe(0);
   });
 });
