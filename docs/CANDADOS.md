@@ -1772,3 +1772,20 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   propuesta reemplazada (comprobado el 27 oct 2026: tres pruebas en rojo con el fallo metido a propósito).
 - **Qué NO tocar:** no darle a la IA una herramienta que llame `crearPublicidad`, `aprobarPropuesta` ni
   nada que gaste; no quitar la pregunta al tope antes de cada vuelta; no aprobar desde la ruta del chat.
+
+## C-DIRECTOR-2 — El Director respeta lo que se pide, no inventa cualidades y habla de tú (27 oct 2026)
+
+- **Qué se rompió y cómo se veía:** en la primera prueba en vivo se le pidió el anuncio del generador
+  «con la chica de la pijama rosa hablando». El Director miró la foto, creyó que era un producto (una
+  pijama) y la cambió por «sin persona»; además escribió «es liviano, fácil de arrancar y rinde horas»
+  (nadie se lo dijo) y cerró con «cuando Richard apruebe la tarjeta», hablándole a Richard de Richard.
+- **Causa real:** sus reglas decían «tú decides los detalles» sin decir que lo pedido de forma explícita
+  manda, y la lista de «prohibido inventar» no nombraba las cualidades del producto.
+- **Qué se hizo:** en `src/lib/director-prompt.ts`: lo pedido de forma explícita se respeta (si no
+  conviene, se dice en una frase y se hace igual, salvo que rompa una regla del texto); del producto solo
+  se dice lo que contaron o se ve en las fotos; una persona recortada sin fondo casi siempre es una
+  presentadora; le habla de tú a quien escribe.
+- **Cómo se comprueba:** `npx vitest run pruebas/director.test.ts` (bloque C-DIRECTOR-2; en rojo si se
+  quita la regla, comprobado el 27 oct 2026). En vivo: el mismo pedido del generador sale con la chica de
+  la pijama como persona y sin cualidades inventadas.
+- **Qué NO tocar:** no volver a «tú decides todo» sin la excepción de lo pedido.

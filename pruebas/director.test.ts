@@ -13,6 +13,7 @@ import {
 } from "@/lib/director";
 import {
   contextoDelEncargo,
+  SISTEMA,
   dinero,
   HERRAMIENTAS,
   historialParaLaIA,
@@ -368,5 +369,15 @@ describe("Director: la conversación con la IA", () => {
     expect(notaDeFotos(["a.jpg", "b.png"], "Encargo 1")).toBe(
       "(Te subí estas 2 fotos a la carpeta «Encargo 1»: a.jpg, b.png)",
     );
+  });
+});
+
+describe("Director: lo que aprendió en la primera prueba en vivo (C-DIRECTOR-2, 27 oct 2026)", () => {
+  it("respeta lo que se pide de forma explícita, no inventa cualidades y habla de tú", () => {
+    expect(SISTEMA).toContain("Lo que te piden de forma explícita se respeta");
+    expect(SISTEMA).toContain("Del producto dices solo lo que te contaron o lo que se ve en las fotos");
+    expect(SISTEMA).toContain("Le hablas de tú");
+    expect(SISTEMA).toContain("casi siempre es una presentadora");
+    expect(SISTEMA).not.toContain("solo Richard, con ese botón");
   });
 });
