@@ -10,6 +10,7 @@ export const GRUPOS = [
     enlaces: [
       { href: "/", texto: "Guiones", icono: "M4 5h16M4 12h10M4 19h7" },
       { href: "/nuevo", texto: "Nuevo video", icono: "M12 5v14M5 12h14" },
+      { href: "/director", texto: "Director", icono: "M4 5h16v11H9l-5 4zM8 9h8M8 12h5" },
       {
         href: "/grabaciones",
         texto: "Grabaciones",

@@ -1754,3 +1754,21 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   del armado, si la mezcla pasa de −1 dB, un limitador suave baja los picos sueltos.
 - **Qué NO tocar:** no meter una imagen ni otro video en medio de la prueba; los textos y la persona sí
   pueden cambiar encima.
+
+## C-DIRECTOR-1 — La IA del Director propone; solo el botón de Richard aprueba y gasta (27 oct 2026)
+
+- **Qué se pidió y por qué es candado:** Richard quiere que sus clientes vivan su misma experiencia:
+  conversar, ver antes de pagar y corregir barato. La promesa del Director es «nada se paga sin tu
+  aprobación con el precio delante». Si la IA pudiera aprobar o pedir un video por su cuenta, gastaría
+  sola, y con clientes eso es dinero ajeno.
+- **Qué se hizo:** la IA tiene dos herramientas y nada más: `ver_imagen` (mira una foto de la biblioteca)
+  y `proponer_anuncio` (deja una tarjeta en `director_propuestas`, revisada con el mismo esquema que el
+  formulario de Publicidad). La tarjeta se vuelve un pedido para la Mac solo con `aprobarPropuesta`, que
+  únicamente llama la acción del botón (con sesión). La aprobación es atómica: un doble clic no pide dos
+  videos y una propuesta reemplazada ya no se aprueba. Cada vuelta de la IA pregunta al tope de gasto
+  antes de salir y anota lo que costó (`gastos` y `director_encargos.costo_usd`).
+- **Cómo se comprueba:** `npx vitest run pruebas/director.test.ts`. Se pone en rojo si se le agrega a la
+  IA una herramienta que apruebe o gaste, si un doble clic crea dos pedidos, o si se aprueba una
+  propuesta reemplazada (comprobado el 27 oct 2026: tres pruebas en rojo con el fallo metido a propósito).
+- **Qué NO tocar:** no darle a la IA una herramienta que llame `crearPublicidad`, `aprobarPropuesta` ni
+  nada que gaste; no quitar la pregunta al tope antes de cada vuelta; no aprobar desde la ruta del chat.
