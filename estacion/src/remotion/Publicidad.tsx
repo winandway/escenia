@@ -1190,6 +1190,21 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           </Sequence>
         ) : null;
       })}
+      {p.efectos.map((e, i) => {
+        const largo = e.hastaMs === null ? undefined : Math.max(1, f(e.hastaMs - e.desdeMs));
+        return (
+          <Sequence key={`efecto-${i}`} from={f(e.desdeMs)} durationInFrames={largo} layout="none">
+            <Audio
+              src={staticFile(e.ruta)}
+              volume={(fr) => {
+                const entra = Math.min(1, fr / 8);
+                const sale = largo === undefined ? 1 : Math.min(1, Math.max(0, (largo - fr) / 10));
+                return e.volumen * entra * sale;
+              }}
+            />
+          </Sequence>
+        );
+      })}
       {p.sfx.final && (
         <Sequence from={f(p.cierre.inicioMs)} durationInFrames={45} layout="none">
           <Audio src={staticFile(p.sfx.final)} volume={0.5} />

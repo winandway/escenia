@@ -163,6 +163,17 @@ export const esquemaPublicidad = z.object({
     imagen: z.string().nullable().default(null),
   }),
   sfx: z.object({ cortes: z.array(z.string()), final: z.string().nullable() }),
+  /** Sonidos largos a su hora (el chorro del agua), con entrada y salida suaves. */
+  efectos: z
+    .array(
+      z.object({
+        ruta: z.string(),
+        desdeMs: z.number().min(0),
+        hastaMs: z.number().min(0).nullable(),
+        volumen: z.number().min(0).max(1),
+      }),
+    )
+    .default([]),
 });
 export type PropsPublicidad = z.infer<typeof esquemaPublicidad>;
 

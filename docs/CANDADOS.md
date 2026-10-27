@@ -1748,5 +1748,9 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Cómo se comprueba:** `npx vitest run pruebas/publicidad.test.ts` (bloque C-DEMO-1; se pone en rojo si
   una frase con hora pisa a la anterior, comprobado el 27 oct 2026). En el video: de la primera frase de
   la prueba al cierre no hay ningún corte de imagen, y se oye el chorro del agua.
+- **El agua casi no se oía:** el teléfono grabó el chorro al nivel del ruido del cuarto (−49 dB); subirlo
+  solo subía el soplido. Se compuso un chorro propio (`agua-chorro.mp3`, burbujas del modelo de
+  Minnaert, en `scripts/sfx-propios.mjs`) y se pone con `efectos` solo mientras cae el agua. Y al final
+  del armado, si la mezcla pasa de −1 dB, un limitador suave baja los picos sueltos.
 - **Qué NO tocar:** no meter una imagen ni otro video en medio de la prueba; los textos y la persona sí
   pueden cambiar encima.

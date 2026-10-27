@@ -698,3 +698,38 @@ describe("C-DEMO-1: la demostración en vivo, sin cortes y con la voz a su hora 
     expect(plan.momentos[1]?.video?.sonido).toBe(0);
   });
 });
+
+describe("sonidos largos a su hora: el chorro del agua (27 oct 2026)", () => {
+  // El video del teléfono casi no grabó el agua (el chorro quedaba al nivel del ruido del cuarto): el
+  // chorro se pone como un sonido aparte, solo mientras cae el agua.
+  const base = {
+    marca: "Pro In Shop",
+    texto: "Llenamos el vaso con el agua del grifo ahora.",
+    momentos: [{ frase: "Llenamos el" }, { frase: "vaso con" }, { frase: "agua del" }],
+    cierre: { frase: "grifo ahora", lineas: [] },
+  };
+
+  it("sin efectos, la lista está vacía", () => {
+    expect(esquemaPlanPublicidad.parse(base).efectos).toEqual([]);
+    expect(esquemaPublicidad.shape.efectos.parse(undefined)).toEqual([]);
+  });
+
+  it("un efecto lleva su hora, su final opcional y su volumen (0,5 si no se dice)", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      ...base,
+      efectos: [{ archivo: "agua-chorro.mp3", desde_ms: 9000, hasta_ms: 18_000 }],
+    });
+    expect(plan.efectos[0]).toEqual({
+      archivo: "agua-chorro.mp3",
+      desde_ms: 9000,
+      hasta_ms: 18_000,
+      volumen: 0.5,
+    });
+  });
+
+  it("el volumen no pasa de 1", () => {
+    expect(() =>
+      esquemaPlanPublicidad.parse({ ...base, efectos: [{ archivo: "a.mp3", desde_ms: 0, volumen: 2 }] }),
+    ).toThrow();
+  });
+});

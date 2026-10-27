@@ -49,4 +49,33 @@ const en = (nombre) => path.join(carpeta, nombre);
   l.ruido(0.01, { amp: 0.35, dur: 0.5, centro: 180, ancho: 0.9 });
   l.guardar(en("boom.mp3"), { ganancia: 1.6 });
 }
+// agua-chorro: un chorro de agua cayendo en un vaso, diez segundos (para las demostraciones con agua:
+// los videos grabados con el teléfono casi no recogen ese sonido). Cientos de burbujas por segundo
+// (modelo de Minnaert) sobre un soplo suave; las burbujas suben de tono a medida que el vaso se llena.
+{
+  const DUR = 10;
+  const l = crearLienzo(DUR, { semilla: 4242 });
+  let s = 4242;
+  const azar = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const borde = (t) => Math.min(1, t / 0.35) * Math.min(1, (DUR - 0.3 - t) / 0.7);
+  // El soplo de fondo: el agua golpeando, filtrado alrededor de 1,2 kHz.
+  for (let t = 0; t < DUR - 0.3; t += 0.06) {
+    l.ruido(t, { amp: 0.05 * borde(t), dur: 0.16, centro: 800 + azar() * 900, ancho: 0.7, forma: "campana" });
+  }
+  // Las burbujas.
+  for (let t = 0.05; t < DUR - 0.35; t += 1 / 260) {
+    const lleno = t / DUR;
+    const f = 450 * Math.pow(6, azar()) * (1 + lleno * 0.6);
+    l.burbuja({
+      t0: t + azar() * 0.004,
+      f,
+      amp: (0.012 + azar() * 0.05) * borde(t),
+      dur: 0.02 + azar() * 0.05,
+      sube: 0.3 + azar() * 0.6,
+      pan: 0.35 + azar() * 0.3,
+    });
+  }
+  l.sala(0.12);
+  l.guardar(en("agua-chorro.mp3"), { ganancia: 1.2 });
+}
 console.log(`Efectos listos en ${carpeta}`);

@@ -1005,6 +1005,14 @@ export async function pasoArmar(
       imagen: plan.cierre.imagen ? (await imagenEnPublico(plan.cierre.imagen)).nombre : null,
     },
     sfx: { cortes, final },
+    efectos: await Promise.all(
+      plan.efectos.map(async (e) => ({
+        ruta: await sonidoEnPublico(e.archivo),
+        desdeMs: e.desde_ms,
+        hastaMs: e.hasta_ms ?? null,
+        volumen: e.volumen,
+      })),
+    ),
   };
   await writeFile(
     path.join(trabajo, nombre === "anuncio" ? "props.json" : `props-${nombre}.json`),
@@ -1033,6 +1041,45 @@ export async function pasoArmar(
     outputLocation: salida,
     inputProps: props,
   });
+  // La voz, la música, el sonido del video y los efectos juntos pueden pasar del tope: un limitador
+  // suave sobre los picos sueltos (no cambia cómo suena) y la imagen tal cual.
+  const picos = await exec("ffmpeg", [
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    salida,
+    "-af",
+    "ebur128=peak=true",
+    "-vn",
+    "-f",
+    "null",
+    "-",
+  ]);
+  const pico = Number([...picos.stderr.matchAll(/Peak:\s+(-?[\d.]+) dBFS/g)].pop()?.[1] ?? "-99");
+  if (pico > -1) {
+    const limitada = salida.replace(/\.mp4$/, "-limitada.mp4");
+    await exec("ffmpeg", [
+      "-y",
+      "-v",
+      "error",
+      "-i",
+      salida,
+      "-c:v",
+      "copy",
+      "-af",
+      "alimiter=limit=0.84:attack=3:release=60:level=false",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k",
+      "-movflags",
+      "+faststart",
+      limitada,
+    ]);
+    const { rename } = await import("node:fs/promises");
+    await rename(limitada, salida);
+    console.log(`  audio: el pico llegaba a ${pico} dB; quedó por debajo de −1,5`);
+  }
   const costo = costoPublicidadUsd(voz.duracionMs / 1000, Boolean(avatar) || conPersonas, voz.costoUsd);
   console.log(
     `Listo: ${salida} · ${(duracionMs / 1000).toFixed(1)} s · costo calculado $${costo.toFixed(2)}`,

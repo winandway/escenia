@@ -178,6 +178,23 @@ export function crearLienzo(segundos, { bucle = false, semilla = 1 } = {}) {
   }
 
   /**
+   * Una burbuja de agua (el modelo de Minnaert): un seno corto que sube de tono mientras se apaga.
+   * Cientos por segundo, de tonos al azar, suenan a agua cayendo.
+   */
+  function burbuja({ t0, f, amp, dur = 0.05, sube = 0.5, pan = 0.5 }) {
+    const i0 = Math.round(t0 * SR);
+    const n = Math.round(dur * SR);
+    let fase = 0;
+    for (let i = 0; i < n; i++) {
+      const t = i / SR;
+      const fi = f * (1 + (sube * t) / dur);
+      fase += (2 * Math.PI * fi) / SR;
+      const env = Math.min(1, t / 0.0015) * Math.exp((-t * 5) / dur);
+      poner(i0 + i, Math.sin(fase) * env * amp, pan);
+    }
+  }
+
+  /**
    * Una sala (reverberación de Schroeder: cuatro peines y dos pasatodo), mezclada con `mojado`: el piano
    * suena en un cuarto y no pegado al oído.
    */
@@ -255,5 +272,5 @@ export function crearLienzo(segundos, { bucle = false, semilla = 1 } = {}) {
     );
   }
 
-  return { N, nota, bombo, ruido, cuerda, piano, sala, guardar, segundos };
+  return { N, nota, bombo, ruido, cuerda, piano, burbuja, sala, guardar, segundos };
 }

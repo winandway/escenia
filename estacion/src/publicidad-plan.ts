@@ -80,6 +80,20 @@ export const esquemaPlanPublicidad = z
       .optional(),
     /** El volumen de la música debajo de la voz (0,13 de siempre; más bajo si el video trae su sonido). */
     musica_volumen: z.number().min(0).max(1).default(0.13),
+    /**
+     * Sonidos largos encima de todo, a su hora (el chorro del agua cuando cae en el vaso): el archivo
+     * (de recursos/sfx o de la carpeta del cliente), desde y hasta qué milisegundo, y su volumen.
+     */
+    efectos: z
+      .array(
+        z.object({
+          archivo: z.string().min(1),
+          desde_ms: z.number().min(0),
+          hasta_ms: z.number().min(0).optional(),
+          volumen: z.number().min(0).max(1).default(0.5),
+        }),
+      )
+      .default([]),
     /** Lo más largo que puede durar la voz (el anuncio de bienvenida de QRBott dura 90 s). */
     maximo_seg: z.number().min(10).max(120).default(SEGUNDOS_MAXIMOS),
     /** Cuánto queda la tarjeta final después de la última palabra. */
