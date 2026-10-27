@@ -17,6 +17,9 @@ aparece en la misma tarjeta, con el botón de descargar. El encargo también se 
 
 ## Cómo se usa
 
+> Para probarlo de punta a punta con material real (tres pruebas con su texto listo para pegar):
+> [PROBAR-DIRECTOR.md](PROBAR-DIRECTOR.md).
+
 1. **Director → Encargo nuevo.** Cada encargo trae su carpeta de fotos («Encargo 3»): lo que se sube en
    el chat cae ahí.
 2. **Escribir lo que se quiere** (o tocar un atajo: «Un producto con mis fotos», «Con una persona que

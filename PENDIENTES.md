@@ -3,7 +3,7 @@
 ## 👤 Esperando por Richard
 
 - 👤 Pro In Shop, comercial del agua (hecho con la asesora de camisa roja, 30 s): verlo y mandárselo al cliente → si cambia una frase, se rehace solo ese pedazo.
-- 👤 Probar el **Director** (menú Director del panel, docs/DIRECTOR.md) con un encargo de verdad: un anuncio con fotos, una prueba en vivo subiendo su video, o una locución con su voz → con lo que diga se ajustan sus reglas.
+- 👤 Probar el **Director** con las tres pruebas de docs/PROBAR-DIRECTOR.md (material listo en publicidad/prueba-director: el generador, el agua y los quince años; cerca de un dólar las tres) → con lo que diga se ajustan sus reglas.
 - 👤 Poner el precio del servicio para los primeros clientes (planes/ESCENIA-COMO-PRODUCTO.md, sección de clientes) → con eso se arrancan esta semana como servicio hecho por Windoce.
 - 👤 Ver el video de la tarjeta de saldo de QRBott (diseño «pizarra»: el teléfono con la captura entera, la chica con moño y blusa mostaza señalándolo, a veces de espaldas) y decir si así quiere los próximos → el diseño queda para los demás videos de funciones.
 - 👤 Ver el video de Cashea de QRBott (la chica con su look nuevo, paleta morada y portada en el primer cuadro) y decir si así se ven distintos los videos → la armonía nueva se usa en los próximos.

@@ -24,7 +24,7 @@
 - Noticias de Losupe para los videos cortos (el prompt para la sesión de Losupe): [docs/NOTICIAS-LOSUPE.md](docs/NOTICIAS-LOSUPE.md).
 - Monigotes animados (videos de intriga con dibujos de línea que se mueven, Wan 2.2): [docs/MONIGOTES.md](docs/MONIGOTES.md).
 - Locución sobre un video ya editado (la voz de Richard con piano suave debajo; quince años, homenajes): [docs/LOCUCION.md](docs/LOCUCION.md). El material de personas va en `encargos/`, fuera de git.
-- **El Director** (el chat del panel que propone el anuncio en una tarjeta con su precio; solo el botón de Richard aprueba y gasta, C-DIRECTOR-1): [docs/DIRECTOR.md](docs/DIRECTOR.md).
+- **El Director** (el chat del panel que propone el anuncio en una tarjeta con su precio; solo el botón de Richard aprueba y gasta, C-DIRECTOR-1): [docs/DIRECTOR.md](docs/DIRECTOR.md) (cómo probarlo: [docs/PROBAR-DIRECTOR.md](docs/PROBAR-DIRECTOR.md)).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro
