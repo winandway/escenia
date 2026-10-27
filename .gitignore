@@ -93,3 +93,6 @@ estacion/recursos/sfx-panel/
 
 # Encargos de video de personas (fotos, nombres, voces): datos privados, nunca al repo público
 /encargos/
+
+# Planes de producto y negocio (estrategia): no van al repo público
+/planes/
