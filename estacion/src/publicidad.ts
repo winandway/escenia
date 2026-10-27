@@ -849,6 +849,50 @@ export async function pasoArmar(
     const m = await sharp(origen).metadata();
     return { nombre, ancho: m.width ?? 0, alto: m.height ?? 0 };
   };
+  // Un video real de fondo: se pasa una vez a vertical 1080×1920 (girado si venía acostado), sin sonido,
+  // y se saca su cuadro en el segundo pedido para el fondo difuminado y la miniatura.
+  const videoEnPublico = async (v: { archivo: string; desde_s: number; velocidad: number }) => {
+    const origen = path.resolve(carpeta, v.archivo);
+    const nombre = `vid-${huella(origen)}.mp4`;
+    const destino = path.join(publica, nombre);
+    if (!existsSync(destino))
+      await exec("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        origen,
+        "-an",
+        "-vf",
+        "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "medium",
+        "-crf",
+        "18",
+        "-pix_fmt",
+        "yuv420p",
+        destino,
+      ]);
+    const poster = `${nombre.replace(/\.mp4$/, "")}-${Math.round(v.desde_s * 1000)}.jpg`;
+    if (!existsSync(path.join(publica, poster)))
+      await exec("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        "-ss",
+        String(v.desde_s),
+        "-i",
+        destino,
+        "-frames:v",
+        "1",
+        "-q:v",
+        "3",
+        path.join(publica, poster),
+      ]);
+    return { nombre, poster };
+  };
   const sonidoEnPublico = async (nombre: string) => {
     const opciones = [
       path.resolve(carpeta, nombre),
@@ -868,7 +912,12 @@ export async function pasoArmar(
           voz.palabras.filter((p) => p.startMs >= inicioMs),
         )
       : [];
-    const img = m.imagen ? await imagenEnPublico(m.imagen) : null;
+    const vid = m.video ? await videoEnPublico(m.video) : null;
+    const img = vid
+      ? { nombre: vid.poster, ancho: 1080, alto: 1920 }
+      : m.imagen
+        ? await imagenEnPublico(m.imagen)
+        : null;
     tramos.push({
       inicioMs,
       finMs,
@@ -889,6 +938,10 @@ export async function pasoArmar(
       oscurecer: Boolean(m.oscurecer),
       entrada: m.entrada ?? "golpe",
       vistaPersona: m.vista_persona ?? null,
+      video:
+        vid && m.video
+          ? { ruta: vid.nombre, desdeMs: m.video.desde_s * 1000, velocidad: m.video.velocidad }
+          : null,
       texto: m.texto ?? null,
       chips: (m.chips ?? []).map((c, k) => ({ texto: c.texto, inicioMs: chipsInicio[k] ?? inicioMs })),
     });
@@ -911,7 +964,11 @@ export async function pasoArmar(
     duracionMs,
     tramos,
     subtitulos: bloquesDeSubtitulos(voz.palabras),
-    cierre: { inicioMs: cierreMs, lineas: plan.cierre.lineas },
+    cierre: {
+      inicioMs: cierreMs,
+      lineas: plan.cierre.lineas,
+      imagen: plan.cierre.imagen ? (await imagenEnPublico(plan.cierre.imagen)).nombre : null,
+    },
     sfx: { cortes, final },
   };
   await writeFile(

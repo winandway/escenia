@@ -589,3 +589,57 @@ describe("C-VOZ-PUBLICIDAD: sin pausas largas entre escenas y la voz al volumen 
     expect(plan.voz_lufs).toBe(-14);
   });
 });
+
+describe("publicidad con el video real del cliente de fondo (Pro In Shop, 27 oct 2026)", () => {
+  // Richard: «quiero el video real con un avatar hablando». El video del cliente va a pantalla completa
+  // detrás de la persona, desde el segundo que se pida y más rápido para quitar los tiempos muertos.
+  const base = {
+    marca: "Pro In Shop",
+    texto: "Mira esta prueba con el agua del grifo y con la del sistema.",
+    momentos: [{ frase: "Mira esta" }, { frase: "agua del grifo" }, { frase: "la del sistema" }],
+    cierre: { frase: "la del sistema", lineas: ["@marca"] },
+  };
+
+  it("un momento acepta un video con su segundo de inicio y su velocidad", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      ...base,
+      momentos: [
+        { frase: "Mira esta", video: { archivo: "videos/prueba.mp4", desde_s: 18 } },
+        ...base.momentos.slice(1),
+      ],
+    });
+    expect(plan.momentos[0]?.video).toEqual({ archivo: "videos/prueba.mp4", desde_s: 18, velocidad: 1 });
+  });
+
+  it("la velocidad tiene tope (ni cámara lenta extrema ni un borrón)", () => {
+    expect(() =>
+      esquemaPlanPublicidad.parse({
+        ...base,
+        momentos: [
+          { frase: "Mira esta", video: { archivo: "v.mp4", velocidad: 8 } },
+          ...base.momentos.slice(1),
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("la tarjeta final acepta la foto del producto", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      ...base,
+      cierre: { ...base.cierre, imagen: "productos/equipo.png" },
+    });
+    expect(plan.cierre.imagen).toBe("productos/equipo.png");
+  });
+
+  it("las props viejas siguen valiendo: sin video en el momento y sin foto en el cierre", () => {
+    expect(esquemaPublicidad.shape.cierre.parse({ inicioMs: 0, lineas: [] }).imagen).toBeNull();
+    const tramo = esquemaPublicidad.shape.tramos.element.parse({
+      inicioMs: 0,
+      finMs: 1000,
+      imagen: null,
+      texto: null,
+      chips: [],
+    });
+    expect(tramo.video).toBeNull();
+  });
+});

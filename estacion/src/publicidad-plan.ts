@@ -103,6 +103,17 @@ export const esquemaPlanPublicidad = z
           /** La tarjeta baja a oscuro (de noche). */
           oscurecer: z.boolean().optional(),
           entrada: z.enum(["golpe", "barrido"]).optional(),
+          /**
+           * Un video real de fondo (diseño «pantalla»): el archivo, desde qué segundo y a qué velocidad
+           * (1,5 = más rápido, para quitar tiempos muertos). Gira solo si el teléfono lo grabó acostado.
+           */
+          video: z
+            .object({
+              archivo: z.string().min(1),
+              desde_s: z.number().min(0).default(0),
+              velocidad: z.number().min(0.25).max(4).default(1),
+            })
+            .optional(),
           /** Diseño «pantalla»: cómo se ve la persona desde este momento (grande, cuerpo, medio, cabeza u oculta). */
           vista_persona: esquemaVistaPersona.optional(),
           /**
@@ -130,7 +141,12 @@ export const esquemaPlanPublicidad = z
       )
       .min(3),
     /** La tarjeta final con el logo: entra cuando se dice `frase`. */
-    cierre: z.object({ frase: z.string().min(2), lineas: z.array(z.string().max(32)).max(4) }),
+    cierre: z.object({
+      frase: z.string().min(2),
+      lineas: z.array(z.string().max(32)).max(4),
+      /** El producto (mejor sin fondo) debajo de las líneas de la tarjeta final. */
+      imagen: z.string().optional(),
+    }),
   })
   .superRefine((p, ctx) => {
     if (!p.texto && !p.partes)

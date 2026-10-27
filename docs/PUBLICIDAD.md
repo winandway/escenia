@@ -122,6 +122,27 @@ de la misma foto con Seedream edit (3 ¢ cada una).
 **La portada de WhatsApp:** el primer cuadro ya trae el título completo y la persona quieta (WhatsApp lo
 usa de miniatura).
 
+## El video real del cliente de fondo: el agua de Pro In Shop (27 oct 2026)
+
+Richard pasó dos videos grabados con el teléfono (el sistema de ósmosis inversa bajo el fregadero y la
+prueba con un medidor: el agua del grifo marca rojo y la del sistema, verde) y pidió el video real con
+un avatar hablando delante.
+
+- **momento `video`** (`archivo`, `desde_s`, `velocidad` de 0,25 a 4): el video del cliente a pantalla
+  completa en el diseño `pantalla`, desde ese segundo y más rápido si hay tiempos muertos. Se pasa una vez
+  a vertical 1080×1920 (girado si el teléfono lo grabó acostado) y sin sonido; su cuadro de ese segundo
+  sirve de fondo difuminado y de miniatura.
+- **`cierre.imagen`**: el producto sin fondo debajo de las líneas de la tarjeta final (aquí, el equipo
+  recortado del folleto del cliente con la Mac), para que el cierre no quede vacío.
+- **El avatar del cliente**: la asesora de Pro In Shop (camisa roja con cuello y puños negros, cuerpo sano;
+  Richard no quiere avatares demasiado flacos). La IA escribe mal el nombre en la ropa («Pro In Ship»):
+  se pide solo la diana y el nombre se borda después pegando el logo real (`asesora-*-logo.png`). Las
+  poses con el logo no se voltean (el texto saldría al revés): a la derecha va la de frente con
+  `apunta: "izquierda"`.
+
+Plan `publicidad/proinshop/plan-agua.json`; costó 49 ¢ (voz 4 ¢ y la asesora 45 ¢), más 27 ¢ de
+imágenes del avatar.
+
 ## Maggie y el comercial de franquicias sin marca (25 oct 2026)
 
 **Maggie** es el nombre de la chica de los anuncios (la del moño, con más curvas, desde la tarjeta de

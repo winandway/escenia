@@ -103,6 +103,15 @@ export const esquemaPublicidad = z.object({
       entrada: z.enum(["golpe", "barrido"]).default("golpe"),
       /** Cómo se ve la persona desde este momento (diseño «pantalla»); null: sigue como venía. */
       vistaPersona: esquemaVistaPersona.nullable().default(null),
+      /**
+       * Un video real de fondo en vez de la foto (diseño «pantalla»): el archivo ya vertical, desde qué
+       * milisegundo y a qué velocidad. `imagen` trae su primer cuadro (para el fondo difuminado y la
+       * miniatura). Sin sonido: suena la voz, la música y los efectos del anuncio.
+       */
+      video: z
+        .object({ ruta: z.string(), desdeMs: z.number().min(0), velocidad: z.number().min(0.25).max(4) })
+        .nullable()
+        .default(null),
     }),
   ),
   /**
@@ -139,7 +148,12 @@ export const esquemaPublicidad = z.object({
       resaltada: z.number(),
     }),
   ),
-  cierre: z.object({ inicioMs: z.number(), lineas: z.array(z.string()) }),
+  /** La tarjeta final; `imagen`: el producto (sin fondo) debajo de las líneas, para que no quede vacía. */
+  cierre: z.object({
+    inicioMs: z.number(),
+    lineas: z.array(z.string()),
+    imagen: z.string().nullable().default(null),
+  }),
   sfx: z.object({ cortes: z.array(z.string()), final: z.string().nullable() }),
 });
 export type PropsPublicidad = z.infer<typeof esquemaPublicidad>;

@@ -30,7 +30,7 @@ const publicidadVacia: PropsPublicidad = {
   duracionMs: 3000,
   tramos: [],
   subtitulos: [],
-  cierre: { inicioMs: 3000, lineas: [] },
+  cierre: { inicioMs: 3000, lineas: [], imagen: null },
   sfx: { cortes: [], final: null },
 };
 

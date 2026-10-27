@@ -153,17 +153,24 @@ const Tarjeta: React.FC<{
     const x = interpolate(frame, [0, Math.max(1, duracion)], [-14 * lado, 14 * lado], {
       extrapolateRight: "clamp",
     });
-    contenido = (
-      <Img
-        src={staticFile(tramo.imagen ?? "")}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transform: `translateX(${x}px) scale(${golpe * lento})`,
-        }}
-      />
-    );
+    const estilo: React.CSSProperties = {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      transform: `translateX(${x}px) scale(${golpe * lento})`,
+    };
+    contenido =
+      completa && tramo.video ? (
+        <OffthreadVideo
+          src={staticFile(tramo.video.ruta)}
+          trimBefore={f(tramo.video.desdeMs)}
+          playbackRate={tramo.video.velocidad}
+          muted
+          style={estilo}
+        />
+      ) : (
+        <Img src={staticFile(tramo.imagen ?? "")} style={estilo} />
+      );
   }
   return (
     <div
@@ -747,7 +754,9 @@ const Cierre: React.FC<{
   acento: string;
   oscuro: boolean;
   paleta: PropsPublicidad["paleta"];
-}> = ({ logo, lineas, acento, oscuro, paleta }) => {
+  /** El producto debajo de las líneas. */
+  imagen?: string | null;
+}> = ({ logo, lineas, acento, oscuro, paleta, imagen = null }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = spring({ frame, fps, config: { damping: 13, stiffness: 140 } });
@@ -791,6 +800,19 @@ const Cierre: React.FC<{
           </div>
         );
       })}
+      {imagen && (
+        <Img
+          src={staticFile(imagen)}
+          style={{
+            marginTop: 50,
+            width: 900,
+            height: 820,
+            objectFit: "contain",
+            transform: `scale(${0.8 + 0.2 * spring({ frame: frame - 10, fps, config: { damping: 13 } })}) translateY(${-8 * Math.sin(frame / 18)}px)`,
+            filter: "drop-shadow(0 30px 40px rgba(0,0,0,0.25))",
+          }}
+        />
+      )}
       {!logo && (
         <svg
           width={200}
@@ -982,7 +1004,14 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
       )}
       {/* Tarjeta final con el logo. */}
       <Sequence from={f(p.cierre.inicioMs)} layout="none">
-        <Cierre logo={p.logo} lineas={p.cierre.lineas} acento={p.acento} oscuro={oscuro} paleta={p.paleta} />
+        <Cierre
+          logo={p.logo}
+          lineas={p.cierre.lineas}
+          acento={p.acento}
+          oscuro={oscuro}
+          paleta={p.paleta}
+          imagen={p.cierre.imagen}
+        />
       </Sequence>
       {/* La persona por tramos (medio cuerpo o cuerpo completo); fuera del cierre. */}
       {p.apariciones.map((a, i) => {
