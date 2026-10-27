@@ -268,3 +268,39 @@ CREATE TABLE IF NOT EXISTS publicidades (
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS publicidades_por_estado ON publicidades(estado, id);
+
+-- El Director (docs/DIRECTOR.md): la conversación con la IA que arma los anuncios. Cada encargo es
+-- una conversación; lo que la IA propone queda como una tarjeta con su precio, y SOLO el botón de
+-- Richard la aprueba (C-DIRECTOR-1): la IA no puede gastar ni pedir un video por su cuenta.
+CREATE TABLE IF NOT EXISTS director_encargos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  titulo TEXT NOT NULL DEFAULT 'Encargo nuevo',
+  carpeta TEXT NOT NULL DEFAULT '',          -- la carpeta de Imágenes donde caen las fotos del chat
+  estado TEXT NOT NULL DEFAULT 'abierto' CHECK (estado IN ('abierto','archivado')),
+  costo_usd REAL NOT NULL DEFAULT 0,         -- lo que lleva gastado la IA de la conversación
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS director_encargos_por_estado ON director_encargos(estado, actualizado_en);
+
+CREATE TABLE IF NOT EXISTS director_propuestas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  encargo_id INTEGER NOT NULL REFERENCES director_encargos(id),
+  datos TEXT NOT NULL,                       -- JSON: el pedido del anuncio, ya validado
+  precio_usd REAL NOT NULL,
+  estado TEXT NOT NULL DEFAULT 'propuesta' CHECK (estado IN ('propuesta','aprobada','reemplazada')),
+  publicidad_id INTEGER REFERENCES publicidades(id),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS director_propuestas_por_encargo ON director_propuestas(encargo_id, id);
+
+CREATE TABLE IF NOT EXISTS director_mensajes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  encargo_id INTEGER NOT NULL REFERENCES director_encargos(id),
+  rol TEXT NOT NULL CHECK (rol IN ('richard','director','aviso')),
+  texto TEXT NOT NULL DEFAULT '',
+  propuesta_id INTEGER REFERENCES director_propuestas(id),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS director_mensajes_por_encargo ON director_mensajes(encargo_id, id);
