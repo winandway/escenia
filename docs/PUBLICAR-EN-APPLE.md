@@ -71,8 +71,10 @@ Cuando Expo tenga compilaciones otra vez (el mes nuevo o un plan pago), `compila
 
 ## Dónde va hoy (31 oct 2026)
 
-- Compilación 3 (con escenas) `VALID`; la 1 retirada. Ficha, precio, disponibilidad y nueve capturas
-  cargadas. Falta solo «Privacidad de la app» para mandarla a revisión.
+- Compilación 3 (con escenas) `VALID`; la 1 retirada. Ficha, precio, disponibilidad, nueve capturas y
+  «Privacidad de la app» publicadas. **Versión 1.0 en WAITING_FOR_REVIEW** (enviada el 31 oct 2026).
+- Privacidad publicada (desde el Chrome de Richard): «Fotos o vídeos» y «Otro contenido del usuario»,
+  ambos para funcionalidad de la app, vinculados a la cuenta y sin seguimiento.
 - TestFlight interno: go@windoce.com invitado. Enlace público (abre cuando Apple apruebe la prueba):
   https://testflight.apple.com/join/zW3q14aJ
 
