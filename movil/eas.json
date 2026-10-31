@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_PANEL_URL": "https://escenia.sitios.dev"
+      },
+      "node": "24.15.0"
+    },
+    "simulador": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_PANEL_URL": "https://escenia.sitios.dev"
+      },
+      "node": "24.15.0"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6829275493",
+        "appleTeamId": "7KM9P6R682"
+      }
+    }
+  }
+}
