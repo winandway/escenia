@@ -1863,3 +1863,17 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Cómo se comprueba:** `pruebas/app-iphone-logica.test.ts` (en rojo si se quita el complemento de
   `app.json`) y, en la Mac, la app abre en el simulador con iOS 27.
 - **Qué NO tocar:** no quitar el complemento hasta pasar a Expo 58 (su plantilla ya trae las escenas).
+
+## C-APP-IOS-4 — Avisos al iPhone cuando un video está listo (31 oct 2026)
+
+- **Qué se hizo:** la app guarda la dirección de avisos de su iPhone (`app_avisos`, solo la cuenta de
+  Richard) y la Mac, al entregar un video del Director o un anuncio, firma con la llave de avisos de Apple
+  (ES256, `estacion/src/avisos.ts`) y avisa en el idioma de cada teléfono. Los datos van en `body`: la app
+  de Expo lee ahí los datos de un aviso remoto, y con eso abre el proyecto al tocarlo. Los avisos van
+  firmados para producción (`expo-notifications` con `mode: production`), que es lo que usan TestFlight y
+  la tienda; el identificador de la app tiene la capacidad de avisos y el guion de compilar crea su propio
+  perfil «Escenia App Store (avisos)» (el de Expo se hizo antes y no los trae).
+- **Cómo se comprueba:** `pruebas/app-iphone.test.ts` (en rojo si los datos dejan de ir en `body` o si la
+  cuenta de demostración recibiera avisos; comprobado el 31 oct 2026). Contra Apple, con una dirección
+  inventada, la respuesta es «BadDeviceToken» (la firma pasa; con una firma mala sería otra).
+- **Qué NO tocar:** no subir la llave de avisos a la nube; no poner `mode: development`.

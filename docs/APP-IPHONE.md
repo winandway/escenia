@@ -26,6 +26,19 @@ en que se le escribe. Lo escrito en el chat se guarda solo y vuelve si se cierra
 carpeta **Maggie** de Imágenes, y el Director la usa cuando se pide una persona que hable y no se trae
 otra, con la voz venezolana (en inglés, la femenina).
 
+## Los avisos al iPhone (desde el 31 oct 2026)
+
+Cuando la Mac entrega un video (del Director o un anuncio), cada iPhone con la app abierta en la cuenta
+de Richard recibe «Tu video está listo» con el nombre del proyecto, en su idioma. Al tocarlo se abre ese
+chat, aunque la app estuviera cerrada. La app pide el permiso al entrar; sin permiso funciona igual.
+
+- La app guarda la dirección de avisos de su iPhone en `POST /datos/app/avisos` (tabla `app_avisos`) y la
+  quita al cerrar sesión. La cuenta de demostración no recibe avisos.
+- La Mac (`estacion/src/avisos.ts`) pide a quién avisar en `/datos/estacion/avisos` y firma directo con la
+  llave de avisos de Apple de `~/.config/motor-escenia/apple-apns`: la llave nunca sube a la nube. Si
+  Apple dice que una dirección ya no sirve, se borra.
+- Los datos del aviso van en `body` (ahí los lee la app de Expo en un aviso remoto).
+
 ## La cuenta del revisor de Apple (demostración)
 
 Apple exige una cuenta para revisar la app. Es una segunda contraseña (su texto vive solo en
@@ -64,5 +77,4 @@ C-APP-IOS-1 (la cuenta del revisor), C-APP-IOS-2 (textos, idiomas y permisos de 
 ## Lo que sigue
 
 - Cuentas de clientes con su propio saldo prepagado (hoy la app entra con la contraseña del panel).
-- Avisos al teléfono cuando el video está listo (la llave de notificaciones ya está guardada).
 - La versión de Android con la misma app.

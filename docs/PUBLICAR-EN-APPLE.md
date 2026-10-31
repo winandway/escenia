@@ -13,7 +13,7 @@
 | Proyecto de Expo                     | `@windoce-llc/escenia` (`63919fcd-54ff-48bd-800c-9d9110b71cd8`)                   |
 | Equipo de Apple                      | Windoce LLC, `7KM9P6R682`                                                         |
 | Llave de la API de App Store Connect | `~/.config/motor-escenia/apple-asc/` (copiada de la de la cuenta)                 |
-| Llave de avisos (APNs)               | `~/.config/motor-escenia/apple-apns/` (todavía no se usa)                         |
+| Llave de avisos (APNs)               | `~/.config/motor-escenia/apple-apns/` (la usa la Mac para avisar al iPhone)       |
 | Token de Expo                        | `~/.config/motor-escenia/expo-token`                                              |
 | Contraseña del revisor de Apple      | `~/.config/motor-escenia/revisor-apple` (solo letras y números)                   |
 | Certificado y perfil de firma        | Los que guarda Expo para esta app (certificado `88666LUM6K`, perfil `RUNFCKKDKW`) |
@@ -44,7 +44,8 @@ así que se compila en la Mac, gratis:
 cd /Users/windocellc/Motor-Escenia && node scripts/tiendas/compilar-ios-mac.mjs
 ```
 
-El guion baja de Expo el certificado y el perfil de la App Store de esta app (los mismos que usa la nube),
+El guion baja de Expo el certificado de esta app (el mismo que usa la nube), crea por la API su propio
+perfil de la App Store con avisos («Escenia App Store (avisos)», el de Expo no los trae),
 los pone en un llavero aparte con su propia contraseña (así la firma no abre ninguna ventana pidiendo la
 contraseña de la Mac), regenera el proyecto nativo con el complemento de escenas, pone el número de
 compilación siguiente al último de Apple, compila, exporta el IPA y lo envía con `eas submit` (enviar NO
