@@ -69,6 +69,13 @@ Cuando Expo tenga compilaciones otra vez (el mes nuevo o un plan pago), `compila
 5. Las de la receta madre siguen valiendo: textos de permiso sin `false` (error 90683), la llave en
    `eas.json` solo durante el envío, y la verdad está en `buildUploads`, no en lo que dice Expo.
 
+## Dónde va hoy (31 oct 2026)
+
+- Compilación 3 (con escenas) `VALID`; la 1 retirada. Ficha, precio, disponibilidad y nueve capturas
+  cargadas. Falta solo «Privacidad de la app» para mandarla a revisión.
+- TestFlight interno: go@windoce.com invitado. Enlace público (abre cuando Apple apruebe la prueba):
+  https://testflight.apple.com/join/zW3q14aJ
+
 ## Lo que hace Richard (no hay API)
 
 - **Privacidad de la app** en App Store Connect: se llena desde su Chrome (la sesión ya abierta). Lo que la

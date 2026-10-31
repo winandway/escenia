@@ -2,8 +2,8 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 App de iPhone: instalar TestFlight en el iPhone, abrir el enlace público de la prueba (en docs/PUBLICAR-EN-APPLE.md) y probar la app con su contraseña del panel → con lo que diga se ajusta antes de que Apple la apruebe.
-- 👤 App de iPhone: llenar «Privacidad de la app» en App Store Connect (Apple no tiene API; lo que va está en docs/PUBLICAR-EN-APPLE.md) → sin eso Apple no deja enviar a revisión.
+- 👤 App de iPhone: entrar a App Store Connect en su Chrome (la sesión venció el 31 oct) y avisar → la IA llena «Privacidad de la app» (Apple no tiene API para eso) y la manda a revisión con `enviar-revision-ios.mjs 3`; todo lo demás ya está cargado.
+- 👤 App de iPhone: probarla en su iPhone con TestFlight: la invitación interna llegó a go@windoce.com (sirve si el iPhone usa ese Apple ID) y el enlace público (en docs/PUBLICAR-EN-APPLE.md) abre cuando Apple apruebe la prueba, en menos de un día. Entra con la contraseña del panel.
 - 👤 Pro In Shop, comercial del agua (hecho con la asesora de camisa roja, 30 s): verlo y mandárselo al cliente → si cambia una frase, se rehace solo ese pedazo.
 - 👤 Probar el **Director** con las tres pruebas de docs/PROBAR-DIRECTOR.md (material listo en publicidad/prueba-director: el generador, el agua y los quince años; cerca de un dólar las tres) → con lo que diga se ajustan sus reglas.
 - 👤 Poner el precio del servicio para los primeros clientes (planes/ESCENIA-COMO-PRODUCTO.md, sección de clientes) → con eso se arrancan esta semana como servicio hecho por Windoce.
