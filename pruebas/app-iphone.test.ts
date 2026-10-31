@@ -212,3 +212,14 @@ describe("las páginas que pide Apple se abren sin sesión (C-APP-IOS-1)", () =>
       expect(pedir(ruta).headers.get("location"), ruta).toContain("/entrar");
   });
 });
+
+describe("el Director de la app habla el idioma de quien le escribe y conoce a Maggie (C-APP-IOS-1)", () => {
+  it("sus reglas lo dicen, y la del idioma va al final (en la prueba en vivo comentó en español a quien escribía en inglés)", async () => {
+    const { SISTEMA } = await import("@/lib/director-prompt");
+    const lineas = SISTEMA.split("\n").filter(Boolean);
+    expect(lineas.at(-1)).toMatch(
+      /^El idioma: TODO lo que le escribes .* el comentario después de la tarjeta/,
+    );
+    expect(SISTEMA).toContain("Maggie es la presentadora de la casa (la carpeta «Maggie»)");
+  });
+});

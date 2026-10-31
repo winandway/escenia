@@ -7,8 +7,6 @@ import os from "node:os";
 import { join } from "node:path";
 
 export const CARPETA_LLAVE = join(os.homedir(), ".config", "motor-escenia", "apple-asc");
-// La llave vive en una carpeta fija de la Mac; los nombres de archivo son constantes de este guion.
-// eslint-disable-next-line security/detect-non-literal-fs-filename
 const leerBytesDeLlave = (f) => fs.readFileSync(join(CARPETA_LLAVE, f));
 export const leerLlave = (f) => leerBytesDeLlave(f).toString("utf8").trim();
 const b64 = (x) => Buffer.from(JSON.stringify(x)).toString("base64url");

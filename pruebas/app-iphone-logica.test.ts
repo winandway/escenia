@@ -129,3 +129,34 @@ describe("la configuración que exige Apple (C-APP-IOS-2)", () => {
     expect(eas).not.toMatch(/ascApiKey|AuthKey|\.p8/);
   });
 });
+
+describe("la app arranca con escenas, como exige iOS 27 (C-APP-IOS-3)", () => {
+  // La plantilla de AppDelegate de Expo 57, tal cual la genera «expo prebuild».
+  const PLANTILLA = `class AppDelegate: ExpoAppDelegate {
+  var window: UIWindow?
+
+#if os(iOS) || os(tvOS)
+    window = UIWindow(frame: UIScreen.main.bounds)
+    factory.startReactNative(
+      withModuleName: "main",
+      in: window,
+      launchOptions: launchOptions)
+#endif
+
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)`;
+
+  it("el complemento está en la configuración (sin él la app se cerraba al abrir en el simulador con iOS 27)", () => {
+    const app = JSON.parse(movil("app.json")) as { expo: { plugins: unknown[] } };
+    expect(app.expo.plugins).toContain("./plugins/escenas-ios");
+  });
+
+  it("declara la escena y le quita la ventana al AppDelegate", async () => {
+    const plugin = (await import("../movil/plugins/escenas-ios.js")) as unknown as {
+      default: { conEscenas: (c: string) => string; MANIFIESTO: Record<string, unknown> };
+    };
+    const nuevo = plugin.default.conEscenas(PLANTILLA);
+    expect(nuevo).toContain("class AppDelegate: ExpoAppDelegate, ExpoReactNativeFactoryProvider {");
+    expect(nuevo).not.toContain("UIWindow(frame:");
+    expect(JSON.stringify(plugin.default.MANIFIESTO)).toContain("$(PRODUCT_MODULE_NAME).SceneDelegate");
+  });
+});

@@ -16,6 +16,11 @@ export default defineConfig([
     },
   },
   {
+    // Los guiones de Apple leen la llave y las capturas desde carpetas fijas de la Mac y del repositorio.
+    files: ["scripts/tiendas/**"],
+    rules: { "security/detect-non-literal-fs-filename": "off" },
+  },
+  {
     // La Estación trabaja con sus propias carpetas en la Mac: las rutas armadas son suyas.
     files: ["estacion/**"],
     rules: { "security/detect-non-literal-fs-filename": "off" },

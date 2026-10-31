@@ -73,7 +73,8 @@
           "savePhotosPermission": "Escenia saves the finished video ads to your Photos when you tap Save.",
           "isAccessMediaLocationEnabled": false
         }
-      ]
+      ],
+      "./plugins/escenas-ios"
     ],
     "extra": {
       "router": {},
