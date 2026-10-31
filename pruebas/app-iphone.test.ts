@@ -238,3 +238,59 @@ describe("el panel le dice al Director en qué idioma contestar (C-APP-IOS-1)", 
     expect(avisoDeIdioma("en")).toContain("English only");
   });
 });
+
+describe("el Director mira las fotos con su tipo de verdad (C-APP-IOS-1)", () => {
+  it("una «.png» que por dentro es JPG se manda como JPG (las fotos de Maggie: la IA las rechazaba)", async () => {
+    const { tipoPorFirma } = await import("@/lib/director");
+    expect(tipoPorFirma(new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe("image/jpeg");
+    expect(tipoPorFirma(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d]))).toBe("image/png");
+    expect(tipoPorFirma(new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]))).toBe(
+      "image/webp",
+    );
+    expect(tipoPorFirma(new Uint8Array([1, 2, 3]))).toBeNull();
+  });
+});
+
+describe("ver_imagen usa el tipo de verdad al mandarle la foto a la IA (C-APP-IOS-1)", () => {
+  it("la foto «maggie.png» con bytes de JPG viaja como image/jpeg", async () => {
+    const { responderDirector } = await import("@/lib/director");
+    const db = baseEnMemoria();
+    const id = await crearEncargo(db);
+    const r = await db.ejecutar(
+      "INSERT INTO imagenes (carpeta, nombre, clave, tipo, bytes) VALUES ('Maggie', 'maggie.png', 'imagenes/maggie.png', 'imagen', 2000)",
+    );
+    await anotarMensaje(db, id, "richard", "Mira la foto de Maggie");
+    const pedidos: Record<string, unknown>[] = [];
+    const respuestas = [
+      {
+        content: [{ type: "tool_use", id: "toolu_a", name: "ver_imagen", input: { id: r.ultimoId } }],
+        stop_reason: "tool_use",
+      },
+      { content: [{ type: "text", text: "La vi." }], stop_reason: "end_turn" },
+    ];
+    const falso: typeof fetch = async (_u, init) => {
+      pedidos.push(JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
+      const siguiente = respuestas.shift();
+      return new Response(
+        JSON.stringify({
+          id: "msg",
+          type: "message",
+          role: "assistant",
+          model: "claude-sonnet-5",
+          stop_sequence: null,
+          usage: { input_tokens: 10, output_tokens: 5 },
+          ...siguiente,
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    };
+    const almacen = {
+      async get() {
+        return { size: 4, arrayBuffer: async () => new Uint8Array([0xff, 0xd8, 0xff, 0xe0]).buffer };
+      },
+    };
+    await responderDirector(db, id, { modelo: "claude-sonnet-5", apiKey: "x", almacen, fetch: falso });
+    const ultimo = (pedidos[1]?.messages as { content: unknown }[]).at(-1)?.content;
+    expect(JSON.stringify(ultimo)).toContain('"media_type":"image/jpeg"');
+  });
+});

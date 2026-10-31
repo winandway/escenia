@@ -401,6 +401,27 @@ const TIPO_PARA_MIRAR: Record<string, "image/jpeg" | "image/png" | "image/webp">
   webp: "image/webp",
 };
 
+/**
+ * El tipo de verdad de una foto, por sus primeros bytes: una «.png» puede ser un JPG por dentro (las fotos
+ * de Maggie lo son) y la IA rechaza la foto si se le dice otro tipo (pasó en vivo el 31 oct 2026).
+ */
+export function tipoPorFirma(b: Uint8Array): "image/jpeg" | "image/png" | "image/webp" | null {
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png";
+  if (
+    b[0] === 0x52 &&
+    b[1] === 0x49 &&
+    b[2] === 0x46 &&
+    b[3] === 0x46 &&
+    b[8] === 0x57 &&
+    b[9] === 0x45 &&
+    b[10] === 0x42 &&
+    b[11] === 0x50
+  )
+    return "image/webp";
+  return null;
+}
+
 function aBase64(bytes: Uint8Array): string {
   let binario = "";
   for (let i = 0; i < bytes.length; i += 0x8000)
@@ -434,14 +455,15 @@ async function verImagen(
     return fallo(uso.id, `«${fila.nombre}» pesa demasiado para mirarla: guíate por su nombre.`);
   const objeto = await almacen.get(fila.clave);
   if (!objeto) return fallo(uso.id, `«${fila.nombre}» no está en el almacén: guíate por su nombre.`);
-  const datos = aBase64(new Uint8Array(await objeto.arrayBuffer()));
+  const bytes = new Uint8Array(await objeto.arrayBuffer());
+  const datos = aBase64(bytes);
   return {
     bloque: {
       type: "tool_result",
       tool_use_id: uso.id,
       content: [
         { type: "text", text: `#${fila.id} «${fila.nombre}», de la carpeta «${fila.carpeta}».` },
-        { type: "image", source: { type: "base64", media_type: tipo, data: datos } },
+        { type: "image", source: { type: "base64", media_type: tipoPorFirma(bytes) ?? tipo, data: datos } },
       ],
     },
   };
