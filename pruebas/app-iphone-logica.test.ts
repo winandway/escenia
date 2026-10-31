@@ -151,7 +151,8 @@ describe("la app arranca con escenas, como exige iOS 27 (C-APP-IOS-3)", () => {
   });
 
   it("declara la escena y le quita la ventana al AppDelegate", async () => {
-    const plugin = (await import("../movil/plugins/escenas-ios.js")) as unknown as {
+    // La parte pura del complemento (sin Expo): así corre también en GitHub, sin movil/node_modules.
+    const plugin = (await import("../movil/plugins/escenas-ios-texto.js")) as unknown as {
       default: { conEscenas: (c: string) => string; MANIFIESTO: Record<string, unknown> };
     };
     const nuevo = plugin.default.conEscenas(PLANTILLA);

@@ -1,9 +1,22 @@
 {
-  "extends": "expo/tsconfig.base",
+  "//": "Lo mismo que expo/tsconfig.base, copiado aquí: las pruebas de la raíz leen este archivo en GitHub, donde movil/node_modules no existe.",
   "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ESNext"],
+    "module": "preserve",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "customConditions": ["react-native"],
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "target": "ESNext",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "android", "ios"]
 }

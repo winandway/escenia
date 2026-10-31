@@ -1,7 +1,8 @@
 // La cuenta del revisor de Apple (docs/APP-IPHONE.md, C-APP-IOS-1): crea su contraseña UNA vez, la
 // guarda fuera del repositorio en ~/.config/motor-escenia/revisor-apple (archivo 600) y carga en la base
-// en vivo solo su huella (ajuste «app_demo_huella»). Si ya existe, reutiliza la misma.
-// Uso (desde la raíz): estacion/node_modules/.bin/tsx scripts/tiendas/clave-revisor.ts
+// en vivo solo su huella (ajuste «app_demo_huella»). Si ya existe, reutiliza la misma; «--nueva» la cambia.
+// Solo letras y números: un guion o un símbolo se convierte en otro según el teclado (pasó en el simulador).
+// Uso (desde la raíz): estacion/node_modules/.bin/tsx scripts/tiendas/clave-revisor.ts [--nueva]
 import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -12,11 +13,12 @@ import { db } from "../base-remota";
 const ARCHIVO = join(homedir(), ".config", "motor-escenia", "revisor-apple");
 
 async function principal() {
-  let clave = existsSync(ARCHIVO) ? readFileSync(ARCHIVO, "utf8").trim() : "";
+  const nueva = process.argv.includes("--nueva");
+  let clave = existsSync(ARCHIVO) && !nueva ? readFileSync(ARCHIVO, "utf8").trim() : "";
   if (!clave) {
     const letras = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
     const azar = crypto.getRandomValues(new Uint8Array(14));
-    clave = "Review-" + Array.from(azar, (b) => letras[b % letras.length]).join("");
+    clave = "Review" + Array.from(azar, (b) => letras[b % letras.length]).join("");
     writeFileSync(ARCHIVO, clave + "\n", { mode: 0o600 });
     chmodSync(ARCHIVO, 0o600);
   }
