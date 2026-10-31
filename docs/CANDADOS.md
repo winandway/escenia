@@ -1816,3 +1816,50 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   chat y reproducidas en la tarjeta.
 - **Qué NO tocar:** no meter cortes ni otro video en la prueba en vivo; no dejar que la IA proponga sin
   mirar el video; no subir el resultado en una sola petición (pasa de cien megas).
+
+## C-APP-IOS-1 — La app de iPhone entra con su token y la cuenta del revisor de Apple no ve ni gasta nada ajeno (31 oct 2026)
+
+- **Qué se pidió:** probar Escenia como app en Apple (TestFlight) y mandarla a revisión. Apple exige una
+  cuenta para su revisor, y el panel es de una sola persona.
+- **Qué se hizo:** la app entra con la contraseña del panel por `POST /datos/app/entrar` y recibe un
+  token propio (`esc_…`, huella en `app_sesiones`) que viaja como `Bearer`. Una segunda contraseña (la
+  del revisor; huella en el ajuste `app_demo_huella`, texto solo en `~/.config/motor-escenia/revisor-apple`)
+  abre la cuenta **demo**: `puedeSubir` la rechaza (403) en todo lo que gasta salvo que la ruta diga
+  `cuentaDemo: true` (el chat del Director y sus fotos); cada ruta comprueba `puedeVerEncargo`; su
+  Director solo ve la carpeta de su encargo y la de Maggie (`carpetasPermitidas`, también en
+  `ver_imagen`); aprobar llama a `aprobarEnDemo` (sin anuncio ni trabajo: video de ejemplo público en
+  `public/muestras/`); tope de 40 mensajes por día y 15 proyectos.
+- **El idioma:** en la prueba en vivo el Director comentó en español a quien escribía en inglés, aun con
+  la regla escrita. Ahora el panel detecta el idioma del último mensaje (`idiomaDeEscritura`, sin contar
+  las notas de lo subido) y se lo dice en cada respuesta (`avisoDeIdioma`). Comprobado en vivo.
+- **Cómo se comprueba:** `npx vitest run pruebas/app-iphone.test.ts` (en rojo si se quita el bloqueo de la
+  cuenta demo, la comprobación del encargo, el filtro de carpetas o la detección del idioma; comprobado el
+  31 oct 2026). En vivo: con la cuenta demo, `/datos/publicidades` responde 403, aprobar no crea anuncios
+  ni trabajos, y `/datos/archivos/…` responde 401.
+- **Qué NO tocar:** no darle a la cuenta demo acceso a rutas que gastan; no guardar la contraseña del
+  revisor en el repositorio; la huella se vuelve a cargar con `scripts/tiendas/clave-revisor.ts`.
+
+## C-APP-IOS-2 — La app de iPhone: dos idiomas, banderas, ojito y los textos de permiso de Apple (31 oct 2026)
+
+- **Qué se hizo:** la app (`movil/`, Expo SDK 57) nace en inglés y español con el selector estilo Amazon
+  (España y EE. UU.), la contraseña con ojito, archivar y salir dentro del menú de tres puntos, el chat
+  que no pierde lo escrito (`useBorrador`) y los cuatro textos de permiso de iOS (fotos, guardar en
+  Fotos, cámara y micrófono) escritos en `app.json` y en los complementos, sin ningún `false` (un `false`
+  BORRA el texto al compilar y Apple rechaza con el error 90683).
+- **Cómo se comprueba:** `npx vitest run pruebas/app-iphone-logica.test.ts` (en rojo con un permiso en
+  `false`, con la bandera de México o con un texto en inglés escrito en español; comprobado el 31 oct
+  2026). Y `cd movil && npx expo config --type introspect | grep UsageDescription` muestra los cuatro.
+- **Qué NO tocar:** `movil/tsconfig.json` no extiende `expo/tsconfig.base` a propósito: las pruebas de la
+  raíz lo leen en GitHub, donde `movil/node_modules` no existe (la verificación falló así el 31 oct).
+
+## C-APP-IOS-3 — La app arranca con escenas, como exige iOS 27 (31 oct 2026)
+
+- **Qué se rompió:** la primera compilación se cerraba al abrir en el simulador con iOS 27
+  (`_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`): la plantilla de Expo 57 todavía no
+  adopta las escenas (UIScene).
+- **Qué se hizo:** el complemento `movil/plugins/escenas-ios.js` (el mismo probado en Divoox): declara la
+  escena en Info.plist, agrega `SceneDelegate.swift` y le quita la ventana al AppDelegate. La parte pura
+  vive en `escenas-ios-texto.js`. La compilación 1 (sin escenas) quedó retirada en TestFlight.
+- **Cómo se comprueba:** `pruebas/app-iphone-logica.test.ts` (en rojo si se quita el complemento de
+  `app.json`) y, en la Mac, la app abre en el simulador con iOS 27.
+- **Qué NO tocar:** no quitar el complemento hasta pasar a Expo 58 (su plantilla ya trae las escenas).

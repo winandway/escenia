@@ -2,6 +2,8 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 App de iPhone: instalar TestFlight en el iPhone, abrir el enlace público de la prueba (en docs/PUBLICAR-EN-APPLE.md) y probar la app con su contraseña del panel → con lo que diga se ajusta antes de que Apple la apruebe.
+- 👤 App de iPhone: llenar «Privacidad de la app» en App Store Connect (Apple no tiene API; lo que va está en docs/PUBLICAR-EN-APPLE.md) → sin eso Apple no deja enviar a revisión.
 - 👤 Pro In Shop, comercial del agua (hecho con la asesora de camisa roja, 30 s): verlo y mandárselo al cliente → si cambia una frase, se rehace solo ese pedazo.
 - 👤 Probar el **Director** con las tres pruebas de docs/PROBAR-DIRECTOR.md (material listo en publicidad/prueba-director: el generador, el agua y los quince años; cerca de un dólar las tres) → con lo que diga se ajustan sus reglas.
 - 👤 Poner el precio del servicio para los primeros clientes (planes/ESCENIA-COMO-PRODUCTO.md, sección de clientes) → con eso se arrancan esta semana como servicio hecho por Windoce.
