@@ -133,4 +133,4 @@
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)
 
-- [ ] (IA) Cuando Apple apruebe la prueba pública de la compilación 3, correr `node scripts/tiendas/testflight.mjs` para pedir la revisión de prueba de la compilación 4 (la que trae los avisos al iPhone). El grupo interno ya la tiene.
+- [ ] (IA) Cuando Apple apruebe la prueba pública de la compilación 3, correr `node scripts/tiendas/testflight.mjs` para pedir la revisión de prueba de la última compilación (la 5: avisos al iPhone, chat nuevo y tarjeta con lo que sale en el video). El grupo interno ya la tiene.
