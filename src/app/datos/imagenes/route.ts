@@ -1,6 +1,7 @@
 // Richard sube una imagen (o un PDF) a una carpeta de la biblioteca. Cada archivo viaja
 // en su propia petición (el navegador las manda una detrás de otra); los datos van en
 // la dirección. También acepta el secreto de la Estación (para subir desde la Mac).
+import { carpetaDeEncargoDemo } from "@/lib/app-sesion";
 import { contexto } from "@/lib/entorno";
 import { guardarImagen } from "@/lib/imagenes";
 import { puedeSubir } from "@/lib/permiso-subida";
@@ -10,12 +11,15 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const { env, db, bucket } = await contexto();
-  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO);
+  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO, { cuentaDemo: true });
   if (!permiso.ok) return permiso.respuesta;
   if (!bucket) return Response.json({ error: "El almacén no está disponible." }, { status: 503 });
   const parseo = esquemaImagenNueva.safeParse(Object.fromEntries(new URL(req.url).searchParams));
   if (!parseo.success)
     return Response.json({ error: parseo.error.issues[0]?.message ?? "Revisa los datos." }, { status: 400 });
+  // La cuenta del revisor de Apple solo sube a la carpeta de uno de sus propios encargos.
+  if (permiso.app?.tipo === "demo" && !(await carpetaDeEncargoDemo(db, parseo.data.carpeta)))
+    return Response.json({ error: "The demo account can only upload to its own projects." }, { status: 403 });
   const megas = MAX_BYTES_IMAGEN / 1_048_576;
   if (Number(req.headers.get("content-length") ?? "0") > MAX_BYTES_IMAGEN)
     return Response.json({ error: `«${parseo.data.nombre}» pasa de ${megas} MB.` }, { status: 413 });

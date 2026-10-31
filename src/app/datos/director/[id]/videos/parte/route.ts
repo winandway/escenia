@@ -2,7 +2,8 @@
 import { z } from "zod";
 import { videoDelDirector } from "@/lib/director-videos";
 import { contexto } from "@/lib/entorno";
-import { puedeSubir } from "@/lib/permiso-subida";
+import { puedeVerEncargo } from "@/lib/app-sesion";
+import { encargoAjeno, puedeSubir } from "@/lib/permiso-subida";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +17,9 @@ const esquema = z.object({
 
 export async function PUT(req: Request, ctx: RouteContext<"/datos/director/[id]/videos/parte">) {
   const { env, db, bucket } = await contexto();
-  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO);
+  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO, { cuentaDemo: true });
   if (!permiso.ok) return permiso.respuesta;
+  if (!(await puedeVerEncargo(db, permiso.app, Number((await ctx.params).id)))) return encargoAjeno();
   if (!bucket) return Response.json({ error: "El almacén no está disponible." }, { status: 503 });
   const parseo = esquema.safeParse(Object.fromEntries(new URL(req.url).searchParams));
   if (!parseo.success) return Response.json({ error: "Parámetros inválidos." }, { status: 400 });

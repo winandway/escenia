@@ -1,7 +1,8 @@
-// Sirve un archivo del almacén a quien tenga sesión en el panel.
+// Sirve un archivo del almacén a quien tenga sesión en el panel (o en la app de iPhone).
 // Los videos se sirven por rangos (206) para que el reproductor pueda saltar,
 // y con `?descargar=1` bajan como archivo.
 import { cookies } from "next/headers";
+import { sesionDeLaApp } from "@/lib/app-sesion";
 import { contexto } from "@/lib/entorno";
 import { cabecerasDeRango, rangoDesdeCabecera } from "@/lib/rango";
 import { COOKIE_SESION, sesionValida } from "@/lib/sesion";
@@ -15,8 +16,11 @@ const RUTA_VALIDA =
 
 export async function GET(req: Request, ctx: RouteContext<"/datos/archivos/[...clave]">) {
   const { db, bucket } = await contexto();
+  // El panel con su cookie, o la app de iPhone con su token (solo la cuenta de Richard: la del
+  // revisor de Apple no ve archivos del almacén, C-APP-IOS-1).
+  const app = await sesionDeLaApp(db, req.headers.get("authorization"));
   const jar = await cookies();
-  if (!(await sesionValida(db, jar.get(COOKIE_SESION)?.value)))
+  if (app?.tipo !== "richard" && !(await sesionValida(db, jar.get(COOKIE_SESION)?.value)))
     return new Response("No autorizado.", { status: 401 });
   if (!bucket) return new Response("Sin almacén.", { status: 503 });
 

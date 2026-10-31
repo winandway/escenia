@@ -1,6 +1,7 @@
 // Los videos del chat del Director (C-DIRECTOR-3). GET: cómo va cada uno (el chat pregunta hasta que
 // la Mac lo termina de mirar). POST: empieza la subida por partes (paso 1 de 3, como las grabaciones).
 import { z } from "zod";
+import { puedeVerEncargo } from "@/lib/app-sesion";
 import { encargoPorId } from "@/lib/director";
 import {
   claveDeVideoDelEncargo,
@@ -10,7 +11,7 @@ import {
   videosDelEncargo,
 } from "@/lib/director-videos";
 import { contexto } from "@/lib/entorno";
-import { puedeSubir } from "@/lib/permiso-subida";
+import { encargoAjeno, puedeSubir } from "@/lib/permiso-subida";
 import { MAX_BYTES_VIDEO_DIRECTOR } from "@compartido/director";
 import { TAMANO_PARTE } from "@compartido/grabaciones";
 
@@ -34,9 +35,10 @@ async function encargoAbierto(ctx: RouteContext<"/datos/director/[id]/videos">) 
 
 export async function GET(req: Request, ctx: RouteContext<"/datos/director/[id]/videos">) {
   const { env, db, encargo } = await encargoAbierto(ctx);
-  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO);
+  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO, { cuentaDemo: true });
   if (!permiso.ok) return permiso.respuesta;
   if (!encargo) return Response.json({ error: "Ese encargo no existe o está archivado." }, { status: 404 });
+  if (!(await puedeVerEncargo(db, permiso.app, encargo.id))) return encargoAjeno();
   const videos = await videosDelEncargo(db, encargo.id);
   return Response.json({
     videos: videos.map((v) => ({
@@ -51,9 +53,10 @@ export async function GET(req: Request, ctx: RouteContext<"/datos/director/[id]/
 
 export async function POST(req: Request, ctx: RouteContext<"/datos/director/[id]/videos">) {
   const { env, db, bucket, encargo } = await encargoAbierto(ctx);
-  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO);
+  const permiso = await puedeSubir(req, db, env.ESTACION_SECRETO, { cuentaDemo: true });
   if (!permiso.ok) return permiso.respuesta;
   if (!encargo) return Response.json({ error: "Ese encargo no existe o está archivado." }, { status: 404 });
+  if (!(await puedeVerEncargo(db, permiso.app, encargo.id))) return encargoAjeno();
   if (!bucket) return Response.json({ error: "El almacén no está disponible." }, { status: 503 });
   const parseo = esquema.safeParse(await req.json().catch(() => null));
   if (!parseo.success)

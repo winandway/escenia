@@ -1,0 +1,214 @@
+// La app de iPhone (docs/APP-IPHONE.md, C-APP-IOS-1): entra con su token, y la cuenta del revisor de
+// Apple solo ve lo suyo, no gasta y no ve carpetas de clientes. Base SQLite en memoria con el esquema
+// de producción; nada le pega a un servicio de verdad.
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { baseEnMemoria } from "./base-memoria";
+
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
+
+import { encargoParaLaApp, estadoParaLaApp } from "@/lib/app-encargo";
+import {
+  AJUSTE_HUELLA_DEMO,
+  anotarEncargoDemo,
+  aprobarEnDemo,
+  carpetaDeEncargoDemo,
+  crearSesionApp,
+  cuentaDeLaClave,
+  encargosDeLaCuenta,
+  mensajesDemoHoy,
+  puedeVerEncargo,
+  sesionDeLaApp,
+  tokenDeLaApp,
+} from "@/lib/app-sesion";
+import { huellaDeClave } from "@/lib/clave";
+import {
+  anotarMensaje,
+  crearEncargo,
+  encargoPorId,
+  guardarPropuesta,
+  materialDelEncargo,
+} from "@/lib/director";
+import { puedeSubir } from "@/lib/permiso-subida";
+import { NextRequest } from "next/server";
+import { proxy, RUTAS_PUBLICAS } from "@/proxy";
+
+type Base = ReturnType<typeof baseEnMemoria>;
+
+// Valores de mentira, distintos en cada corrida: en el repo no queda nada que parezca una clave.
+const SECRETO = `${crypto.randomUUID()}${crypto.randomUUID()}`;
+const CLAVE_PANEL = `panel-${crypto.randomUUID()}`;
+const CLAVE_DEMO = `demo-${crypto.randomUUID()}`;
+const TEXTO =
+  "¿Se te va la luz y se te para todo? Mira esto. El generador a gasolina de 1200 vatios de Pro In Shop. Con él prendes las luces, el ventilador y la nevera sin miedo. Es fácil de mover y arranca rápido. Escríbenos por Instagram y pídelo hoy mismo.";
+
+const pedido = (token?: string) =>
+  new Request("https://escenia.sitios.dev/datos/director/1", {
+    method: "POST",
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+
+async function conFotos(db: Base, carpetas: string[]) {
+  for (const carpeta of carpetas)
+    await db.ejecutar(
+      "INSERT INTO imagenes (carpeta, nombre, clave, tipo, bytes) VALUES (?, ?, ?, 'imagen', 2000)",
+      [carpeta, `foto-${carpeta}.jpg`, `imagenes/${carpeta}.jpg`],
+    );
+}
+
+describe("la app de iPhone entra con su propio token (C-APP-IOS-1)", () => {
+  let db: Base;
+  let huellaPanel: string;
+  beforeEach(async () => {
+    db = baseEnMemoria();
+    huellaPanel = await huellaDeClave(CLAVE_PANEL);
+    await db.ejecutar("INSERT INTO ajustes (clave, valor) VALUES (?, ?)", [
+      AJUSTE_HUELLA_DEMO,
+      await huellaDeClave(CLAVE_DEMO),
+    ]);
+  });
+
+  it("la contraseña del panel abre la cuenta de Richard; la del revisor, la de demostración; otra, nada", async () => {
+    expect(await cuentaDeLaClave(db, CLAVE_PANEL, huellaPanel)).toBe("richard");
+    expect(await cuentaDeLaClave(db, CLAVE_DEMO, huellaPanel)).toBe("demo");
+    expect(await cuentaDeLaClave(db, "inventada", huellaPanel)).toBeNull();
+    expect(await cuentaDeLaClave(db, CLAVE_PANEL, undefined)).toBeNull();
+  });
+
+  it("el token vale hasta que se cierra o vence, y el secreto de la Estación no pasa por token de la app", async () => {
+    const token = await crearSesionApp(db, "richard");
+    expect(token.startsWith("esc_")).toBe(true);
+    expect(await sesionDeLaApp(db, `Bearer ${token}`)).toMatchObject({ tipo: "richard" });
+    expect(tokenDeLaApp(`Bearer ${SECRETO}`)).toBeNull();
+    expect(await sesionDeLaApp(db, `Bearer esc_${crypto.randomUUID()}`)).toBeNull();
+    await db.ejecutar("UPDATE app_sesiones SET expira_en = datetime('now', '-1 minute')");
+    expect(await sesionDeLaApp(db, `Bearer ${token}`)).toBeNull();
+  });
+
+  it("la cuenta del revisor no entra a lo que gasta (anuncios, grabaciones) y sí al chat del Director", async () => {
+    const richard = await crearSesionApp(db, "richard");
+    const demo = await crearSesionApp(db, "demo");
+    expect(await puedeSubir(pedido(richard), db, SECRETO)).toMatchObject({
+      ok: true,
+      app: { tipo: "richard" },
+    });
+    const bloqueada = await puedeSubir(pedido(demo), db, SECRETO);
+    expect(bloqueada.ok).toBe(false);
+    if (!bloqueada.ok) expect(bloqueada.respuesta.status).toBe(403);
+    expect(await puedeSubir(pedido(demo), db, SECRETO, { cuentaDemo: true })).toMatchObject({
+      ok: true,
+      app: { tipo: "demo" },
+    });
+    const vencida = await puedeSubir(pedido(`esc_${crypto.randomUUID()}`), db, SECRETO);
+    expect(vencida.ok).toBe(false);
+    if (!vencida.ok) expect(vencida.respuesta.status).toBe(401);
+  });
+});
+
+describe("la cuenta del revisor de Apple solo ve lo suyo (C-APP-IOS-1)", () => {
+  let db: Base;
+  beforeEach(() => {
+    db = baseEnMemoria();
+  });
+
+  it("ni la lista ni el encargo de Richard se ven desde la demostración, y al revés la lista no se mezcla", async () => {
+    const deRichard = await crearEncargo(db);
+    const deDemo = await crearEncargo(db);
+    await anotarEncargoDemo(db, deDemo);
+    const demo = { tipo: "demo" as const, token: "x" };
+    expect(await puedeVerEncargo(db, demo, deRichard)).toBe(false);
+    expect(await puedeVerEncargo(db, demo, deDemo)).toBe(true);
+    expect(await puedeVerEncargo(db, { tipo: "richard", token: "x" }, deRichard)).toBe(true);
+    expect((await encargosDeLaCuenta(db, "demo")).map((e) => e.id)).toEqual([deDemo]);
+    expect((await encargosDeLaCuenta(db, "richard")).map((e) => e.id)).toEqual([deRichard]);
+    expect(await carpetaDeEncargoDemo(db, `Encargo ${deDemo}`)).toBe(true);
+    expect(await carpetaDeEncargoDemo(db, `Encargo ${deRichard}`)).toBe(false);
+  });
+
+  it("el Director de la demostración no ve las carpetas de los clientes", async () => {
+    await conFotos(db, ["Pro In Shop", "Maggie"]);
+    const id = await crearEncargo(db);
+    const encargo = await encargoPorId(db, id);
+    if (!encargo) throw new Error("sin encargo");
+    const todas = await materialDelEncargo(db, encargo);
+    expect(todas.carpetas.map((c) => c.carpeta).sort()).toEqual(["Maggie", "Pro In Shop"]);
+    const demo = await materialDelEncargo(db, encargo, [encargo.carpeta, "Maggie"]);
+    expect(demo.carpetas.map((c) => c.carpeta)).toEqual(["Maggie"]);
+  });
+
+  it("aprobar en la demostración no anota ningún anuncio ni trabajo para la Mac: muestra un ejemplo", async () => {
+    await conFotos(db, ["Maggie"]);
+    const id = await crearEncargo(db);
+    await anotarEncargoDemo(db, id);
+    const p = await guardarPropuesta(db, id, {
+      nombre: "Cafetería · prueba",
+      narracion: TEXTO,
+      idioma: "es",
+      voz: "venezolana",
+      carpetas: ["Maggie"],
+      avatar: "foto-Maggie.jpg",
+      instrucciones: "",
+    });
+    if (!p.ok) throw new Error(p.error);
+    await aprobarEnDemo(db, p.id);
+    await aprobarEnDemo(db, p.id); // un doble toque no hace nada más
+    expect((await db.uno<{ n: number }>("SELECT COUNT(*) AS n FROM publicidades"))?.n).toBe(0);
+    expect((await db.uno<{ n: number }>("SELECT COUNT(*) AS n FROM director_trabajos"))?.n).toBe(0);
+    const encargo = await encargoPorId(db, id);
+    if (!encargo) throw new Error("sin encargo");
+    const vista = await encargoParaLaApp(db, encargo);
+    expect(vista.propuestas[0]?.resultado).toMatchObject({
+      estado: "listo",
+      muestra: true,
+      costoUsd: 0,
+      video: "",
+    });
+    expect(vista.propuestas[0]?.persona).toBe("foto-Maggie");
+    expect(vista.mensajes.filter((m) => m.rol === "aviso")).toHaveLength(1);
+    expect(vista.enMarcha).toBe(false);
+  });
+
+  it("una propuesta de Richard no se puede aprobar «en demostración»", async () => {
+    await conFotos(db, ["Maggie"]);
+    const id = await crearEncargo(db);
+    const p = await guardarPropuesta(db, id, {
+      nombre: "Cliente · producto",
+      narracion: TEXTO,
+      idioma: "es",
+      voz: "venezolana",
+      carpetas: ["Maggie"],
+      avatar: "",
+      instrucciones: "",
+    });
+    if (!p.ok) throw new Error(p.error);
+    await expect(aprobarEnDemo(db, p.id)).rejects.toThrow("no existe");
+  });
+
+  it("los mensajes del día de la demostración se cuentan para el tope", async () => {
+    const deDemo = await crearEncargo(db);
+    await anotarEncargoDemo(db, deDemo);
+    const deRichard = await crearEncargo(db);
+    await anotarMensaje(db, deDemo, "richard", "hola");
+    await anotarMensaje(db, deDemo, "director", "hola, ¿qué vendes?");
+    await anotarMensaje(db, deRichard, "richard", "otro");
+    expect(await mensajesDemoHoy(db)).toBe(1);
+  });
+
+  it("los estados de los videos se traducen a cuatro que entiende la app", () => {
+    expect(estadoParaLaApp("subida")).toBe("en-fila");
+    expect(estadoParaLaApp("tomada")).toBe("armando");
+    expect(estadoParaLaApp("lista")).toBe("listo");
+    expect(estadoParaLaApp("error")).toBe("error");
+    expect(estadoParaLaApp("quitada")).toBe("error");
+  });
+});
+
+describe("las páginas que pide Apple se abren sin sesión (C-APP-IOS-1)", () => {
+  it("privacidad y soporte, en inglés y en español, sin mandar a entrar; el panel sigue cerrado", () => {
+    const pedir = (ruta: string) => proxy(new NextRequest(`https://escenia.sitios.dev${ruta}`));
+    expect(RUTAS_PUBLICAS).toEqual(["/privacy", "/es/privacy", "/support", "/es/support"]);
+    for (const ruta of [...RUTAS_PUBLICAS, "/muestras/escenia-muestra.mp4"])
+      expect(pedir(ruta).headers.get("location"), ruta).toBeNull();
+    for (const ruta of ["/director", "/es", "/privacy/otra"])
+      expect(pedir(ruta).headers.get("location"), ruta).toContain("/entrar");
+  });
+});

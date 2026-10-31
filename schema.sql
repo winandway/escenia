@@ -345,3 +345,21 @@ CREATE TABLE IF NOT EXISTS director_trabajos (
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS director_trabajos_por_estado ON director_trabajos(estado, id);
+
+-- La app de iPhone (docs/APP-IPHONE.md, C-APP-IOS-1). Entra con la contraseña del panel y recibe un
+-- token propio (viaja en «Authorization: Bearer», no en cookie); aquí solo queda su huella. «demo» es la
+-- cuenta del revisor de Apple: solo ve sus propios encargos y aprobar no gasta (muestra un ejemplo).
+CREATE TABLE IF NOT EXISTS app_sesiones (
+  id TEXT PRIMARY KEY,                       -- huella SHA-256 del token
+  tipo TEXT NOT NULL CHECK (tipo IN ('richard','demo')),
+  creada_en TEXT NOT NULL DEFAULT (datetime('now')),
+  expira_en TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS app_encargos_demo (
+  encargo_id INTEGER PRIMARY KEY REFERENCES director_encargos(id),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS app_demo_resultados (
+  propuesta_id INTEGER PRIMARY KEY REFERENCES director_propuestas(id),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);

@@ -34,5 +34,7 @@ export default defineConfig([
     "estacion/cache/**",
     "out-deploy/**",
     ".dist-worker/**",
+    // La app de iPhone (Expo) tiene su propio lint y sus tipos dentro de movil/.
+    "movil/**",
   ]),
 ]);

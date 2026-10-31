@@ -14,6 +14,12 @@ const rutas = [
   { ruta: "/iconos/icono-192.png", esperado: [200] },
   { ruta: "/iconos/icono-512.png", esperado: [200] },
   { ruta: "/datos/estacion/siguiente", metodo: "POST", esperado: [401] },
+  { ruta: "/privacy", esperado: [200] },
+  { ruta: "/es/privacy", esperado: [200] },
+  { ruta: "/support", esperado: [200] },
+  { ruta: "/es/support", esperado: [200] },
+  { ruta: "/datos/app/encargos", esperado: [401] },
+  { ruta: "/muestras/escenia-muestra.mp4", esperado: [200] },
 ];
 
 let fallos = 0;

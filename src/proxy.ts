@@ -5,6 +5,8 @@ import { COOKIE_SESION } from "@/lib/sesion";
 
 // Lo que el teléfono pide SIN sesión para instalar la app (C-APP-1).
 export const RUTAS_DE_LA_APP = ["/manifest.webmanifest", "/sw.js", "/sin-conexion"];
+// Las páginas públicas que pide Apple para la app de iPhone (C-APP-IOS-1): privacidad y soporte.
+export const RUTAS_PUBLICAS = ["/privacy", "/es/privacy", "/support", "/es/support"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,7 +14,9 @@ export function proxy(request: NextRequest) {
     pathname === "/entrar" ||
     pathname.startsWith("/datos/") ||
     pathname.startsWith("/iconos/") ||
-    RUTAS_DE_LA_APP.includes(pathname);
+    pathname.startsWith("/muestras/") ||
+    RUTAS_DE_LA_APP.includes(pathname) ||
+    RUTAS_PUBLICAS.includes(pathname);
   if (publico) return NextResponse.next();
   if (!request.cookies.get(COOKIE_SESION)?.value) {
     const destino = new URL("/entrar", request.url);

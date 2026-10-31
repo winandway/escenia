@@ -341,14 +341,20 @@ export async function resultadoDePropuesta(
 }
 
 /** Las carpetas (las más recientes primero), sus fotos, los videos del chat y cómo van las propuestas. */
-export async function materialDelEncargo(db: BaseDatos, encargo: FilaEncargo): Promise<MaterialDelDirector> {
-  const [carpetas, imagenes, propuestas, videos] = await Promise.all([
+export async function materialDelEncargo(
+  db: BaseDatos,
+  encargo: FilaEncargo,
+  carpetasPermitidas?: string[],
+): Promise<MaterialDelDirector> {
+  const [todas, imagenes, propuestas, videos] = await Promise.all([
     carpetasDeImagenes(db),
     imagenesActivas(db),
     propuestasDelEncargo(db, encargo.id),
     videosDelEncargo(db, encargo.id),
   ]);
   const resultados = await Promise.all(propuestas.map((p) => resultadoDePropuesta(db, p)));
+  // La cuenta del revisor de Apple (C-APP-IOS-1) solo ve su carpeta y la de Maggie: nada de clientes.
+  const carpetas = carpetasPermitidas ? todas.filter((c) => carpetasPermitidas.includes(c.carpeta)) : todas;
   return {
     carpetaDelEncargo: encargo.carpeta,
     carpetas: carpetas.map((c) => ({
@@ -412,11 +418,12 @@ async function verImagen(
   db: BaseDatos,
   uso: Anthropic.ToolUseBlock,
   almacen: AlmacenDeLectura | null,
+  carpetasPermitidas?: string[],
 ): Promise<Resultado> {
   const parseo = numeroDe(uso.input);
   if (!parseo.success) return fallo(uso.id, "Falta el número de la imagen (#).");
   const fila = await imagenPorId(db, parseo.data.id);
-  if (!fila || fila.tipo !== "imagen")
+  if (!fila || fila.tipo !== "imagen" || (carpetasPermitidas && !carpetasPermitidas.includes(fila.carpeta)))
     return fallo(uso.id, `No hay una foto con el número ${parseo.data.id}.`);
   const tipo = TIPO_PARA_MIRAR[fila.clave.split(".").pop()?.toLowerCase() ?? ""];
   if (!tipo || !almacen)
@@ -494,8 +501,9 @@ async function ejecutarHerramienta(
   encargoId: number,
   uso: Anthropic.ToolUseBlock,
   almacen: AlmacenDeLectura | null,
+  carpetasPermitidas?: string[],
 ): Promise<Resultado> {
-  if (uso.name === "ver_imagen") return verImagen(db, uso, almacen);
+  if (uso.name === "ver_imagen") return verImagen(db, uso, almacen, carpetasPermitidas);
   if (uso.name === "ver_video") return verVideo(db, encargoId, uso, almacen);
   if (uso.name === "proponer_anuncio") {
     const r = await guardarPropuesta(db, encargoId, uso.input);
@@ -519,6 +527,8 @@ export type OpcionesDirector = {
   apiKey: string;
   almacen: AlmacenDeLectura | null;
   fetch?: typeof fetch;
+  /** Solo estas carpetas de Imágenes (la cuenta de demostración de la app); sin esto, todas. */
+  carpetasPermitidas?: string[];
 };
 
 /**
@@ -538,7 +548,7 @@ export async function responderDirector(
   if (!encargo) throw new Error("Ese encargo no existe.");
   const historial = historialParaLaIA(await mensajesDelEncargo(db, encargoId));
   if (historial.at(-1)?.role !== "user") throw new Error("No hay ningún mensaje nuevo que responder.");
-  const material = await materialDelEncargo(db, encargo);
+  const material = await materialDelEncargo(db, encargo, opciones.carpetasPermitidas);
   const cliente = new Anthropic({ apiKey: opciones.apiKey, fetch: opciones.fetch, maxRetries: 2 });
   const conversacion: Anthropic.MessageParam[] = [...historial];
   const textos: string[] = [];
@@ -572,7 +582,13 @@ export async function responderDirector(
       const resultados: Anthropic.ToolResultBlockParam[] = [];
       for (const b of r.content) {
         if (b.type !== "tool_use") continue;
-        const res = await ejecutarHerramienta(db, encargoId, b, opciones.almacen);
+        const res = await ejecutarHerramienta(
+          db,
+          encargoId,
+          b,
+          opciones.almacen,
+          opciones.carpetasPermitidas,
+        );
         if (res.propuestaId) {
           propuestaId = res.propuestaId;
           // Lo que la IA ve en la vuelta siguiente ya incluye su tarjeta.
