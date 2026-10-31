@@ -75,3 +75,21 @@ export function tituloDelProyecto(titulo: string, idioma: Idioma): string {
   if (!n) return titulo;
   return idioma === "en" ? `Project ${n}` : `Proyecto ${n}`;
 }
+
+/** La voz como la entiende el público (el panel manda su nombre interno). */
+export function nombreDeVoz(voz: string, idioma: Idioma): string {
+  const nombres: Record<string, [string, string]> = {
+    richard: ["Male voice", "Voz de hombre"],
+    femenina: ["Female voice", "Voz de mujer"],
+    venezolana: ["Latina female voice", "Voz de mujer latina"],
+  };
+  const par = nombres[voz];
+  return par ? (idioma === "en" ? par[0] : par[1]) : voz;
+}
+
+/** Quién lo presenta: «Maggie» para cualquiera de sus fotos; si no, el nombre de la foto, legible. */
+export function nombreDePersona(persona: string): string {
+  if (/maggie/i.test(persona)) return "Maggie";
+  const limpio = persona.replace(/[-_]+/g, " ").trim();
+  return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+}

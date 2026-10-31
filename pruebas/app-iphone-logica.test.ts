@@ -16,6 +16,8 @@ import {
   nombreDeArchivo,
   notaDeFotos,
   notaDeVideos,
+  nombreDePersona,
+  nombreDeVoz,
   tituloDelProyecto,
   trozos,
 } from "../movil/src/logica";
@@ -63,6 +65,13 @@ describe("la app dice lo mismo que el panel (C-APP-IOS-2)", () => {
     expect(tituloDelProyecto("Encargo 7", "en")).toBe("Project 7");
     expect(tituloDelProyecto("Encargo 7", "es")).toBe("Proyecto 7");
     expect(tituloDelProyecto("Coffee Shop · bread", "es")).toBe("Coffee Shop · bread");
+  });
+
+  it("la tarjeta no muestra nombres internos: la voz y Maggie salen como los entiende el público", () => {
+    expect(nombreDeVoz("femenina", "en")).toBe("Female voice");
+    expect(nombreDeVoz("venezolana", "es")).toBe("Voz de mujer latina");
+    expect(nombreDePersona("maggie-blusa-presenta")).toBe("Maggie");
+    expect(nombreDePersona("asesora_frente-logo")).toBe("Asesora frente logo");
   });
 
   it("el borrador es de su cuenta y de su formulario", () => {

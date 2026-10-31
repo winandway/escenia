@@ -3,7 +3,7 @@
 // precio: es el único momento en que algo se hace y se cobra (C-DIRECTOR-1).
 import { Alert, Pressable, Text, View } from "react-native";
 import { useEstado } from "./estado";
-import { dinero, reloj } from "./logica";
+import { dinero, nombreDePersona, nombreDeVoz, reloj } from "./logica";
 import { C } from "./tema";
 import type { PropuestaApp } from "./tipos";
 import { VideoTerminado } from "./VideoTerminado";
@@ -22,7 +22,9 @@ export function Tarjeta({
   const { t, idioma } = useEstado();
   const tipo =
     p.tipo === "anuncio"
-      ? t("tarjeta_anuncio")
+      ? p.persona
+        ? t("tarjeta_anuncio_persona")
+        : t("tarjeta_anuncio")
       : p.tipo === "demostracion"
         ? t("tarjeta_demostracion")
         : t("tarjeta_locucion");
@@ -55,8 +57,8 @@ export function Tarjeta({
       </View>
       <Text style={{ color: C.texto, fontSize: 18, fontWeight: "800", marginTop: 6 }}>{p.nombre}</Text>
       <Text style={{ color: C.suave, marginTop: 4 }}>
-        ~{p.segundos} {t("tarjeta_segundos")} · {t("tarjeta_voz")}: {p.voz} ·{" "}
-        {p.persona ? `${t("tarjeta_presenta")}: ${p.persona}` : t("tarjeta_sin_persona")}
+        ~{p.segundos} {t("tarjeta_segundos")} · {nombreDeVoz(p.voz, idioma)} ·{" "}
+        {p.persona ? `${t("tarjeta_presenta")}: ${nombreDePersona(p.persona)}` : t("tarjeta_sin_persona")}
       </Text>
       <View style={{ marginTop: 10, gap: 6 }}>
         {p.frases.map((f, i) => (
