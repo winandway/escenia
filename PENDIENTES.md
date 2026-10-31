@@ -132,3 +132,5 @@
 - [x] Fase 3 (parte): textos de YouTube automáticos al terminar cada video: título, títulos de shorts, descripción y 30 palabras clave, con copiar (27 sep 2026, C-PUBLICACION-1).
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)
+
+- [ ] (IA) Cuando Apple apruebe la prueba pública de la compilación 3, correr `node scripts/tiendas/testflight.mjs` para pedir la revisión de prueba de la compilación 4 (la que trae los avisos al iPhone). El grupo interno ya la tiene.
