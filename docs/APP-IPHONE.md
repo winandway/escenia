@@ -13,10 +13,12 @@ de iPhone llamada **Escenia: AI Video Ads** (en el teléfono sale como «Escenia
    se guarda en el teléfono.
 2. **Tus proyectos**: la lista de encargos, «Proyecto nuevo», y en el menú de tres puntos «Archivar» y
    «Cerrar sesión».
-3. **El chat**: los atajos (el primero, **«Anuncio con Maggie hablando»**), fotos o video desde la galería
-   o la cámara (los videos suben por partes), y la **tarjeta** con el precio arriba, el texto, la voz y
-   quién lo presenta. «Aprobar» pide confirmación con el precio. «Cambiar algo» lleva al cuadro de
-   escribir.
+3. **El chat**, al estilo de ChatGPT: sin mensajes, cuatro sugerencias (la primera, **«Anuncio con
+   Maggie»**); abajo, la barra con «+» (fotos o video de la galería o la cámara; los videos suben por
+   partes y se ven como miniaturas con su avance) y la flecha para mandar. El Director pide lo que falta
+   (logo, fotos del producto) antes de la tarjeta (C-DIRECTOR-4). La **tarjeta** trae el precio arriba,
+   «lo que sale en el video» (la foto de la presentadora, el logo o «sin logo», las fotos del producto),
+   el texto y la voz. «Aprobar» pide confirmación con el precio. «Cambiar algo» lleva a la barra.
 4. **El video terminado** aparece en la misma tarjeta: se ve ahí, se **guarda en Fotos** o se **comparte**.
 
 Inglés primero (para EE. UU.) y español con el selector estilo Amazon. El Director contesta en el idioma

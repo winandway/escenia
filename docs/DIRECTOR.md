@@ -31,6 +31,13 @@ aparece en la misma tarjeta, con el botón de descargar. El encargo también se 
 Lo que se escribe no se pierde: el cuadro se guarda solo y vuelve si se cierra la ventana. Si la IA no
 responde, el mensaje queda guardado y sale el botón «Pedirle que responda».
 
+## Antes de la tarjeta: el Director pide lo que falta (C-DIRECTOR-4)
+
+Un anuncio con fotos no se puede proponer sin el logo y sin fotos del producto: el Director los pide en
+un solo mensaje («súbelo con el botón +»). Si el cliente no tiene logo, o quiere el anuncio solo con
+Maggie, lo dice y se hace así. La tarjeta muestra con qué foto de la presentadora, con qué logo y con qué
+fotos se va a hacer el video.
+
 ## Lo que sabe hacer
 
 1. **Anuncio con fotos**: el anuncio vertical de 12 a 45 segundos de Publicidad (fotos en tarjetas,

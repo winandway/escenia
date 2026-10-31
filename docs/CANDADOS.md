@@ -1877,3 +1877,22 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   cuenta de demostración recibiera avisos; comprobado el 31 oct 2026). Contra Apple, con una dirección
   inventada, la respuesta es «BadDeviceToken» (la firma pasa; con una firma mala sería otra).
 - **Qué NO tocar:** no subir la llave de avisos a la nube; no poner `mode: development`.
+
+## C-DIRECTOR-4 — La tarjeta del anuncio sale completa o no sale, y muestra lo que va en el video (31 oct 2026)
+
+- **Qué se rompió:** Richard probó la app con un anuncio de QRBott: la tarjeta salió, la aprobó, y la Mac
+  falló después con «No encontré el logo». No se gastó nada, pero el Director no había orquestado lo que
+  faltaba, y la tarjeta no mostraba con qué foto ni con qué logo se iba a hacer.
+- **Qué se hizo:** `faltaEnElAnuncio` (`compartido/director.ts`) no deja guardar la tarjeta si falta el
+  logo o las fotos del producto: el error vuelve al Director, que lo pide en UN mensaje (botón +). Si el
+  cliente dice que no tiene logo o que va solo con la presentadora, el Director propone con `sin_logo` o
+  `solo_presentadora` (campos nuevos de `proponer_anuncio`). Las fotos de la carpeta «Maggie» nunca
+  cuentan como fotos del producto ni como logo. La Mac arma sin logo cuando no hay (la composición ya lo
+  soportaba) y no usa las otras poses de Maggie como fotos del producto. La tarjeta de la app muestra «lo
+  que sale en el video»: la foto de la presentadora, el logo o «sin logo», y las fotos del producto
+  (`/datos/app/imagenes/<id>`, con las mismas reglas de cuenta).
+- **Cómo se comprueba:** `npx vitest run pruebas/director-material.test.ts` (en rojo si se quita la
+  exigencia del logo; comprobado el 31 oct 2026) y `pruebas/app-iphone.test.ts` (el material de la
+  tarjeta). En vivo: «anuncio con Maggie para mi app» → el Director pide logo, capturas y nombre, sin
+  tarjeta; «sin logo y solo con Maggie» → tarjeta con Maggie, «sin logo» y «solo la presentadora».
+- **Qué NO tocar:** no volver a dejar que la tarjeta salga sin revisar el material.
