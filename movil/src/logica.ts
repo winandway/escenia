@@ -68,3 +68,10 @@ export function trozos(bytes: number, tamano: number): [number, number][] {
   for (let desde = 0; desde < bytes; desde += tamano) lista.push([desde, Math.min(tamano, bytes - desde)]);
   return lista;
 }
+
+/** El nombre por defecto de un proyecto («Encargo 7», como lo crea el panel), en el idioma de la app. */
+export function tituloDelProyecto(titulo: string, idioma: Idioma): string {
+  const n = /^Encargo (\d+)$/.exec(titulo.trim())?.[1];
+  if (!n) return titulo;
+  return idioma === "en" ? `Project ${n}` : `Proyecto ${n}`;
+}

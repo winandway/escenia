@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorDeApi, pedir } from "../../src/api";
 import { useEstado } from "../../src/estado";
-import { mensajeConNotas, nombreDeArchivo } from "../../src/logica";
+import { mensajeConNotas, nombreDeArchivo, tituloDelProyecto } from "../../src/logica";
 import { subirFoto, subirVideo } from "../../src/subir";
 import { Tarjeta } from "../../src/Tarjeta";
 import { C } from "../../src/tema";
@@ -44,7 +44,7 @@ const ATAJOS: [LlaveTexto, LlaveTexto][] = [
 export default function Proyecto() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const encargoId = Number(id);
-  const { t, cuenta } = useEstado();
+  const { t, cuenta, idioma } = useEstado();
   const borrador = useBorrador(`chat-${encargoId}`, cuenta ?? "");
   const [encargo, setEncargo] = useState<EncargoApp | null>(null);
   const [subidas, setSubidas] = useState<Subida[]>([]);
@@ -195,7 +195,12 @@ export default function Proyecto() {
 
   return (
     <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: C.fondo }}>
-      <Stack.Screen options={{ title: encargo?.titulo ?? "", headerBackTitle: t("volver") }} />
+      <Stack.Screen
+        options={{
+          title: encargo ? tituloDelProyecto(encargo.titulo, idioma) : "",
+          headerBackTitle: t("volver"),
+        }}
+      />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}

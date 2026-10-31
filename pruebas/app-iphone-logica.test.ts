@@ -16,6 +16,7 @@ import {
   nombreDeArchivo,
   notaDeFotos,
   notaDeVideos,
+  tituloDelProyecto,
   trozos,
 } from "../movil/src/logica";
 import { TEXTOS } from "../movil/src/textos";
@@ -56,6 +57,12 @@ describe("la app dice lo mismo que el panel (C-APP-IOS-2)", () => {
     expect(nombreDeArchivo("sin-extension", "foto", 2)).toBe("foto-2.jpg");
     expect(extensionDeFoto("IMG_0001.HEIC")).toBeNull();
     expect(extensionDeFoto("logo.PNG")).toBe("png");
+  });
+
+  it("el nombre por defecto del proyecto sale en el idioma de la app; el que puso el Director, tal cual", () => {
+    expect(tituloDelProyecto("Encargo 7", "en")).toBe("Project 7");
+    expect(tituloDelProyecto("Encargo 7", "es")).toBe("Proyecto 7");
+    expect(tituloDelProyecto("Coffee Shop · bread", "es")).toBe("Coffee Shop · bread");
   });
 
   it("el borrador es de su cuenta y de su formulario", () => {

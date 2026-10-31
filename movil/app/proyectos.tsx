@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorDeApi, pedir } from "../src/api";
 import { useEstado } from "../src/estado";
-import { dinero } from "../src/logica";
+import { dinero, tituloDelProyecto } from "../src/logica";
 import { SelectorIdioma } from "../src/SelectorIdioma";
 import { C } from "../src/tema";
 
@@ -82,7 +82,7 @@ export default function Proyectos() {
   }
 
   function archivar(p: Proyecto) {
-    Alert.alert(p.titulo, t("proyectos_archivar_pregunta"), [
+    Alert.alert(tituloDelProyecto(p.titulo, idioma), t("proyectos_archivar_pregunta"), [
       { text: t("proyectos_cancelar"), style: "cancel" },
       {
         text: t("proyectos_archivar"),
@@ -160,7 +160,7 @@ export default function Proyectos() {
             >
               <View style={{ flex: 1 }}>
                 <Text style={{ color: C.texto, fontSize: 17, fontWeight: "700" }} numberOfLines={1}>
-                  {item.titulo}
+                  {tituloDelProyecto(item.titulo, idioma)}
                 </Text>
                 {item.ultimo ? (
                   <Text style={{ color: C.suave, marginTop: 4 }} numberOfLines={2}>
