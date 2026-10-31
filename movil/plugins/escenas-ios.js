@@ -33,7 +33,6 @@ function escenasIos(config) {
     (c) => {
       const nombre = IOSConfig.XcodeUtils.getProjectName(c.modRequest.projectRoot);
       // La ruta sale del propio proyecto de Expo, no de una entrada externa.
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       fs.writeFileSync(
         path.join(c.modRequest.platformProjectRoot, nombre, 'SceneDelegate.swift'),
         ESCENA,
