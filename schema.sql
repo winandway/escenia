@@ -363,3 +363,13 @@ CREATE TABLE IF NOT EXISTS app_demo_resultados (
   propuesta_id INTEGER PRIMARY KEY REFERENCES director_propuestas(id),
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Los iPhone que reciben avisos (docs/APP-IPHONE.md, C-APP-IOS-4): la dirección de avisos de Apple de
+-- cada teléfono con la app abierta en la cuenta de Richard, y su idioma. La Mac los avisa al entregar.
+CREATE TABLE IF NOT EXISTS app_avisos (
+  token TEXT PRIMARY KEY,
+  cuenta TEXT NOT NULL CHECK (cuenta IN ('richard','demo')),
+  idioma TEXT NOT NULL DEFAULT 'en' CHECK (idioma IN ('en','es')),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
