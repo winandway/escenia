@@ -163,7 +163,10 @@ describe("la cuenta del revisor de Apple solo ve lo suyo (C-APP-IOS-1)", () => {
       video: "",
     });
     expect(vista.propuestas[0]?.persona).toBe("foto-Maggie");
-    expect(vista.mensajes.filter((m) => m.rol === "aviso")).toHaveLength(1);
+    const avisos = vista.mensajes.filter((m) => m.rol === "aviso");
+    expect(avisos).toHaveLength(1);
+    // Sin mensajes en inglés, el aviso sale en español.
+    expect(avisos[0]?.texto).toMatch(/^Cuenta de demostración/);
     expect(vista.enMarcha).toBe(false);
   });
 

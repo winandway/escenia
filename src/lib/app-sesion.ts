@@ -4,6 +4,7 @@
 // revisor de Apple: solo ve sus propios encargos, tiene tope de mensajes y aprobar no gasta.
 import type { BaseDatos } from "./db";
 import { b64url, claveCorrecta, sha256Hex } from "./clave";
+import { idiomaDeEscritura } from "./director-prompt";
 import { aSqlite } from "./sesion";
 
 export type TipoSesionApp = "richard" | "demo";
@@ -137,6 +138,11 @@ export async function mensajesDemoHoy(db: BaseDatos): Promise<number> {
  * Aprobar en la cuenta de demostración: la tarjeta queda aprobada y la app muestra un video de ejemplo
  * que trae consigo. No se anota ningún anuncio ni trabajo para la Mac: no se gasta nada.
  */
+export const AVISO_DEMO = {
+  en: "Demo account: approving here doesn't render a new video or charge anything. You'll see a finished sample video instead.",
+  es: "Cuenta de demostración: aprobar aquí no arma un video nuevo ni cobra nada. Verás un video de ejemplo terminado.",
+} as const;
+
 export async function aprobarEnDemo(db: BaseDatos, propuestaId: number): Promise<{ encargoId: number }> {
   const p = await db.uno<{ encargo_id: number; estado: string }>(
     "SELECT encargo_id, estado FROM director_propuestas WHERE id = ?",
@@ -151,11 +157,16 @@ export async function aprobarEnDemo(db: BaseDatos, propuestaId: number): Promise
       [propuestaId],
     );
     await db.ejecutar("INSERT OR IGNORE INTO app_demo_resultados (propuesta_id) VALUES (?)", [propuestaId]);
+    // El aviso va en el idioma de la conversación (el de lo último que escribió quien prueba).
+    const ultimo = await db.uno<{ texto: string }>(
+      "SELECT texto FROM director_mensajes WHERE encargo_id = ? AND rol = 'richard' ORDER BY id DESC LIMIT 1",
+      [p.encargo_id],
+    );
     await db.ejecutar(
       "INSERT INTO director_mensajes (encargo_id, rol, texto, propuesta_id) VALUES (?, 'aviso', ?, ?)",
       [
         p.encargo_id,
-        "Demo account: approving here doesn't render a new video or charge anything. You'll see a finished sample video instead.",
+        idiomaDeEscritura(ultimo?.texto ?? "") === "en" ? AVISO_DEMO.en : AVISO_DEMO.es,
         propuestaId,
       ],
     );
