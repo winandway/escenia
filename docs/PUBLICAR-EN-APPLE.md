@@ -6,17 +6,17 @@
 
 ## Datos fijos
 
-| Qué                                  | Valor                                                                                   |
-| ------------------------------------ | --------------------------------------------------------------------------------------- |
-| App en App Store Connect             | «Escenia: AI Video Ads», número `6829275493`                                            |
-| Identificador (Bundle ID)            | `com.windoce.escenia` (portal: `6DGG7K5SLY`)                                            |
-| Proyecto de Expo                     | `@windoce-llc/escenia` (`63919fcd-54ff-48bd-800c-9d9110b71cd8`)                         |
-| Equipo de Apple                      | Windoce LLC, `7KM9P6R682`                                                               |
-| Llave de la API de App Store Connect | `~/.config/motor-escenia/apple-asc/` (copiada de la de la cuenta)                       |
-| Llave de avisos (APNs)               | `~/.config/motor-escenia/apple-apns/` (todavía no se usa)                               |
-| Token de Expo                        | `~/.config/motor-escenia/expo-token`                                                    |
-| Contraseña del revisor de Apple      | `~/.config/motor-escenia/revisor-apple` (solo letras y números)                         |
-| Perfil de firma de la Mac            | «Escenia App Store (Mac)», con el certificado de distribución que ya está en el llavero |
+| Qué                                  | Valor                                                                             |
+| ------------------------------------ | --------------------------------------------------------------------------------- |
+| App en App Store Connect             | «Escenia: AI Video Ads», número `6829275493`                                      |
+| Identificador (Bundle ID)            | `com.windoce.escenia` (portal: `6DGG7K5SLY`)                                      |
+| Proyecto de Expo                     | `@windoce-llc/escenia` (`63919fcd-54ff-48bd-800c-9d9110b71cd8`)                   |
+| Equipo de Apple                      | Windoce LLC, `7KM9P6R682`                                                         |
+| Llave de la API de App Store Connect | `~/.config/motor-escenia/apple-asc/` (copiada de la de la cuenta)                 |
+| Llave de avisos (APNs)               | `~/.config/motor-escenia/apple-apns/` (todavía no se usa)                         |
+| Token de Expo                        | `~/.config/motor-escenia/expo-token`                                              |
+| Contraseña del revisor de Apple      | `~/.config/motor-escenia/revisor-apple` (solo letras y números)                   |
+| Certificado y perfil de firma        | Los que guarda Expo para esta app (certificado `88666LUM6K`, perfil `RUNFCKKDKW`) |
 
 Nada de esto entra al repositorio.
 
@@ -25,6 +25,7 @@ Nada de esto entra al repositorio.
 | Guion                       | Qué hace                                                                            |
 | --------------------------- | ----------------------------------------------------------------------------------- |
 | `asc.mjs`                   | La conexión con la API de App Store Connect (la usan todos).                        |
+| `compilar-ios-mac.mjs`      | Compila en la Mac y envía, sin gastar compilaciones de Expo (el camino de hoy).     |
 | `compilar-ios.mjs`          | Compila en la nube de Expo y envía. **Gasta compilaciones de Expo** (ver abajo).    |
 | `estado-ios.mjs`            | La verdad de Apple: cada subida (`COMPLETE`/`FAILED`) y cada compilación (`VALID`). |
 | `fichas-app-store.mjs`      | Ficha en inglés y español, categoría, edad, revisor, derechos de contenido.         |
@@ -34,34 +35,33 @@ Nada de esto entra al repositorio.
 | `enviar-revision-ios.mjs`   | Adjunta la compilación a la versión y la manda a revisión.                          |
 | `clave-revisor.ts`          | Crea (o cambia con `--nueva`) la contraseña del revisor y carga su huella.          |
 
-## Cómo se compila HOY: en la Mac, firmado a mano
+## Cómo se compila HOY: en la Mac, con un comando
 
 La cuenta gratuita de Expo de Windoce se quedó sin compilaciones del mes (las usaron las apps de Divoox),
-y las dos salidas automáticas de Xcode se trabaron. Lo que funcionó:
+así que se compila en la Mac, gratis:
 
-1. `cd movil && npx expo prebuild --platform ios --clean` (aplica el complemento de escenas).
-2. Subir el número de compilación en `movil/ios/Escenia/Info.plist` (`CFBundleVersion`): uno más que el
-   último que muestre `estado-ios.mjs`.
-3. Compilar firmado a mano con el perfil de la Mac:
-   `xcodebuild -workspace movil/ios/Escenia.xcworkspace -scheme Escenia -configuration Release
--destination generic/platform=iOS -archivePath <carpeta>/Escenia.xcarchive archive
-DEVELOPMENT_TEAM=7KM9P6R682 CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Distribution"
-PROVISIONING_PROFILE_SPECIFIER="Escenia App Store (Mac)"`
-4. Exportar el IPA con `xcodebuild -exportArchive` y un ExportOptions con `method` app-store-connect,
-   `destination` export, `signingStyle` manual y el perfil de arriba.
-5. Enviarlo con Expo (enviar NO gasta compilaciones): la llave en `movil/eas.json` solo durante el envío
-   (como hace `compilar-ios.mjs`) y `npx eas-cli submit --platform ios --path <IPA> --non-interactive`.
-6. `node scripts/tiendas/estado-ios.mjs` hasta ver la compilación `VALID`.
+```bash
+cd /Users/windocellc/Motor-Escenia && node scripts/tiendas/compilar-ios-mac.mjs
+```
 
-Cuando Expo tenga compilaciones otra vez (el mes nuevo o un plan pago), `compilar-ios.mjs` hace todo de una.
+El guion baja de Expo el certificado y el perfil de la App Store de esta app (los mismos que usa la nube),
+los pone en un llavero aparte con su propia contraseña (así la firma no abre ninguna ventana pidiendo la
+contraseña de la Mac), regenera el proyecto nativo con el complemento de escenas, pone el número de
+compilación siguiente al último de Apple, compila, exporta el IPA y lo envía con `eas submit` (enviar NO
+gasta compilaciones). Al final deja la lista de llaveros como estaba y borra el llavero aparte. Después:
+`node scripts/tiendas/estado-ios.mjs` hasta ver la compilación `VALID`.
+
+Cuando Expo tenga compilaciones otra vez (el mes nuevo o un plan pago), `compilar-ios.mjs` lo hace en la nube.
 
 ## Trampas que ya costaron horas aquí
 
 1. **iOS 27 cierra la app al abrir** si no adopta escenas: el complemento `movil/plugins/escenas-ios.js`
    (C-APP-IOS-3). La compilación 1 tenía ese fallo y quedó retirada.
-2. **Dos certificados con el mismo nombre** («Apple Distribution: Windoce LLC»): el del llavero de la Mac
-   (de otro proyecto) y el que guarda Expo. Por eso la compilación local de Expo falla al firmar y se usa
-   el perfil propio de la Mac. No se borra ninguno: los usan otras apps de la cuenta.
+2. **El certificado del llavero de la Mac es de otro proyecto** («Apple Distribution: Windoce LLC»): la
+   compilación local de Expo lo agarra por el nombre y falla al firmar, y usarlo abre una ventana de macOS
+   que pide la contraseña de la Mac (la firma se queda esperando). Por eso el guion usa el certificado de
+   Expo en un llavero aparte. No se borra ningún certificado: los usan otras apps de la cuenta. (Quedó un
+   perfil «Escenia App Store (Mac)» de ese intento; no se usa.)
 3. **Firma automática de Xcode con la llave**: pide un perfil de desarrollo y el equipo no tiene iPhones
    registrados; y la subida directa de Xcode se queda colgada en «Auth wants us to retry». No se usa.
 4. **El teclado del simulador está en español**: el guion de una contraseña se volvía apóstrofo. Por eso la
