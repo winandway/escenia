@@ -74,6 +74,12 @@
           "isAccessMediaLocationEnabled": false
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "mode": "production"
+        }
+      ],
       "./plugins/escenas-ios"
     ],
     "extra": {

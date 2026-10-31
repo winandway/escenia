@@ -4,6 +4,7 @@
 // 2) ARMAR lo que Richard aprobó con el botón: la prueba en vivo (con los mismos pasos que el anuncio del
 //    agua) o la locución (con los mismos que la de los quince años), y entregarlo al chat.
 // Cada gasto se anota en el panel en el momento en que se hace.
+import { avisarVideoListo } from "./avisos";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, stat } from "node:fs/promises";
@@ -306,6 +307,9 @@ export async function atenderTrabajoDelDirector(): Promise<boolean> {
     await avisar("subiendo el video al chat");
     await panel.entregarTrabajoDelDirector(t.id, r.salida, r.duracionSeg);
     console.log(`[${hora()}] Director: trabajo #${t.id} listo, ${r.duracionSeg.toFixed(1)} s.`);
+    // El aviso al iPhone (C-APP-IOS-4): si falla, la entrega ya quedó hecha.
+    const avisados = await avisarVideoListo({ trabajo: t.id });
+    if (avisados) console.log(`[${hora()}] Director: aviso al iPhone (${avisados}).`);
   } catch (e) {
     const msj = e instanceof Error ? e.message : String(e);
     console.error(`[${hora()}] Falló el trabajo #${t.id} del Director:`, msj);

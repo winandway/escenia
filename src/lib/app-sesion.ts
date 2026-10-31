@@ -192,3 +192,30 @@ export const ipDelPedido = (req: Request) =>
   req.headers.get("cf-connecting-ip") ??
   req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
   "desconocida";
+
+// ——— Los avisos al iPhone (C-APP-IOS-4) ———
+
+/** La dirección de avisos de Apple de un iPhone: 64 caracteres hexadecimales (a veces más). */
+export const esTokenDeAvisos = (t: string) => /^[0-9a-f]{64,200}$/i.test(t);
+
+export async function guardarTokenDeAvisos(
+  db: BaseDatos,
+  token: string,
+  cuenta: TipoSesionApp,
+  idioma: "en" | "es",
+): Promise<void> {
+  await db.ejecutar(
+    `INSERT INTO app_avisos (token, cuenta, idioma) VALUES (?, ?, ?)
+     ON CONFLICT(token) DO UPDATE SET cuenta = excluded.cuenta, idioma = excluded.idioma, actualizado_en = datetime('now')`,
+    [token.toLowerCase(), cuenta, idioma],
+  );
+}
+
+export const borrarTokenDeAvisos = (db: BaseDatos, token: string) =>
+  db.ejecutar("DELETE FROM app_avisos WHERE token = ?", [token.toLowerCase()]);
+
+/** Los iPhone de la cuenta de Richard (la de demostración nunca recibe avisos: no hay videos de verdad). */
+export const telefonosParaAvisar = (db: BaseDatos) =>
+  db.todos<{ token: string; idioma: "en" | "es" }>(
+    "SELECT token, idioma FROM app_avisos WHERE cuenta = 'richard' ORDER BY actualizado_en DESC LIMIT 20",
+  );

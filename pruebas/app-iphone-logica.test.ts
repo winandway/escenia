@@ -138,6 +138,11 @@ describe("la configuración que exige Apple (C-APP-IOS-2)", () => {
     }
   });
 
+  it("los avisos van firmados para producción (TestFlight y la tienda usan los avisos de producción)", () => {
+    const avisos = app.expo.plugins.find((p) => Array.isArray(p) && p[0] === "expo-notifications");
+    expect(avisos).toEqual(["expo-notifications", { mode: "production" }]);
+  });
+
   it("es la app de Escenia en la cuenta de Windoce, y la llave de Apple no vive en eas.json", () => {
     expect(app.expo.ios.bundleIdentifier).toBe("com.windoce.escenia");
     const eas = movil("eas.json");

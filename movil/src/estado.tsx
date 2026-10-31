@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getLocales } from "expo-localization";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { alCerrarSesion, borrarSesion, cargarSesion, guardarSesion, pedir, type Cuenta } from "./api";
+import { quitarAvisos, registrarAvisos } from "./avisos";
 import type { Idioma } from "./logica";
 import { TEXTOS, type LlaveTexto } from "./textos";
 
@@ -37,6 +38,11 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  // Con sesión en la cuenta de Richard, este iPhone se anota para los avisos (en su idioma).
+  useEffect(() => {
+    if (cuenta === "richard") void registrarAvisos(idioma);
+  }, [cuenta, idioma]);
+
   const cambiarIdioma = useCallback((i: Idioma) => {
     setIdioma(i);
     void AsyncStorage.setItem(LLAVE_IDIOMA, i).catch(() => undefined);
@@ -49,6 +55,7 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
 
   const salir = useCallback(async () => {
     // Se avisa al servidor para que la sesión muera allá; si falla, se sale igual.
+    await quitarAvisos();
     await pedir("/datos/app/salir", { metodo: "POST" }).catch(() => undefined);
     await borrarSesion();
     const llaves = (await AsyncStorage.getAllKeys().catch(() => [])).filter((k) => k.startsWith("borrador:"));

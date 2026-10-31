@@ -2,6 +2,7 @@
 // toma el pedido, baja las imágenes de sus carpetas, le pide el plan a la IA del panel (qué foto y qué
 // texto en cada frase), hace la voz, la persona que habla y el video, y lo sube. Cada gasto se anota en
 // el panel en el momento en que se hace.
+import { avisarVideoListo } from "./avisos";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { paraElPlan, sincronizarImagenes } from "./comerciales";
@@ -84,6 +85,8 @@ export async function atenderPublicidad(): Promise<boolean> {
     const r = await pasoArmar(armar, trabajo, trabajo);
     await avisar("subiendo el video al panel");
     await panel.subirVideoPublicidad(p.id, r.salida, r.duracionMs / 1000);
+    // El aviso al iPhone (C-APP-IOS-4), si el anuncio salió de la app; si falla, la entrega ya quedó hecha.
+    await avisarVideoListo({ publicidad: p.id });
     console.log(`[${hora()}] Anuncio #${p.id} listo: ${(r.duracionMs / 1000).toFixed(1)} s.`);
   } catch (e) {
     const msj = e instanceof Error ? e.message : String(e);

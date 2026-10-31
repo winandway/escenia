@@ -27,7 +27,7 @@ const correr = (cmd, args, opciones = {}) =>
 const leer = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8" }).trim();
 
 // 1. El certificado y el perfil que Expo guarda para esta app.
-const consulta = `query { app { byFullName(fullName: "@windoce-llc/escenia") { iosAppCredentials { iosAppBuildCredentialsList { iosDistributionType distributionCertificate { certificateP12 certificatePassword } provisioningProfile { provisioningProfile } } } } } }`;
+const consulta = `query { app { byFullName(fullName: "@windoce-llc/escenia") { iosAppCredentials { iosAppBuildCredentialsList { iosDistributionType distributionCertificate { serialNumber certificateP12 certificatePassword } } } } } }`;
 const r = await fetch("https://api.expo.dev/graphql", {
   method: "POST",
   headers: { "content-type": "application/json", authorization: `Bearer ${EXPO_TOKEN}` },
@@ -43,16 +43,35 @@ fs.writeFileSync(
   Buffer.from(cred.distributionCertificate.certificateP12, "base64"),
   { mode: 0o600 },
 );
-const perfilArchivo = join(TRABAJO, "perfil.mobileprovision");
-fs.writeFileSync(perfilArchivo, Buffer.from(cred.provisioningProfile.provisioningProfile, "base64"), {
-  mode: 0o600,
-});
-const perfilPlist = leer("security", ["cms", "-D", "-i", perfilArchivo]);
-const uuid = /<key>UUID<\/key>\s*<string>([^<]+)<\/string>/.exec(perfilPlist)?.[1];
-const nombrePerfil = /<key>Name<\/key>\s*<string>([^<]+)<\/string>/.exec(perfilPlist)?.[1];
-fs.copyFileSync(
-  perfilArchivo,
+// El perfil de la App Store con ese certificado lo crea este guion por la API (el de Expo se hizo antes
+// de habilitar los avisos y no los trae: la firma fallaría). Se reutiliza mientras siga activo.
+const NOMBRE_PERFIL = "Escenia App Store (avisos)";
+const cert = (await asc("GET", "/v1/certificates?limit=50")).data.find(
+  (c) => c.attributes.serialNumber === cred.distributionCertificate.serialNumber,
+);
+if (!cert) throw new Error("El certificado de Expo no aparece en la cuenta de Apple.");
+const yaHay = (await asc("GET", `/v1/profiles?filter[name]=${encodeURIComponent(NOMBRE_PERFIL)}`)).data.find(
+  (p) => p.attributes.profileState === "ACTIVE",
+);
+const perfil =
+  yaHay ??
+  (
+    await asc("POST", "/v1/profiles", {
+      data: {
+        type: "profiles",
+        attributes: { name: NOMBRE_PERFIL, profileType: "IOS_APP_STORE" },
+        relationships: {
+          bundleId: { data: { type: "bundleIds", id: "6DGG7K5SLY" } },
+          certificates: { data: [{ type: "certificates", id: cert.id }] },
+        },
+      },
+    })
+  ).data;
+const uuid = perfil.attributes.uuid;
+const nombrePerfil = perfil.attributes.name;
+fs.writeFileSync(
   join(os.homedir(), "Library", "MobileDevice", "Provisioning Profiles", `${uuid}.mobileprovision`),
+  Buffer.from(perfil.attributes.profileContent, "base64"),
 );
 
 // 2. Un llavero aparte con su propia contraseña.

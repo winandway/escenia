@@ -297,3 +297,61 @@ describe("ver_imagen usa el tipo de verdad al mandarle la foto a la IA (C-APP-IO
     expect(JSON.stringify(ultimo)).toContain('"media_type":"image/jpeg"');
   });
 });
+
+describe("los avisos al iPhone cuando un video está listo (C-APP-IOS-4)", () => {
+  it("solo los iPhone de la cuenta de Richard reciben avisos, y una dirección se guarda una sola vez", async () => {
+    const { guardarTokenDeAvisos, telefonosParaAvisar, borrarTokenDeAvisos, esTokenDeAvisos } =
+      await import("@/lib/app-sesion");
+    const db = baseEnMemoria();
+    const uno = "a".repeat(64);
+    await guardarTokenDeAvisos(db, uno, "richard", "es");
+    await guardarTokenDeAvisos(db, uno.toUpperCase(), "richard", "en");
+    await guardarTokenDeAvisos(db, "b".repeat(64), "demo", "en");
+    expect(await telefonosParaAvisar(db)).toEqual([{ token: uno, idioma: "en" }]);
+    await borrarTokenDeAvisos(db, uno);
+    expect(await telefonosParaAvisar(db)).toEqual([]);
+    expect(esTokenDeAvisos("z".repeat(64))).toBe(false);
+    expect(esTokenDeAvisos("0123abcd".repeat(8))).toBe(true);
+  });
+
+  it("el aviso sale en el idioma del teléfono y lleva el proyecto donde la app lo lee", async () => {
+    const { textoDelAviso, cargaDelAviso } = await import("../estacion/src/avisos");
+    expect(textoDelAviso("en", "Encargo 7")).toEqual({
+      title: "Your video is ready",
+      body: "Project 7: open it to watch, save or share.",
+    });
+    expect(textoDelAviso("es", "Panadería · pan dulce").title).toBe("Tu video está listo");
+    expect(textoDelAviso("es", "Panadería · pan dulce").body).toContain("Panadería · pan dulce");
+    const carga = cargaDelAviso({ title: "t", body: "b" }, 9);
+    // En un aviso remoto la app de Expo lee los datos de «body»: si van en otro lado, tocar el aviso no abre nada.
+    expect(carga).toEqual({
+      aps: { alert: { title: "t", body: "b" }, sound: "default" },
+      body: { encargoId: 9 },
+    });
+  });
+
+  it("la firma para Apple es un ES256 válido con la llave, el equipo y la hora", async () => {
+    const { firmaApns } = await import("../estacion/src/avisos");
+    const { generateKeyPairSync, verify } = await import("node:crypto");
+    const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+    const pem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const jwt = firmaApns(pem, "KEYID12345", "TEAM123456", 1_800_000_000);
+    const [cabeza, cuerpo, firma] = jwt.split(".");
+    expect(JSON.parse(Buffer.from(cabeza ?? "", "base64url").toString())).toEqual({
+      alg: "ES256",
+      kid: "KEYID12345",
+    });
+    expect(JSON.parse(Buffer.from(cuerpo ?? "", "base64url").toString())).toEqual({
+      iss: "TEAM123456",
+      iat: 1_800_000_000,
+    });
+    expect(
+      verify(
+        "sha256",
+        Buffer.from(`${cabeza}.${cuerpo}`),
+        { key: publicKey, dsaEncoding: "ieee-p1363" },
+        Buffer.from(firma ?? "", "base64url"),
+      ),
+    ).toBe(true);
+  });
+});
