@@ -16,10 +16,12 @@ import { asegurarModelo, costoTokensUsd, MODELOS_PERMITIDOS } from "@compartido/
 import { costoEstimadoPublicidadUsd, esquemaPublicidadNueva } from "@compartido/publicidad";
 import type { BaseDatos } from "./db";
 import {
+  avisoDeIdioma,
   contextoDelEncargo,
   dinero,
   HERRAMIENTAS,
   historialParaLaIA,
+  idiomaDeEscritura,
   reloj,
   SISTEMA,
   type MaterialDelDirector,
@@ -549,6 +551,8 @@ export async function responderDirector(
   const historial = historialParaLaIA(await mensajesDelEncargo(db, encargoId));
   if (historial.at(-1)?.role !== "user") throw new Error("No hay ningún mensaje nuevo que responder.");
   const material = await materialDelEncargo(db, encargo, opciones.carpetasPermitidas);
+  const ultimoMio = (await mensajesDelEncargo(db, encargoId)).filter((m) => m.rol === "richard").at(-1);
+  const idioma = idiomaDeEscritura(ultimoMio?.texto ?? "");
   const cliente = new Anthropic({ apiKey: opciones.apiKey, fetch: opciones.fetch, maxRetries: 2 });
   const conversacion: Anthropic.MessageParam[] = [...historial];
   const textos: string[] = [];
@@ -565,6 +569,7 @@ export async function responderDirector(
           system: [
             { type: "text", text: SISTEMA },
             { type: "text", text: contextoDelEncargo(material) },
+            { type: "text", text: avisoDeIdioma(idioma) },
           ],
           tools: HERRAMIENTAS,
           messages: conversacion,

@@ -223,3 +223,18 @@ describe("el Director de la app habla el idioma de quien le escribe y conoce a M
     expect(SISTEMA).toContain("Maggie es la presentadora de la casa (la carpeta «Maggie»)");
   });
 });
+
+describe("el panel le dice al Director en qué idioma contestar (C-APP-IOS-1)", () => {
+  it("detecta el inglés y el español de quien escribe, sin contar las notas de lo subido", async () => {
+    const { idiomaDeEscritura, avisoDeIdioma, notaDeFotos } = await import("@/lib/director-prompt");
+    expect(
+      idiomaDeEscritura("I want an ad with Maggie for my coffee shop. People order ahead on WhatsApp."),
+    ).toBe("en");
+    expect(idiomaDeEscritura("Quiero un anuncio con Maggie para mi panadería, se pide por WhatsApp.")).toBe(
+      "es",
+    );
+    const conNota = `I want an ad for my shoes, people buy on Instagram.\n\n${notaDeFotos(["a.jpg", "b.jpg"], "Encargo 5")}`;
+    expect(idiomaDeEscritura(conNota)).toBe("en");
+    expect(avisoDeIdioma("en")).toContain("English only");
+  });
+});

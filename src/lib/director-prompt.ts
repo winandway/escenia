@@ -363,3 +363,73 @@ export function notaDeVideos(nombres: string[]): string {
   const cuales = nombres.length === 1 ? "este video" : `estos ${nombres.length} videos`;
   return `(Te subí ${cuales}: ${nombres.join(", ")})`;
 }
+
+/**
+ * ¿En qué idioma escribe quien le habla al Director? Con la regla escrita no bastó: el comentario
+ * después de la tarjeta salía en español aunque le escribieran en inglés (prueba en vivo de la app, 31
+ * oct 2026). El panel lo detecta y se lo dice en cada respuesta (C-APP-IOS-1).
+ */
+export function idiomaDeEscritura(texto: string): "es" | "en" {
+  const ES = new Set([
+    "el",
+    "la",
+    "los",
+    "las",
+    "que",
+    "de",
+    "del",
+    "y",
+    "para",
+    "con",
+    "por",
+    "quiero",
+    "una",
+    "mi",
+    "es",
+    "se",
+    "al",
+    "como",
+    "pero",
+    "muy",
+    "también",
+    "sin",
+  ]);
+  const EN = new Set([
+    "the",
+    "and",
+    "to",
+    "for",
+    "with",
+    "my",
+    "i",
+    "want",
+    "is",
+    "it",
+    "of",
+    "an",
+    "on",
+    "people",
+    "you",
+    "your",
+    "our",
+    "just",
+    "this",
+    "that",
+    "please",
+    "without",
+  ]);
+  let puntos = 0;
+  // Las notas de lo subido («(Te subí estas fotos…)») las agrega la pantalla en español: no cuentan.
+  const propio = texto.replace(/\(Te subí[^)]*\)/g, "");
+  for (const p of propio.toLowerCase().match(/[a-záéíóúñü]+/g) ?? []) {
+    if (ES.has(p)) puntos--;
+    if (EN.has(p)) puntos++;
+  }
+  if (/[ñ¿¡áéíóú]/i.test(propio)) puntos -= 2;
+  return puntos > 0 ? "en" : "es";
+}
+
+export const avisoDeIdioma = (idioma: "es" | "en") =>
+  idioma === "en"
+    ? "IDIOMA DE ESTA RESPUESTA: inglés. Quien te escribe usa el inglés: todo lo que le digas, también el comentario después de la tarjeta, va en inglés (English only)."
+    : "IDIOMA DE ESTA RESPUESTA: español. Todo lo que le digas va en español.";
