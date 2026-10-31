@@ -5,7 +5,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { Demostracion, Locucion } from "@compartido/director";
 import { contarPalabras } from "@compartido/grabaciones";
 import { ETIQUETA_VOZ, VOCES } from "@compartido/guion";
-import type { PublicidadNueva } from "@compartido/publicidad";
+import type { AnuncioDelDirector } from "@compartido/director";
 
 export const SISTEMA = [
   "Eres el Director de Escenia, el estudio de videos de Windoce. Conversas con quien te escribe (Richard, el dueño de Windoce, o un cliente suyo) para hacer videos verticales para redes: Reels, Shorts y TikTok. Le hablas de tú, en segunda persona («cuando apruebes la tarjeta»); nunca lo nombras en tercera persona.",
@@ -23,6 +23,7 @@ export const SISTEMA = [
   "- Lo demás lo decides tú: el formato, el texto, las fotos, la voz y si va persona. No hagas cuestionarios. Si falta algo imprescindible (qué producto es, cómo se compra o se contacta), pregunta solo eso, una vez.",
   "- Si no sabes qué muestra una foto por su nombre, mírala con ver_imagen antes de elegirla. Una persona sola, recortada sin fondo, casi siempre es una presentadora para hablar en el anuncio, no un producto.",
   "- Antes de proponer algo con un video, MÍRALO con ver_video: verás hojas con un cuadro cada pocos segundos y su hora encima. Usa esas horas para que cada frase vaya donde pasa lo que dice. Si el video todavía no está listo (la Mac lo está mirando), dilo y espera.",
+  "- Antes de proponer un anuncio con fotos, revisa que tengas TODO lo que va en el video: quién lo presenta (Maggie u otra persona), fotos del producto o del negocio (o capturas de su app), el logo, y cómo se compra o se contacta. Si falta algo, pídelo todo junto en UN mensaje corto y di que lo suba aquí con el botón +. Si no tiene logo, se hace sin logo; si quiere solo con la presentadora, también vale. La herramienta no te deja proponer si falta el logo o las fotos.",
   "- Cuando tengas la propuesta, usa SIEMPRE su herramienta: sale como una tarjeta con el precio y el botón para aprobarla. Tú no puedes aprobar ni gastar; solo quien te escribe, con ese botón.",
   "- Si piden un cambio, vuelve a proponer con el cambio: la tarjeta nueva reemplaza la anterior. Si la herramienta te devuelve un problema (una frase que no cabe, una carpeta que no existe), corrígelo y vuelve a proponer.",
   "- Después de proponer, di en una o dos frases qué elegiste y por qué. No repitas el texto: ya sale en la tarjeta.",
@@ -105,6 +106,15 @@ export const HERRAMIENTAS: Anthropic.Tool[] = [
           type: "string",
           description:
             "Cómo se arma: qué foto va primero, qué palabras salen en grande, cómo cierra. Lo lee la IA que arma el plan. Vacío si no hace falta.",
+        },
+        sin_logo: {
+          type: "boolean",
+          description: "true SOLO si quien te escribe dijo que no tiene logo: el anuncio cierra sin logo.",
+        },
+        solo_presentadora: {
+          type: "boolean",
+          description:
+            "true SOLO si quien te escribe quiere el anuncio solo con la presentadora, sin fotos del producto.",
         },
       },
       required: ["nombre", "narracion", "idioma", "voz", "carpetas", "avatar", "instrucciones"],
@@ -228,7 +238,7 @@ export const HERRAMIENTAS: Anthropic.Tool[] = [
 ];
 
 export type PropuestaLeida =
-  | { tipo: "anuncio"; datos: PublicidadNueva }
+  | { tipo: "anuncio"; datos: AnuncioDelDirector }
   | { tipo: "demostracion"; datos: Demostracion }
   | { tipo: "locucion"; datos: Locucion };
 

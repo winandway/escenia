@@ -20,6 +20,13 @@ export type PropuestaApp = {
   persona: string;
   segundos: number;
   frases: { texto: string; enSeg: number | null }[];
+  material: {
+    personaFoto: number | null;
+    logo: number | null;
+    sinLogo: boolean;
+    fotos: number[];
+    soloPresentadora: boolean;
+  } | null;
   resultado: ResultadoApp | null;
 };
 

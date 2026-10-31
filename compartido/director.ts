@@ -6,7 +6,7 @@
 import { z } from "zod";
 import { IDS_IDIOMA } from "./comerciales";
 import { VOCES } from "./guion";
-import { COSTO_AVATAR_POR_SEGUNDO } from "./publicidad";
+import { COSTO_AVATAR_POR_SEGUNDO, esquemaPublicidadNueva } from "./publicidad";
 
 export const ESTADOS_VIDEO_DIRECTOR = ["subiendo", "subido", "mirando", "listo", "error"] as const;
 export type EstadoVideoDirector = (typeof ESTADOS_VIDEO_DIRECTOR)[number];
@@ -161,3 +161,47 @@ export const palabrasDe = (texto: string, desde = 0, n = 3) =>
     .join(" ");
 
 export const primerasPalabras = (texto: string, n = 3) => palabrasDe(texto, 0, n);
+
+// ——— Lo que el anuncio con fotos necesita antes de volverse tarjeta (C-DIRECTOR-4) ———
+
+/** La carpeta de la presentadora de la casa: sus fotos nunca son fotos del producto ni el logo. */
+export const CARPETA_PRESENTADORA = "Maggie";
+
+/** El anuncio que propone el Director: el de Publicidad más lo que quien pide eligió no tener. */
+export const esquemaAnuncioDelDirector = esquemaPublicidadNueva.extend({
+  /** Dijo que no tiene logo: el anuncio cierra sin logo. */
+  sin_logo: z.boolean().default(false),
+  /** Dijo que va solo con la presentadora, sin fotos del producto. */
+  solo_presentadora: z.boolean().default(false),
+});
+export type AnuncioDelDirector = z.infer<typeof esquemaAnuncioDelDirector>;
+
+type FotoDeCarpeta = { id: number; nombre: string; carpeta: string; tipo: string };
+const esLogo = (nombre: string) => /logo/i.test(nombre);
+
+/** Qué va a usar el anuncio de verdad: la persona, el logo y las fotos del producto. */
+export function materialDelAnuncio(
+  imagenes: FotoDeCarpeta[],
+  d: Pick<AnuncioDelDirector, "carpetas" | "avatar">,
+) {
+  const enCarpetas = imagenes.filter((i) => i.tipo === "imagen" && d.carpetas.includes(i.carpeta));
+  const persona = d.avatar ? (enCarpetas.find((i) => i.nombre === d.avatar) ?? null) : null;
+  const propias = enCarpetas.filter((i) => i.carpeta !== CARPETA_PRESENTADORA && i.nombre !== d.avatar);
+  const logo = propias.find((i) => esLogo(i.nombre)) ?? null;
+  const fotos = propias.filter((i) => i.id !== logo?.id);
+  return { persona, logo, fotos };
+}
+
+/**
+ * Lo que falta antes de mostrar la tarjeta: el logo (o que digan «sin logo») y las fotos del producto (o
+ * que digan «solo con la presentadora»). El error vuelve al Director para que lo pida en el chat.
+ */
+export function faltaEnElAnuncio(imagenes: FotoDeCarpeta[], d: AnuncioDelDirector): string | null {
+  const m = materialDelAnuncio(imagenes, d);
+  const faltan: string[] = [];
+  if (!m.logo && !d.sin_logo) faltan.push("el logo de la marca");
+  if (!m.fotos.length && !d.solo_presentadora)
+    faltan.push("fotos del producto o del negocio (o capturas de la app)");
+  if (!faltan.length) return null;
+  return `Todavía no puedes proponer: falta ${faltan.join(" y ")}. Pídeselo a quien te escribe en UN solo mensaje: que lo suba aquí con el botón + (las fotos caen en la carpeta de este chat). Si no tiene logo y te lo dice, propón con sin_logo: true; si quiere el anuncio solo con la presentadora, con solo_presentadora: true.`;
+}

@@ -12,7 +12,8 @@ import {
   type FilaPropuesta,
 } from "./director";
 import { videosDelEncargo } from "./director-videos";
-import { segundosDeTexto, textoDeDemostracion } from "@compartido/director";
+import { materialDelAnuncio, segundosDeTexto, textoDeDemostracion } from "@compartido/director";
+import { imagenesActivas, type FilaImagen } from "./imagenes";
 
 export type EstadoResultadoApp = "en-fila" | "armando" | "listo" | "error";
 
@@ -40,6 +41,17 @@ export type PropuestaApp = {
   segundos: number;
   /** El texto que dice la voz; en la prueba en vivo y la locución, frase por frase con su segundo. */
   frases: { texto: string; enSeg: number | null }[];
+  /**
+   * Lo que va a salir en el video, para verlo antes de aprobar (C-DIRECTOR-4): la foto de la persona, el
+   * logo y las fotos del producto (números de imagen; la app las pide a /datos/app/imagenes/<id>).
+   */
+  material: {
+    personaFoto: number | null;
+    logo: number | null;
+    sinLogo: boolean;
+    fotos: number[];
+    soloPresentadora: boolean;
+  } | null;
   resultado: ResultadoApp | null;
 };
 
@@ -62,12 +74,20 @@ export function estadoParaLaApp(estado: string): EstadoResultadoApp {
   return "en-fila";
 }
 
-function fichaDePropuesta(p: FilaPropuesta): Omit<PropuestaApp, "resultado"> {
-  const base = { id: p.id, estado: p.estado, precioUsd: p.precio_usd };
+function fichaDePropuesta(p: FilaPropuesta, imagenes: FilaImagen[]): Omit<PropuestaApp, "resultado"> {
+  const base = { id: p.id, estado: p.estado, precioUsd: p.precio_usd, material: null };
   const l = leerPropuesta(p);
-  if (l.tipo === "anuncio")
+  if (l.tipo === "anuncio") {
+    const m = materialDelAnuncio(imagenes, l.datos);
     return {
       ...base,
+      material: {
+        personaFoto: m.persona?.id ?? null,
+        logo: m.logo?.id ?? null,
+        sinLogo: l.datos.sin_logo,
+        fotos: m.fotos.slice(0, 8).map((f) => f.id),
+        soloPresentadora: l.datos.solo_presentadora,
+      },
       tipo: "anuncio",
       nombre: l.datos.nombre,
       voz: l.datos.voz,
@@ -75,6 +95,7 @@ function fichaDePropuesta(p: FilaPropuesta): Omit<PropuestaApp, "resultado"> {
       segundos: Math.round(segundosDeTexto(l.datos.narracion)),
       frases: [{ texto: l.datos.narracion, enSeg: null }],
     };
+  }
   if (l.tipo === "demostracion")
     return {
       ...base,
@@ -124,15 +145,16 @@ async function resultadoParaLaApp(db: BaseDatos, p: FilaPropuesta): Promise<Resu
 }
 
 export async function encargoParaLaApp(db: BaseDatos, encargo: FilaEncargo): Promise<EncargoApp> {
-  const [mensajes, propuestas, videos] = await Promise.all([
+  const [mensajes, propuestas, videos, imagenes] = await Promise.all([
     mensajesDelEncargo(db, encargo.id),
     propuestasDelEncargo(db, encargo.id),
     videosDelEncargo(db, encargo.id),
+    imagenesActivas(db),
   ]);
   const fichas: PropuestaApp[] = [];
   for (const p of propuestas) {
     try {
-      fichas.push({ ...fichaDePropuesta(p), resultado: await resultadoParaLaApp(db, p) });
+      fichas.push({ ...fichaDePropuesta(p, imagenes), resultado: await resultadoParaLaApp(db, p) });
     } catch {
       // Una propuesta que ya no se puede leer no tumba la pantalla: simplemente no se muestra.
     }

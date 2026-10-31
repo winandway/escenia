@@ -34,6 +34,7 @@ async function conFotos(db: Base) {
     ["Pro In Shop", "generador-frente.jpg"],
     ["Pro In Shop", "chica.webp"],
     ["Otra marca", "logo.png"],
+    ["Pro In Shop", "logo-proinshop.png"],
   ] as const)
     await db.ejecutar(
       "INSERT INTO imagenes (carpeta, nombre, clave, tipo, bytes) VALUES (?, ?, ?, 'imagen', 2000)",
@@ -214,7 +215,7 @@ describe("Director: la conversación con la IA", () => {
     ]);
     const r = await responderDirector(db, id, opciones(falso));
     expect(pedidos).toHaveLength(2);
-    expect(JSON.stringify(pedidos[0]?.system)).toContain("Carpeta «Pro In Shop» (2)");
+    expect(JSON.stringify(pedidos[0]?.system)).toContain("Carpeta «Pro In Shop» (3)");
     expect(pedidos[0]?.thinking).toEqual({ type: "adaptive" });
     const resultado = JSON.stringify((pedidos[1]?.messages as unknown[]).at(-1));
     expect(resultado).toContain("toolu_1");

@@ -11,6 +11,7 @@ import { prepararMusica } from "./musica";
 import { panel } from "./panel";
 import { pasoArmar, pasoAvatar, pasoVoz } from "./publicidad";
 import { acentoDeLogo, elegirLogo, planParaArmar } from "./publicidad-plan";
+import { CARPETA_PRESENTADORA } from "@compartido/director";
 
 /** Un anuncio pedido desde el panel puede durar un poco más que el prototipo (el texto ya viene medido). */
 const MAXIMO_SEG_PANEL = 60;
@@ -47,16 +48,12 @@ export async function atenderPublicidad(): Promise<boolean> {
     const avatar = p.avatar ? imagenes.find((i) => i.nombre === p.avatar) : undefined;
     if (p.avatar && !avatar)
       throw new Error(`No encontré la foto de la persona («${p.avatar}») en las carpetas elegidas.`);
-    const logo = elegirLogo(imagenes, p.avatar);
-    if (!logo)
-      throw new Error(
-        "No encontré el logo: sube a una de las carpetas una imagen que se llame «logo» (mejor sin fondo).",
-      );
+    // Las otras fotos de la presentadora de la casa no son fotos del producto ni logo (C-DIRECTOR-4).
+    const propias = imagenes.filter((i) => i.carpeta !== CARPETA_PRESENTADORA || i.nombre === p.avatar);
+    // Sin logo se arma igual (el cliente lo dijo en el chat): antes fallaba aquí después de aprobar.
+    const logo = elegirLogo(propias, p.avatar);
     await avisar("la IA está armando el plan con tus imágenes");
-    const plan = await panel.planDePublicidad(
-      p.id,
-      paraElPlan(imagenes.filter((i) => i.nombre !== p.avatar)),
-    );
+    const plan = await panel.planDePublicidad(p.id, paraElPlan(propias.filter((i) => i.nombre !== p.avatar)));
     const trabajo = path.join(config.CARPETA_SALIDA, `anuncio-${p.id}`);
     await mkdir(trabajo, { recursive: true });
     const musica = await prepararMusica(MUSICA_DE_ANUNCIO, trabajo).catch(() => null);
@@ -67,12 +64,14 @@ export async function atenderPublicidad(): Promise<boolean> {
       idioma: p.idioma,
       plan,
       rutas: new Map(imagenes.map((i) => [i.nombre, i.ruta])),
-      logo: logo.ruta,
+      logo: logo?.ruta ?? "",
       avatar: avatar?.ruta,
       musica: musica ? path.join(trabajo, musica.ruta) : undefined,
-      acento: await acentoDelArchivo(logo.ruta).catch(() => null),
+      acento: logo ? await acentoDelArchivo(logo.ruta).catch(() => null) : null,
     });
-    console.log(`  logo: ${logo.nombre} · color ${armar.acento} · música: ${musica?.archivo ?? "ninguna"}`);
+    console.log(
+      `  logo: ${logo?.nombre ?? "sin logo"} · color ${armar.acento} · música: ${musica?.archivo ?? "ninguna"}`,
+    );
     await avisar("haciendo la voz");
     const voz = await pasoVoz(armar, trabajo, (t) => avisar(t), MAXIMO_SEG_PANEL);
     if (voz.nueva) await gasto("elevenlabs", `voz (${Math.round(voz.duracionMs / 1000)} s)`, voz.costoUsd);

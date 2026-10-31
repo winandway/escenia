@@ -1,12 +1,73 @@
 // La tarjeta del Director: el precio arriba, el texto que dirá la voz (con su segundo en la prueba en
 // vivo y la locución), la voz, quién lo presenta, y los dos botones. Aprobar pide confirmación con el
 // precio: es el único momento en que algo se hace y se cobra (C-DIRECTOR-1).
-import { Alert, Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { cabeceras, PANEL } from "./api";
 import { useEstado } from "./estado";
 import { dinero, nombreDePersona, nombreDeVoz, reloj } from "./logica";
 import { C } from "./tema";
 import type { PropuestaApp } from "./tipos";
 import { VideoTerminado } from "./VideoTerminado";
+
+/** Una foto de la biblioteca (la persona, el logo o una foto del producto), pedida con la sesión. */
+function Foto({ id, tamano, redonda = false }: { id: number; tamano: number; redonda?: boolean }) {
+  return (
+    <Image
+      source={{ uri: `${PANEL}/datos/app/imagenes/${id}`, headers: cabeceras() }}
+      style={{
+        width: tamano,
+        height: tamano,
+        borderRadius: redonda ? tamano / 2 : 10,
+        backgroundColor: C.borde,
+      }}
+      contentFit="cover"
+      transition={150}
+    />
+  );
+}
+
+/** Lo que va a salir en el video, para verlo antes de aprobar (C-DIRECTOR-4). */
+function LoQueSale({ m, persona }: { m: NonNullable<PropuestaApp["material"]>; persona: string }) {
+  const { t } = useEstado();
+  return (
+    <View style={{ marginTop: 12, gap: 10, backgroundColor: "#0e1422", borderRadius: 12, padding: 12 }}>
+      <Text style={{ color: C.suave, fontWeight: "700", fontSize: 12 }}>
+        {t("tarjeta_que_sale").toUpperCase()}
+      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        {m.personaFoto ? <Foto id={m.personaFoto} tamano={56} redonda /> : null}
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={{ color: C.texto, fontWeight: "700" }}>
+            {m.personaFoto
+              ? `✓ ${t("tarjeta_presenta")}: ${nombreDePersona(persona)}`
+              : t("tarjeta_sin_persona")}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {m.logo ? <Foto id={m.logo} tamano={28} /> : null}
+            <Text style={{ color: m.logo ? C.texto : C.suave }}>
+              {m.logo ? `✓ ${t("tarjeta_logo")}` : `— ${t("tarjeta_sin_logo")}`}
+            </Text>
+          </View>
+        </View>
+      </View>
+      {m.fotos.length ? (
+        <View style={{ gap: 6 }}>
+          <Text style={{ color: C.texto }}>
+            ✓ {t("tarjeta_fotos")} ({m.fotos.length})
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+            {m.fotos.map((id) => (
+              <Foto key={id} id={id} tamano={64} />
+            ))}
+          </ScrollView>
+        </View>
+      ) : (
+        <Text style={{ color: C.suave }}>— {t("tarjeta_solo_presentadora")}</Text>
+      )}
+    </View>
+  );
+}
 
 export function Tarjeta({
   p,
@@ -60,6 +121,7 @@ export function Tarjeta({
         ~{p.segundos} {t("tarjeta_segundos")} · {nombreDeVoz(p.voz, idioma)} ·{" "}
         {p.persona ? `${t("tarjeta_presenta")}: ${nombreDePersona(p.persona)}` : t("tarjeta_sin_persona")}
       </Text>
+      {p.material ? <LoQueSale m={p.material} persona={p.persona} /> : null}
       <View style={{ marginTop: 10, gap: 6 }}>
         {p.frases.map((f, i) => (
           <Text key={i} style={{ color: C.texto, lineHeight: 21 }}>

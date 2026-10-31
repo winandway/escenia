@@ -11,9 +11,11 @@ import {
   esquemaLocucion,
   problemaDeDemostracion,
   problemaDeLocucion,
+  esquemaAnuncioDelDirector,
+  faltaEnElAnuncio,
 } from "@compartido/director";
 import { asegurarModelo, costoTokensUsd, MODELOS_PERMITIDOS } from "@compartido/modelos";
-import { costoEstimadoPublicidadUsd, esquemaPublicidadNueva } from "@compartido/publicidad";
+import { costoEstimadoPublicidadUsd } from "@compartido/publicidad";
 import type { BaseDatos } from "./db";
 import {
   avisoDeIdioma,
@@ -101,7 +103,7 @@ export function leerPropuesta(p: Pick<FilaPropuesta, "datos">): PropuestaLeida {
   const crudo = JSON.parse(p.datos) as { tipo?: string };
   if (crudo.tipo === "demostracion") return { tipo: "demostracion", datos: esquemaDemostracion.parse(crudo) };
   if (crudo.tipo === "locucion") return { tipo: "locucion", datos: esquemaLocucion.parse(crudo) };
-  return { tipo: "anuncio", datos: esquemaPublicidadNueva.parse(crudo) };
+  return { tipo: "anuncio", datos: esquemaAnuncioDelDirector.parse(crudo) };
 }
 
 export async function anotarMensaje(
@@ -176,13 +178,15 @@ export async function guardarPropuesta(
   encargoId: number,
   entrada: unknown,
 ): Promise<GuardadoDePropuesta> {
-  const parseo = esquemaPublicidadNueva.safeParse(entrada);
+  const parseo = esquemaAnuncioDelDirector.safeParse(entrada);
   if (!parseo.success) return { ok: false, error: parseo.error.issues[0]?.message ?? "Revisa los datos." };
   const d = parseo.data;
-  const problema = problemaDeFotos(await imagenesActivas(db), d.carpetas, [
-    { nombre: d.avatar, que: "la persona" },
-  ]);
+  const imagenes = await imagenesActivas(db);
+  const problema = problemaDeFotos(imagenes, d.carpetas, [{ nombre: d.avatar, que: "la persona" }]);
   if (problema) return { ok: false, error: problema };
+  // C-DIRECTOR-4: la tarjeta sale completa o no sale (antes, sin logo, fallaba en la Mac después de aprobar).
+  const falta = faltaEnElAnuncio(imagenes, d);
+  if (falta) return { ok: false, error: falta };
   return insertarPropuesta(db, encargoId, d, costoEstimadoPublicidadUsd(d.narracion, Boolean(d.avatar)));
 }
 

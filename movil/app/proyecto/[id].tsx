@@ -1,11 +1,12 @@
-// El chat con el Director: la conversación, las tarjetas con su precio, los videos subidos y su estado.
-// Lo escrito se guarda solo (useBorrador) y vuelve si se cierra la app. Mientras algo está en marcha (un
-// video que el estudio mira o arma), la pantalla vuelve a preguntar sola cada cuatro segundos.
+// El chat con el Director, al estilo de las apps de chat: los mensajes del Director a lo ancho, los tuyos
+// en burbuja, las tarjetas con su precio y lo que va a salir en el video, y abajo la barra con «+» y la
+// flecha. Sin mensajes, sugerencias para empezar. Lo escrito se guarda solo (useBorrador). Mientras algo
+// está en marcha (un video que el estudio mira o arma), la pantalla vuelve a preguntar cada 4 segundos.
 import * as ImagePicker from "expo-image-picker";
 import { Redirect, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorDeApi, pedir } from "../../src/api";
+import { Composer, type Adjunto } from "../../src/Composer";
 import { useEstado } from "../../src/estado";
 import { mensajeConNotas, nombreDeArchivo, tituloDelProyecto } from "../../src/logica";
 import { subirFoto, subirVideo } from "../../src/subir";
@@ -25,21 +27,46 @@ import type { LlaveTexto } from "../../src/textos";
 import type { EncargoApp } from "../../src/tipos";
 import { useBorrador } from "../../src/useBorrador";
 
-type Subida = {
-  clave: string;
-  nombre: string;
-  tipo: "foto" | "video";
-  estado: "subiendo" | "lista" | "error";
-  pct?: number;
-  error?: string;
-};
-
-const ATAJOS: [LlaveTexto, LlaveTexto][] = [
-  ["atajo_maggie", "atajo_maggie_texto"],
-  ["atajo_fotos", "atajo_fotos_texto"],
-  ["atajo_vivo", "atajo_vivo_texto"],
-  ["atajo_voz", "atajo_voz_texto"],
+const SUGERENCIAS: [LlaveTexto, LlaveTexto, LlaveTexto][] = [
+  ["atajo_maggie", "atajo_maggie_sub", "atajo_maggie_texto"],
+  ["atajo_fotos", "atajo_fotos_sub", "atajo_fotos_texto"],
+  ["atajo_vivo", "atajo_vivo_sub", "atajo_vivo_texto"],
+  ["atajo_voz", "atajo_voz_sub", "atajo_voz_texto"],
 ];
+
+/** Tres puntos que laten mientras el Director piensa. */
+function Pensando() {
+  const { t } = useEstado();
+  const [valor] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const ciclo = Animated.loop(
+      Animated.timing(valor, { toValue: 3, duration: 1200, useNativeDriver: true }),
+    );
+    ciclo.start();
+    return () => ciclo.stop();
+  }, [valor]);
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 }}>
+      {[0, 1, 2].map((i) => (
+        <Animated.View
+          key={i}
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: C.acento,
+            opacity: valor.interpolate({
+              inputRange: [i, i + 0.5, i + 1],
+              outputRange: [0.3, 1, 0.3],
+              extrapolate: "clamp",
+            }),
+          }}
+        />
+      ))}
+      <Text style={{ color: C.suave, marginLeft: 4 }}>{t("chat_pensando")}</Text>
+    </View>
+  );
+}
 
 export default function Proyecto() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -47,7 +74,7 @@ export default function Proyecto() {
   const { t, cuenta, idioma } = useEstado();
   const borrador = useBorrador(`chat-${encargoId}`, cuenta ?? "");
   const [encargo, setEncargo] = useState<EncargoApp | null>(null);
-  const [subidas, setSubidas] = useState<Subida[]>([]);
+  const [adjuntos, setAdjuntos] = useState<Adjunto[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
   const [sinRespuesta, setSinRespuesta] = useState(false);
@@ -79,27 +106,23 @@ export default function Proyecto() {
 
   if (!cuenta) return <Redirect href="/entrar" />;
 
-  const anotar = (s: Subida) => setSubidas((todas) => [...todas.filter((x) => x.clave !== s.clave), s]);
+  const anotar = (a: Adjunto) => setAdjuntos((todos) => [...todos.filter((x) => x.clave !== a.clave), a]);
 
   async function subir(assets: ImagePicker.ImagePickerAsset[]) {
     if (!encargo) return;
     for (const [n, a] of assets.entries()) {
       const tipo = a.type === "video" ? "video" : "foto";
       const nombre = nombreDeArchivo(a.fileName, tipo, Date.now() + n);
-      const clave = `${a.uri}-${n}`;
-      anotar({ clave, nombre, tipo, estado: "subiendo", pct: 0 });
+      const base = { clave: `${a.uri}-${n}`, uri: a.uri, nombre, tipo } as const;
+      anotar({ ...base, estado: "subiendo", pct: 0 });
       try {
         if (tipo === "video")
-          await subirVideo(a.uri, nombre, encargo.id, (pct) =>
-            anotar({ clave, nombre, tipo, estado: "subiendo", pct }),
-          );
+          await subirVideo(a.uri, nombre, encargo.id, (pct) => anotar({ ...base, estado: "subiendo", pct }));
         else await subirFoto(a.uri, nombre, encargo.carpeta);
-        anotar({ clave, nombre, tipo, estado: "lista" });
+        anotar({ ...base, estado: "lista" });
       } catch (e) {
         anotar({
-          clave,
-          nombre,
-          tipo,
+          ...base,
           estado: "error",
           error: e instanceof ErrorDeApi && e.message ? e.message : t("chat_fallo_subida"),
         });
@@ -123,14 +146,14 @@ export default function Proyecto() {
   }
 
   async function mandar(textoLibre?: string) {
-    if (!encargo || enviando || subidas.some((s) => s.estado === "subiendo")) return;
-    const listas = subidas.filter((s) => s.estado === "lista");
+    if (!encargo || enviando || adjuntos.some((a) => a.estado === "subiendo")) return;
+    const listas = adjuntos.filter((a) => a.estado === "lista");
     const texto =
       textoLibre ??
       mensajeConNotas(
         borrador.texto,
-        listas.filter((s) => s.tipo === "foto").map((s) => s.nombre),
-        listas.filter((s) => s.tipo === "video").map((s) => s.nombre),
+        listas.filter((a) => a.tipo === "foto").map((a) => a.nombre),
+        listas.filter((a) => a.tipo === "video").map((a) => a.nombre),
         encargo.carpeta,
       );
     if (textoLibre === undefined && !texto) return setError(t("chat_vacio"));
@@ -139,13 +162,13 @@ export default function Proyecto() {
     try {
       await pedir(`/datos/director/${encargo.id}`, { metodo: "POST", cuerpo: { texto } });
       borrador.descartar();
-      setSubidas([]);
+      setAdjuntos([]);
       setPlaceholder("chat_placeholder");
     } catch (e) {
       // Si el mensaje quedó guardado aunque la IA fallara, el cuadro se limpia igual: ya está arriba.
       if (e instanceof ErrorDeApi && e.status >= 500) {
         borrador.descartar();
-        setSubidas([]);
+        setAdjuntos([]);
       }
       setError(e instanceof ErrorDeApi && e.message ? e.message : t("error_red"));
     } finally {
@@ -191,7 +214,7 @@ export default function Proyecto() {
     );
   };
 
-  const subiendo = subidas.some((s) => s.estado === "subiendo");
+  const vacio = encargo !== null && encargo.mensajes.length === 0;
 
   return (
     <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: C.fondo }}>
@@ -208,77 +231,94 @@ export default function Proyecto() {
       >
         <ScrollView
           ref={lista}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          contentContainerStyle={{ padding: 16, gap: 16, flexGrow: 1 }}
           onContentSizeChange={() => lista.current?.scrollToEnd({ animated: false })}
           keyboardShouldPersistTaps="handled"
         >
-          {!encargo ? <ActivityIndicator color={C.acento} style={{ marginTop: 30 }} /> : null}
-          {encargo?.videos.map((v) => (
-            <View
-              key={`v${v.id}`}
-              style={{
-                backgroundColor: C.panel,
-                borderRadius: 12,
-                padding: 10,
-                borderWidth: 1,
-                borderColor: C.borde,
-              }}
-            >
-              <Text style={{ color: C.suave }} numberOfLines={1}>
-                🎬 {v.nombre} ·{" "}
-                <Text
-                  style={{
-                    color: v.estado === "listo" ? C.exito : v.estado === "error" ? C.error : C.acento,
-                  }}
-                >
-                  {v.estado === "listo"
-                    ? `${Math.floor(v.duracionSeg / 60)}:${String(Math.floor(v.duracionSeg % 60)).padStart(2, "0")} · ${t("chat_mac_listo")}`
-                    : v.estado === "error"
-                      ? t("chat_video_error")
-                      : t("chat_mac_mirando")}
+          {vacio ? (
+            <View style={{ flex: 1, justifyContent: "center", gap: 18, paddingVertical: 20 }}>
+              <View style={{ alignItems: "center", gap: 8 }}>
+                <Text style={{ color: C.acento, fontSize: 30 }}>▶</Text>
+                <Text style={{ color: C.texto, fontSize: 24, fontWeight: "800", textAlign: "center" }}>
+                  {t("chat_vacio_titulo")}
                 </Text>
-              </Text>
+                <Text style={{ color: C.suave, textAlign: "center", lineHeight: 20, paddingHorizontal: 12 }}>
+                  {t("chat_vacio_sub")}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                {SUGERENCIAS.map(([titulo, sub, texto]) => (
+                  <Pressable
+                    key={titulo}
+                    onPress={() => {
+                      borrador.escribir(t(texto));
+                      campo.current?.focus();
+                    }}
+                    accessibilityRole="button"
+                    style={({ pressed }) => ({
+                      width: "47%",
+                      flexGrow: 1,
+                      backgroundColor: C.panel,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: C.borde,
+                      padding: 14,
+                      opacity: pressed ? 0.8 : 1,
+                    })}
+                  >
+                    <Text style={{ color: C.texto, fontWeight: "700" }}>{t(titulo)}</Text>
+                    <Text style={{ color: C.suave, marginTop: 4, fontSize: 13 }}>{t(sub)}</Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
+          ) : null}
+          {encargo?.videos.map((v) => (
+            <Text key={`v${v.id}`} style={{ color: C.suave, fontSize: 13 }} numberOfLines={1}>
+              🎬 {v.nombre} ·{" "}
+              <Text
+                style={{ color: v.estado === "listo" ? C.exito : v.estado === "error" ? C.error : C.acento }}
+              >
+                {v.estado === "listo"
+                  ? `${Math.floor(v.duracionSeg / 60)}:${String(Math.floor(v.duracionSeg % 60)).padStart(2, "0")} · ${t("chat_mac_listo")}`
+                  : v.estado === "error"
+                    ? t("chat_video_error")
+                    : t("chat_mac_mirando")}
+              </Text>
+            </Text>
           ))}
           {encargo?.mensajes.map((m) => (
-            <View key={`m${m.id}`} style={{ gap: 10 }}>
+            <View key={`m${m.id}`} style={{ gap: 12 }}>
               {m.rol === "aviso" ? (
                 <Text style={{ color: C.exito, textAlign: "center", fontSize: 13, paddingHorizontal: 12 }}>
                   {m.texto}
                 </Text>
-              ) : (
+              ) : m.rol === "yo" ? (
                 <View
                   style={{
-                    alignSelf: m.rol === "yo" ? "flex-end" : "flex-start",
-                    maxWidth: "88%",
-                    backgroundColor: m.rol === "yo" ? C.burbujaYo : C.panel,
-                    borderRadius: 16,
-                    padding: 12,
+                    alignSelf: "flex-end",
+                    maxWidth: "85%",
+                    backgroundColor: C.burbujaYo,
+                    borderRadius: 20,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
                   }}
                 >
-                  <Text
-                    style={{
-                      color: m.rol === "yo" ? C.suave : C.acento,
-                      fontSize: 12,
-                      fontWeight: "700",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {m.rol === "yo" ? t("chat_yo") : t("chat_director")}
-                  </Text>
                   <Text style={{ color: C.texto, fontSize: 16, lineHeight: 22 }}>{m.texto}</Text>
+                </View>
+              ) : (
+                <View style={{ gap: 6 }}>
+                  <Text style={{ color: C.acento, fontSize: 13, fontWeight: "700" }}>
+                    ▶ {t("chat_director")}
+                  </Text>
+                  <Text style={{ color: C.texto, fontSize: 16, lineHeight: 24 }}>{m.texto}</Text>
                 </View>
               )}
               {m.rol !== "aviso" ? tarjetaDe(m.propuestaId) : null}
             </View>
           ))}
           {encargo?.propuestas.map((p) => tarjetaDe(p.id))}
-          {enviando ? (
-            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-              <ActivityIndicator color={C.acento} />
-              <Text style={{ color: C.suave }}>{t("chat_pensando")}</Text>
-            </View>
-          ) : null}
+          {enviando ? <Pensando /> : null}
           {!enviando && sinRespuesta ? (
             <Pressable
               onPress={() => void mandar("")}
@@ -297,127 +337,35 @@ export default function Proyecto() {
         </ScrollView>
 
         <View
-          style={{
-            borderTopWidth: 1,
-            borderTopColor: C.borde,
-            padding: 12,
-            gap: 8,
-            backgroundColor: C.fondo,
-          }}
+          style={{ paddingHorizontal: 12, paddingTop: 6, paddingBottom: 8, gap: 6, backgroundColor: C.fondo }}
         >
-          {error ? <Text style={{ color: C.error }}>{error}</Text> : null}
+          {error ? <Text style={{ color: C.error, paddingHorizontal: 6 }}>{error}</Text> : null}
+          {adjuntos
+            .filter((a) => a.estado === "error")
+            .map((a) => (
+              <Text key={`e${a.clave}`} style={{ color: C.error, fontSize: 13, paddingHorizontal: 6 }}>
+                {a.nombre}: {a.error}
+              </Text>
+            ))}
           {borrador.recuperado && borrador.texto ? (
-            <Text style={{ color: C.suave, fontSize: 13 }}>
+            <Text style={{ color: C.suave, fontSize: 13, paddingHorizontal: 6 }}>
               {t("chat_recuperado")}{" "}
               <Text onPress={borrador.descartar} style={{ color: C.acento, fontWeight: "700" }}>
                 {t("chat_empezar_de_nuevo")}
               </Text>
             </Text>
           ) : null}
-          {subidas.map((s) => (
-            <Text
-              key={s.clave}
-              style={{
-                color: s.estado === "error" ? C.error : s.estado === "lista" ? C.exito : C.suave,
-                fontSize: 13,
-              }}
-            >
-              {s.tipo === "video" ? "🎬" : "🖼"} {s.nombre} ·{" "}
-              {s.estado === "subiendo"
-                ? `${t("chat_subiendo")}${s.pct !== undefined ? ` ${s.pct}%` : "…"}`
-                : s.estado === "lista"
-                  ? t("chat_subido")
-                  : s.error}
-            </Text>
-          ))}
-          {!borrador.texto ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {ATAJOS.map(([titulo, texto]) => (
-                <Pressable
-                  key={titulo}
-                  onPress={() => {
-                    borrador.escribir(t(texto));
-                    campo.current?.focus();
-                  }}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: C.borde,
-                    borderRadius: 999,
-                    paddingHorizontal: 12,
-                    paddingVertical: 7,
-                  }}
-                >
-                  <Text style={{ color: C.texto, fontSize: 13 }}>{t(titulo)}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          ) : null}
-          <TextInput
+          <Composer
             ref={campo}
-            value={borrador.texto}
-            onChangeText={borrador.escribir}
+            texto={borrador.texto}
+            escribir={borrador.escribir}
             placeholder={t(placeholder)}
-            placeholderTextColor={C.suave}
-            multiline
-            style={{
-              color: C.texto,
-              fontSize: 16,
-              minHeight: 48,
-              maxHeight: 140,
-              backgroundColor: C.panel,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: C.borde,
-              paddingHorizontal: 12,
-              paddingTop: 12,
-              paddingBottom: 12,
-            }}
+            adjuntos={adjuntos}
+            quitar={(clave) => setAdjuntos((todos) => todos.filter((a) => a.clave !== clave))}
+            elegir={(camara) => void elegir(camara)}
+            mandar={() => void mandar()}
+            enviando={enviando}
           />
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Pressable
-              onPress={() => void elegir(false)}
-              accessibilityRole="button"
-              style={{
-                borderWidth: 1,
-                borderColor: C.borde,
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 11,
-              }}
-            >
-              <Text style={{ color: C.texto, fontWeight: "600" }}>🖼 {t("chat_subir")}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => void elegir(true)}
-              accessibilityRole="button"
-              style={{
-                borderWidth: 1,
-                borderColor: C.borde,
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 11,
-              }}
-            >
-              <Text style={{ color: C.texto, fontWeight: "600" }}>📷 {t("chat_camara")}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => void mandar()}
-              disabled={enviando || subiendo}
-              accessibilityRole="button"
-              style={{
-                marginLeft: "auto",
-                backgroundColor: C.acento,
-                borderRadius: 12,
-                paddingHorizontal: 18,
-                paddingVertical: 11,
-                opacity: enviando || subiendo ? 0.6 : 1,
-              }}
-            >
-              <Text style={{ color: C.sobreAcento, fontWeight: "800" }}>
-                {enviando ? t("chat_mandando") : subiendo ? `${t("chat_subiendo")}…` : t("chat_mandar")}
-              </Text>
-            </Pressable>
-          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -147,6 +147,8 @@ describe("la cuenta del revisor de Apple solo ve lo suyo (C-APP-IOS-1)", () => {
       carpetas: ["Maggie"],
       avatar: "foto-Maggie.jpg",
       instrucciones: "",
+      sin_logo: true,
+      solo_presentadora: true,
     });
     if (!p.ok) throw new Error(p.error);
     await aprobarEnDemo(db, p.id);
@@ -181,6 +183,8 @@ describe("la cuenta del revisor de Apple solo ve lo suyo (C-APP-IOS-1)", () => {
       carpetas: ["Maggie"],
       avatar: "",
       instrucciones: "",
+      sin_logo: true,
+      solo_presentadora: true,
     });
     if (!p.ok) throw new Error(p.error);
     await expect(aprobarEnDemo(db, p.id)).rejects.toThrow("no existe");
@@ -353,5 +357,42 @@ describe("los avisos al iPhone cuando un video está listo (C-APP-IOS-4)", () =>
         Buffer.from(firma ?? "", "base64url"),
       ),
     ).toBe(true);
+  });
+});
+
+describe("la tarjeta de la app muestra lo que va a salir en el video (C-DIRECTOR-4)", () => {
+  it("la foto de la persona, el logo o «sin logo», y las fotos del producto", async () => {
+    const db = baseEnMemoria();
+    for (const [carpeta, nombre] of [
+      ["Maggie", "maggie-blazer-presenta.png"],
+      ["Maggie", "maggie-blusa-senalando.png"],
+      ["Encargo 1", "captura.png"],
+      ["Encargo 1", "logo-tienda.png"],
+    ] as const)
+      await db.ejecutar(
+        "INSERT INTO imagenes (carpeta, nombre, clave, tipo, bytes) VALUES (?, ?, ?, 'imagen', 2000)",
+        [carpeta, nombre, `imagenes/${nombre}`],
+      );
+    const id = await crearEncargo(db);
+    const p = await guardarPropuesta(db, id, {
+      nombre: "Tienda · producto",
+      narracion: TEXTO,
+      idioma: "es",
+      voz: "venezolana",
+      carpetas: ["Encargo 1", "Maggie"],
+      avatar: "maggie-blazer-presenta.png",
+      instrucciones: "",
+    });
+    if (!p.ok) throw new Error(p.error);
+    const encargo = await encargoPorId(db, id);
+    if (!encargo) throw new Error("sin encargo");
+    const vista = await encargoParaLaApp(db, encargo);
+    expect(vista.propuestas[0]?.material).toEqual({
+      personaFoto: 1,
+      logo: 4,
+      sinLogo: false,
+      fotos: [3],
+      soloPresentadora: false,
+    });
   });
 });
