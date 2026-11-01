@@ -2,6 +2,7 @@
 // Selector de idioma estilo Amazon (regla global de Richard): botón «🇺🇸 EN ▾» y una ventanita blanca
 // con «Change language», opciones con círculo naranja y una línea gris entre ellas. Se cierra al elegir,
 // al tocar fuera o con Escape. El español lleva la bandera de España; el inglés, la de EE. UU.
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
 export type IdiomaLegal = "en" | "es";
@@ -11,13 +12,21 @@ const IDIOMAS = [
 ] as const;
 const TITULO = { en: "Change language", es: "Cambiar idioma" } as const;
 
+/** La misma página en el otro idioma: el español vive bajo «/es» con las mismas direcciones en inglés. */
+export function rutasDeIdioma(ruta: string): Record<IdiomaLegal, string> {
+  const en = ruta === "/es" ? "/" : ruta.startsWith("/es/") ? ruta.slice(3) : ruta;
+  return { en, es: en === "/" ? "/es" : `/es${en}` };
+}
+
 export function SelectorIdioma({
   idioma,
-  rutas,
+  rutas: rutasDadas,
 }: {
   idioma: IdiomaLegal;
-  rutas: Record<IdiomaLegal, string>;
+  rutas?: Record<IdiomaLegal, string>;
 }) {
+  const ruta = usePathname();
+  const rutas = rutasDadas ?? rutasDeIdioma(ruta ?? "/");
   const [abierto, setAbierto] = useState(false);
   const caja = useRef<HTMLDivElement>(null);
   const id = useId();

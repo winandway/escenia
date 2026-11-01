@@ -93,3 +93,11 @@ export function nombreDePersona(persona: string): string {
   const limpio = persona.replace(/[-_]+/g, " ").trim();
   return limpio.charAt(0).toUpperCase() + limpio.slice(1);
 }
+
+/** «Tus casos» de ayuda: el más reciente primero, sin repetir y hasta 30 (no hay cuentas: los recuerda el teléfono). */
+export function agregarCaso(lista: string[], codigo: string): string[] {
+  return [codigo, ...lista.filter((c) => c !== codigo)].slice(0, 30);
+}
+
+/** Un correo con forma de correo (el panel lo vuelve a revisar). */
+export const correoValido = (c: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(c.trim());

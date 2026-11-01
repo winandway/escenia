@@ -133,7 +133,7 @@ export const SOPORTE = {
     titulo: "Escenia Support",
     actualizado: "We usually reply within one business day.",
     intro:
-      "Need help with Escenia? Write to soporte+escenia@windoce.com and tell us what happened. If it's about a specific video, include the project name you see in the app.",
+      "Need help with Escenia? Open a support case below and our team will reply in a private conversation, or write to soporte+escenia@windoce.com. If it's about a specific video, include the project name you see in the app.",
     secciones: [
       {
         titulo: "How Escenia works",
@@ -160,7 +160,7 @@ export const SOPORTE = {
     titulo: "Soporte de Escenia",
     actualizado: "Solemos responder en un día hábil.",
     intro:
-      "¿Necesitas ayuda con Escenia? Escríbenos a soporte+escenia@windoce.com y cuéntanos qué pasó. Si es sobre un video en particular, incluye el nombre del proyecto que ves en la app.",
+      "¿Necesitas ayuda con Escenia? Abre un caso de soporte aquí abajo y nuestro equipo te responde en una conversación privada, o escríbenos a soporte+escenia@windoce.com. Si es sobre un video en particular, incluye el nombre del proyecto que ves en la app.",
     secciones: [
       {
         titulo: "Cómo funciona Escenia",

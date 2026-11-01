@@ -12,6 +12,10 @@ const esquemaEntorno = z.object({
   ANTHROPIC_API_KEY: z.string().min(10).optional(),
   TURNSTILE_SITE_KEY: z.string().optional(),
   TURNSTILE_SECRET_KEY: z.string().optional(),
+  // La puerta del gerente de correo (C-GERENTE-1). Sin ella vale la huella guardada en la base.
+  GERENTE_SECRETO: z.string().min(32).optional(),
+  // El token del sitio para mandar correos (API de YaDominios). Sin él vale el ajuste correo_token.
+  YAD_TOKEN: z.string().min(10).optional(),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;

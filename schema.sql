@@ -373,3 +373,41 @@ CREATE TABLE IF NOT EXISTS app_avisos (
   creado_en TEXT NOT NULL DEFAULT (datetime('now')),
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Los casos de ayuda (docs/AYUDA.md, C-AYUDA-1): la persona escribe desde la página de soporte o desde la
+-- app, sin cuenta, y sigue su caso como un chat con su enlace secreto (`codigo`, no se adivina ni se
+-- indexa). El gerente de correo de Richard los lee y los contesta por /datos/gerente/* (C-GERENTE-1).
+-- `aviso_token`: la dirección de avisos del iPhone que abrió el caso; la Mac le avisa cada respuesta.
+CREATE TABLE IF NOT EXISTS ayuda_casos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  codigo TEXT NOT NULL UNIQUE,
+  origen TEXT NOT NULL CHECK (origen IN ('web','app')),
+  nombre TEXT NOT NULL,
+  correo TEXT NOT NULL,
+  idioma TEXT NOT NULL DEFAULT 'en' CHECK (idioma IN ('en','es')),
+  asunto TEXT NOT NULL,
+  estado TEXT NOT NULL DEFAULT 'abierto' CHECK (estado IN ('abierto','respondido','cerrado')),
+  aviso_token TEXT NOT NULL DEFAULT '',
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS ayuda_casos_por_estado ON ayuda_casos(estado, actualizado_en);
+-- Cada mensaje del chat. Las respuestas de soporte con iPhone quedan con aviso 'pendiente' hasta que la Mac
+-- lo manda ('enviado') o Apple lo rechaza ('fallo').
+CREATE TABLE IF NOT EXISTS ayuda_mensajes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  caso_id INTEGER NOT NULL REFERENCES ayuda_casos(id),
+  de TEXT NOT NULL CHECK (de IN ('cliente','soporte')),
+  texto TEXT NOT NULL,
+  plantilla TEXT NOT NULL DEFAULT '',
+  aviso TEXT NOT NULL DEFAULT '' CHECK (aviso IN ('','pendiente','enviado','fallo')),
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS ayuda_mensajes_por_caso ON ayuda_mensajes(caso_id, id);
+CREATE INDEX IF NOT EXISTS ayuda_mensajes_por_aviso ON ayuda_mensajes(aviso);
+-- Límite de pedidos por llave y ventana (abrir casos, escribir, la puerta del gerente).
+CREATE TABLE IF NOT EXISTS limites (
+  llave TEXT NOT NULL,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS limites_por_llave ON limites(llave, creado_en);

@@ -6,6 +6,7 @@ import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEn
 import { atenderComercial, materialDeComercial } from "./comerciales";
 import { atenderGrabacion, materialDeGrabacion } from "./grabaciones";
 import { atenderPublicidad } from "./publicidades";
+import { vigilarAvisosDeAyuda } from "./avisos";
 import { atenderTrabajoDelDirector, vigilarVideosDelDirector } from "./director";
 import { panel } from "./panel";
 import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas";
@@ -210,6 +211,8 @@ async function principal() {
   console.log("Lista. Esperando trabajos.");
   // Los videos que suben en el chat del Director se miran aparte, cada 10 s (C-DIRECTOR-3).
   vigilarVideosDelDirector();
+  // Las respuestas de soporte a los casos de ayuda se avisan al iPhone cada 15 s (C-AYUDA-1).
+  vigilarAvisosDeAyuda();
   // Si se queda 10 minutos sin hablar con el panel, se sale y launchd la vuelve a arrancar.
   vigilar((minutos) => {
     console.error(`[${hora()}] La Estación lleva ${minutos} min sin señal de vida: se reinicia sola.`);

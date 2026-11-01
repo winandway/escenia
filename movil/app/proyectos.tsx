@@ -108,7 +108,12 @@ export default function Proyectos() {
                 accessibilityLabel={t("proyectos_mas")}
                 hitSlop={10}
                 onPress={() =>
-                  menuDeTresPuntos([t("proyectos_salir")], 0, t("proyectos_cancelar"), () => void salir())
+                  menuDeTresPuntos(
+                    [t("ayuda_menu"), t("proyectos_salir")],
+                    1,
+                    t("proyectos_cancelar"),
+                    (i) => (i === 0 ? router.push("/ayuda") : void salir()),
+                  )
                 }
                 style={{ paddingHorizontal: 8 }}
               >

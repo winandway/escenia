@@ -1912,3 +1912,27 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   correo de la app no es el del buzón. Comprobado en rojo el 1 nov 2026.
 - **La pantalla de entrar de la app** lleva el correo nuevo desde la compilación 6; las anteriores muestran el viejo,
   que sigue recibiendo.
+
+## C-AYUDA-1 — Los casos de ayuda: la persona escribe sin cuenta y sigue su caso como un chat (1 nov 2026)
+
+- **Qué es:** el formulario «Abre un caso de soporte» en la página de soporte y en la app (pantalla de entrar y
+  menú de tres puntos), la conversación de cada caso por su enlace secreto y «Tus casos» en el navegador o el
+  teléfono. Detalle completo en docs/AYUDA.md.
+- **Qué NO tocar:** el enlace del caso es la única llave de la conversación (32 bytes al azar, `noindex`,
+  `referrer: no-referrer`); el chat nunca devuelve el correo de la persona. Los formularios guardan lo escrito y no
+  se limpian hasta tener el caso creado. Las respuestas con iPhone quedan `pendiente` hasta que la Mac las manda.
+- **El candado:** `pruebas/ayuda.test.ts` (crear, leer sin correo, reabrir al escribir, límite, cola de avisos,
+  dirección muerta, avisos atascados, rutas públicas, textos y guías completos en los dos idiomas). Comprobado en
+  rojo el 1 nov 2026. Canario: pieza `ayuda` en `/datos/salud`.
+
+## C-GERENTE-1 — La puerta del gerente de correo para contestar los casos (1 nov 2026)
+
+- **Qué es:** `GET /datos/gerente/tickets` y `POST /datos/gerente/tickets/<id>/responder`, con el mismo contrato que
+  Divoox, para que el gerente de correo de Richard lea y conteste los casos abiertos.
+- **El secreto:** en `~/.config/gerente-correo/soporte-escenia`; en el sitio solo su huella (ajuste
+  `gerente_huella`), o la variable `GERENTE_SECRETO` si se pone en el panel (manda sobre la huella). Sin ninguna de
+  las dos, la puerta no existe para nadie. Comparación de huellas en tiempo constante; 30 pedidos por minuto por
+  conexión contando los fallidos.
+- **Qué NO tocar:** la lista del gerente no lleva correo, pagos ni direcciones. El correo solo sale desde un
+  dominio conectado al sitio; sin él se responde `correo:"error"` con su motivo y el canario lo muestra apagado.
+- **El candado:** `pruebas/ayuda.test.ts`, bloque «la puerta del gerente». Comprobado en rojo el 1 nov 2026.

@@ -5,6 +5,7 @@ import { estacionViva } from "@/lib/estacion-estado";
 import { comercialesAtascados } from "@/lib/comerciales";
 import { grabacionesAtascadas } from "@/lib/grabaciones";
 import { problemaAbiertoDeIA } from "@/lib/ia-estado";
+import { avisosDeAyudaAtascados, estadoDelCorreo } from "@/lib/ayuda";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,20 @@ export async function GET() {
           detalle || `Hay ${atascadas} grabación(es) esperando hace más de tres horas con la Mac encendida.`;
     } catch (e) {
       piezas.grabaciones = "error";
+      detalle = detalle || (e instanceof Error ? e.message : String(e));
+    }
+    try {
+      // Los casos de ayuda (C-AYUDA-1): con la Mac encendida, ningún aviso al iPhone espera más de
+      // 10 minutos. El correo de soporte sale apagado mientras Escenia no tenga un dominio conectado.
+      const atascados = await avisosDeAyudaAtascados(db);
+      const atasco = atascados > 0 && piezas.estacion === "ok";
+      piezas.ayuda = atasco ? "error" : "ok";
+      if (atasco) detalle = detalle || `Hay ${atascados} aviso(s) de ayuda sin salir hace más de 10 minutos.`;
+      const correo = await estadoDelCorreo(db);
+      piezas.correo = correo.estado;
+      if (correo.motivo) detalle = detalle || correo.motivo;
+    } catch (e) {
+      piezas.ayuda = "error";
       detalle = detalle || (e instanceof Error ? e.message : String(e));
     }
   } catch (e) {

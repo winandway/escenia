@@ -100,7 +100,7 @@ export function enviarAviso(
   });
 }
 
-async function panel(ruta: string, metodo: "GET" | "DELETE", cuerpo?: unknown): Promise<unknown> {
+async function panel(ruta: string, metodo: "GET" | "POST" | "DELETE", cuerpo?: unknown): Promise<unknown> {
   // La configuración se carga aquí y no arriba: así las pruebas leen este archivo sin estacion/.env.
   const { config } = await import("./config");
   const r = await fetch(`${config.PANEL_URL}${ruta}`, {
@@ -135,4 +135,68 @@ export async function avisarVideoListo(de: { trabajo?: number; publicidad?: numb
     console.warn(`[avisos] no se pudo avisar al iPhone: ${e instanceof Error ? e.message : e}`);
     return 0;
   }
+}
+
+// ——— Las respuestas de soporte a los casos de ayuda (docs/AYUDA.md, C-AYUDA-1) ———
+
+/** Lo que dice el aviso cuando el equipo contesta un caso, en el idioma del caso. */
+export function textoDelAvisoDeAyuda(
+  idioma: "en" | "es",
+  numero: string,
+  texto: string,
+): { title: string; body: string } {
+  return {
+    title: idioma === "en" ? `We replied to your case ${numero}` : `Te respondimos tu caso ${numero}`,
+    body: texto,
+  };
+}
+
+const direccionMuerta = (r: { estado: number; motivo: string }) =>
+  r.estado === 410 || r.motivo === "BadDeviceToken" || r.motivo === "Unregistered";
+
+/** Manda los avisos pendientes. Un fallo pasajero (sin red) se deja pendiente y se reintenta. */
+export async function avisarRespuestasDeAyuda(enviar = enviarAviso): Promise<number> {
+  const r = (await panel("/datos/estacion/ayuda", "GET")) as {
+    avisos?: {
+      mensajeId: number;
+      token: string;
+      idioma: "en" | "es";
+      numero: string;
+      codigo: string;
+      texto: string;
+    }[];
+  };
+  let entregados = 0;
+  for (const a of r.avisos ?? []) {
+    // El caso viaja en «body»: al tocar el aviso, la app abre ese chat.
+    const res = await enviar(a.token, {
+      aps: { alert: textoDelAvisoDeAyuda(a.idioma, a.numero, a.texto), sound: "default" },
+      body: { caso: a.codigo },
+    });
+    if (res.estado === 200) entregados++;
+    else console.warn(`[avisos] ayuda ${a.numero}: Apple respondió ${res.estado} ${res.motivo}`);
+    if (res.estado === 200 || direccionMuerta(res))
+      await panel("/datos/estacion/ayuda", "POST", {
+        mensajeId: a.mensajeId,
+        resultado: res.estado === 200 ? "enviado" : "fallo",
+        direccionMuerta: direccionMuerta(res),
+      });
+  }
+  return entregados;
+}
+
+/** Cada 15 segundos, las respuestas de soporte que tienen un iPhone esperando. */
+export function vigilarAvisosDeAyuda(cadaMs = 15_000): void {
+  let ocupado = false;
+  setInterval(() => {
+    if (ocupado) return;
+    ocupado = true;
+    void avisarRespuestasDeAyuda()
+      .catch((e) =>
+        console.warn(
+          `[avisos] no se pudo preguntar por casos de ayuda: ${e instanceof Error ? e.message : e}`,
+        ),
+      )
+      .finally(() => (ocupado = false));
+  }, cadaMs);
 }

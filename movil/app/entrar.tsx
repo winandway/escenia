@@ -1,6 +1,6 @@
 // Entrar: la contraseña (con su ojito), el selector de idioma arriba y un error claro si algo falla.
 // La contraseña no se guarda nunca: ni en el borrador ni en el teléfono (solo el token de la sesión).
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -20,6 +20,7 @@ import { C } from "../src/tema";
 
 export default function Entrar() {
   const { t, cuenta, entrar } = useEstado();
+  const router = useRouter();
   const [clave, setClave] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
@@ -109,6 +110,14 @@ export default function Entrar() {
             </Text>
           </Pressable>
           <Text style={{ color: C.suave, marginTop: 20, lineHeight: 20 }}>{t("entrar_ayuda")}</Text>
+          <Pressable
+            onPress={() => router.push("/ayuda")}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={{ marginTop: 14, alignSelf: "flex-start" }}
+          >
+            <Text style={{ color: C.acento, fontWeight: "700", fontSize: 16 }}>{t("ayuda_contactar")} →</Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

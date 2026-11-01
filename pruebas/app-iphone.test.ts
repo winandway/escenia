@@ -212,7 +212,7 @@ describe("la cuenta del revisor de Apple solo ve lo suyo (C-APP-IOS-1)", () => {
 describe("las páginas que pide Apple se abren sin sesión (C-APP-IOS-1)", () => {
   it("privacidad y soporte, en inglés y en español, sin mandar a entrar; el panel sigue cerrado", () => {
     const pedir = (ruta: string) => proxy(new NextRequest(`https://escenia.sitios.dev${ruta}`));
-    expect(RUTAS_PUBLICAS).toEqual(["/privacy", "/es/privacy", "/support", "/es/support"]);
+    expect(RUTAS_PUBLICAS).toEqual(["/privacy", "/es/privacy", "/support", "/es/support", "/sitemap.xml"]);
     for (const ruta of [...RUTAS_PUBLICAS, "/muestras/escenia-muestra.mp4"])
       expect(pedir(ruta).headers.get("location"), ruta).toBeNull();
     for (const ruta of ["/director", "/es", "/privacy/otra"])

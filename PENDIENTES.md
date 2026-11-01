@@ -2,6 +2,7 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Pedirle a YaDominios que conecte un dominio al sitio de Escenia (por ejemplo escenia.windoce.com) con «Correos desde tu dominio» → las respuestas de soporte a los casos de ayuda también le llegan a la persona por correo (hoy le llegan en su chat y en la app). Lo demás lo hace la IA (docs/AYUDA.md).
 - 👤 Entrar a fal.ai en su Chrome (la cuenta de los cobros «FAL FEATURES LABELS» de 10 dólares) → la IA lee el uso exacto por clave y modelo y crea una clave propia para Escenia, así se sabe cuánto de cada recarga es de Escenia, de Beellon o de Losupe (docs/GASTOS.md).
 - 👤 App de iPhone: probarla en su iPhone con TestFlight. Apple ya aprobó la prueba pública: el enlace público (en docs/PUBLICAR-EN-APPLE.md) abre en cualquier iPhone y trae la compilación 6. Entra con la contraseña del panel y acepta los avisos.
 - 👤 Pro In Shop, comercial del agua (hecho con la asesora de camisa roja, 30 s): verlo y mandárselo al cliente → si cambia una frase, se rehace solo ese pedazo.

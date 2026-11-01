@@ -42,3 +42,24 @@ export function proyectoDelAviso(r: Notifications.NotificationResponse | null): 
   const id = (r?.notification.request.content.data as { encargoId?: unknown } | undefined)?.encargoId;
   return typeof id === "number" && id > 0 ? id : null;
 }
+
+/**
+ * La dirección de avisos de este iPhone para un caso de ayuda (C-AYUDA-1): así la Mac le avisa cuando
+ * soporte responde, también sin cuenta. Pide el permiso la primera vez; sin permiso, el caso sigue igual.
+ */
+export async function direccionParaAyuda(): Promise<string | undefined> {
+  try {
+    const permiso = await Notifications.requestPermissionsAsync();
+    if (!permiso.granted) return undefined;
+    const { data } = await Notifications.getDevicePushTokenAsync();
+    return typeof data === "string" && data ? data : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** El caso de ayuda que trae un aviso tocado (la Mac lo manda en «body»). */
+export function casoDelAviso(r: Notifications.NotificationResponse | null): string | null {
+  const caso = (r?.notification.request.content.data as { caso?: unknown } | undefined)?.caso;
+  return typeof caso === "string" && /^[A-Za-z0-9_-]{40,60}$/.test(caso) ? caso : null;
+}
