@@ -64,6 +64,12 @@ o se vuelve a cargar con `scripts/tiendas/clave-revisor.ts`). Esa cuenta:
   app, y cada ruta comprueba que la cuenta pueda tocar ese encargo.
 - **Tablas** (`schema.sql`): `app_sesiones`, `app_encargos_demo`, `app_demo_resultados`.
 - **Páginas públicas** que pide Apple: `/privacy`, `/es/privacy`, `/support`, `/es/support`.
+- **Correo de soporte que ven los clientes: soporte+escenia@windoce.com** (desde el 1 nov 2026, orden de Richard: todo el
+  soporte de Windoce entra por un solo buzón con una etiqueta por app). Está en la privacidad, el soporte y el borrado de
+  datos (los dos idiomas), en la pantalla de entrar de la app, en la descripción de la App Store, en las notas para el
+  revisor y en el correo de comentarios de TestFlight. El contacto del revisor de Apple sigue siendo el titular
+  (go@windoce.com): ese no lo ven los clientes. go@windoce.com sigue recibiendo, así que lo que ya circuló no se rompe.
+  Candado C-SOPORTE-1.
 - **La app** (`movil/`, Expo SDK 57, expo-router): `app/` (pantallas), `src/` (conexión, idioma,
   borrador, subidas, tarjeta, video). La parte pura (`src/logica.ts`, `src/textos.ts`) la prueban las
   pruebas de la raíz.

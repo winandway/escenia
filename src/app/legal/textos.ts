@@ -2,12 +2,14 @@
 // (manda) y en español (traducción de cortesía). Escritos para el público: sin nombres internos.
 import type { Seccion } from "./PaginaLegal";
 
-const CONTACTO = "Windoce LLC, 30080 Montmorency Dr, Novi, MI 48377, USA · go@windoce.com";
+// El correo de soporte es el buzón único de Windoce con la etiqueta de Escenia (1 nov 2026, docs/APP-IPHONE.md).
+export const CORREO_SOPORTE = "soporte+escenia@windoce.com";
+const CONTACTO = `Windoce LLC, 30080 Montmorency Dr, Novi, MI 48377, USA · ${CORREO_SOPORTE}`;
 
 export const PRIVACIDAD = {
   en: {
     titulo: "Escenia Privacy Policy",
-    actualizado: "Last updated: October 31, 2026",
+    actualizado: "Last updated: November 1, 2026",
     intro:
       "Escenia is a video studio app made by Windoce LLC. You chat with our AI Director, add your photos and videos, and approve short vertical video ads for social media. This policy explains what we collect, why, and the choices you have.",
     secciones: [
@@ -48,7 +50,7 @@ export const PRIVACIDAD = {
       {
         titulo: "Deleting your data",
         parrafos: [
-          "Email go@windoce.com from the address linked to your account and we'll delete your projects, uploads, and videos within 30 days.",
+          "Email soporte+escenia@windoce.com from the address linked to your account and we'll delete your projects, uploads, and videos within 30 days.",
         ],
       },
       {
@@ -67,7 +69,7 @@ export const PRIVACIDAD = {
   es: {
     titulo: "Política de privacidad de Escenia",
     actualizado:
-      "Última actualización: 31 de octubre de 2026 · Traducción de cortesía: rige la versión en inglés.",
+      "Última actualización: 1 de noviembre de 2026 · Traducción de cortesía: rige la versión en inglés.",
     intro:
       "Escenia es una app de estudio de video hecha por Windoce LLC. Conversas con nuestro Director de IA, agregas tus fotos y videos, y apruebas anuncios cortos en vertical para redes sociales. Esta política explica qué recogemos, para qué y qué opciones tienes.",
     secciones: [
@@ -108,7 +110,7 @@ export const PRIVACIDAD = {
       {
         titulo: "Borrar tus datos",
         parrafos: [
-          "Escríbenos a go@windoce.com desde el correo de tu cuenta y borramos tus proyectos, tus archivos y tus videos en un plazo de 30 días.",
+          "Escríbenos a soporte+escenia@windoce.com desde el correo de tu cuenta y borramos tus proyectos, tus archivos y tus videos en un plazo de 30 días.",
         ],
       },
       {
@@ -131,7 +133,7 @@ export const SOPORTE = {
     titulo: "Escenia Support",
     actualizado: "We usually reply within one business day.",
     intro:
-      "Need help with Escenia? Write to go@windoce.com and tell us what happened. If it's about a specific video, include the project name you see in the app.",
+      "Need help with Escenia? Write to soporte+escenia@windoce.com and tell us what happened. If it's about a specific video, include the project name you see in the app.",
     secciones: [
       {
         titulo: "How Escenia works",
@@ -149,7 +151,7 @@ export const SOPORTE = {
           "How much does a video cost? Each card shows its price before you approve it. Ads with a talking presenter cost more than ads with photos only.",
           "Can I change the script? Yes. Tap Change something and say what you want in your own words. A new card replaces the old one.",
           "Can I use my own presenter or my own voice? Ask the Director, or write to us and our team will set it up.",
-          "How do I delete my data? Email go@windoce.com from the address linked to your account. See our privacy policy.",
+          "How do I delete my data? Email soporte+escenia@windoce.com from the address linked to your account. See our privacy policy.",
         ],
       },
     ] satisfies Seccion[],
@@ -158,7 +160,7 @@ export const SOPORTE = {
     titulo: "Soporte de Escenia",
     actualizado: "Solemos responder en un día hábil.",
     intro:
-      "¿Necesitas ayuda con Escenia? Escríbenos a go@windoce.com y cuéntanos qué pasó. Si es sobre un video en particular, incluye el nombre del proyecto que ves en la app.",
+      "¿Necesitas ayuda con Escenia? Escríbenos a soporte+escenia@windoce.com y cuéntanos qué pasó. Si es sobre un video en particular, incluye el nombre del proyecto que ves en la app.",
     secciones: [
       {
         titulo: "Cómo funciona Escenia",
@@ -176,7 +178,7 @@ export const SOPORTE = {
           "¿Cuánto cuesta un video? Cada tarjeta muestra su precio antes de aprobarla. Los anuncios con una presentadora que habla cuestan más que los que llevan solo fotos.",
           "¿Puedo cambiar el texto? Sí. Toca Cambiar algo y dilo con tus palabras. La tarjeta nueva reemplaza la anterior.",
           "¿Puedo usar mi propia presentadora o mi voz? Pídeselo al Director o escríbenos y nuestro equipo lo prepara.",
-          "¿Cómo borro mis datos? Escribe a go@windoce.com desde el correo de tu cuenta. Mira nuestra política de privacidad.",
+          "¿Cómo borro mis datos? Escribe a soporte+escenia@windoce.com desde el correo de tu cuenta. Mira nuestra política de privacidad.",
         ],
       },
     ] satisfies Seccion[],

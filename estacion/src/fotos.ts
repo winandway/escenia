@@ -39,7 +39,7 @@ function anioDeCandidata(p: PaginaCommons): number | null {
   return enTitulo && Number(enTitulo) <= ahora ? Number(enTitulo) : null;
 }
 
-const AGENTE = "Escenia/0.1 (https://windoce.com; escenia@windoce.com)";
+const AGENTE = "Escenia/0.1 (https://windoce.com; soporte+escenia@windoce.com)";
 const usadas = new Set<string>();
 
 type PaginaCommons = {

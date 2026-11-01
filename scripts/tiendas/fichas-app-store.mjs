@@ -43,7 +43,7 @@ const TEXTOS = {
       "MADE FOR BUSINESSES AND CREATORS",
       "Shops, restaurants, services, apps and personal brands that need fresh video every week, without filming or editing.",
       "",
-      "Accounts are created by Windoce for its clients. Questions? go@windoce.com",
+      "Accounts are created by Windoce for its clients. Questions? soporte+escenia@windoce.com",
     ].join("\n"),
     novedades: "First version: the Director, ads with Maggie, live demos and voice-overs.",
   },
@@ -75,7 +75,7 @@ const TEXTOS = {
       "HECHO PARA NEGOCIOS Y CREADORES",
       "Tiendas, restaurantes, servicios, apps y marcas personales que necesitan video nuevo cada semana, sin grabar ni editar.",
       "",
-      "Las cuentas las crea Windoce para sus clientes. ¿Preguntas? go@windoce.com",
+      "Las cuentas las crea Windoce para sus clientes. ¿Preguntas? soporte+escenia@windoce.com",
     ].join("\n"),
     novedades: "Primera versión: el Director, anuncios con Maggie, pruebas en vivo y locuciones.",
   },
@@ -171,7 +171,7 @@ const revision = {
     "Sign-in: the app only asks for a password. Use the demo password above.",
     "The demo account is safe to explore: tap New project, write what you want to sell (for example: an ad with Maggie for a coffee shop, people order on WhatsApp), and the Director replies with a card. Approving on the demo account never charges anything and shows a finished sample video, which you can play, save to Photos or share.",
     "Escenia is a business-to-business production service: Windoce LLC's studio produces each video for its business clients under a service agreement. Accounts are created by Windoce; there is no public sign-up. The price on each card is the client's production cost, invoiced by Windoce outside the app; the app has no payment screen and sells nothing to consumers.",
-    "Support: go@windoce.com",
+    "Support: soporte+escenia@windoce.com",
   ].join("\n\n"),
 };
 const det = await asc("GET", `/v1/appStoreVersions/${version.id}/appStoreReviewDetail`).catch(() => null);

@@ -1896,3 +1896,19 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   tarjeta). En vivo: «anuncio con Maggie para mi app» → el Director pide logo, capturas y nombre, sin
   tarjeta; «sin logo y solo con Maggie» → tarjeta con Maggie, «sin logo» y «solo la presentadora».
 - **Qué NO tocar:** no volver a dejar que la tarjeta salga sin revisar el material.
+
+## C-SOPORTE-1 — El correo de soporte de Escenia es el buzón único de Windoce (1 nov 2026)
+
+- **Qué se pidió:** Richard ordenó que todo el soporte entre por un solo buzón con una etiqueta por app. El de
+  Escenia es `soporte+escenia@windoce.com` (lo creó y lo atiende la sesión del gerente de correo).
+- **Dónde está:** `CORREO_SOPORTE` en `src/app/legal/textos.ts` (privacidad, soporte y borrar datos, en inglés y
+  español), `entrar_ayuda` en `movil/src/textos.ts`, la descripción y las notas del revisor en
+  `scripts/tiendas/fichas-app-store.mjs`, y `feedbackEmail` en `scripts/tiendas/testflight.mjs`. En Apple se cambió
+  en vivo por la API el 1 nov 2026 (descripción en inglés y español, notas del revisor y TestFlight), con la versión
+  1.0 todavía en revisión.
+- **Lo que NO cambia:** el contacto del revisor de Apple (`contactEmail`, el titular) y el probador interno de
+  TestFlight (el Apple ID de Richard). Esos no los ven los clientes.
+- **El candado:** `pruebas/correo-soporte.test.ts` se pone rojo si un texto público vuelve a `go@windoce.com` o si el
+  correo de la app no es el del buzón. Comprobado en rojo el 1 nov 2026.
+- **La pantalla de entrar de la app** lleva el correo nuevo desde la compilación 6; las anteriores muestran el viejo,
+  que sigue recibiendo.

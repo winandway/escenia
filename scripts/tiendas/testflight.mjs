@@ -77,7 +77,7 @@ await asc("PATCH", `/v1/betaAppReviewDetails/${detalle.id}`, {
 });
 const locs = (await asc("GET", `/v1/apps/${APP_ID}/betaAppLocalizations`)).data;
 const datosPrueba = {
-  feedbackEmail: "go@windoce.com",
+  feedbackEmail: "soporte+escenia@windoce.com",
   description:
     "Escenia turns a short chat with an AI Director into a vertical video ad with a talking presenter.",
   marketingUrl: "https://escenia.sitios.dev/support",
