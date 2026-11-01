@@ -81,7 +81,9 @@ Cuando Expo tenga compilaciones otra vez (el mes nuevo o un plan pago), `compila
   aprobada, así que el enlace público ya abre para cualquier iPhone.
 - Compilación 7 (1 nov 2026: la 6 más la Ayuda, con «Contactar a soporte» en la pantalla de entrar, «Ayuda» en el
   menú de tres puntos y el chat de cada caso; docs/AYUDA.md) `VALID`, en los dos grupos, con su revisión de prueba
-  **APPROVED** el mismo día. Es la que trae hoy el enlace público.
+  **APPROVED** el mismo día.
+- Compilación 8 (1 nov 2026: la 7 más «Adjuntar capturas» en el chat de cada caso de ayuda, C-AYUDA-2) `VALID`, en
+  los dos grupos, con su revisión de prueba **APPROVED** el mismo día. Es la que trae hoy el enlace público.
 - TestFlight interno: go@windoce.com invitado. Enlace público: https://testflight.apple.com/join/zW3q14aJ
 - Correo de soporte (C-SOPORTE-1): soporte+escenia@windoce.com en la descripción, las notas del revisor y los
   comentarios de TestFlight, cambiado por la API el 1 nov 2026 con la versión en revisión (Apple lo dejó).

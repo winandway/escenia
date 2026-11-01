@@ -82,6 +82,8 @@ o se vuelve a cargar con `scripts/tiendas/clave-revisor.ts`). Esa cuenta:
   proyectos». Abre «Tus casos» y el formulario para abrir uno; cada caso es un chat con el soporte de Escenia.
 - Al abrir un caso la app pide permiso de avisos; con permiso, la Mac le avisa cada respuesta y al tocar el aviso
   se abre ese chat. Todo el detalle, la puerta del gerente de correo y los candados: docs/AYUDA.md (C-AYUDA-1).
+- Desde la compilación 8, «Adjuntar capturas» en el chat del caso: hasta 3 imágenes de la fototeca por mensaje,
+  cada una se sube sola con su miniatura y, si falla, el texto se queda (C-AYUDA-2).
 
 ## Candados
 
