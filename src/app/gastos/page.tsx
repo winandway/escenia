@@ -53,8 +53,9 @@ export default async function PaginaGastos({ searchParams }: PageProps<"/gastos"
       <div className="tarjeta mb-5">
         <p className="text-3xl font-semibold text-neutral-100">{dinero(r.total)}</p>
         <p className="mt-1 text-sm text-neutral-400">
-          Gastado este mes por el panel · {videos} videos terminados ({r.videos.guiones} de guiones,{" "}
-          {r.videos.anuncios} anuncios, {r.videos.director} del Director con video)
+          Gastado este mes por el panel · {videos} producciones terminadas ({r.videos.guiones} de guiones,
+          contando las que se rehicieron, {r.videos.anuncios} anuncios, {r.videos.director} del Director con
+          video)
         </p>
         <p className="mt-3 text-xs text-neutral-500">
           Ojo: la cuenta de fal.ai la usan también otros proyectos (Beellon y Losupe), y fal.ai cobra la

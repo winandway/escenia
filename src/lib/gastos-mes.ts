@@ -27,6 +27,13 @@ export function piezaDelGasto(detalle: string): Pieza {
       nombre: `Director · proyecto ${encargo}`,
       enlace: `/director/${encargo}`,
     };
+  if (/^textos de youtube/i.test(detalle))
+    return { clave: "textos-youtube", nombre: "Textos de YouTube (títulos y descripciones)", enlace: null };
+  if (/^plan de comercial/i.test(detalle))
+    return { clave: "planes-comercial", nombre: "Planes de comerciales (IA)", enlace: "/comerciales" };
+  if (/^dibujo de /i.test(detalle))
+    return { clave: "dibujos", nombre: "Fotos pasadas a dibujo (estilo Cómic)", enlace: null };
+  if (/miniatura/i.test(detalle)) return { clave: "miniaturas", nombre: "Miniaturas", enlace: null };
   if (/^guion:/i.test(detalle))
     return { clave: "guiones-ia", nombre: "Guiones escritos por la IA", enlace: "/" };
   if (/imagen escena/i.test(detalle))

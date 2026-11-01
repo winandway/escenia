@@ -15,6 +15,10 @@ describe("piezaDelGasto", () => {
     expect(piezaDelGasto("plan de anuncio: Tienda").clave).toBe("planes-anuncio");
     expect(piezaDelGasto("guion: Cómo una tintorería controla").clave).toBe("guiones-ia");
     expect(piezaDelGasto("imagen escena 3").clave).toBe("escenas");
+    expect(piezaDelGasto("textos de YouTube: Un título").clave).toBe("textos-youtube");
+    expect(piezaDelGasto("plan de comercial: Cliente").clave).toBe("planes-comercial");
+    expect(piezaDelGasto("dibujo de web-1a2b.jpg").clave).toBe("dibujos");
+    expect(piezaDelGasto("figura de la miniatura").clave).toBe("miniaturas");
     expect(piezaDelGasto("algo nuevo").clave).toBe("otros");
   });
 
