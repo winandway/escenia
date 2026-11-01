@@ -14,6 +14,10 @@
   con permiso, cada respuesta de soporte llega como aviso al iPhone y al tocarlo se abre el chat.
 - **Docs:** la guía pública «Pide ayuda: tus casos de soporte» (`/docs/help/support-cases` y `/es/docs/...`), con
   capturas reales en `docs/capturas/ayuda-*.png` (copia servida en `public/capturas/`).
+- **Capturas (C-AYUDA-2, pedido del gerente el 1 nov 2026):** en el chat del caso, «Adjuntar capturas» deja hasta
+  3 imágenes por mensaje (JPG, PNG, WEBP o HEIC, 10 MB cada una). Cada una se sube apenas se elige y muestra su
+  miniatura; si una falla, se quita y se vuelve a poner, y el texto no se pierde. Guía pública: «Cómo mandar una
+  captura a soporte» (`/docs/help/send-a-screenshot` y `/es/docs/...`).
 - Todos los formularios guardan lo escrito mientras se escribe y lo devuelven al volver (regla global).
 
 ## Cómo está hecho
@@ -30,7 +34,8 @@
 | Docs                             | `src/app/docs/` (guías en `guias.ts`) y `src/app/es/docs/`; mapa del sitio en `src/app/sitemap.ts`            |
 | Canario                          | piezas `ayuda` (avisos atascados más de 10 min con la Mac encendida) y `correo` en `/datos/salud`             |
 
-Límites: abrir casos 5 por hora por conexión; escribir 20 cada 10 minutos; leer 60 por minuto; la puerta del
+Límites: subir capturas 30 cada 10 minutos por conexión y 12 sueltas (sin mensaje) por caso; el tipo se decide por
+los primeros bytes del archivo (un SVG o un GIF no entran aunque digan ser imagen). Abrir casos 5 por hora por conexión; escribir 20 cada 10 minutos; leer 60 por minuto; la puerta del
 gerente 30 por minuto (cuentan también los intentos con el secreto malo). El formulario web lleva un campo trampa
 para robots.
 
@@ -39,6 +44,10 @@ para robots.
 1. `GET https://escenia.sitios.dev/datos/gerente/tickets?estado=abiertos` (o `estado=todos`) →
    `{tickets:[{id, numero, app:"escenia", cliente_nombre, idioma, asunto, estado, creado, mensajes:[{de, fecha, texto}]}]}`.
    «Abiertos» son los que esperan respuesta: los nuevos y los que la persona volvió a escribir. Sin correo.
+   Cada mensaje trae `adjuntos: [{nombre, tipo, url}]` (vacío si no tiene). La `url` es de
+   `https://escenia.sitios.dev/datos/ayuda/adjuntos/<id>`, firmada (HMAC con el secreto de la Estación) y vale 30
+   días desde que se pide la lista; con la firma mala o vencida da 403. Para abrir una captura desde la Mac, basta
+   esa misma dirección.
 2. `POST https://escenia.sitios.dev/datos/gerente/tickets/<id>/responder` con `{texto, plantilla?: "P1".."P9", cerrar?: boolean}` →
    `{ok, numero, plantilla, aviso, correo, correo_motivo?}`.
 3. «Authorization: Bearer <secreto>», comparación de huellas en tiempo constante, 401 si falta o está mal.

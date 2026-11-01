@@ -1936,3 +1936,15 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
 - **Qué NO tocar:** la lista del gerente no lleva correo, pagos ni direcciones. El correo solo sale desde un
   dominio conectado al sitio; sin él se responde `correo:"error"` con su motivo y el canario lo muestra apagado.
 - **El candado:** `pruebas/ayuda.test.ts`, bloque «la puerta del gerente». Comprobado en rojo el 1 nov 2026.
+
+## C-AYUDA-2 — Las capturas de los casos de ayuda (1 nov 2026)
+
+- **Qué es:** «Adjuntar capturas» en el chat del caso (web y app): hasta 3 imágenes por mensaje, JPG, PNG, WEBP o
+  HEIC, 10 MB cada una, guardadas en `env.BUCKET` bajo `ayuda/<caso>/`. La lista del gerente y el chat traen
+  `adjuntos: [{nombre, tipo, url}]` con un enlace firmado de Escenia que vale 30 días. Detalle: docs/AYUDA.md.
+- **Qué NO tocar:** el tipo se decide por los primeros bytes, nunca por lo que dice el navegador (un SVG con
+  scripts no puede entrar). La imagen se sirve con `nosniff`, sin caché pública y sin dejar la dirección a otros
+  sitios. Las capturas se suben antes del mensaje y se pegan al mandarlo: una subida que falla no se lleva el
+  texto, y una captura de otro caso o ya usada hace que el mensaje no salga.
+- **El candado:** `pruebas/ayuda.test.ts`, bloque «las capturas de los casos». Comprobado en rojo el 1 nov 2026
+  (tipo por bytes, firma, subida, capturas ajenas o repetidas).

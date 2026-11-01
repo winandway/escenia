@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     return Response.json({ error: "No autorizado." }, { status: 401 });
   const todos = new URL(req.url).searchParams.get("estado") === "todos";
   return Response.json(
-    { tickets: await ticketsParaElGerente(db, todos) },
+    { tickets: await ticketsParaElGerente(db, todos, env.ESTACION_SECRETO) },
     { headers: { "cache-control": "no-store" } },
   );
 }

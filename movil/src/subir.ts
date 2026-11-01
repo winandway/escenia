@@ -89,3 +89,23 @@ export async function subirVideo(
     cuerpo: { id: inicio.id, uploadId: inicio.uploadId, partes },
   });
 }
+
+/**
+ * Una captura para un caso de ayuda (C-AYUDA-2): la imagen en crudo, sin cuenta (el enlace del caso es la
+ * llave). Devuelve su número para pegarla al mensaje; el panel decide el tipo por los bytes.
+ */
+export async function subirCaptura(
+  uri: string,
+  nombre: string,
+  tipo: string,
+  codigo: string,
+): Promise<number> {
+  const consulta = new URLSearchParams({ nombre });
+  const r = await new File(uri).upload(
+    `${PANEL}/datos/ayuda/casos/${encodeURIComponent(codigo)}/adjuntos?${consulta.toString()}`,
+    { httpMethod: "POST", uploadType: UploadType.BINARY_CONTENT, headers: { "content-type": tipo } },
+  );
+  const j = JSON.parse(r.body || "{}") as { id?: number; error?: string; codigo?: string };
+  if (r.status >= 300 || !j.id) throw new ErrorDeApi(j.error ?? "", r.status, j.codigo ?? "");
+  return j.id;
+}

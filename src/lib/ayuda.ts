@@ -5,6 +5,7 @@
 import { CORREO_SOPORTE } from "@/app/legal/textos";
 import { b64url, igualesSinFiltrarTiempo, sha256Hex } from "./clave";
 import { latidoEstacion } from "./consultas";
+import { adjuntosDeMensajes, adjuntosLibres, pegarAdjuntos, type AdjuntoPublico } from "./ayuda-adjuntos";
 import type { BaseDatos } from "./db";
 import { estacionViva } from "./estacion-estado";
 
@@ -88,22 +89,31 @@ type FilaCaso = {
   creado_en: string;
   actualizado_en: string;
 };
-type FilaMensaje = { caso_id: number; de: Autor; texto: string; creado_en: string };
+type FilaMensaje = { id: number; caso_id: number; de: Autor; texto: string; creado_en: string };
 
 async function mensajesDe(db: BaseDatos, ids: number[]): Promise<FilaMensaje[]> {
   if (!ids.length) return [];
   return db.todos<FilaMensaje>(
-    `SELECT caso_id, de, texto, creado_en FROM ayuda_mensajes
+    `SELECT id, caso_id, de, texto, creado_en FROM ayuda_mensajes
       WHERE caso_id IN (SELECT value FROM json_each(?)) ORDER BY id`,
     [JSON.stringify(ids)],
   );
 }
 
-const mensajesPublicos = (todos: FilaMensaje[], id: number) =>
-  todos.filter((m) => m.caso_id === id).map((m) => ({ de: m.de, texto: m.texto, fecha: iso(m.creado_en) }));
+/** Los mensajes de un caso como los ven la persona y el gerente, cada uno con sus capturas. */
+const mensajesPublicos = (todos: FilaMensaje[], id: number, adjuntos: Map<number, AdjuntoPublico[]>) =>
+  todos
+    .filter((m) => m.caso_id === id)
+    .map((m) => ({ de: m.de, texto: m.texto, fecha: iso(m.creado_en), adjuntos: adjuntos.get(m.id) ?? [] }));
+
+/** El caso de un enlace secreto, o null. */
+export async function idDelCaso(db: BaseDatos, codigo: string): Promise<number | null> {
+  if (!codigoValido(codigo)) return null;
+  return (await db.uno<{ id: number }>("SELECT id FROM ayuda_casos WHERE codigo = ?", [codigo]))?.id ?? null;
+}
 
 /** El chat de un caso, para la persona que tiene el enlace. Sin su correo: el enlace se puede reenviar. */
-export async function casoPorCodigo(db: BaseDatos, codigo: string) {
+export async function casoPorCodigo(db: BaseDatos, codigo: string, secreto: string) {
   if (!codigoValido(codigo)) return null;
   const c = await db.uno<FilaCaso>("SELECT * FROM ayuda_casos WHERE codigo = ?", [codigo]);
   if (!c) return null;
@@ -114,7 +124,15 @@ export async function casoPorCodigo(db: BaseDatos, codigo: string) {
     asunto: c.asunto,
     estado: c.estado,
     creado: iso(c.creado_en),
-    mensajes: mensajesPublicos(await mensajesDe(db, [c.id]), c.id),
+    mensajes: await (async () => {
+      const mensajes = await mensajesDe(db, [c.id]);
+      const adjuntos = await adjuntosDeMensajes(
+        db,
+        mensajes.map((m) => m.id),
+        secreto,
+      );
+      return mensajesPublicos(mensajes, c.id, adjuntos);
+    })(),
   };
 }
 
@@ -143,27 +161,32 @@ export async function casosPorCodigos(db: BaseDatos, codigos: string[]) {
   });
 }
 
-/** La persona escribe otra vez en su caso: vuelve a quedar abierto para el gerente. */
+/**
+ * La persona escribe otra vez en su caso, con texto, capturas o las dos cosas: vuelve a quedar abierto para
+ * el gerente. Si alguna captura no es de este caso o ya está en otro mensaje, no se manda nada.
+ */
 export async function escribirComoCliente(
   db: BaseDatos,
   codigo: string,
   texto: string,
   avisoToken?: string,
-): Promise<boolean> {
-  if (!codigoValido(codigo)) return false;
-  const c = await db.uno<{ id: number }>("SELECT id FROM ayuda_casos WHERE codigo = ?", [codigo]);
-  if (!c) return false;
-  await db.ejecutar("INSERT INTO ayuda_mensajes (caso_id, de, texto) VALUES (?, 'cliente', ?)", [
-    c.id,
+  adjuntos: number[] = [],
+): Promise<"ok" | "no_existe" | "adjuntos"> {
+  const casoId = await idDelCaso(db, codigo);
+  if (!casoId) return "no_existe";
+  if (!(await adjuntosLibres(db, casoId, adjuntos))) return "adjuntos";
+  const m = await db.ejecutar("INSERT INTO ayuda_mensajes (caso_id, de, texto) VALUES (?, 'cliente', ?)", [
+    casoId,
     texto,
   ]);
+  await pegarAdjuntos(db, casoId, Number(m.ultimoId), adjuntos);
   await db.ejecutar(
     `UPDATE ayuda_casos SET estado = 'abierto', actualizado_en = datetime('now'),
        aviso_token = CASE WHEN ? = '' THEN aviso_token ELSE ? END
      WHERE id = ?`,
-    [avisoToken ?? "", avisoToken ?? "", c.id],
+    [avisoToken ?? "", avisoToken ?? "", casoId],
   );
-  return true;
+  return "ok";
 }
 
 // ——— La puerta del gerente (C-GERENTE-1) ———
@@ -191,13 +214,18 @@ export async function secretoDelGerenteValido(
 }
 
 /** Los casos para el gerente: sin correo, pagos ni direcciones. Solo nombre, idioma, asunto y el chat. */
-export async function ticketsParaElGerente(db: BaseDatos, todos: boolean) {
+export async function ticketsParaElGerente(db: BaseDatos, todos: boolean, secreto: string) {
   const casos = await db.todos<FilaCaso>(
     `SELECT * FROM ayuda_casos ${todos ? "" : "WHERE estado = 'abierto'"} ORDER BY actualizado_en DESC LIMIT 100`,
   );
   const mensajes = await mensajesDe(
     db,
     casos.map((c) => c.id),
+  );
+  const adjuntos = await adjuntosDeMensajes(
+    db,
+    mensajes.map((m) => m.id),
+    secreto,
   );
   return casos.map((c) => ({
     id: String(c.id),
@@ -208,7 +236,7 @@ export async function ticketsParaElGerente(db: BaseDatos, todos: boolean) {
     asunto: c.asunto,
     estado: c.estado,
     creado: iso(c.creado_en),
-    mensajes: mensajesPublicos(mensajes, c.id),
+    mensajes: mensajesPublicos(mensajes, c.id, adjuntos),
   }));
 }
 

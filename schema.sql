@@ -411,3 +411,18 @@ CREATE TABLE IF NOT EXISTS limites (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS limites_por_llave ON limites(llave, creado_en);
+-- Las capturas que la persona adjunta a un mensaje de su caso (C-AYUDA-2): hasta 3 por mensaje, 10 MB cada una,
+-- en env.BUCKET bajo ayuda/<caso>/. Se suben primero (mensaje_id vacío) y se pegan al mensaje al mandarlo, así
+-- una subida que falla no se lleva el texto. Se ven con un enlace firmado que vale 30 días.
+CREATE TABLE IF NOT EXISTS ayuda_adjuntos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  caso_id INTEGER NOT NULL REFERENCES ayuda_casos(id),
+  mensaje_id INTEGER REFERENCES ayuda_mensajes(id),
+  clave TEXT NOT NULL,
+  nombre TEXT NOT NULL,
+  tipo TEXT NOT NULL CHECK (tipo IN ('image/jpeg','image/png','image/webp','image/heic')),
+  bytes INTEGER NOT NULL,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS ayuda_adjuntos_por_mensaje ON ayuda_adjuntos(mensaje_id);
+CREATE INDEX IF NOT EXISTS ayuda_adjuntos_por_caso ON ayuda_adjuntos(caso_id, mensaje_id);

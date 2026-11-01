@@ -1,12 +1,16 @@
 // La conversación de un caso de ayuda (C-AYUDA-1), como un chat: lo que escribió la persona a la derecha y
 // las respuestas de soporte a la izquierda. Se refresca cada 20 segundos mientras se ve y al tirar hacia
 // abajo. La caja de abajo guarda lo escrito mientras se escribe (regla global de formularios).
+// Las capturas (C-AYUDA-2) se suben apenas se eligen, cada una sola; si una falla, el texto se queda.
+import * as ImagePicker from "expo-image-picker";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   RefreshControl,
@@ -20,6 +24,7 @@ import { direccionParaAyuda } from "../../src/avisos";
 import { anotarCaso, type EstadoCaso } from "../../src/casos";
 import { useEstado } from "../../src/estado";
 import { Insignia } from "../../src/Insignia";
+import { subirCaptura } from "../../src/subir";
 import { C } from "../../src/tema";
 import { useBorrador } from "../../src/useBorrador";
 
@@ -27,8 +32,24 @@ type Caso = {
   numero: string;
   asunto: string;
   estado: EstadoCaso;
-  mensajes: { de: "cliente" | "soporte"; texto: string; fecha: string }[];
+  mensajes: {
+    de: "cliente" | "soporte";
+    texto: string;
+    fecha: string;
+    adjuntos: { nombre: string; tipo: string; url: string }[];
+  }[];
 };
+type Adjunto = {
+  llave: string;
+  uri: string;
+  nombre: string;
+  estado: "subiendo" | "listo" | "error";
+  id?: number;
+  motivo?: string;
+};
+
+const MAX_ADJUNTOS = 3;
+const MAX_BYTES = 10 * 1_048_576;
 
 export default function ChatDelCaso() {
   const { codigo } = useLocalSearchParams<{ codigo: string }>();
@@ -37,6 +58,7 @@ export default function ChatDelCaso() {
   const [cargando, setCargando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
+  const [adjuntos, setAdjuntos] = useState<Adjunto[]>([]);
   const lista = useRef<FlatList<Caso["mensajes"][number]>>(null);
   const borrador = useBorrador(`ayuda-caso-${codigo}`, cuenta ?? "sin-cuenta");
   const fecha = new Intl.DateTimeFormat(idioma === "es" ? "es-US" : "en-US", {
@@ -67,20 +89,65 @@ export default function ChatDelCaso() {
     }, [codigo, cargar]),
   );
 
+  const cambiar = (llave: string, cambios: Partial<Adjunto>) =>
+    setAdjuntos((l) => l.map((a) => (a.llave === llave ? { ...a, ...cambios } : a)));
+
+  async function elegirCapturas() {
+    const libres = MAX_ADJUNTOS - adjuntos.length;
+    if (libres <= 0) return;
+    const r = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.85,
+      allowsMultipleSelection: true,
+      selectionLimit: libres,
+    });
+    if (r.canceled) return;
+    for (const [n, a] of r.assets.slice(0, libres).entries()) {
+      const llave = `${Date.now()}-${n}`;
+      const nombre = a.fileName ?? `captura-${n + 1}.jpg`;
+      const grande = (a.fileSize ?? 0) > MAX_BYTES;
+      setAdjuntos((l) => [
+        ...l,
+        {
+          llave,
+          uri: a.uri,
+          nombre,
+          estado: grande ? "error" : "subiendo",
+          motivo: grande ? t("ayuda_adjunto_grande") : "",
+        },
+      ]);
+      if (grande) continue;
+      subirCaptura(a.uri, nombre, a.mimeType ?? "image/jpeg", codigo)
+        .then((id) => cambiar(llave, { estado: "listo", id }))
+        .catch(() => cambiar(llave, { estado: "error", motivo: t("ayuda_adjunto_fallo") }));
+    }
+  }
+
   async function mandar() {
     const texto = borrador.texto.trim();
-    if (!texto || enviando) return;
+    const listos = adjuntos.filter((a) => a.estado === "listo" && a.id).map((a) => a.id as number);
+    if (enviando || (!texto && !listos.length)) return;
+    if (adjuntos.some((a) => a.estado === "subiendo")) return setError(t("ayuda_esperar"));
     setEnviando(true);
     setError("");
     try {
       await pedir(`/datos/ayuda/casos/${encodeURIComponent(codigo)}/mensajes`, {
         metodo: "POST",
-        cuerpo: { texto, aviso_token: await direccionParaAyuda() },
+        cuerpo: { texto, adjuntos: listos, aviso_token: await direccionParaAyuda() },
       });
       borrador.descartar();
+      setAdjuntos([]);
       await cargar();
     } catch (e) {
-      setError(e instanceof ErrorDeApi && e.codigo === "intentos" ? t("ayuda_intentos") : t("error_red"));
+      // El texto y las capturas se quedan para intentarlo otra vez.
+      const codigoError = e instanceof ErrorDeApi ? e.codigo : "red";
+      setError(
+        codigoError === "intentos"
+          ? t("ayuda_intentos")
+          : codigoError === "adjuntos"
+            ? t("ayuda_reintentar")
+            : t("error_red"),
+      );
     } finally {
       setEnviando(false);
     }
@@ -145,9 +212,25 @@ export default function ChatDelCaso() {
                 <Text style={{ color: C.suave, fontSize: 12, fontWeight: "700" }}>
                   {mio ? t("chat_yo") : t("ayuda_soporte")} · {fecha.format(new Date(item.fecha))}
                 </Text>
-                <Text style={{ color: C.texto, fontSize: 16, lineHeight: 22, marginTop: 4 }}>
-                  {item.texto}
-                </Text>
+                {item.texto ? (
+                  <Text style={{ color: C.texto, fontSize: 16, lineHeight: 22, marginTop: 4 }}>
+                    {item.texto}
+                  </Text>
+                ) : null}
+                {item.adjuntos.length ? (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                    {item.adjuntos.map((a) => (
+                      <Pressable
+                        key={a.url}
+                        accessibilityRole="imagebutton"
+                        accessibilityLabel={a.nombre}
+                        onPress={() => void Linking.openURL(a.url)}
+                      >
+                        <Image source={{ uri: a.url }} style={{ width: 96, height: 96, borderRadius: 10 }} />
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
               </View>
             );
           }}
@@ -171,6 +254,61 @@ export default function ChatDelCaso() {
               {error}
             </Text>
           ) : null}
+          {adjuntos.length ? (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+              {adjuntos.map((a) => (
+                <View key={a.llave} style={{ width: 72 }}>
+                  <View>
+                    <Image
+                      source={{ uri: a.uri }}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: 10,
+                        opacity: a.estado === "listo" ? 1 : 0.6,
+                      }}
+                    />
+                    {a.estado === "subiendo" ? (
+                      <ActivityIndicator color="#fff" style={{ position: "absolute", top: 26, left: 26 }} />
+                    ) : null}
+                    <Pressable
+                      onPress={() => setAdjuntos((l) => l.filter((x) => x.llave !== a.llave))}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${t("ayuda_quitar")}: ${a.nombre}`}
+                      hitSlop={8}
+                      style={{
+                        position: "absolute",
+                        top: 3,
+                        right: 3,
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: "rgba(0,0,0,0.7)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "800" }}>×</Text>
+                    </Pressable>
+                  </View>
+                  {a.estado === "error" ? (
+                    <Text style={{ color: C.error, fontSize: 11, marginTop: 3 }} numberOfLines={3}>
+                      {a.motivo}
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          ) : null}
+          <Pressable
+            onPress={() => void elegirCapturas()}
+            disabled={adjuntos.length >= MAX_ADJUNTOS}
+            accessibilityRole="button"
+            style={{ alignSelf: "flex-start", opacity: adjuntos.length >= MAX_ADJUNTOS ? 0.5 : 1 }}
+          >
+            <Text style={{ color: C.acento, fontWeight: "700" }}>+ {t("ayuda_adjuntar")}</Text>
+            <Text style={{ color: C.suave, fontSize: 12 }}>{t("ayuda_adjuntos_ayuda")}</Text>
+          </Pressable>
           <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-end" }}>
             <TextInput
               value={borrador.texto}
@@ -202,7 +340,7 @@ export default function ChatDelCaso() {
                 borderRadius: 14,
                 paddingHorizontal: 16,
                 paddingVertical: 12,
-                opacity: pressed || enviando || !borrador.texto.trim() ? 0.6 : 1,
+                opacity: pressed || enviando || (!borrador.texto.trim() && !adjuntos.length) ? 0.6 : 1,
               })}
             >
               {enviando ? (

@@ -216,6 +216,97 @@ export const GUIAS: Guia[] = [
       ],
     },
   },
+  {
+    seccion: "help",
+    slug: "send-a-screenshot",
+    actualizada: "2026-11-01",
+    en: {
+      titulo: "How to send a screenshot to support",
+      resumen:
+        "Take a screenshot of what you see, attach up to three images to your support case, and our team sees exactly what happened.",
+      bloques: [
+        {
+          tipo: "p",
+          texto:
+            "A screenshot shows our team exactly what you see, so we can fix it faster. You can attach screenshots to any message in your support case, on the web or in the iPhone app.",
+        },
+        { tipo: "h2", texto: "1. Take the screenshot" },
+        {
+          tipo: "pasos",
+          items: [
+            "iPhone: press the side button and the volume up button at the same time.",
+            "Android: press the power button and the volume down button at the same time.",
+            "Mac: press Shift, Command and 4, then drag over the part of the screen you want.",
+            "Windows: press the Windows key, Shift and S, then drag over the part of the screen you want.",
+          ],
+        },
+        { tipo: "h2", texto: "2. Attach it to your case" },
+        {
+          tipo: "pasos",
+          items: [
+            "Open your case. If you don't have one yet, open it first from the Support page or from Help in the app.",
+            "Tap Attach screenshots and choose up to three images. JPG, PNG, WEBP and HEIC work, up to 10 MB each.",
+            "Wait until each thumbnail finishes uploading. If one fails, remove it and add it again: your text stays where it was.",
+            "Write what happened, if you want, and tap Send. Your images appear in the conversation.",
+          ],
+        },
+        {
+          tipo: "imagen",
+          src: "/capturas/ayuda-captura-en.png",
+          alt: "A support case with a screenshot attached, ready to send",
+        },
+        { tipo: "h2", texto: "Before you send it" },
+        {
+          tipo: "nota",
+          texto:
+            "Crop or cover anything private before attaching it: passwords, card numbers, codes or other people's information. Only our team and whoever has your case link can see your images.",
+        },
+      ],
+    },
+    es: {
+      titulo: "Cómo mandar una captura a soporte",
+      resumen:
+        "Toma una captura de lo que ves, adjunta hasta tres imágenes a tu caso de soporte y nuestro equipo verá exactamente qué pasó.",
+      bloques: [
+        {
+          tipo: "p",
+          texto:
+            "Una captura de pantalla le muestra a nuestro equipo exactamente lo que ves, así lo resolvemos más rápido. Puedes adjuntar capturas a cualquier mensaje de tu caso de soporte, en la web o en la app de iPhone.",
+        },
+        { tipo: "h2", texto: "1. Toma la captura" },
+        {
+          tipo: "pasos",
+          items: [
+            "iPhone: presiona al mismo tiempo el botón lateral y el de subir volumen.",
+            "Android: presiona al mismo tiempo el botón de encendido y el de bajar volumen.",
+            "Mac: presiona Mayúsculas, Comando y 4, y arrastra sobre la parte de la pantalla que quieres.",
+            "Windows: presiona la tecla de Windows, Mayúsculas y S, y arrastra sobre la parte de la pantalla que quieres.",
+          ],
+        },
+        { tipo: "h2", texto: "2. Adjúntala a tu caso" },
+        {
+          tipo: "pasos",
+          items: [
+            "Abre tu caso. Si todavía no tienes uno, ábrelo primero desde la página de Soporte o desde Ayuda en la app.",
+            "Toca Adjuntar capturas y elige hasta tres imágenes. Sirven JPG, PNG, WEBP y HEIC, de hasta 10 MB cada una.",
+            "Espera a que cada miniatura termine de subir. Si una falla, quítala y agrégala otra vez: tu texto se queda donde estaba.",
+            "Escribe qué pasó, si quieres, y toca Enviar. Tus imágenes aparecen en la conversación.",
+          ],
+        },
+        {
+          tipo: "imagen",
+          src: "/capturas/ayuda-captura-es.png",
+          alt: "Un caso de soporte con una captura adjunta, lista para enviar",
+        },
+        { tipo: "h2", texto: "Antes de mandarla" },
+        {
+          tipo: "nota",
+          texto:
+            "Recorta o tapa lo privado antes de adjuntarla: contraseñas, números de tarjeta, códigos o datos de otras personas. Tus imágenes solo las ve nuestro equipo y quien tenga el enlace de tu caso.",
+        },
+      ],
+    },
+  },
 ];
 
 export const rutaDeGuia = (g: Pick<Guia, "seccion" | "slug">, idioma: IdiomaDocs) =>

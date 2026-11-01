@@ -39,6 +39,7 @@ type Base = ReturnType<typeof baseEnMemoria>;
 const SECRETO = `${crypto.randomUUID()}${crypto.randomUUID()}`;
 const IPHONE = "ab12".repeat(16);
 const SIN_CORREO = { token: undefined };
+const FIRMA = `firma-${crypto.randomUUID()}`;
 
 const nuevo = (extra: Partial<CasoNuevo> = {}): CasoNuevo => ({
   origen: "web",
@@ -61,14 +62,19 @@ describe("los casos de ayuda de la persona (C-AYUDA-1)", () => {
     expect(c.numero).toBe(numeroDeCaso(c.id));
     expect(c.numero).toMatch(/^ESC-\d{4,}$/);
     expect(c.codigo).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    const chat = await casoPorCodigo(db, c.codigo);
+    const chat = await casoPorCodigo(db, c.codigo, FIRMA);
     expect(chat).toMatchObject({ numero: c.numero, estado: "abierto", asunto: "My video didn't arrive" });
     expect(chat?.mensajes).toEqual([
-      { de: "cliente", texto: "I approved the card an hour ago.", fecha: expect.stringMatching(/Z$/) },
+      {
+        de: "cliente",
+        texto: "I approved the card an hour ago.",
+        fecha: expect.stringMatching(/Z$/),
+        adjuntos: [],
+      },
     ]);
     expect(JSON.stringify(chat)).not.toContain("ejemplo.com");
-    expect(await casoPorCodigo(db, "corto")).toBeNull();
-    expect(await casoPorCodigo(db, "x".repeat(43))).toBeNull();
+    expect(await casoPorCodigo(db, "corto", FIRMA)).toBeNull();
+    expect(await casoPorCodigo(db, "x".repeat(43), FIRMA)).toBeNull();
     expect(enlaceDelCaso(c.codigo, "es")).toBe(`https://escenia.sitios.dev/es/support/case/${c.codigo}`);
   });
 
@@ -84,8 +90,8 @@ describe("los casos de ayuda de la persona (C-AYUDA-1)", () => {
       estado: "cerrado",
       ultimo: { de: "soporte", texto: "Ya lo revisamos." },
     });
-    expect(await escribirComoCliente(db, mio.codigo, "Sigue sin llegar.", IPHONE)).toBe(true);
-    expect((await casoPorCodigo(db, mio.codigo))?.estado).toBe("abierto");
+    expect(await escribirComoCliente(db, mio.codigo, "Sigue sin llegar.", IPHONE)).toBe("ok");
+    expect((await casoPorCodigo(db, mio.codigo, FIRMA))?.estado).toBe("abierto");
     const fila = await db.uno<{ aviso_token: string }>("SELECT aviso_token FROM ayuda_casos WHERE id = ?", [
       mio.id,
     ]);
@@ -96,7 +102,7 @@ describe("los casos de ayuda de la persona (C-AYUDA-1)", () => {
       (await db.uno<{ aviso_token: string }>("SELECT aviso_token FROM ayuda_casos WHERE id = ?", [mio.id]))
         ?.aviso_token,
     ).toBe(IPHONE);
-    expect(await escribirComoCliente(db, "y".repeat(43), "hola")).toBe(false);
+    expect(await escribirComoCliente(db, "y".repeat(43), "hola")).toBe("no_existe");
   });
 
   it("el límite deja pasar hasta el máximo por llave", async () => {
@@ -127,7 +133,7 @@ describe("la puerta del gerente (C-GERENTE-1)", () => {
     const a = await crearCaso(db, nuevo({ idioma: "es", asunto: "No me deja entrar" }));
     const b = await crearCaso(db, nuevo());
     await responderComoSoporte(db, b.id, { texto: "Listo.", cerrar: false }, SIN_CORREO);
-    const abiertos = await ticketsParaElGerente(db, false);
+    const abiertos = await ticketsParaElGerente(db, false, FIRMA);
     expect(abiertos).toEqual([
       {
         id: String(a.id),
@@ -138,10 +144,17 @@ describe("la puerta del gerente (C-GERENTE-1)", () => {
         asunto: "No me deja entrar",
         estado: "abierto",
         creado: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
-        mensajes: [{ de: "cliente", texto: "I approved the card an hour ago.", fecha: expect.any(String) }],
+        mensajes: [
+          {
+            de: "cliente",
+            texto: "I approved the card an hour ago.",
+            fecha: expect.any(String),
+            adjuntos: [],
+          },
+        ],
       },
     ]);
-    const todos = await ticketsParaElGerente(db, true);
+    const todos = await ticketsParaElGerente(db, true, FIRMA);
     expect(todos.map((t) => t.numero).sort()).toEqual([a.numero, b.numero].sort());
     expect(todos.find((t) => t.id === String(b.id))?.mensajes.map((m) => m.de)).toEqual([
       "cliente",
@@ -172,7 +185,7 @@ describe("la puerta del gerente (C-GERENTE-1)", () => {
       [c.id],
     );
     expect(m).toEqual({ de: "soporte", plantilla: "P3", aviso: "" });
-    expect((await casoPorCodigo(db, c.codigo))?.estado).toBe("cerrado");
+    expect((await casoPorCodigo(db, c.codigo, FIRMA))?.estado).toBe("cerrado");
     expect(await responderComoSoporte(db, 999, { texto: "x", cerrar: false }, SIN_CORREO)).toBeNull();
     // Sin dominio el correo sale apagado en el canario, no en rojo.
     expect((await estadoDelCorreo(db)).estado).toBe("apagado");
@@ -388,8 +401,10 @@ describe("lo público de la ayuda se abre sin sesión y está en los dos idiomas
       // Lo público no lleva rutas internas ni nombres técnicos.
       expect(JSON.stringify(g)).not.toMatch(/\/datos\/|gerente|ESTACION|YaDominios|fal\.ai|ElevenLabs/i);
     }
-    expect(buscarGuias("es", "numero de caso").map((g) => g.slug)).toEqual(["support-cases"]);
-    expect(buscarGuias("en", "case number").map((g) => g.slug)).toEqual(["support-cases"]);
+    expect(buscarGuias("es", "numero de caso").map((g) => g.slug)).toContain("support-cases");
+    expect(buscarGuias("es", "captura heic").map((g) => g.slug)).toEqual(["send-a-screenshot"]);
+    expect(GUIAS.some((g) => g.slug === "send-a-screenshot")).toBe(true);
+    expect(buscarGuias("en", "case number").map((g) => g.slug)).toContain("support-cases");
     expect(buscarGuias("en", "zzzz")).toEqual([]);
   });
 });
@@ -420,5 +435,151 @@ describe("la ayuda en la app de iPhone (C-AYUDA-1)", () => {
     // Ningún formulario pierde lo escrito: las dos pantallas usan el borrador.
     expect(ayuda).toContain('useBorrador("ayuda-mensaje"');
     expect(chat).toContain("useBorrador(`ayuda-caso-${codigo}`");
+  });
+});
+
+describe("las capturas de los casos (C-AYUDA-2)", () => {
+  const conCabeza = (cabeza: number[] | string, largo = 300) => {
+    const b = new Uint8Array(largo);
+    const bytes = typeof cabeza === "string" ? [...cabeza].map((c) => c.charCodeAt(0)) : cabeza;
+    b.set(bytes);
+    return b;
+  };
+  const JPG = conCabeza([0xff, 0xd8, 0xff, 0xe0]);
+  const almacen = () => {
+    const guardado = new Map<string, { bytes: number; tipo?: string }>();
+    return {
+      guardado,
+      async put(clave: string, cuerpo: ArrayBuffer, op?: { httpMetadata?: { contentType?: string } }) {
+        guardado.set(clave, { bytes: cuerpo.byteLength, tipo: op?.httpMetadata?.contentType });
+      },
+    };
+  };
+
+  it("el tipo se decide por los primeros bytes: JPG, PNG, WEBP y HEIC entran; SVG, GIF y texto no", async () => {
+    const { tipoPorContenido, nombreDeAdjunto } = await import("@/lib/ayuda-adjuntos");
+    expect(tipoPorContenido(JPG)).toBe("image/jpeg");
+    expect(tipoPorContenido(conCabeza([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]))).toBe("image/png");
+    expect(tipoPorContenido(conCabeza("RIFF\u0000\u0000\u0000\u0000WEBP"))).toBe("image/webp");
+    expect(tipoPorContenido(conCabeza("\u0000\u0000\u0000\u0018ftypheic"))).toBe("image/heic");
+    expect(tipoPorContenido(conCabeza("<svg xmlns="))).toBeNull();
+    expect(tipoPorContenido(conCabeza("GIF89a"))).toBeNull();
+    expect(tipoPorContenido(conCabeza("hola"))).toBeNull();
+    expect(nombreDeAdjunto("C:\\fotos/../Captura de pantalla <1>.PNG", "image/jpeg")).toBe(
+      "Captura de pantalla 1.jpg",
+    );
+    expect(nombreDeAdjunto("", "image/png")).toBe("captura.png");
+  });
+
+  it("el enlace firmado vale al menos 7 días y no sirve vencido, con otro número ni con otra firma", async () => {
+    const { enlaceDeAdjunto, enlaceValido } = await import("@/lib/ayuda-adjuntos");
+    const ahora = Date.parse("2026-11-01T12:00:00Z");
+    const url = new URL(await enlaceDeAdjunto(FIRMA, 7, ahora));
+    expect(url.origin).toBe("https://escenia.sitios.dev");
+    expect(url.pathname).toBe("/datos/ayuda/adjuntos/7");
+    const v = Number(url.searchParams.get("v"));
+    const f = url.searchParams.get("f") ?? "";
+    expect(v * 1000 - ahora).toBeGreaterThanOrEqual(7 * 86_400_000);
+    expect(await enlaceValido(FIRMA, 7, v, f, ahora)).toBe(true);
+    expect(await enlaceValido(FIRMA, 7, v, f, ahora + 8 * 86_400_000)).toBe(true);
+    expect(await enlaceValido(FIRMA, 7, v, f, v * 1000 + 1)).toBe(false);
+    expect(await enlaceValido(FIRMA, 8, v, f, ahora)).toBe(false);
+    expect(await enlaceValido(FIRMA, 7, v + 1, f, ahora)).toBe(false);
+    expect(await enlaceValido("otro-secreto", 7, v, f, ahora)).toBe(false);
+    expect(await enlaceValido(FIRMA, 7, v, "x".repeat(43), ahora)).toBe(false);
+  });
+
+  it("subir guarda en el almacén con su tipo real; lo vacío, lo grande y lo que no es imagen no entra", async () => {
+    const { guardarAdjunto, MAX_BYTES_ADJUNTO } = await import("@/lib/ayuda-adjuntos");
+    const db = baseEnMemoria();
+    const c = await crearCaso(db, nuevo());
+    const a = almacen();
+    const r = await guardarAdjunto(db, a, c.id, "pantalla.png", JPG.buffer);
+    expect(r).toMatchObject({ ok: true, nombre: "pantalla.jpg", tipo: "image/jpeg" });
+    const [clave, guardado] = [...a.guardado.entries()][0]!;
+    expect(clave.startsWith(`ayuda/${c.id}/`)).toBe(true);
+    expect(clave).toMatch(/^ayuda\/\d+\/[A-Za-z0-9_-]{22}\.jpg$/);
+    expect(guardado).toEqual({ bytes: 300, tipo: "image/jpeg" });
+    expect(await guardarAdjunto(db, a, c.id, "x.jpg", new ArrayBuffer(10))).toMatchObject({
+      ok: false,
+      codigo: "vacio",
+    });
+    expect(await guardarAdjunto(db, a, c.id, "x.svg", conCabeza("<svg ").buffer)).toMatchObject({
+      ok: false,
+      codigo: "tipo",
+      estado: 415,
+    });
+    const grande = new Uint8Array(MAX_BYTES_ADJUNTO + 1);
+    grande.set([0xff, 0xd8, 0xff]);
+    expect(await guardarAdjunto(db, a, c.id, "x.jpg", grande.buffer)).toMatchObject({
+      ok: false,
+      codigo: "grande",
+      estado: 413,
+    });
+    expect(a.guardado.size).toBe(1);
+  });
+
+  it("el mensaje lleva sus capturas (hasta 3, solo del mismo caso) y la persona y el gerente las ven con su enlace", async () => {
+    const { guardarAdjunto, enlaceValido } = await import("@/lib/ayuda-adjuntos");
+    const db = baseEnMemoria();
+    const c = await crearCaso(db, nuevo());
+    const otro = await crearCaso(db, nuevo());
+    const a = almacen();
+    const subir = async (casoId: number) => {
+      const r = await guardarAdjunto(db, a, casoId, "captura.jpg", JPG.buffer);
+      if (!r.ok) throw new Error("no subió");
+      return r.id;
+    };
+    const [uno, dos, tres, cuatro] = [
+      await subir(c.id),
+      await subir(c.id),
+      await subir(c.id),
+      await subir(c.id),
+    ];
+    const ajena = await subir(otro.id);
+    expect(await escribirComoCliente(db, c.codigo, "Mira.", undefined, [uno!, dos!, tres!, cuatro!])).toBe(
+      "adjuntos",
+    );
+    expect(await escribirComoCliente(db, c.codigo, "Mira.", undefined, [uno!, ajena])).toBe("adjuntos");
+    expect(await escribirComoCliente(db, c.codigo, "Mira.", undefined, [uno!, uno!])).toBe("adjuntos");
+    // Solo capturas, sin texto, también vale.
+    expect(await escribirComoCliente(db, c.codigo, "", undefined, [uno!, dos!])).toBe("ok");
+    // Una captura que ya va en un mensaje no se puede volver a pegar.
+    expect(await escribirComoCliente(db, c.codigo, "Otra vez.", undefined, [uno!])).toBe("adjuntos");
+    const chat = await casoPorCodigo(db, c.codigo, FIRMA);
+    const conCapturas = chat?.mensajes.at(-1);
+    expect(conCapturas?.texto).toBe("");
+    expect(conCapturas?.adjuntos.map((x) => [x.nombre, x.tipo])).toEqual([
+      ["captura.jpg", "image/jpeg"],
+      ["captura.jpg", "image/jpeg"],
+    ]);
+    const url = new URL(conCapturas!.adjuntos[0]!.url);
+    expect(
+      await enlaceValido(
+        FIRMA,
+        Number(url.pathname.split("/").pop()),
+        Number(url.searchParams.get("v")),
+        url.searchParams.get("f") ?? "",
+      ),
+    ).toBe(true);
+    const tickets = await ticketsParaElGerente(db, false, FIRMA);
+    expect(tickets.find((t) => t.id === String(c.id))?.mensajes.at(-1)?.adjuntos).toHaveLength(2);
+    expect(tickets.find((t) => t.id === String(c.id))?.mensajes[0]?.adjuntos).toEqual([]);
+  });
+
+  it("la web y la app tienen el botón de adjuntar y no borran el texto si la subida falla", () => {
+    const raiz = path.resolve(__dirname, "..");
+    const web = readFileSync(path.join(raiz, "src/app/legal/ChatDelCaso.tsx"), "utf8");
+    const app = readFileSync(path.join(raiz, "movil/app/ayuda/[codigo].tsx"), "utf8");
+    const subirApp = readFileSync(path.join(raiz, "movil/src/subir.ts"), "utf8");
+    expect(web).toContain("/adjuntos?nombre=");
+    expect(subirApp).toContain("/adjuntos?${consulta.toString()}");
+    for (const codigo of [web, app]) {
+      expect(codigo).toContain("adjuntos: listos");
+      // Si la subida o el envío fallan, el borrador del texto no se descarta.
+      expect(codigo).toMatch(/catch[\s\S]{0,400}setError/);
+    }
+    expect(web).toContain('accept="image/jpeg,image/png,image/webp,image/heic,.heic"');
+    expect(app).toContain("launchImageLibraryAsync");
   });
 });
