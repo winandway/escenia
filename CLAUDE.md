@@ -26,6 +26,7 @@
 - Locución sobre un video ya editado (la voz de Richard con piano suave debajo; quince años, homenajes): [docs/LOCUCION.md](docs/LOCUCION.md). El material de personas va en `encargos/`, fuera de git.
 - **El Director** (el chat del panel que propone el anuncio en una tarjeta con su precio; solo el botón de Richard aprueba y gasta, C-DIRECTOR-1): [docs/DIRECTOR.md](docs/DIRECTOR.md) (cómo probarlo: [docs/PROBAR-DIRECTOR.md](docs/PROBAR-DIRECTOR.md)).
 - **La app de iPhone** (el Director en el bolsillo, «Escenia: AI Video Ads»; la cuenta del revisor de Apple no ve ni gasta nada ajeno): [docs/APP-IPHONE.md](docs/APP-IPHONE.md); cómo se publica en Apple: [docs/PUBLICAR-EN-APPLE.md](docs/PUBLICAR-EN-APPLE.md).
+- **Gastos** (cuánto cuesta cada video, qué servicio cobra y qué es cada cobro de la tarjeta; fal.ai es compartido con Beellon y Losupe): [docs/GASTOS.md](docs/GASTOS.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro

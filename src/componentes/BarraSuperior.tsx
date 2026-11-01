@@ -36,6 +36,7 @@ export const GRUPOS = [
     enlaces: [
       { href: "/calendario", texto: "Calendario", icono: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4" },
       { href: "/trabajos", texto: "Estación", icono: "M4 4h16v10H4zM8 20h8M12 14v6" },
+      { href: "/gastos", texto: "Gastos", icono: "M12 3v18M16 7H10a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H8" },
       {
         href: "/ajustes",
         texto: "Ajustes",
