@@ -76,6 +76,13 @@ o se vuelve a cargar con `scripts/tiendas/clave-revisor.ts`). Esa cuenta:
 - **Arranque con escenas** (`movil/plugins/escenas-ios.js`): iOS 27 cierra al abrir toda app que no las
   adopte; la plantilla de Expo 57 todavía no las trae. Se quita al pasar a Expo 58.
 
+## La Ayuda (desde la compilación 7, 1 nov 2026)
+
+- «Contactar a soporte» abajo en la pantalla de entrar (sin cuenta) y «Ayuda» en el menú de tres puntos de «Tus
+  proyectos». Abre «Tus casos» y el formulario para abrir uno; cada caso es un chat con el soporte de Escenia.
+- Al abrir un caso la app pide permiso de avisos; con permiso, la Mac le avisa cada respuesta y al tocar el aviso
+  se abre ese chat. Todo el detalle, la puerta del gerente de correo y los candados: docs/AYUDA.md (C-AYUDA-1).
+
 ## Candados
 
 C-APP-IOS-1 (la cuenta del revisor), C-APP-IOS-2 (textos, idiomas y permisos de la app) y C-APP-IOS-3
