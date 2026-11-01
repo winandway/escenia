@@ -2,6 +2,7 @@
 
 ## 👤 Esperando por Richard
 
+- 👤 Entrar a fal.ai en su Chrome (la cuenta de los cobros «FAL FEATURES LABELS» de 10 dólares) → la IA lee el uso exacto por clave y modelo y crea una clave propia para Escenia, así se sabe cuánto de cada recarga es de Escenia, de Beellon o de Losupe (docs/GASTOS.md).
 - 👤 App de iPhone: probarla en su iPhone con TestFlight: la invitación interna llegó a go@windoce.com (sirve si el iPhone usa ese Apple ID) y el enlace público (en docs/PUBLICAR-EN-APPLE.md) abre cuando Apple apruebe la prueba, en menos de un día. Entra con la contraseña del panel.
 - 👤 Pro In Shop, comercial del agua (hecho con la asesora de camisa roja, 30 s): verlo y mandárselo al cliente → si cambia una frase, se rehace solo ese pedazo.
 - 👤 Probar el **Director** con las tres pruebas de docs/PROBAR-DIRECTOR.md (material listo en publicidad/prueba-director: el generador, el agua y los quince años; cerca de un dólar las tres) → con lo que diga se ajustan sus reglas.
