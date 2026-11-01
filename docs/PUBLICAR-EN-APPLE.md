@@ -76,11 +76,12 @@ Cuando Expo tenga compilaciones otra vez (el mes nuevo o un plan pago), `compila
   «Privacidad de la app» publicadas. **Versión 1.0 en WAITING_FOR_REVIEW** (enviada el 31 oct 2026).
 - Privacidad publicada (desde el Chrome de Richard): «Fotos o vídeos» y «Otro contenido del usuario»,
   ambos para funcionalidad de la app, vinculados a la cuenta y sin seguimiento.
-- Compilación 5 (avisos al iPhone, chat al estilo ChatGPT y la tarjeta con lo que sale en el video)
-  `VALID` y en el grupo interno; su revisión de prueba se pide cuando Apple termine la de la 3
-  (`testflight.mjs`).
-- TestFlight interno: go@windoce.com invitado. Enlace público (abre cuando Apple apruebe la prueba):
-  https://testflight.apple.com/join/zW3q14aJ
+- Compilación 6 (1 nov 2026: la 5 más el correo de soporte nuevo en la pantalla de entrar) `VALID`, en el
+  grupo interno y en la «Prueba pública», con su revisión de prueba **APPROVED**. La de la 3 también quedó
+  aprobada, así que el enlace público ya abre para cualquier iPhone.
+- TestFlight interno: go@windoce.com invitado. Enlace público: https://testflight.apple.com/join/zW3q14aJ
+- Correo de soporte (C-SOPORTE-1): soporte+escenia@windoce.com en la descripción, las notas del revisor y los
+  comentarios de TestFlight, cambiado por la API el 1 nov 2026 con la versión en revisión (Apple lo dejó).
 
 ## Lo que hace Richard (no hay API)
 

@@ -3,7 +3,7 @@
 ## 👤 Esperando por Richard
 
 - 👤 Entrar a fal.ai en su Chrome (la cuenta de los cobros «FAL FEATURES LABELS» de 10 dólares) → la IA lee el uso exacto por clave y modelo y crea una clave propia para Escenia, así se sabe cuánto de cada recarga es de Escenia, de Beellon o de Losupe (docs/GASTOS.md).
-- 👤 App de iPhone: probarla en su iPhone con TestFlight: la invitación interna llegó a go@windoce.com (sirve si el iPhone usa ese Apple ID) y el enlace público (en docs/PUBLICAR-EN-APPLE.md) abre cuando Apple apruebe la prueba, en menos de un día. Entra con la contraseña del panel.
+- 👤 App de iPhone: probarla en su iPhone con TestFlight. Apple ya aprobó la prueba pública: el enlace público (en docs/PUBLICAR-EN-APPLE.md) abre en cualquier iPhone y trae la compilación 6. Entra con la contraseña del panel y acepta los avisos.
 - 👤 Pro In Shop, comercial del agua (hecho con la asesora de camisa roja, 30 s): verlo y mandárselo al cliente → si cambia una frase, se rehace solo ese pedazo.
 - 👤 Probar el **Director** con las tres pruebas de docs/PROBAR-DIRECTOR.md (material listo en publicidad/prueba-director: el generador, el agua y los quince años; cerca de un dólar las tres) → con lo que diga se ajustan sus reglas.
 - 👤 Poner el precio del servicio para los primeros clientes (planes/ESCENIA-COMO-PRODUCTO.md, sección de clientes) → con eso se arrancan esta semana como servicio hecho por Windoce.
@@ -134,4 +134,4 @@
 - [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)
 
-- [ ] (IA) Cuando Apple apruebe la prueba pública de la compilación 3, correr `node scripts/tiendas/testflight.mjs` para pedir la revisión de prueba de la última compilación (la 5: avisos al iPhone, chat nuevo y tarjeta con lo que sale en el video). El grupo interno ya la tiene.
+- [x] (IA) Revisión de prueba de la última compilación pedida y aprobada (la 6, 1 nov 2026).
