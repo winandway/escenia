@@ -109,7 +109,7 @@ describe("los dos idiomas y las reglas de la pantalla (C-APP-IOS-2)", () => {
   it("archivar y cerrar sesión van dentro del menú de tres puntos (con Ayuda al lado de cerrar sesión)", () => {
     const lista = movil("app/proyectos.tsx");
     expect(lista).toContain('menuDeTresPuntos([t("proyectos_archivar")]');
-    expect(lista).toContain('menuDeTresPuntos([t("ayuda_menu"), t("proyectos_salir")], 1,');
+    expect(lista).toMatch(/menuDeTresPuntos\(\s*\[t\("ayuda_menu"\), t\("proyectos_salir"\)\],\s*1,/);
   });
 });
 
