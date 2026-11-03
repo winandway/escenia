@@ -2,7 +2,7 @@
 
 ## 👤 Esperando por Richard
 
-- 👤 🔴 Apple rechazó Escenia (3 nov 2026, pautas 4.3 spam y 4.2.6): decir «sí» a la recomendación de docs/APPLE-RECHAZO-4.3.md → no se reenvía Escenia como app aparte y el Director pasa a vivir dentro de Beellon (se hace en la sesión de Beellon). Con su «sí» se manda a Apple la respuesta corta ya escrita. Escenia sigue igual en la web y en TestFlight.
+- 👤 🔴 Apple rechazó Escenia (3 nov 2026, pautas 4.3 spam y 4.2.6): decir «sí» a la recomendación de planes/tiendas/TUTORIAL-RECHAZO-APPLE.md (carpeta privada) → no se reenvía Escenia como app aparte y el Director pasa a vivir dentro de Beellon (se hace en la sesión de Beellon). Con su «sí» se manda a Apple la respuesta corta ya escrita. Escenia sigue igual en la web y en TestFlight.
 - 👤 Pedirle a YaDominios que conecte un dominio al sitio de Escenia (por ejemplo escenia.windoce.com) con «Correos desde tu dominio» → las respuestas de soporte a los casos de ayuda también le llegan a la persona por correo (hoy le llegan en su chat y en la app). Lo demás lo hace la IA (docs/AYUDA.md).
 - 👤 Entrar a fal.ai en su Chrome (la cuenta de los cobros «FAL FEATURES LABELS» de 10 dólares) → la IA lee el uso exacto por clave y modelo y crea una clave propia para Escenia, así se sabe cuánto de cada recarga es de Escenia, de Beellon o de Losupe (docs/GASTOS.md).
 - 👤 App de iPhone: probarla en su iPhone con TestFlight. Apple ya aprobó la prueba pública: el enlace público (en docs/PUBLICAR-EN-APPLE.md) abre en cualquier iPhone y trae la compilación 8 (ya con la Ayuda: «Contactar a soporte» en la pantalla de entrar, «Ayuda» en el menú de tres puntos y las capturas en cada caso). Entra con la contraseña del panel y acepta los avisos.
