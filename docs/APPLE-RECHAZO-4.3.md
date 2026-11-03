@@ -71,6 +71,15 @@ con la Gerencia.
 la repetición puede sacar a Windoce del programa de desarrolladores. Escenia como app aparte no vale ese riesgo:
 lo que la hace valiosa (el Director) sobrevive entero dentro de Beellon.
 
+## La línea común de la cuenta y Escenia (3 nov 2026, tarde)
+
+Gerencia dejó una línea común para que todas las apps contesten igual (APPLE-4.3-LINEA-COMUN, en la carpeta de
+Gerencia), y Richard dio el sí para mandar hoy las respuestas de la cuenta. Escenia **no puede usar tal cual la
+respuesta común a la pregunta 6** («no, ninguna otra app de la cuenta hace lo mismo»): Beellon sí hace anuncios en
+video con IA. La regla de esa misma línea común es que todo sea verdad y se pueda comprobar. Por eso Escenia
+espera la decisión de Richard: contestar hoy con la respuesta honesta de abajo (la 6 dice que sí podría vivir en
+Beellon), o no contestar y pasar el Director a Beellon. Hasta su respuesta no se manda nada.
+
 ## Respuesta corta (si Richard elige la recomendación)
 
 > Thank you for the review. We agree that Escenia's functionality overlaps with another app on our account,
