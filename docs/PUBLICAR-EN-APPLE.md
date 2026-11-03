@@ -73,7 +73,7 @@ Cuando Expo tenga compilaciones otra vez (el mes nuevo o un plan pago), `compila
 ## Dónde va hoy (31 oct 2026)
 
 - Compilación 3 (con escenas) `VALID`; la 1 retirada. Ficha, precio, disponibilidad, nueve capturas y
-  «Privacidad de la app» publicadas. **Versión 1.0 en WAITING_FOR_REVIEW** (enviada el 31 oct 2026).
+  «Privacidad de la app» publicadas. Versión 1.0 enviada el 31 oct 2026 y **RECHAZADA el 3 nov 2026 por las pautas 4.3 (spam) y 4.2.6**, el mismo minuto que casi todas las apps de la cuenta. No reenviar: ver docs/APPLE-RECHAZO-4.3.md.
 - Privacidad publicada (desde el Chrome de Richard): «Fotos o vídeos» y «Otro contenido del usuario»,
   ambos para funcionalidad de la app, vinculados a la cuenta y sin seguimiento.
 - Compilación 6 (1 nov 2026: la 5 más el correo de soporte nuevo en la pantalla de entrar) `VALID`, en el
