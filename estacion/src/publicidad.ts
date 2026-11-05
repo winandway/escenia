@@ -987,7 +987,13 @@ export async function pasoArmar(
     logo,
     tema: plan.tema,
     diseno: plan.diseno,
-    paleta: plan.paleta ?? null,
+    paleta: plan.paleta
+      ? {
+          fondo: plan.paleta.fondo,
+          patron: plan.paleta.patron,
+          foto: plan.paleta.foto ? (await imagenEnPublico(plan.paleta.foto)).nombre : null,
+        }
+      : null,
     portada: plan.portada
       ? { lineas: plan.portada.lineas, etiqueta: plan.portada.etiqueta, hastaMs: plan.portada.hasta_ms }
       : null,

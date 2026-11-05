@@ -362,6 +362,38 @@ describe("publicidad: cada video con su armonía y su portada (Cashea, 22 oct 20
       esquemaPlanPublicidad.parse({ ...base, paleta: { fondo: ["morado", "#000000"] } }),
     ).toThrow();
   });
+
+  it("la paleta admite una foto detrás de todo (el data center de Kipuu) y el armado la pide al video", async () => {
+    // Richard, 5 nov 2026: «un fondo unicolor… y que haya un data center al fondo de ella».
+    const base = {
+      marca: "Kipuu",
+      logo: "l.png",
+      partes: ["¿Los archivos de tu empresa siguen regados? Te presento Kipuu."],
+      momentos: [{ frase: "Los archivos de" }, { frase: "siguen regados" }, { frase: "Te presento Kipuu" }],
+      cierre: { frase: "Te presento", lineas: [] },
+    };
+    const p = esquemaPlanPublicidad.parse({
+      ...base,
+      paleta: { fondo: ["#0a1a4f", "#0a1a4f"], patron: "ninguno", foto: "fondos/datacenter-1.png" },
+    });
+    expect(p.paleta?.foto).toBe("fondos/datacenter-1.png");
+    const { esquemaPublicidad: esquemaPropsPublicidad } =
+      await import("../estacion/src/remotion/publicidad-diseno");
+    const props = esquemaPropsPublicidad.shape.paleta.parse({
+      fondo: ["#0a1a4f", "#0a1a4f"],
+      patron: "ninguno",
+      foto: "fondo.png",
+    });
+    expect(props?.foto).toBe("fondo.png");
+    // Sin foto, el fondo es el degradado de siempre.
+    expect(esquemaPropsPublicidad.shape.paleta.parse({ fondo: ["#0a1a4f", "#020617"] })?.foto).toBeNull();
+    const { readFileSync } = await import("node:fs");
+    const path = await import("node:path");
+    const armado = readFileSync(path.resolve(__dirname, "../estacion/src/publicidad.ts"), "utf8");
+    expect(armado).toContain(
+      "foto: plan.paleta.foto ? (await imagenEnPublico(plan.paleta.foto)).nombre : null",
+    );
+  });
 });
 
 describe("C-PIZARRA-1: el diseño «pizarra», el teléfono y la persona que lo señala (23 oct 2026)", () => {

@@ -40,6 +40,8 @@ export const esquemaPublicidad = z.object({
     .object({
       fondo: z.tuple([z.string().regex(/^#[0-9a-f]{6}$/i), z.string().regex(/^#[0-9a-f]{6}$/i)]),
       patron: z.enum(["puntos", "lineas", "ninguno"]).default("puntos"),
+      /** Una foto detrás de todo (teñida con la paleta), en vez del degradado solo. */
+      foto: z.string().nullable().default(null),
     })
     .nullable()
     .default(null),

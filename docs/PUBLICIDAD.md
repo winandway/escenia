@@ -326,3 +326,23 @@ alcaldías. Plan `publicidad/kipuu/plan-comercial.json` (fuera de git), 41,6 s, 
   `cuadros` necesita los videos de la persona ya hechos.
 - **Costó 1,05 $:** voz 6 ¢, Maggie hablando 72 ¢ y las nueve fotos del look 27 ¢. Archivos «Comercial Kipuu
   Maggie v1» (y su versión para WhatsApp y la miniatura) en `publicidad/kipuu/`.
+
+### Versión 2: el data center de fondo (5 nov 2026)
+
+Richard: el fondo de rayas se veía raro y había espacios vacíos; pidió un fondo de un solo color de la marca,
+un data center con servidores encendidos detrás de Maggie y algo más impactante, para que la gente pague de una.
+
+- **`paleta.foto`** (nuevo): una foto detrás de todo el anuncio, con un acercamiento lento y teñida con los colores
+  de la paleta (más oscura abajo para leer). Con foto, ya no se pone detrás la captura difuminada. El cierre
+  también la usa, con un brillo del color de la marca detrás del logo, y la primera línea (la dirección) va en
+  una píldora del color de la marca: sobre la foto, el azul de Kipuu no se leía. Prueba en
+  `pruebas/publicidad.test.ts` («la paleta admite una foto detrás de todo»), comprobada en rojo.
+- El data center es una foto hecha con Seedream (`fondos/datacenter-1.png`, pasillo centrado de servidores con
+  luces azules; 3 ¢ cada una, se hicieron dos). Paleta de un solo color `#0a1a4f` sin dibujo.
+- Cierre más vendedor: «kipuu.com / Elige tu plan hoy / Desde US$4,99 al mes» con los equipos de Kipuu
+  (computadora y celular de la portada de su página, sin fondo con la Mac) debajo. La portada dice
+  «DESDE US$4,99 AL MES» en la etiqueta. Un texto nuevo, «¿ARCHIVOS REGADOS?», llena el hueco de arriba al
+  principio.
+- `trabajo_de: "plan-comercial"`: la misma voz y los mismos videos de Maggie; la versión 2 costó solo los 6 ¢ de
+  las fotos del data center. Ojo: con `trabajo_de`, el video sale como `<nombre del plan>.mp4` en la carpeta de
+  trabajo, no como `anuncio.mp4`.

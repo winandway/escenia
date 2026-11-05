@@ -570,6 +570,33 @@ const PersonaEnPizarra: React.FC<{
   );
 };
 
+/**
+ * La foto de fondo de la paleta (un data center detrás de la persona): se acerca muy despacio durante
+ * todo el anuncio y va teñida con los dos colores de la paleta, más oscura abajo, para que los textos,
+ * las tarjetas y la persona se lean encima.
+ */
+const FotoDeFondo: React.FC<{ paleta: NonNullable<PropsPublicidad["paleta"]>; foto: string }> = ({
+  paleta,
+  foto,
+}) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const zoom = interpolate(frame, [0, durationInFrames], [1.04, 1.16]);
+  return (
+    <>
+      <AbsoluteFill style={{ backgroundColor: paleta.fondo[0] }} />
+      <AbsoluteFill style={{ transform: `scale(${zoom})` }}>
+        <Img src={staticFile(foto)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </AbsoluteFill>
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(180deg, ${paleta.fondo[0]}b3 0%, ${paleta.fondo[0]}40 32%, ${paleta.fondo[1]}66 62%, ${paleta.fondo[1]}e6 100%)`,
+        }}
+      />
+    </>
+  );
+};
+
 /** El fondo de la paleta: degradado y un dibujo suave (puntos o líneas) que se desliza despacio. */
 const FondoDePaleta: React.FC<{ paleta: NonNullable<PropsPublicidad["paleta"]> }> = ({ paleta }) => {
   const frame = useCurrentFrame();
@@ -768,6 +795,7 @@ const Cierre: React.FC<{
     ? `radial-gradient(circle at 50% 30%, ${acento}40 0%, ${paleta.fondo[0]} 50%, ${paleta.fondo[1]} 100%)`
     : `radial-gradient(circle at 50% 30%, ${acento}33 0%, #06110b 55%, #030805 100%)`;
   const salto = Math.abs(Math.sin((frame / fps) * Math.PI * 1.6));
+  const conFoto = oscuro && Boolean(paleta?.foto);
   return (
     <AbsoluteFill
       style={{
@@ -779,9 +807,21 @@ const Cierre: React.FC<{
         opacity: Math.min(1, frame / 6),
       }}
     >
+      {/* Con foto de fondo, el cierre la conserva (con un brillo del color de la marca detrás del logo). */}
+      {conFoto && paleta?.foto && (
+        <>
+          <FotoDeFondo paleta={paleta} foto={paleta.foto} />
+          <AbsoluteFill
+            style={{ background: `radial-gradient(circle at 50% 28%, ${acento}55 0%, rgba(0,0,0,0) 52%)` }}
+          />
+        </>
+      )}
       {logo && (
         <>
-          <Img src={staticFile(logo)} style={{ width: 920, transform: `scale(${0.7 + 0.3 * s})` }} />
+          <Img
+            src={staticFile(logo)}
+            style={{ position: "relative", width: 920, transform: `scale(${0.7 + 0.3 * s})` }}
+          />
           <div style={{ height: 50 }} />
         </>
       )}
@@ -791,13 +831,25 @@ const Cierre: React.FC<{
           <div
             key={l}
             style={{
+              // Encima de la foto de fondo (si la hay): lo posicionado se pinta en el orden del documento.
+              position: "relative",
               transform: `translateY(${(1 - si) * 40}px)`,
               opacity: si,
               fontSize: i === 0 ? (logo ? 92 : 118) : logo ? 60 : 72,
-              color: i === 0 ? acento : oscuro ? "#fff" : "#111",
+              color: i === 0 && !conFoto ? acento : oscuro ? "#fff" : "#111",
               marginTop: 18,
               textAlign: "center",
               padding: "0 40px",
+              // Sobre la foto de fondo, la dirección del color de la marca no se leía (Kipuu v2, 5 nov 2026):
+              // va en una píldora del color de la marca, con letra blanca.
+              ...(i === 0 && conFoto
+                ? {
+                    background: acento,
+                    borderRadius: 26,
+                    padding: "8px 44px",
+                    boxShadow: "0 14px 40px rgba(0,0,0,0.45)",
+                  }
+                : {}),
             }}
           >
             {l}
@@ -808,6 +860,7 @@ const Cierre: React.FC<{
         <Img
           src={staticFile(imagen)}
           style={{
+            position: "relative",
             marginTop: 50,
             width: 900,
             height: 820,
@@ -896,9 +949,14 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
   return (
     <AbsoluteFill style={{ backgroundColor: oscuro ? "#050b07" : "#0b0b0b", fontFamily }}>
       {/* Fondo con la armonía propia del video: degradado de su paleta y su dibujo. */}
-      {p.paleta && <FondoDePaleta paleta={p.paleta} />}
-      {/* Fondo: la misma foto difuminada y oscura (nunca un clip ajeno, C-FONDO-2). */}
-      {actual?.imagen && !pizarra && (
+      {p.paleta &&
+        (p.paleta.foto ? (
+          <FotoDeFondo paleta={p.paleta} foto={p.paleta.foto} />
+        ) : (
+          <FondoDePaleta paleta={p.paleta} />
+        ))}
+      {/* Fondo: la misma foto difuminada y oscura (nunca un clip ajeno, C-FONDO-2). Con foto de fondo, no. */}
+      {actual?.imagen && !pizarra && !p.paleta?.foto && (
         <AbsoluteFill
           style={{
             filter: "blur(28px) brightness(0.45)",

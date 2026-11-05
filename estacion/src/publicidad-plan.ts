@@ -41,6 +41,11 @@ export const esquemaPlanPublicidad = z
       .object({
         fondo: z.tuple([z.string().regex(/^#[0-9a-f]{6}$/i), z.string().regex(/^#[0-9a-f]{6}$/i)]),
         patron: z.enum(["puntos", "lineas", "ninguno"]).default("puntos"),
+        /**
+         * Una foto detrás de todo el anuncio (el data center de Kipuu, 5 nov 2026: «un fondo unicolor… y que
+         * haya un data center al fondo de ella»), teñida con los colores de la paleta para que se lea encima.
+         */
+        foto: z.string().optional(),
       })
       .optional(),
     /** La portada del primer cuadro (la miniatura de WhatsApp): título en una o dos líneas y etiqueta. */
