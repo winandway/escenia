@@ -16,6 +16,8 @@ export const TEXTO_MUESTRA: Record<Voz, string> = {
     "Hola, esta es la voz femenina del banco. Así sueno leyendo el texto de un comercial, con un tono claro y profesional.",
   venezolana:
     "¡Hola! ¿Se te va la luz en casa? Mira esto: así sueno vendiendo un producto, alegre y natural. ¡Pídelo hoy mismo!",
+  neutra:
+    "Hola, soy la voz neutra del banco. Sin acento de ningún país, así sueno en un comercial que corre en toda Latinoamérica.",
 };
 
 async function principal() {

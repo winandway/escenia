@@ -9,6 +9,7 @@ export const DESCRIPCION_VOZ: Record<Voz, string> = {
   richard: "Tu voz (clonada): hombre, cercana y natural.",
   femenina: "Mujer, tono neutro de catálogo.",
   venezolana: "Chica joven de Caracas, alegre: ideal para anuncios.",
+  neutra: "Mujer joven sin acento de ningún país: sirve para anuncios en varios países.",
 };
 
 export const muestraDeVoz = (voz: Voz) => `/datos/archivos/voces/${voz}.mp3`;

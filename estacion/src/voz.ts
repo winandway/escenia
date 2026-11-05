@@ -54,6 +54,7 @@ export async function generarVoz(
         richard: config.ELEVENLABS_VOICE_ID,
         femenina: config.ELEVENLABS_VOICE_ID_FEMENINA,
         venezolana: config.ELEVENLABS_VOICE_ID_VENEZOLANA,
+        neutra: config.ELEVENLABS_VOICE_ID_NEUTRA,
       })
     : "";
   // Cada voz con su modelo: la venezolana se lee con Eleven v3 (con el rápido pierde el acento).

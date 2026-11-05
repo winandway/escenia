@@ -81,8 +81,10 @@ página), las rutas `/datos/publicidades` y `/datos/estacion/publicidades/*`,
 
 ## El banco de voces
 
-Las tres voces: la de Richard (clonada), la femenina de catálogo y la **venezolana** (chica joven de
-Caracas, diseñada en ElevenLabs el 17 oct 2026; se lee con el modelo v3). El banco sale en Publicidad,
+Las cuatro voces: la de Richard (clonada), la femenina de catálogo, la **venezolana** (chica joven de
+Caracas, diseñada en ElevenLabs el 17 oct 2026; se lee con el modelo v3) y la **neutra** (mujer joven sin
+acento de ningún país, diseñada el 5 nov 2026 con Voice Design v3 y leída con v3; `ELEVENLABS_VOICE_ID_NEUTRA`).
+Richard la eligió para los comerciales que corren en varios países. El banco sale en Publicidad,
 Comerciales y Nuevo video. Las muestras viven en el almacén del panel (`voces/<voz>.mp3`) y se rehacen
 con `npx tsx src/muestras-voces.ts` desde `estacion/` (unos 2 centavos por voz).
 
@@ -297,3 +299,30 @@ Incluye el plan de la IA del panel (1 o 2 centavos). El prototipo costó 0,5951 
 
 1. El precio de venta lo decide Richard.
 2. Que la IA escriba también el texto a partir de las fotos y los datos del producto (hoy lo escribe él).
+
+## Kipuu con Maggie y la voz neutra (5 nov 2026)
+
+Comercial pagado para Colombia (y otros países) del almacenamiento en la nube de Kipuu, para empresas y
+alcaldías. Plan `publicidad/kipuu/plan-comercial.json` (fuera de git), 41,6 s, diseño `telefono`.
+
+- **La voz:** Richard probó tres voces paisas y prefirió una **neutra**, porque sirve en varios países sin
+  rehacer el anuncio. Se diseñaron tres neutras con Voice Design v3 (`publicidad/kipuu/voces/`); eligió la 1, que
+  quedó en el banco como `neutra`. La paisa 1 también le gustó y queda de reserva para una campaña solo de
+  Colombia.
+- **El look de Maggie:** blazer azul cobalto (el azul de Kipuu), blusa blanca, pantalón azul marino, tenis
+  blancos y cola alta (`avatar/kipuu-frente-senalando-3.png` y `kipuu-presenta-3.png`). Seedream adelgaza a la
+  persona: las dos primeras vueltas salieron flacas y la tercera, pidiendo su talla («US size 14, wide hips,
+  full thick thighs»), salió como la Maggie de siempre. Nueve fotos, 27 ¢.
+- **La armonía:** paleta `#0a1a4f` → `#020617` con líneas, acento `#1A5CFF`, música
+  `electronic-tech-synth-minimal-curious-pulse.mp3`, portada «TUS ARCHIVOS / SEGUROS EN LA NUBE» con la etiqueta
+  «PARA EMPRESAS». El logo de Kipuu trae el texto azul marino: se aclaró a blanco (`logo-kipuu-claro.png`) para
+  el fondo oscuro.
+- **Las capturas:** las pantallas de la app que mandó Richard y las tarjetas de los planes sacadas de la página
+  de precios en vivo, en celular. Antes de sacarlas se lee la página: ese día ya estaba corregida (Equipo 5
+  personas, Empresa 10) y una corrección encima la habría estropeado.
+- **El precio de la competencia:** Google Workspace cobra por persona (14 dólares el plan de 2 TB, página
+  oficial del 5 nov 2026), pero el anuncio dice «otras nubes»: Workspace trae correo y oficina, no solo archivos.
+- **Ojo:** la vista previa con la persona `quieta` solo funciona en el diseño `pizarra`; en `telefono` el paso
+  `cuadros` necesita los videos de la persona ya hechos.
+- **Costó 1,05 $:** voz 6 ¢, Maggie hablando 72 ¢ y las nueve fotos del look 27 ¢. Archivos «Comercial Kipuu
+  Maggie v1» (y su versión para WhatsApp y la miniatura) en `publicidad/kipuu/`.

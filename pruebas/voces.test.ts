@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { esquemaGuion, esquemaGuionGenerado, VOCES } from "@compartido/guion";
-import { elegirIdDeVoz } from "@compartido/voces";
+import { elegirIdDeVoz, modeloDeVoz, VARIABLE_DE_VOZ } from "@compartido/voces";
 
 describe("voces (C-VOZ-1)", () => {
   it("elige el id de la voz pedida", () => {
@@ -45,5 +45,15 @@ describe("la voz venezolana (Publicidad, 17 oct 2026)", () => {
     expect(VARIABLE_DE_VOZ.venezolana).toBe("ELEVENLABS_VOICE_ID_VENEZOLANA");
     expect(modeloDeVoz("venezolana", "eleven_flash_v2_5")).toBe("eleven_v3");
     expect(modeloDeVoz("richard", "eleven_flash_v2_5")).toBe("eleven_flash_v2_5");
+  });
+});
+
+describe("la voz neutra latina (comerciales para varios países, 5 nov 2026)", () => {
+  it("está en el banco, sale de su variable y se lee con Eleven v3", () => {
+    expect(VOCES).toContain("neutra");
+    expect(elegirIdDeVoz("neutra", { neutra: "ne1" })).toBe("ne1");
+    expect(() => elegirIdDeVoz("neutra", { venezolana: "ve1" })).toThrow(/ELEVENLABS_VOICE_ID_NEUTRA/);
+    expect(VARIABLE_DE_VOZ.neutra).toBe("ELEVENLABS_VOICE_ID_NEUTRA");
+    expect(modeloDeVoz("neutra", "eleven_flash_v2_5")).toBe("eleven_v3");
   });
 });

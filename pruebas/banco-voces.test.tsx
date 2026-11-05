@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { VOCES } from "@compartido/guion";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BancoDeVoces, muestraDeVoz } from "@/componentes/BancoDeVoces";
 
@@ -31,14 +32,14 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("BancoDeVoces (oír cada voz antes de elegirla)", () => {
-  it("muestra las tres voces con la elegida por defecto marcada", () => {
+  it("muestra todas las voces del banco con la elegida por defecto marcada", () => {
     render(
       <form>
         <BancoDeVoces porDefecto="venezolana" />
       </form>,
     );
     const radios = screen.getAllByRole("radio");
-    expect(radios).toHaveLength(3);
+    expect(radios).toHaveLength(VOCES.length);
     expect(radios.find((r) => (r as HTMLInputElement).checked)).toHaveAttribute("value", "venezolana");
   });
 
