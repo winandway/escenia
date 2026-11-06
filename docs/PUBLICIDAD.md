@@ -362,3 +362,7 @@ solo guarda lo que cabe en el teléfono; Kipuu es un archivo que crece con los a
 - **Sin nombres de la competencia:** la misma guía dice que iCloud con «Optimizar» y Google Fotos con
   «Liberar espacio» pueden guardar más que el teléfono; el anuncio habla de «una nube espejo».
 - Plan `publicidad/kipuu/plan-copia.json`, guion `publicidad/kipuu/guion-copia.md`.
+- **Una grabación de pantalla del iPhone es más alta que 9:16:** al pasarla a 1080×1920 se corta arriba y abajo
+  y se perdía el título. Se recorta antes con ffmpeg justo debajo de la barra de la hora
+  (`crop=1320:2347:0:150` para 1320×2868) y así se ve entera dentro del teléfono.
+- Richard aprobó el guion y los dibujos a la primera. Salió de 30 s y costó 54 ¢ (voz 5 ¢, Maggie 50 ¢).
