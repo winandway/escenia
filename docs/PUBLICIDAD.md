@@ -131,7 +131,8 @@ prueba con un medidor: el agua del grifo marca rojo y la del sistema, verde) y p
 un avatar hablando delante.
 
 - **momento `video`** (`archivo`, `desde_s`, `velocidad` de 0,25 a 4): el video del cliente a pantalla
-  completa en el diseño `pantalla`, desde ese segundo y más rápido si hay tiempos muertos. Se pasa una vez
+  completa en el diseño `pantalla` (o corriendo dentro del teléfono en el diseño `telefono`, desde el 6 nov
+  2026), desde ese segundo y más rápido si hay tiempos muertos. Se pasa una vez
   a vertical 1080×1920 (girado si el teléfono lo grabó acostado) y sin sonido; su cuadro de ese segundo
   sirve de fondo difuminado y de miniatura.
 - **`cierre.imagen`**: el producto sin fondo debajo de las líneas de la tarjeta final (aquí, el equipo
@@ -346,3 +347,18 @@ un data center con servidores encendidos detrás de Maggie y algo más impactant
 - `trabajo_de: "plan-comercial"`: la misma voz y los mismos videos de Maggie; la versión 2 costó solo los 6 ¢ de
   las fotos del data center. Ojo: con `trabajo_de`, el video sale como `<nombre del plan>.mp4` en la carpeta de
   trabajo, no como `anuncio.mp4`.
+
+## Kipuu: «tu nube no es un espejo» (6 nov 2026)
+
+Richard pasó la grabación de pantalla de la copia de la cámara de Kipuu (21.177 fotos subiendo) y la guía
+«Cómo funciona la copia de la cámara de Kipuu», y pidió un comercial corto y contundente: una nube espejo
+solo guarda lo que cabe en el teléfono; Kipuu es un archivo que crece con los años.
+
+- **El video dentro del teléfono:** el momento `video` ahora también corre dentro de la tarjeta del diseño
+  `telefono` (antes ahí solo se veía su cuadro quieto). La regla vive en `videoEnTarjeta` y la fija su prueba
+  (comprobada en rojo).
+- **Los dibujos** (espejo, archivo que crece y las barras de cinco años contra el teléfono de 128 GB) se
+  dibujan gratis con HTML en la Mac y quedan en `publicidad/kipuu/graficos/`.
+- **Sin nombres de la competencia:** la misma guía dice que iCloud con «Optimizar» y Google Fotos con
+  «Liberar espacio» pueden guardar más que el teléfono; el anuncio habla de «una nube espejo».
+- Plan `publicidad/kipuu/plan-copia.json`, guion `publicidad/kipuu/guion-copia.md`.

@@ -462,3 +462,16 @@ export function ladoDelTelefonoEn(
   }
   return { lado, antes, desdeMs };
 }
+
+/**
+ * El video real que corre dentro de la tarjeta, o `null` si va la captura quieta. En «pantalla» ocupa
+ * toda la pantalla; en «teléfono» corre dentro del teléfono (la grabación de la copia de la cámara de
+ * Kipuu, 6 nov 2026: «un video como imagen de apoyo mientras la chica habla»). En «centro» y «pizarra»
+ * sigue la captura (su cuadro).
+ */
+export function videoEnTarjeta<V>(
+  diseno: z.infer<typeof esquemaPublicidad>["diseno"],
+  video: V | null | undefined,
+): V | null {
+  return video && (diseno === "pantalla" || diseno === "telefono") ? video : null;
+}

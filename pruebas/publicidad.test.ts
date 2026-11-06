@@ -28,6 +28,7 @@ import {
   subtitulosEnPantalla,
   tarjetaTelefono,
   telefonoPizarra,
+  videoEnTarjeta,
   vistaCompleta,
   vistaDeEnfoque,
   vistaPersonaEn,
@@ -763,5 +764,18 @@ describe("sonidos largos a su hora: el chorro del agua (27 oct 2026)", () => {
     expect(() =>
       esquemaPlanPublicidad.parse({ ...base, efectos: [{ archivo: "a.mp3", desde_ms: 0, volumen: 2 }] }),
     ).toThrow();
+  });
+});
+
+describe("el video real corre dentro del teléfono (copia de la cámara de Kipuu, 6 nov 2026)", () => {
+  const video = { ruta: "vid-1.mp4", desdeMs: 0, velocidad: 2, volumen: 0 };
+  it("en «teléfono» y en «pantalla» corre el video; en «centro» y «pizarra» va su cuadro", () => {
+    expect(videoEnTarjeta("telefono", video)).toBe(video);
+    expect(videoEnTarjeta("pantalla", video)).toBe(video);
+    expect(videoEnTarjeta("centro", video)).toBeNull();
+    expect(videoEnTarjeta("pizarra", video)).toBeNull();
+  });
+  it("sin video, la captura", () => {
+    expect(videoEnTarjeta("telefono", null)).toBeNull();
   });
 });

@@ -27,6 +27,7 @@ import {
   subtitulosEnPantalla,
   tarjetaTelefono,
   telefonoPizarra,
+  videoEnTarjeta,
   vistaCompleta,
   vistaDeEnfoque,
   type Vista,
@@ -94,10 +95,21 @@ const Tarjeta: React.FC<{
           transform: `scale(${0.9 + 0.1 * entra})`,
         }}
       >
-        <Img
-          src={staticFile(tramo.imagen ?? "")}
-          style={{ position: "absolute", left: v.left, top: v.top, width: v.width, height: v.height }}
-        />
+        {videoEnTarjeta("telefono", tramo.video) && tramo.video ? (
+          <OffthreadVideo
+            src={staticFile(tramo.video.ruta)}
+            trimBefore={f(tramo.video.desdeMs)}
+            playbackRate={tramo.video.velocidad}
+            muted={!tramo.video.volumen}
+            volume={tramo.video.volumen || 0}
+            style={{ position: "absolute", left: v.left, top: v.top, width: v.width, height: v.height }}
+          />
+        ) : (
+          <Img
+            src={staticFile(tramo.imagen ?? "")}
+            style={{ position: "absolute", left: v.left, top: v.top, width: v.width, height: v.height }}
+          />
+        )}
         {noche > 0 && <AbsoluteFill style={{ background: `rgba(2,4,12,${noche})` }} />}
       </div>
     );
@@ -163,7 +175,7 @@ const Tarjeta: React.FC<{
       transform: `translateX(${x}px) scale(${golpe * lento})`,
     };
     contenido =
-      completa && tramo.video ? (
+      videoEnTarjeta(completa ? "pantalla" : "centro", tramo.video) && tramo.video ? (
         <OffthreadVideo
           src={staticFile(tramo.video.ruta)}
           trimBefore={f(tramo.video.desdeMs)}
