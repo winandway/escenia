@@ -19,6 +19,13 @@ export const esquemaVistaPersona = z.object({
 });
 export type VistaPersona = z.infer<typeof esquemaVistaPersona>;
 
+const fraccion = z.number().min(0).max(1);
+const puntoEnFracciones = z.tuple([fraccion, fraccion]);
+export const esquemaRayos = z.object({
+  nube: puntoEnFracciones.default([0.5, 0.075]),
+  desde: z.array(puntoEnFracciones).min(1).max(12),
+});
+
 export const esquemaPublicidad = z.object({
   marca: z.string(),
   acento: z.string().regex(/^#[0-9a-f]{6}$/i),
@@ -42,6 +49,13 @@ export const esquemaPublicidad = z.object({
       patron: z.enum(["puntos", "lineas", "ninguno"]).default("puntos"),
       /** Una foto detrás de todo (teñida con la paleta), en vez del degradado solo. */
       foto: z.string().nullable().default(null),
+      /**
+       * Cables de luz que suben de los teléfonos de la foto a una nube arriba (Kipuu de verano, 6 nov 2026:
+       * «varias personas detrás con un teléfono en la mano… unos rayos que se conectan a la nube arriba
+       * mientras ella habla»). `desde`: cada teléfono en fracciones de la FOTO (se mueve con su acercamiento);
+       * `nube`: el centro de la nube en fracciones de la PANTALLA (no se mueve).
+       */
+      rayos: esquemaRayos.nullable().default(null),
     })
     .nullable()
     .default(null),
@@ -474,4 +488,49 @@ export function videoEnTarjeta<V>(
   video: V | null | undefined,
 ): V | null {
   return video && (diseno === "pantalla" || diseno === "telefono") ? video : null;
+}
+
+/** El acercamiento lento de la foto de fondo en cada cuadro: de 1,04 a 1,16 a lo largo del anuncio. */
+export function zoomDeFondo(frame: number, total: number): number {
+  const t = total > 0 ? Math.min(1, Math.max(0, frame / total)) : 0;
+  return 1.04 + 0.12 * t;
+}
+
+/**
+ * Dónde cae en la pantalla (1080×1920) un punto de la foto de fondo dado en fracciones, con el
+ * acercamiento aplicado desde el centro: así el cable sale siempre del teléfono, aunque la foto se mueva.
+ */
+export function puntoEnPantalla(p: readonly [number, number], zoom: number): { x: number; y: number } {
+  return { x: 540 + (p[0] * 1080 - 540) * zoom, y: 960 + (p[1] * 1920 - 960) * zoom };
+}
+
+type Punto = { x: number; y: number };
+
+/** El cable de un teléfono a la nube: una curva que sube derecho y llega por debajo de la nube. */
+export function curvaDelRayo(desde: Punto, llegada: Punto): [Punto, Punto, Punto, Punto] {
+  const alto = Math.max(120, desde.y - llegada.y);
+  return [
+    desde,
+    { x: desde.x, y: desde.y - alto * 0.55 },
+    { x: llegada.x, y: llegada.y + alto * 0.45 },
+    llegada,
+  ];
+}
+
+/** Un punto de la curva (t de 0, el teléfono, a 1, la nube): ahí viaja la fotito que sube. */
+export function puntoEnCurva(c: readonly [Punto, Punto, Punto, Punto], t: number): Punto {
+  const u = 1 - t;
+  const a = u * u * u;
+  const b = 3 * u * u * t;
+  const d = 3 * u * t * t;
+  const e = t * t * t;
+  return {
+    x: a * c[0].x + b * c[1].x + d * c[2].x + e * c[3].x,
+    y: a * c[0].y + b * c[1].y + d * c[2].y + e * c[3].y,
+  };
+}
+
+/** El cierre conserva la foto de fondo en los dos temas (antes solo en el oscuro; la oficina de verano va en claro). */
+export function cierreConFoto(paleta: { foto: string | null } | null | undefined): boolean {
+  return Boolean(paleta?.foto);
 }

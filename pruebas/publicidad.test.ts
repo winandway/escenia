@@ -779,3 +779,67 @@ describe("el video real corre dentro del teléfono (copia de la cámara de Kipuu
     expect(videoEnTarjeta("telefono", null)).toBeNull();
   });
 });
+
+describe("los rayos de los teléfonos a la nube (Kipuu de verano, 6 nov 2026)", () => {
+  // Richard: «varias personas detrás con un teléfono en la mano… unos rayos que se conectan a la nube
+  // arriba mientras ella habla… que sea diferente, que se diferencie y que venda».
+  it("el plan y el video aceptan los rayos, y la nube va arriba en el centro si no se dice", async () => {
+    const plan = esquemaPlanPublicidad.parse({
+      marca: "Kipuu",
+      logo: "l.png",
+      partes: ["Tus fotos se suben solas. Las borras del teléfono y en Kipuu siguen ahí."],
+      momentos: [{ frase: "Tus fotos se" }, { frase: "Las borras del" }, { frase: "en Kipuu siguen" }],
+      cierre: { frase: "siguen ahí", lineas: [] },
+      paleta: { fondo: ["#e0f2fe", "#0b2a6f"], foto: "oficina.png", rayos: { desde: [[0.3, 0.55]] } },
+    });
+    expect(plan.paleta?.rayos?.desde).toEqual([[0.3, 0.55]]);
+    const { esquemaPublicidad } = await import("../estacion/src/remotion/publicidad-diseno");
+    const props = esquemaPublicidad.shape.paleta.parse({
+      fondo: ["#e0f2fe", "#0b2a6f"],
+      foto: "oficina.png",
+      rayos: { desde: [[0.3, 0.55]] },
+    });
+    expect(props?.rayos?.nube).toEqual([0.5, 0.075]);
+    // Sin rayos, la foto va sola (el data center de la versión 2 no cambia).
+    expect(
+      esquemaPublicidad.shape.paleta.parse({ fondo: ["#0a1a4f", "#0a1a4f"], foto: "f.png" })?.rayos,
+    ).toBeNull();
+    // Un teléfono fuera de la foto no entra.
+    expect(() =>
+      esquemaPublicidad.shape.paleta.parse({ fondo: ["#0a1a4f", "#0a1a4f"], rayos: { desde: [[1.4, 0.5]] } }),
+    ).toThrow();
+  });
+
+  it("el cable sale del teléfono aunque la foto se acerque, y la fotito sube del teléfono a la nube", async () => {
+    const { curvaDelRayo, puntoEnCurva, puntoEnPantalla, zoomDeFondo } =
+      await import("../estacion/src/remotion/publicidad-diseno");
+    expect(zoomDeFondo(0, 900)).toBeCloseTo(1.04);
+    expect(zoomDeFondo(900, 900)).toBeCloseTo(1.16);
+    // El centro no se mueve; una esquina se va hacia afuera con el acercamiento.
+    expect(puntoEnPantalla([0.5, 0.5], 1.16)).toEqual({ x: 540, y: 960 });
+    const tel = puntoEnPantalla([0.25, 0.55], 1.1);
+    expect(tel.x).toBeCloseTo(540 + (270 - 540) * 1.1);
+    expect(tel.y).toBeCloseTo(960 + (1056 - 960) * 1.1);
+    const curva = curvaDelRayo(tel, { x: 540, y: 204 });
+    expect(puntoEnCurva(curva, 0)).toEqual(tel);
+    expect(puntoEnCurva(curva, 1)).toEqual({ x: 540, y: 204 });
+    // A mitad de camino va más arriba que el teléfono y más abajo que la nube.
+    const medio = puntoEnCurva(curva, 0.5);
+    expect(medio.y).toBeLessThan(tel.y);
+    expect(medio.y).toBeGreaterThan(204);
+  });
+
+  it("el cierre conserva la foto de fondo también en el tema claro, con la dirección en letra blanca", async () => {
+    const { cierreConFoto } = await import("../estacion/src/remotion/publicidad-diseno");
+    expect(cierreConFoto({ foto: "oficina.png" })).toBe(true);
+    expect(cierreConFoto({ foto: null })).toBe(false);
+    expect(cierreConFoto(null)).toBe(false);
+    const { readFileSync } = await import("node:fs");
+    const fuente = readFileSync(new URL("../estacion/src/remotion/Publicidad.tsx", import.meta.url), "utf8");
+    expect(fuente).toContain("const conFoto = cierreConFoto(paleta);");
+    expect(fuente).toContain('color: i === 0 ? (conFoto ? "#fff" : acento)');
+    expect(fuente).toContain("<RayosANube");
+    // En el cierre no va la nube: chocaba con el logo de Kipuu; los cables llegan al logo.
+    expect(fuente).toContain("conNube={false}");
+  });
+});

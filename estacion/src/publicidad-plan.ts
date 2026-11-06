@@ -46,6 +46,19 @@ export const esquemaPlanPublicidad = z
          * haya un data center al fondo de ella»), teñida con los colores de la paleta para que se lea encima.
          */
         foto: z.string().optional(),
+        /**
+         * Cables de luz de los teléfonos de la foto a una nube arriba (Kipuu de verano, 6 nov 2026). `desde`:
+         * cada teléfono en fracciones de la foto; `nube`: el centro de la nube en fracciones de la pantalla.
+         */
+        rayos: z
+          .object({
+            nube: z.tuple([z.number().min(0).max(1), z.number().min(0).max(1)]).optional(),
+            desde: z
+              .array(z.tuple([z.number().min(0).max(1), z.number().min(0).max(1)]))
+              .min(1)
+              .max(12),
+          })
+          .optional(),
       })
       .optional(),
     /** La portada del primer cuadro (la miniatura de WhatsApp): título en una o dos líneas y etiqueta. */

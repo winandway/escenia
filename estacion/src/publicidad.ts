@@ -992,6 +992,12 @@ export async function pasoArmar(
           fondo: plan.paleta.fondo,
           patron: plan.paleta.patron,
           foto: plan.paleta.foto ? (await imagenEnPublico(plan.paleta.foto)).nombre : null,
+          rayos: plan.paleta.rayos
+            ? {
+                nube: plan.paleta.rayos.nube ?? ([0.5, 0.075] as [number, number]),
+                desde: plan.paleta.rayos.desde,
+              }
+            : null,
         }
       : null,
     portada: plan.portada

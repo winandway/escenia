@@ -366,3 +366,29 @@ solo guarda lo que cabe en el teléfono; Kipuu es un archivo que crece con los a
   y se perdía el título. Se recorta antes con ffmpeg justo debajo de la barra de la hora
   (`crop=1320:2347:0:150` para 1320×2868) y así se ve entera dentro del teléfono.
 - Richard aprobó el guion y los dibujos a la primera. Salió de 30 s y costó 54 ¢ (voz 5 ¢, Maggie 50 ¢).
+
+## Kipuu de verano: la oficina con los rayos a la nube (6 nov 2026)
+
+El comercial «espejo» salió espectacular, pero se confundía con los otros dos: el mismo data center y la misma
+Maggie de blazer azul. Richard pidió otra chica, más joven, con falda y más de verano, en una oficina normal con
+varias personas detrás con el teléfono en la mano, y unos rayos que suben de los teléfonos a una nube mientras ella
+habla. «Que se diferencie y que venda»: es para una campaña en Facebook con varios comerciales.
+
+- **`paleta.rayos`** (nuevo): `{ desde: [[x, y], …], nube: [x, y] }`. `desde` es cada teléfono en fracciones de la
+  FOTO de fondo (se mueve con su acercamiento lento: `puntoEnPantalla`); `nube` es el centro de la nube en
+  fracciones de la PANTALLA (por defecto arriba en el centro, `[0.5, 0.075]`). Cada cable brilla, una luz sube por
+  él con una fotito en la punta, cada segundo y medio chispea un rayo en zigzag y la nube se enciende cuando le llega
+  algo. Va encima de la foto y debajo de todo lo demás. En el cierre no va la nube (chocaba con el logo): los cables
+  llegan al logo. Para sacar los puntos: recortar la franja de los teléfonos con una cuadrícula y leerlos.
+- **El cierre conserva la foto también en el tema claro** (`cierreConFoto`); la dirección va en su píldora con letra
+  blanca y las otras líneas llevan un halo blanco para leerse sobre la oficina.
+- Pruebas en `pruebas/publicidad.test.ts` («los rayos de los teléfonos a la nube»), comprobadas en rojo.
+- **La chica nueva** (`publicidad/kipuu/verano/chica-base-2.png`): unos 24 años, pelo suelto ondulado con mechas
+  caramelo, blusa blanca sin mangas, falda lápiz azul rey, tacones nude. Se usó la foto ORIGINAL de Seedream para
+  todas las apariciones. **Ojo: cada retoque con Seedream edit le estropea la cara** (las poses señalando le
+  achicaron los ojos y la versión de falda coral le dejó un ojo medio cerrado y la barriga fea; Richard: «es
+  horrible»). Si hace falta otra pose, mejor pedirla de cero y elegir la que tenga la cara bonita, no retocar.
+- **La armonía:** oficina soleada (`verano/oficina-1.png`, cinco personas con el teléfono encendido, techo con
+  tragaluz libre para la nube), tema claro con el logo de siempre, paleta `#e0f2fe` → `#0b2a6f`, música
+  `corporate-inspiring-piano-pulse-business.mp3`, portada «¿TU NUBE BORRA / TUS FOTOS?» con la etiqueta «EN KIPUU
+  SE QUEDAN». Misma voz y mismo guion que el «espejo» (`trabajo_de: "plan-copia"`).

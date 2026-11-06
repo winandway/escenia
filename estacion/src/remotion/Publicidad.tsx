@@ -18,11 +18,15 @@ import { loadFont } from "@remotion/google-fonts/Anton";
 import { textoSobre } from "./monigotes-diseno";
 import {
   capturaEnTelefono,
+  cierreConFoto,
   contenidoDelTelefono,
+  curvaDelRayo,
   formatoCifra,
   ladoDelTelefonoEn,
   mezclarVistas,
   personaEnPizarra,
+  puntoEnCurva,
+  puntoEnPantalla,
   type PropsPublicidad,
   subtitulosEnPantalla,
   tarjetaTelefono,
@@ -30,6 +34,7 @@ import {
   videoEnTarjeta,
   vistaCompleta,
   vistaDeEnfoque,
+  zoomDeFondo,
   type Vista,
   type VistaPersona,
   vistaPersonaEn,
@@ -587,13 +592,16 @@ const PersonaEnPizarra: React.FC<{
  * todo el anuncio y va teñida con los dos colores de la paleta, más oscura abajo, para que los textos,
  * las tarjetas y la persona se lean encima.
  */
-const FotoDeFondo: React.FC<{ paleta: NonNullable<PropsPublicidad["paleta"]>; foto: string }> = ({
-  paleta,
-  foto,
-}) => {
+const FotoDeFondo: React.FC<{
+  paleta: NonNullable<PropsPublicidad["paleta"]>;
+  foto: string;
+  acento: string;
+  /** En el cierre no va la nube: los cables llegan al logo de la marca, que ocupa ese sitio. */
+  conNube?: boolean;
+}> = ({ paleta, foto, acento, conNube = true }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const zoom = interpolate(frame, [0, durationInFrames], [1.04, 1.16]);
+  const zoom = zoomDeFondo(frame, durationInFrames);
   return (
     <>
       <AbsoluteFill style={{ backgroundColor: paleta.fondo[0] }} />
@@ -605,7 +613,156 @@ const FotoDeFondo: React.FC<{ paleta: NonNullable<PropsPublicidad["paleta"]>; fo
           background: `linear-gradient(180deg, ${paleta.fondo[0]}b3 0%, ${paleta.fondo[0]}40 32%, ${paleta.fondo[1]}66 62%, ${paleta.fondo[1]}e6 100%)`,
         }}
       />
+      {paleta.rayos && <RayosANube rayos={paleta.rayos} zoom={zoom} acento={acento} conNube={conNube} />}
     </>
+  );
+};
+
+/** La silueta de la nube, centrada en 0,0 (unos 300 × 190 px). */
+const NUBE =
+  "M -110 70 C -175 70 -175 -10 -115 -15 C -120 -75 -40 -95 -10 -55 C 15 -110 120 -95 110 -25 C 175 -25 175 70 110 70 Z";
+
+/**
+ * Los cables de luz de los teléfonos de la foto a la nube de arriba (Kipuu de verano, 6 nov 2026): cada
+ * cable brilla quieto, una luz sube por él con una fotito en la punta, de vez en cuando chispea un rayo
+ * en zigzag y la nube se enciende cuando le llega algo. Va encima de la foto y debajo de todo lo demás.
+ */
+const RayosANube: React.FC<{
+  rayos: NonNullable<NonNullable<PropsPublicidad["paleta"]>["rayos"]>;
+  zoom: number;
+  acento: string;
+  conNube: boolean;
+}> = ({ rayos, zoom, acento, conNube }) => {
+  const frame = useCurrentFrame();
+  const aparece = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
+  const nube = { x: rayos.nube[0] * 1080, y: rayos.nube[1] * 1920 };
+  const n = rayos.desde.length;
+  const VUELTA = 66; // cuadros que tarda una fotito en subir
+  const cables = rayos.desde.map((p, i) => {
+    const desde = puntoEnPantalla(p, zoom);
+    const llegada = { x: nube.x + (n > 1 ? (i / (n - 1) - 0.5) * 150 : 0), y: nube.y + 60 };
+    const curva = curvaDelRayo(desde, llegada);
+    const t = ((frame + (i * VUELTA) / n) % VUELTA) / VUELTA;
+    const d = `M ${curva[0].x} ${curva[0].y} C ${curva[1].x} ${curva[1].y} ${curva[2].x} ${curva[2].y} ${curva[3].x} ${curva[3].y}`;
+    return { d, curva, t, desde };
+  });
+  // Cuánto se enciende la nube: según la fotito que esté más cerca de llegar.
+  const llegando = Math.max(0, ...cables.map((c) => (c.t > 0.86 ? (c.t - 0.86) / 0.14 : 0)));
+  // Un rayo en zigzag cada segundo y medio, sobre un cable distinto cada vez, durante 4 cuadros.
+  const chispa = frame % 45 < 4 ? cables[Math.floor(frame / 45) % n] : null;
+  const zigzag = chispa
+    ? Array.from({ length: 13 }, (_, k) => {
+        const q = puntoEnCurva(chispa.curva, k / 12);
+        const lado =
+          k === 0 || k === 12
+            ? 0
+            : (Math.sin(k * 12.9898 + Math.floor(frame / 45) * 78.233) > 0 ? 1 : -1) * (10 + (k % 3) * 6);
+        return `${q.x + lado},${q.y}`;
+      }).join(" ")
+    : null;
+  const latido = 1 + 0.03 * Math.sin(frame / 6) + 0.06 * llegando;
+  return (
+    <AbsoluteFill style={{ opacity: aparece }}>
+      <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{ position: "absolute", inset: 0 }}>
+        <defs>
+          <filter id="brillo-rayo" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="7" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        {cables.map((c, i) => (
+          <g key={i}>
+            <path
+              d={c.d}
+              fill="none"
+              stroke={acento}
+              strokeOpacity={0.45}
+              strokeWidth={10}
+              filter="url(#brillo-rayo)"
+            />
+            <path d={c.d} fill="none" stroke="#ffffff" strokeOpacity={0.8} strokeWidth={3} />
+            <path
+              d={c.d}
+              pathLength={1000}
+              fill="none"
+              stroke="#bfe0ff"
+              strokeWidth={8}
+              strokeLinecap="round"
+              strokeDasharray="150 1000"
+              strokeDashoffset={150 - c.t * 1150}
+              filter="url(#brillo-rayo)"
+            />
+            <circle
+              cx={c.desde.x}
+              cy={c.desde.y}
+              r={14 + 4 * Math.sin(frame / 5 + i)}
+              fill="#ffffff"
+              fillOpacity={0.55}
+              filter="url(#brillo-rayo)"
+            />
+          </g>
+        ))}
+        {zigzag && (
+          <polyline
+            points={zigzag}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth={4}
+            strokeLinejoin="round"
+            filter="url(#brillo-rayo)"
+          />
+        )}
+        {cables.map((c, i) => {
+          if (c.t > 0.9) return null;
+          const q = puntoEnCurva(c.curva, c.t);
+          return (
+            <g key={`f${i}`} transform={`translate(${q.x} ${q.y})`} filter="url(#brillo-rayo)">
+              <rect
+                x={-17}
+                y={-14}
+                width={34}
+                height={28}
+                rx={6}
+                fill="#ffffff"
+                stroke={acento}
+                strokeWidth={3}
+              />
+              <path d="M -11 9 L -3 -1 L 3 5 L 7 1 L 12 9 Z" fill={acento} />
+              <circle cx={7} cy={-6} r={3.5} fill="#ffb703" />
+            </g>
+          );
+        })}
+        {conNube && (
+          <g transform={`translate(${nube.x} ${nube.y}) scale(${latido})`}>
+            <path
+              d={NUBE}
+              fill={acento}
+              fillOpacity={0.35 + 0.4 * llegando}
+              filter="url(#brillo-rayo)"
+              transform="scale(1.12)"
+            />
+            <path d={NUBE} fill="#ffffff" stroke={acento} strokeWidth={7} />
+            <path
+              d="M -30 10 L -30 35 M -30 10 L -45 25 M -30 10 L -15 25"
+              stroke={acento}
+              strokeWidth={8}
+              strokeLinecap="round"
+              fill="none"
+            />
+            <path
+              d="M 30 10 L 30 35 M 30 10 L 15 25 M 30 10 L 45 25"
+              stroke={acento}
+              strokeWidth={8}
+              strokeLinecap="round"
+              fill="none"
+            />
+          </g>
+        )}
+      </svg>
+    </AbsoluteFill>
   );
 };
 
@@ -807,7 +964,7 @@ const Cierre: React.FC<{
     ? `radial-gradient(circle at 50% 30%, ${acento}40 0%, ${paleta.fondo[0]} 50%, ${paleta.fondo[1]} 100%)`
     : `radial-gradient(circle at 50% 30%, ${acento}33 0%, #06110b 55%, #030805 100%)`;
   const salto = Math.abs(Math.sin((frame / fps) * Math.PI * 1.6));
-  const conFoto = oscuro && Boolean(paleta?.foto);
+  const conFoto = cierreConFoto(paleta);
   return (
     <AbsoluteFill
       style={{
@@ -822,7 +979,7 @@ const Cierre: React.FC<{
       {/* Con foto de fondo, el cierre la conserva (con un brillo del color de la marca detrás del logo). */}
       {conFoto && paleta?.foto && (
         <>
-          <FotoDeFondo paleta={paleta} foto={paleta.foto} />
+          <FotoDeFondo paleta={paleta} foto={paleta.foto} acento={acento} conNube={false} />
           <AbsoluteFill
             style={{ background: `radial-gradient(circle at 50% 28%, ${acento}55 0%, rgba(0,0,0,0) 52%)` }}
           />
@@ -848,7 +1005,12 @@ const Cierre: React.FC<{
               transform: `translateY(${(1 - si) * 40}px)`,
               opacity: si,
               fontSize: i === 0 ? (logo ? 92 : 118) : logo ? 60 : 72,
-              color: i === 0 && !conFoto ? acento : oscuro ? "#fff" : "#111",
+              color: i === 0 ? (conFoto ? "#fff" : acento) : oscuro ? "#fff" : "#111",
+              // Sobre la oficina clara (tema claro con foto), la letra oscura lleva un halo blanco para leerse.
+              textShadow:
+                conFoto && !oscuro && i > 0
+                  ? "0 0 18px rgba(255,255,255,0.95), 0 0 6px rgba(255,255,255,0.95)"
+                  : undefined,
               marginTop: 18,
               textAlign: "center",
               padding: "0 40px",
@@ -963,7 +1125,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
       {/* Fondo con la armonía propia del video: degradado de su paleta y su dibujo. */}
       {p.paleta &&
         (p.paleta.foto ? (
-          <FotoDeFondo paleta={p.paleta} foto={p.paleta.foto} />
+          <FotoDeFondo paleta={p.paleta} foto={p.paleta.foto} acento={p.acento} />
         ) : (
           <FondoDePaleta paleta={p.paleta} />
         ))}
