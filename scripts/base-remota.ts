@@ -3,6 +3,7 @@
 // lógica del panel (calendario, guiones). Se corre desde la raíz del proyecto.
 import { readFileSync } from "node:fs";
 import type { BaseDatos, Valor } from "@/lib/db";
+import { sqlConRetorno } from "./sql-retorno";
 
 const entorno = Object.fromEntries(
   readFileSync("estacion/.env", "utf8")
@@ -37,8 +38,7 @@ export const db: BaseDatos = {
     return (((await consulta(sql, params)).results ?? [])[0] as T | undefined) ?? null;
   },
   async ejecutar(sql: string, params: Valor[] = []) {
-    const insertar = /^\s*INSERT/i.test(sql) && !/RETURNING/i.test(sql);
-    const d = await consulta(insertar ? `${sql.trim().replace(/;$/, "")} RETURNING id` : sql, params);
+    const d = await consulta(sqlConRetorno(sql), params);
     const fila = (d.results ?? [])[0] as { id?: number } | undefined;
     return { cambios: d.rowsWritten ?? 0, ultimoId: fila?.id ?? null };
   },

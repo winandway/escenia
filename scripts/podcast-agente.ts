@@ -17,7 +17,10 @@ import { configuracionDelAgente, TOPE_MINUTOS_MAXIMO, MAX_SEGUNDOS_CONVERSACION 
 import { VARIABLE_DE_VOZ } from "@compartido/voces";
 
 const CARPETA = path.join(os.homedir(), ".config", "motor-escenia");
-const RUTA_CLAVE = path.join(CARPETA, "elevenlabs-agentes");
+// Gerencia la guardó como «elevenlabs-agents» (7 nov 2026); se acepta también el nombre de la guía.
+const RUTA_CLAVE =
+  ["elevenlabs-agents", "elevenlabs-agentes"].map((n) => path.join(CARPETA, n)).find((r) => existsSync(r)) ??
+  path.join(CARPETA, "elevenlabs-agents");
 const RUTA_AGENTE = path.join(CARPETA, "podcast-agente-id");
 const API = "https://api.elevenlabs.io";
 const prueba = process.argv.includes("--prueba");

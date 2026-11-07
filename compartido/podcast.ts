@@ -146,6 +146,9 @@ export function configuracionDelAgente(opciones: { vozPorDefecto: string; conver
           llm,
           temperature: 0.3,
           max_tokens: 220,
+          // Sin «pensar»: Gemini 2.5 Flash piensa por defecto y se gastaba los 220 tokens pensando, así que el
+          // invitado saludaba y después se quedaba mudo (7 nov 2026). El invitado solo cuenta su ficha.
+          thinking_budget: 0,
           backup_llm_config: { preference: "override", order: [respaldo] },
         },
       },

@@ -194,6 +194,8 @@ describe("el modelo de texto del invitado y lo que cuesta", () => {
 
   it("el agente: Gemini Flash, 10 minutos, URL firmada, uno a la vez, y el navegador no cambia el modelo", () => {
     const c = configuracionDelAgente({ vozPorDefecto: "id-neutra", conversacionesPorDia: 12 });
+    // Sin pensar: con el «pensar» de Gemini el invitado se quedaba mudo después del saludo.
+    expect(c.conversation_config.agent.prompt.thinking_budget).toBe(0);
     const agente = c.conversation_config.agent;
     expect(agente.prompt.llm).toBe("gemini-2.5-flash");
     expect(agente.prompt.backup_llm_config.order.every((m) => m in LLM_AGENTE_PERMITIDOS)).toBe(true);
