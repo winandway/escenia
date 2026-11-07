@@ -166,11 +166,11 @@ describe("la voz del invitado", () => {
 });
 
 describe("la ficha entra al estudio", () => {
-  it("una historia real solo con el permiso confirmado; la de ficción y la de ejemplo no lo necesitan", () => {
+  it("una historia real solo con el permiso confirmado, también la de ejemplo; la de ficción no lo necesita", () => {
     const real = { origen: "real" as const, ejemplo: false, historia: "algo" };
     expect(fichaLista({ ...real, permiso: false })).toMatch(/permiso por escrito/);
     expect(fichaLista({ ...real, permiso: true })).toBeNull();
-    expect(fichaLista({ ...real, ejemplo: true, permiso: false })).toBeNull();
+    expect(fichaLista({ ...real, ejemplo: true, permiso: false })).toMatch(/permiso por escrito/);
     expect(fichaLista({ ...real, permiso: true, historia: "  " })).toMatch(/no tiene historia/);
     // La de ficción la escribimos nosotros: no hay protagonista a quien pedirle permiso.
     expect(fichaLista({ origen: "ficcion", ejemplo: false, permiso: false, historia: "algo" })).toBeNull();

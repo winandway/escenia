@@ -13,6 +13,11 @@ const CAMPOS_SENSIBLES = /clave|password|pin|cvv|tarjeta|token|secreto/i;
 const CAMPOS_INTERNOS = /^\$/;
 // Un grupo (las voces en radio, las carpetas en casillas) guarda sus valores juntos con este separador.
 const SEPARADOR = "\u001f";
+/**
+ * Una casilla que la persona DESMARCÓ no viaja en FormData: sin esta marca, al volver la casilla quedaba
+ * otra vez marcada (por ejemplo, el permiso de la ficha del podcast). Lo encontró el revisor el 7 nov 2026.
+ */
+export const SIN_MARCAR = "\u001esin-marcar";
 
 export type Borrador = Record<string, string>;
 
@@ -66,6 +71,11 @@ export function datosDelFormulario(form: HTMLFormElement): Borrador {
     // Varias casillas con el mismo nombre (las carpetas): se guardan todas, no solo la última.
     datos[k] = k in datos ? `${datos[k]}${SEPARADOR}${v}` : v;
   });
+  // Solo las que venían marcadas y la persona desmarcó: un formulario sin tocar no deja borrador.
+  for (const el of Array.from(form.elements)) {
+    if (!(el instanceof HTMLInputElement) || el.type !== "checkbox" || !el.name) continue;
+    if (!(el.name in datos) && el.defaultChecked) datos[el.name] = SIN_MARCAR;
+  }
   return datos;
 }
 

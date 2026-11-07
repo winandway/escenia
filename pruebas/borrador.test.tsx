@@ -10,6 +10,7 @@ import {
   guardarBorrador,
   leerBorrador,
   rellenarFormulario,
+  SIN_MARCAR,
   useBorrador,
 } from "@/componentes/useBorrador";
 
@@ -131,6 +132,28 @@ describe("useBorrador con grupos (la voz en radio y las carpetas en casillas)", 
       '<input type="checkbox" name="c" value="a"><input type="checkbox" name="c" value="b" checked><input type="checkbox" name="c" value="d">';
     rellenarFormulario(otro, datos);
     expect(new FormData(otro).getAll("c")).toEqual(["a", "d"]);
+  });
+
+  it("una casilla que venía marcada y la persona desmarcó vuelve DESMARCADA (el permiso de la ficha)", () => {
+    const html =
+      '<input type="checkbox" name="permiso" checked><input type="checkbox" name="g" value="x" checked><input type="checkbox" name="g" value="y">';
+    const form = document.createElement("form");
+    form.innerHTML = html;
+    (form.elements.namedItem("permiso") as HTMLInputElement).checked = false;
+    for (const el of Array.from(form.querySelectorAll<HTMLInputElement>('[name="g"]'))) el.checked = false;
+    const datos = datosDelFormulario(form);
+    expect(datos.permiso).toBe(SIN_MARCAR);
+    const otro = document.createElement("form");
+    otro.innerHTML = html;
+    rellenarFormulario(otro, datos);
+    expect((otro.elements.namedItem("permiso") as HTMLInputElement).checked).toBe(false);
+    expect(new FormData(otro).getAll("g")).toEqual([]);
+  });
+
+  it("un formulario sin tocar no deja borrador por sus casillas", () => {
+    const form = document.createElement("form");
+    form.innerHTML = '<input type="checkbox" name="permiso"><input type="checkbox" name="aviso" checked>';
+    expect(datosDelFormulario(form)).toEqual({ aviso: "on" });
   });
 });
 

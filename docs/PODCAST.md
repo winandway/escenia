@@ -286,3 +286,13 @@ La idea: hoy viene ChatGPT, mañana Claude, después Hermes, cada uno respondien
 - **Qué falta para hacerlo:** la tabla de modelos con precio, el tipo de ficha, el mapa modelo → agente en la
   base, el color del robot y la leyenda por tipo. Sin cuentas nuevas para GPT, Claude y Gemini (van dentro de
   ElevenLabs); para Hermes, la cuenta del proveedor.
+
+## Revisión del 7 nov 2026 (paquete de Luna)
+
+El revisor de calidad devolvió el paquete por dos fallos, ya arreglados y con su prueba en rojo:
+
+- **La ficha de ejemplo pasada a «real» se grababa sin permiso** y mostraba «basados en una historia real».
+  Ahora el permiso se exige a toda historia real, también a la de ejemplo, y su casilla se ve en esa ficha.
+- **El borrador no recordaba una casilla desmarcada** (una casilla sin marcar no viaja en el formulario): al
+  volver, el permiso aparecía marcado otra vez. El arreglo está en `useBorrador` y vale para todos los
+  formularios del panel: se anota la casilla que venía marcada y la persona desmarcó.

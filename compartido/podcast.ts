@@ -100,7 +100,8 @@ export function fichaLista(
   // Una entrevista a la IA no cuenta la historia de nadie: no necesita historia ni permiso.
   if (f.tipo === "entrevista_ia") return null;
   if (!f.historia.trim()) return "La ficha no tiene historia: escríbela antes de grabar.";
-  if (f.origen === "real" && !f.ejemplo && !f.permiso)
+  // También la ficha de ejemplo: si alguien la pasa a «real», no se graba sin permiso (revisor, 7 nov 2026).
+  if (f.origen === "real" && !f.permiso)
     return "Falta confirmar en la ficha que tienes el permiso por escrito de su protagonista.";
   return null;
 }

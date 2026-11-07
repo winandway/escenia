@@ -222,20 +222,19 @@ export function FormularioFicha({
               ))}
             </div>
           </fieldset>
-          {!ficha?.ejemplo && (
-            <label className="hidden items-start gap-3 rounded-md border border-neutral-700 p-3 text-sm group-has-[input[value=real]:checked]/origen:flex">
-              <input
-                type="checkbox"
-                name="permiso"
-                defaultChecked={ficha?.permiso ?? false}
-                className="mt-0.5 accent-amber-500"
-              />
-              <span>
-                Tengo el permiso por escrito de su protagonista para contar esta historia, en las redes donde
-                se va a publicar. Sin esta casilla una historia real no entra al estudio.
-              </span>
-            </label>
-          )}
+          {/* También en la ficha de ejemplo: si se pasa a «real», el permiso se pide como en todas. */}
+          <label className="hidden items-start gap-3 rounded-md border border-neutral-700 p-3 text-sm group-has-[input[value=real]:checked]/origen:flex">
+            <input
+              type="checkbox"
+              name="permiso"
+              defaultChecked={ficha?.permiso ?? false}
+              className="mt-0.5 accent-amber-500"
+            />
+            <span>
+              Tengo el permiso por escrito de su protagonista para contar esta historia, en las redes donde se
+              va a publicar. Sin esta casilla una historia real no entra al estudio.
+            </span>
+          </label>
         </div>
         <div>
           <label htmlFor="historia" className="etiqueta">
