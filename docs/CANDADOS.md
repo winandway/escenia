@@ -2142,3 +2142,47 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   ve sin cara viva encima del cuerpo); no subir los límites de la cabeza sin correr la prueba del micrófono; no
   volver al fundido largo entre dos fotos (es la doble imagen que vio Richard); no sacar la cara viva de la
   cabeza (los ojos se quedarían quietos mientras la cabeza se mueve).
+
+## C-PORTADA-1 — Sin título fantasma detrás de la portada (7 nov 2026)
+
+- **Qué se rompía:** en el comercial «Tus archivos seguros en la nube» de Kipuu, del segundo 1,4 al 2,3 se veía
+  «¿ARCHIVOS REGADOS?» transparente detrás de «TUS ARCHIVOS SEGUROS EN LA NUBE». Lo vio la sesión de campaña en el
+  PDF del 7 nov 2026 («es un error de la transición: queda encimado»).
+- **La causa:** el texto grande de un momento entraba cuando la voz decía su frase, aunque la portada siguiera en
+  pantalla (hasta `hasta_ms`) o se estuviera yendo (10 cuadros más). Quedaba debajo y se veía a través del título.
+- **El arreglo:** `entradaTrasPortada` (en `estacion/src/remotion/publicidad-diseno.ts`): el texto, las etiquetas,
+  la cifra o la ficha de un momento esperan a que la portada se haya ido del todo (`hasta_ms` + 333 ms). Lo usa el
+  bucle de los textos de `Publicidad.tsx`. Vale para todos los anuncios con portada.
+- **Qué NO tocar:** no volver a poner el texto en `t.inicioMs` directo; si la portada sale más lenta, cambiar
+  `SALIDA_PORTADA_CUADROS` (lo usan la portada y la espera).
+- **Cómo se comprueba:** `--paso cuadros --en 45,60,66,72` en `plan-comercial-v2.json`: en el 66 la portada sube
+  sola y en el 72 entra «¿ARCHIVOS REGADOS?».
+- **El candado:** `pruebas/publicidad.test.ts`, «el texto de un momento no entra mientras la portada está en
+  pantalla o se va». Comprobado en rojo el 7 nov 2026. Commit bd29063.
+
+## C-PERSONAS-1 — Cada versión de un anuncio guarda su persona aparte (7 nov 2026)
+
+- **Qué se rompía:** las versiones de un anuncio con `trabajo_de` comparten la carpeta de trabajo, y todas
+  escribían `personas.json`. El 6 nov la versión de verano (otra chica) pisó la lista de Maggie del espejo: al
+  volver a armar el espejo el 7 nov, habría salido la chica de verano. Nadie lo habría notado hasta mirar el video.
+- **El arreglo:** `archivoDePersonas` (en `estacion/src/publicidad-plan.ts`): el plan base guarda `personas.json` y
+  cada versión `personas-<plan>.json`. Cada aparición guarda la foto que se hizo hablar (`imagen`). Al armar,
+  `personasDeOtraVersion` compara la persona guardada con la del plan (cuántas, tiempos y foto) y, si no cuadra,
+  para con «Corre --paso avatar». Rehacer la lista es gratis cuando los videos ya están pagados (se buscan por su
+  huella).
+- **Qué NO tocar:** no volver a leer `personas.json` a ciegas en una versión; no quitar la comparación.
+- **El candado:** `pruebas/publicidad.test.ts`, «cada versión de un anuncio guarda su persona aparte». Comprobado
+  en rojo el 7 nov 2026. Commit bd29063.
+
+## C-INSIGNIA-1 — La insignia de Google Play va tal cual, con su aire (7 nov 2026)
+
+- **Qué es:** el cierre de los anuncios que mandan a instalar la app lleva la insignia oficial «Disponible en
+  Google Play» en español (`cierre.insignia`), bajada de la página oficial de insignias de Google Play.
+- **Sus reglas (página de insignias, 7 nov 2026):** la del idioma de la campaña, sin cambiarle nada (color,
+  elementos, proporción), sin sombra ni brillo, no menos de 28 px de alto, un aire alrededor de al menos un cuarto
+  de su alto y un fondo que no la lave. `medidasDeInsignia` saca el alto de su proporción y el aire; el componente
+  `Insignia` la pinta sin efectos.
+- **Qué NO tocar:** no ponerle `drop-shadow`, `filter`, borde ni fondo encima; no estirarla; no usar el logo de
+  Google Play suelto (para mandar a descargar va la insignia, no el logo).
+- **El candado:** `pruebas/publicidad.test.ts`, «el cierre lleva la insignia oficial de Google Play». Comprobado en
+  rojo el 7 nov 2026. Commit bd29063.

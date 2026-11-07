@@ -434,3 +434,50 @@ Plan `publicidad/kipuu/plan-empresas.json`.
 - **El cierre:** tres tarjetas dibujadas (Windows, Mac, Android) con «Descargar» (`empresas/descargas.png`) y
   «kipuu.com · Gratis 14 días con 10 GB · Sin tarjeta · Descárgala hoy». La prueba es de 14 días o 10 GB, lo que
   llegue primero: la voz dice las dos cosas. iPhone no se nombra («muy pronto» en la página).
+
+## Kipuu: los cambios de la campaña del 7 nov 2026 (prueba en México, Colombia, Chile e hispanos de EE. UU.)
+
+La sesión de campaña pasó el PDF «Kipuu-Cambios-Videos_1» con el segundo exacto de cada cambio. Se hicieron con
+`--paso armar`: la misma voz y las mismas presentadoras ya pagadas. **Costó 0 $.** Los cuatro quedaron en
+Descargas como `Kipuu-1-Pagas.mp4`, `Kipuu-2-Seguros.mp4`, `Kipuu-3-Borra.mp4` y `Kipuu-4-Espejo.mp4` (1080×1920),
+cada uno con su versión «(WhatsApp)» de 720×1280.
+
+Lo nuevo en el motor (todo opcional: un plan que no lo pide sale igual que antes):
+
+| Campo del plan    | Para qué                                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `etiqueta_fija`   | Una etiqueta blanca quieta arriba a la derecha todo el anuncio (menos el cierre, que ya la dice): «14 DÍAS GRATIS · SIN TARJETA». Cada « · » parte un renglón para no chocar con la nube. Con ella, la portada no pone la suya. |
+| `tarjeta_opaca`   | La tarjeta de cada momento entra ya entera (crece un poco, sin fundido). Con el fundido, un cuadro a mitad de la entrada la dejaba «lavada».                                                                                    |
+| momento `ficha`   | De uno a tres datos con su ícono (`servidor`, `candado`, `escudo`, `nube`) en una tarjeta blanca arriba, un dato por renglón: «Datacenters en EE. UU. · Cifrado AES-256». Va en vez del texto grande y de las etiquetas.        |
+| `cierre.insignia` | La insignia oficial de una tienda debajo de la primera línea del cierre, tal cual, y su línea legal chiquita abajo. Con insignia, el producto del cierre va más bajo (600 px) para que quepa todo.                              |
+
+Y dos arreglos que valen para todos los anuncios:
+
+- **El título fantasma (C-PORTADA-1):** el texto del momento que empieza mientras la portada está en pantalla
+  espera a que la portada se haya ido (`entradaTrasPortada`). Antes entraba debajo y se veía transparente detrás.
+- **Cada versión guarda su persona aparte (C-PERSONAS-1):** con `trabajo_de`, la persona se guarda en
+  `personas-<plan>.json`; el armado revisa que la persona guardada sea la del plan (foto y tiempos) y, si no, para
+  y pide `--paso avatar`. Antes la versión de verano pisó a la Maggie del espejo.
+
+**La insignia de Google Play:** `publicidad/kipuu/google-play/disponible-en-google-play.png`, la insignia en
+español bajada de la página oficial de insignias de Google Play (su fuente y sus reglas en `FUENTE.md` de esa
+carpeta). Reglas: en el idioma de la campaña, sin cambiarle nada (ni sombra, ni brillo, ni color, ni proporción),
+más de 28 px de alto y un aire alrededor de un cuarto de su alto (C-INSIGNIA-1).
+
+Video por video:
+
+1. **«¿Pagas la nube por persona?»** (`plan-empresas.json`, a la web): la captura de precios quedó solo con la
+   tabla (Kipuu 24,99, Google 140, Dropbox 150) y debajo la línea grande «Ahorras más de $115 al mes», en el
+   verde del precio de la página (`pantallas/empresas/corte-empresa10-ahorro.png`, dibujada gratis con HTML); la
+   etiqueta fija «14 DÍAS GRATIS · SIN TARJETA». Los 30 días para recuperar lo borrado se quedan: lo dicen la
+   página de seguridad de Kipuu en español y su guía de Docs «papelera y versiones» (comprobado con curl el 7 nov 2026).
+2. **«Tus archivos seguros en la nube»** (`plan-comercial-v2.json`, a la web): sin el título fantasma; la ficha
+   «Datacenters en EE. UU. · Cifrado AES-256» en vez de las etiquetas «Empresas · Alcaldías» (la voz sigue
+   diciendo «empresas y alcaldías»); en el cierre, «14 días gratis · Sin tarjeta» debajo del precio.
+3. **«¿Tu nube borra tus fotos?»** (`plan-verano.json`, a Google Play): la tarjeta del espejo entra ya opaca y el
+   cierre dice «Descárgalo gratis», la insignia de Google Play y «14 días gratis, sin tarjeta», sin precio.
+4. **«¿Tu nube es un espejo?»** (`plan-copia.json`, a Google Play): el mismo cierre del 3, para que la
+   comparación entre los dos sea justa.
+
+Ojo: en el 3 y el 4 la voz del final todavía dice «Entra a Kipuu punto com y elige el tuyo hoy». Cambiarla
+costaría una parte de voz y los dos tramos finales de las dos presentadoras (unos 25 centavos); no se autorizó.
