@@ -67,8 +67,6 @@ export const RESPUESTA_LARGA_MS = 25_000;
 export const DESCANSO_MS = POSE_MINIMA_MS;
 /** El texto de una respuesta vale para la que empieza hasta este tiempo después de llegar. */
 const TEXTO_VALE_MS = 6000;
-/** El fundido entre dos poses (milisegundos): lento y con curva suave, para que se lea como movimiento. */
-export const FUNDIDO_MS = 700;
 
 /** Lee lo que manda la herramienta `gesto` de la IA: solo una de las cuatro poses de gesto, escrita tal cual. */
 export function leerPedidoDeGesto(parametros: unknown): PoseDeGesto | null {

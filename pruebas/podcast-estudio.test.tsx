@@ -108,10 +108,17 @@ describe("el escenario del estudio", () => {
     // Solo se ve una pose a la vez: la primera.
     expect(poses.map((g) => g.style.visibility)).toEqual(["visible", ...Array(6).fill("hidden")]);
     for (const g of poses) {
-      expect(g.querySelector("image")?.getAttribute("href")).toMatch(/^\/podcast\/mia-.+\.webp$/);
-      // Los ojos son los de la imagen, recortados, y las luces de los oídos laten encima.
-      expect(g.querySelectorAll("[data-recorte]")).toHaveLength(2);
-      expect(g.querySelectorAll("[data-luz]")).toHaveLength(2);
+      // Abajo, el cuerpo sin la cabeza; encima, la cabeza sola con su cara viva adentro (se mueve con ella).
+      expect(g.querySelector("image")?.getAttribute("href")).toMatch(/^\/podcast\/mia-.+-cuerpo\.webp$/);
+      const cabeza = g.querySelector("[data-cabeza]");
+      expect(cabeza?.querySelector("image")?.getAttribute("href")).toMatch(
+        /^\/podcast\/mia-.+-cabeza\.webp$/,
+      );
+      // Los ojos son los de la imagen, recortados, y las luces de los oídos laten encima, dentro de la cabeza.
+      expect(cabeza?.querySelectorAll("[data-recorte]")).toHaveLength(2);
+      expect(cabeza?.querySelectorAll("[data-luz]")).toHaveLength(2);
+      // Los ojos y la boca se corren juntos dentro del visor (la mirada).
+      expect(cabeza?.querySelector('[data-parte="rasgos"] [data-ojos]')).not.toBeNull();
       expect(g.querySelector("[data-boca]") === null).toBe(g.getAttribute("data-pose") === "riendo");
     }
   });

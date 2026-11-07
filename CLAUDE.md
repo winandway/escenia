@@ -28,7 +28,7 @@
 - **La app de iPhone** (el Director en el bolsillo, «Escenia: AI Video Ads»; la cuenta del revisor de Apple no ve ni gasta nada ajeno): [docs/APP-IPHONE.md](docs/APP-IPHONE.md); cómo se publica en Apple: [docs/PUBLICAR-EN-APPLE.md](docs/PUBLICAR-EN-APPLE.md). **Rechazada el 3 nov 2026 por spam (4.3 y 4.2.6): no reenviar sin leer planes/tiendas/TUTORIAL-RECHAZO-APPLE.md (carpeta privada, fuera de git).**
 - **Gastos** (cuánto cuesta cada video, qué servicio cobra y qué es cada cobro de la tarjeta; fal.ai es compartido con Beellon y Losupe): [docs/GASTOS.md](docs/GASTOS.md).
 - **Casos de ayuda** (el formulario de soporte en la web y en la app, el chat de cada caso, la guía de Docs y la puerta del gerente de correo de Richard, C-AYUDA-1 y C-GERENTE-1): [docs/AYUDA.md](docs/AYUDA.md).
-- **Podcast IA** (el estudio del invitado: Richard entrevista a una IA; ElevenLabs Agents con URL firmada, tope de minutos y la Fase 2; **Mia IA sentada con siete poses que alterna el motor de poses**, los avatares del catálogo y cómo tienen que ser las imágenes nuevas): [docs/PODCAST.md](docs/PODCAST.md).
+- **Podcast IA** (el estudio del invitado: Richard entrevista a una IA; ElevenLabs Agents con URL firmada, tope de minutos y la Fase 2; **Mia IA sentada con siete poses que alterna el motor de poses, y su cabeza viva que asiente, se inclina y mira (C-PODCAST-6)**, los avatares del catálogo y cómo tienen que ser las imágenes nuevas): [docs/PODCAST.md](docs/PODCAST.md).
 - Pendientes: [PENDIENTES.md](PENDIENTES.md).
 
 ## Perímetro

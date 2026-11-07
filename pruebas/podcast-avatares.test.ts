@@ -33,6 +33,8 @@ import {
   type Punto,
 } from "@compartido/podcast-avatares";
 import { POSES } from "@compartido/podcast-poses";
+import { LIMITES_CABEZA, aplicar, movimientoDeCabeza } from "@compartido/podcast-cabeza";
+import sharp from "sharp";
 import { limpiarEtiquetasDeEmocion } from "@compartido/podcast";
 
 const raiz = path.resolve(__dirname, "..");
@@ -384,6 +386,135 @@ describe("el escenario de Mia: su casa detrás y su micrófono delante (C-PODCAS
 
   it("los demás avatares no tienen escenario y se ven como siempre", () => {
     for (const a of AVATARES) if (a.id !== "mia") expect(a.escenario).toBeUndefined();
+  });
+});
+
+describe("la cabeza de Mia como capa propia (C-PODCAST-6)", () => {
+  const mia = avatarPorId("mia");
+  const poses = posesDe(mia);
+  const leer = (f: string) => {
+    // Rutas del catálogo, fijas en el código.
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    return readFileSync(path.join(raiz, "public", f));
+  };
+  const tamano = (archivo: Buffer) => [1 + archivo.readUIntLE(24, 3), 1 + archivo.readUIntLE(27, 3)];
+
+  it("cada pose trae su cabeza sola y su cuerpo sin la cabeza, en webp con alfa y livianos", () => {
+    expect(poses).toHaveLength(7);
+    for (const p of poses) {
+      const c = p.cabeza;
+      expect(c, p.id).toBeDefined();
+      const cuerpo = leer(c!.cuerpo);
+      const cabeza = leer(c!.imagen);
+      for (const archivo of [cuerpo, cabeza]) {
+        expect(archivo.subarray(12, 16).toString()).toBe("VP8X");
+        expect(archivo[20]! & 0x10).toBe(0x10);
+      }
+      expect(tamano(cuerpo)).toEqual([mia.ancho, mia.alto]);
+      expect(tamano(cabeza)).toEqual([c!.ancho, c!.alto]);
+      expect(cuerpo.length).toBeLessThan(260 * 1024);
+      expect(cabeza.length).toBeLessThan(120 * 1024);
+      // La cabeza cae dentro de la imagen y contiene el visor y las luces de los oídos (la cara viva va adentro).
+      expect(c!.x).toBeGreaterThanOrEqual(0);
+      expect(c!.y).toBeGreaterThanOrEqual(0);
+      expect(c!.x + c!.ancho).toBeLessThanOrEqual(mia.ancho);
+      expect(c!.y + c!.alto).toBeLessThanOrEqual(mia.alto);
+      const cara = p.cara as CaraConVisor;
+      for (const [x, y] of cara.visor!) {
+        expect(x).toBeGreaterThan(c!.x);
+        expect(x).toBeLessThan(c!.x + c!.ancho);
+        expect(y).toBeGreaterThan(c!.y);
+        expect(y).toBeLessThan(c!.y + c!.alto);
+      }
+      // El cuello: debajo de la barbilla y encima de los hombros, bajo el visor.
+      const abajo = Math.max(...cara.visor!.map(([, y]) => y));
+      const xs = cara.visor!.map(([x]) => x);
+      expect(c!.cuello[1]).toBeGreaterThan(abajo + 20);
+      expect(c!.cuello[1]).toBeLessThan(600);
+      expect(c!.cuello[0]).toBeGreaterThan(Math.min(...xs));
+      expect(c!.cuello[0]).toBeLessThan(Math.max(...xs));
+      // El eje (de oído a oído): poco inclinado y del tamaño de la cabeza.
+      expect(Math.abs(c!.eje.angulo)).toBeLessThan(12);
+      expect(c!.eje.escala).toBeGreaterThan(380);
+      expect(c!.eje.escala).toBeLessThan(520);
+    }
+  });
+
+  it("en reposo, la cabeza encima de su cuerpo es la imagen de siempre", async () => {
+    for (const p of poses) {
+      const c = p.cabeza!;
+      const original = await sharp(leer(p.imagen)).ensureAlpha().raw().toBuffer();
+      const juntas = await sharp(leer(c.cuerpo))
+        .composite([{ input: leer(c.imagen), left: c.x, top: c.y }])
+        .ensureAlpha()
+        .raw()
+        .toBuffer();
+      let suma = 0;
+      let grandes = 0;
+      for (let i = 0; i < original.length; i += 4) {
+        const a = original[i + 3]! / 255;
+        let d = Math.abs(juntas[i + 3]! - original[i + 3]!);
+        for (let k = 0; k < 3; k++) d = Math.max(d, Math.abs(juntas[i + k]! - original[i + k]!) * a);
+        suma += d;
+        if (d > 40) grandes++;
+      }
+      // Solo el filo de un píxel de la silueta y la compresión.
+      expect(suma / (original.length / 4), p.id).toBeLessThan(2);
+      expect(grandes, p.id).toBeLessThan(4000);
+    }
+  });
+
+  it("el cuerpo no trae la cabeza: donde estaba el casco no queda casco (cuando la cabeza se mueve, no hay doble imagen)", async () => {
+    for (const p of poses) {
+      const c = p.cabeza!;
+      const arriba = Math.min(...(p.cara as CaraConVisor).visor!.map(([, y]) => y));
+      const caja = {
+        left: Math.round(c.eje.centro[0] - 5),
+        top: Math.round(arriba - 50),
+        width: 11,
+        height: 11,
+      };
+      const luz = async (f: string) => {
+        const px = await sharp(leer(f)).ensureAlpha().extract(caja).raw().toBuffer();
+        let s = 0;
+        for (let i = 0; i < px.length; i += 4)
+          s += ((0.3 * px[i]! + 0.59 * px[i + 1]! + 0.11 * px[i + 2]!) * px[i + 3]!) / 255;
+        return s / (px.length / 4);
+      };
+      // La coronilla del casco: blanca en la pose; en el cuerpo, lo que había detrás.
+      expect(await luz(p.imagen), p.id).toBeGreaterThan(150);
+      expect(await luz(c.cuerpo), p.id).toBeLessThan(40);
+    }
+  });
+
+  it("el micrófono no le tapa la cara ni con la cabeza en sus extremos", () => {
+    const mic = siluetaDelMicrofono(mia.escenario!.microfono!);
+    const L = LIMITES_CABEZA;
+    for (const p of poses) {
+      const cara = p.cara as CaraConVisor;
+      for (const giro of [-L.giro, 0, L.giro])
+        for (const dx of [-L.dx, 0, L.dx])
+          for (const dy of [-L.dy, 0, L.dy]) {
+            const m = movimientoDeCabeza({ giro, dx, dy }, p.cabeza!.cuello);
+            const mover = (f: readonly Punto[]) => f.map((q) => aplicar(m, q));
+            expect(holgura(mic, mover(cara.visor!)), `${p.id}: el visor`).toBeGreaterThanOrEqual(12);
+            for (const o of cara.oidos) {
+              const r = o as { x: number; y: number; ancho: number; alto: number };
+              const caja: Punto[] = [
+                [r.x, r.y],
+                [r.x + r.ancho, r.y],
+                [r.x + r.ancho, r.y + r.alto],
+                [r.x, r.y + r.alto],
+              ];
+              expect(holgura(mic, mover(caja)), `${p.id}: el aro del oído`).toBeGreaterThanOrEqual(8);
+            }
+          }
+    }
+  });
+
+  it("los demás avatares no tienen la cabeza aparte: se ven como siempre", () => {
+    for (const a of AVATARES)
+      if (a.id !== "mia") for (const p of posesDe(a)) expect(p.cabeza).toBeUndefined();
   });
 });
 

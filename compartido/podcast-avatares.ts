@@ -8,7 +8,9 @@
 // con una entrada nueva, sin tocar el componente. La robot plateada (la que eligió Richard el 7 nov 2026 para
 // «Mia IA») va primero.
 
+import { ejeDeLaCabeza, pivoteDelCuello, type EjeDeCabeza } from "./podcast-cabeza";
 import { MEDIDAS_MIA } from "./podcast-mia";
+import { CABEZAS_MIA } from "./podcast-mia-cabeza";
 import { MICROFONO_MIA } from "./podcast-mia-escenario";
 import { POSES, type PoseId } from "./podcast-poses";
 
@@ -156,9 +158,31 @@ export type AvatarPodcast = {
   poses?: Partial<Record<Exclude<PoseId, "tranquila">, PoseAvatar>>;
   /** Su casa detrás y su micrófono delante (Mia). */
   escenario?: EscenarioAvatar;
+  /** La cabeza de la pose «tranquila» como capa propia (Mia; las demás poses traen la suya). */
+  cabeza?: CabezaDePose;
 };
 
-export type PoseAvatar = { imagen: string; cara: CaraConVisor | CaraSinVisor };
+export type PoseAvatar = { imagen: string; cara: CaraConVisor | CaraSinVisor; cabeza?: CabezaDePose };
+
+/**
+ * La cabeza como capa propia (Mia; C-PODCAST-6): la cabeza sola, recortada de la pose, va encima de su cuerpo
+ * (la pose sin la cabeza, con el hueco relleno de lo que hay detrás) y se mueve sola: asiente, se inclina y mira.
+ * Lo prepara scripts/podcast-cabeza.ts. La cara viva va dentro de la cabeza: se mueve con ella.
+ */
+export type CabezaDePose = {
+  /** La cabeza sola (webp con alfa) y dónde va, en píxeles de la imagen de la pose. */
+  imagen: string;
+  x: number;
+  y: number;
+  ancho: number;
+  alto: number;
+  /** La pose sin la cabeza: lo que se dibuja debajo. */
+  cuerpo: string;
+  /** Donde se apoya en el cuello: el centro de sus giros. */
+  cuello: Punto;
+  /** El centro, la inclinación y el tamaño de la cabeza en esta pose (para juntar las cabezas en un cambio). */
+  eje: EjeDeCabeza;
+};
 
 /**
  * La casa del invitado: una imagen 16:9 sin alfa que cubre su panel, detrás de él. El estudio la oscurece y la
@@ -235,13 +259,18 @@ export type MedidaDePose = {
 };
 
 /** Todas las poses del avatar, la tranquila primero (un avatar sin poses tiene solo esa). */
-export function posesDe(a: AvatarPodcast): { id: PoseId; imagen: string; cara: AvatarPodcast["cara"] }[] {
+export function posesDe(
+  a: AvatarPodcast,
+): { id: PoseId; imagen: string; cara: AvatarPodcast["cara"]; cabeza?: CabezaDePose }[] {
   const otras = POSES.flatMap((id) => {
     if (id === "tranquila") return [];
     const p = a.poses?.[id];
     return p ? [{ id, ...p }] : [];
   });
-  return [{ id: "tranquila", imagen: a.imagen, cara: a.cara }, ...otras];
+  return [
+    { id: "tranquila", imagen: a.imagen, cara: a.cara, ...(a.cabeza ? { cabeza: a.cabeza } : {}) },
+    ...otras,
+  ];
 }
 
 /** ¿Es una robot (con visor y cara viva)? */
@@ -325,9 +354,20 @@ function caraDeMia(pose: PoseDeMia): CaraConVisor {
   };
 }
 
+/** La cabeza de Mia en una pose: la imagen que recortó scripts/podcast-cabeza.ts y su eje, medido con su cara. */
+function cabezaDeMia(pose: PoseDeMia): CabezaDePose {
+  const m: MedidaDePose = MEDIDAS_MIA[pose];
+  return {
+    ...CABEZAS_MIA[pose],
+    cuello: pivoteDelCuello(m.visor),
+    eje: ejeDeLaCabeza(m.visor, m.oidos),
+  };
+}
+
 const poseDeMia = (pose: PoseDeMia): PoseAvatar => ({
   imagen: MEDIDAS_MIA[pose].imagen,
   cara: caraDeMia(pose),
+  cabeza: cabezaDeMia(pose),
 });
 
 const MIA: AvatarPodcast = {
@@ -342,6 +382,7 @@ const MIA: AvatarPodcast = {
   pivote: [656, 1120],
   miniatura: { x: 346, y: 36, lado: 640 },
   cara: caraDeMia("tranquila"),
+  cabeza: cabezaDeMia("tranquila"),
   poses: {
     hablando: poseDeMia("hablando"),
     pensando: poseDeMia("pensando"),

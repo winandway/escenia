@@ -1,0 +1,61 @@
+// GENERADO por scripts/podcast-cabeza.ts (no se edita a mano): la cabeza de Mia IA como capa propia en cada
+// pose (la imagen de la cabeza sola y dónde va) y su cuerpo con el hueco relleno. Ver docs/PODCAST.md,
+// «La cabeza viva» (C-PODCAST-6).
+export const CABEZAS_MIA = {
+  tranquila: {
+    imagen: "/podcast/mia-tranquila-cabeza.webp",
+    x: 269,
+    y: 5,
+    ancho: 634,
+    alto: 576,
+    cuerpo: "/podcast/mia-tranquila-cuerpo.webp",
+  },
+  hablando: {
+    imagen: "/podcast/mia-hablando-cabeza.webp",
+    x: 291,
+    y: 0,
+    ancho: 609,
+    alto: 581,
+    cuerpo: "/podcast/mia-hablando-cuerpo.webp",
+  },
+  pensando: {
+    imagen: "/podcast/mia-pensando-cabeza.webp",
+    x: 258,
+    y: 0,
+    ancho: 667,
+    alto: 671,
+    cuerpo: "/podcast/mia-pensando-cuerpo.webp",
+  },
+  notas: {
+    imagen: "/podcast/mia-notas-cabeza.webp",
+    x: 288,
+    y: 0,
+    ancho: 634,
+    alto: 687,
+    cuerpo: "/podcast/mia-notas-cuerpo.webp",
+  },
+  riendo: {
+    imagen: "/podcast/mia-riendo-cabeza.webp",
+    x: 286,
+    y: 0,
+    ancho: 642,
+    alto: 671,
+    cuerpo: "/podcast/mia-riendo-cuerpo.webp",
+  },
+  aplaudiendo: {
+    imagen: "/podcast/mia-aplaudiendo-cabeza.webp",
+    x: 308,
+    y: 3,
+    ancho: 606,
+    alto: 568,
+    cuerpo: "/podcast/mia-aplaudiendo-cuerpo.webp",
+  },
+  idea: {
+    imagen: "/podcast/mia-idea-cabeza.webp",
+    x: 221,
+    y: 0,
+    ancho: 666,
+    alto: 607,
+    cuerpo: "/podcast/mia-idea-cuerpo.webp",
+  },
+} as const;

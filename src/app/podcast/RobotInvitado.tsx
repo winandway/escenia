@@ -8,9 +8,14 @@
 // - Una persona (modo «sin_visor»): sin boca dibujada (se vería falso). Las luces de sus audífonos laten con la
 //   voz y un resplandor de su color la acompaña cuando habla.
 // - Un avatar con poses (Mia): cada pose es su imagen con su cara; el motor de poses (podcast-poses.ts) elige
-//   cuál se ve, con calma (C-PODCAST-4). El cambio es un fundido de 700 ms con curva suave y, a la vez, el cuerpo
-//   baja unos píxeles, se achica un poco más del 1 % y se inclina apenas, y vuelve: se lee como «se acomoda»,
-//   no como un cambio de cuadro.
+//   cuál se ve, con calma (C-PODCAST-4). El cambio (podcast-cabeza.ts, C-PODCAST-6) es un impulso, el cruce
+//   rápido de las dos imágenes en el momento de más movimiento y un asentamiento; las dos cabezas se juntan
+//   durante el cambio, así la cara viaja de una pose a la otra sin doble imagen. Hablando, espera una pausa de
+//   la voz (como mucho medio segundo).
+// - Un avatar con la cabeza como capa propia (Mia, C-PODCAST-6): cada pose es su cuerpo (sin la cabeza) y su
+//   cabeza encima, con la cara viva adentro. La cabeza se mueve sola: asiente con SU voz, se inclina hacia
+//   Richard al escuchar, mira a la cámara, a Richard o a un lado (los ojos primero, la cabeza después) y nunca
+//   se queda congelada.
 // - Un avatar con escenario (Mia): su micrófono de podcast delante, entrando desde el borde izquierdo, con un
 //   vaivén casi nulo (su casa va detrás, en el panel: Escenario.tsx).
 // Todos respiran (un ciclo de 4,5 s) y se mecen muy poco; riéndose tiembla un poco y aplaudiendo da saltitos.
@@ -34,6 +39,7 @@ import {
   trazoAfinado,
   type AvatarPodcast,
   type BocaAvatar,
+  type CabezaDePose,
   type CaraConVisor,
   type CaraSinVisor,
   type Ojo,
@@ -41,7 +47,17 @@ import {
   type TrazoAfinado,
 } from "@compartido/podcast-avatares";
 import {
-  FUNDIDO_MS,
+  CAMBIO_MS,
+  cabezaInicial,
+  cambioDePose,
+  componer,
+  matrizSvg,
+  movimientoDeCabeza,
+  pasoDeCabeza,
+  puedeCambiar,
+  transformarCabeza,
+} from "@compartido/podcast-cabeza";
+import {
   SIN_ENTRADAS,
   memoriaInicial,
   piensa,
@@ -63,10 +79,6 @@ export type AudioInvitado = {
   entradas?: () => EntradasDelMotor;
 };
 
-/** Curva suave de ida y vuelta (sin tirones al empezar ni al terminar). */
-const suave = (x: number) => x * x * (3 - 2 * x);
-/** Cuánto se acomoda el cuerpo en un cambio de pose: baja (px de su imagen), se achica y se inclina, y vuelve. */
-export const ACOMODO = { baja: 7, achica: 0.014, inclina: 0.35 } as const;
 /** Un ciclo de respiración (segundos). */
 export const RESPIRACION_S = 4.5;
 
@@ -262,82 +274,85 @@ function CaraViva({ c, id, pensando }: { c: CaraConVisor; id: string; pensando: 
         </g>
       )}
       <g clipPath={c.visor ? `url(#${id}-visor)` : undefined} data-parte="cara">
-        <g
-          className="pod-mirada"
-          data-ojos=""
-          style={{
-            transform: pensando ? `translate(${c.mirada[0]}px, ${c.mirada[1]}px)` : "translate(0px, 0px)",
-          }}
-        >
-          {/* El resplandor de todo junto (ojos y pestañas), para que no se sume donde se tocan. */}
-          {dibujados && (
-            <g filter={`url(#${id}-halo)`} opacity={c.opacidadHalo}>
-              {c.ojos.map((o, i) => (
-                <g key={i} className="pod-ojo">
-                  <OjoVivo ojo={o} color={c.luz} extra={c.halo} />
-                  {pestanas(o, c.haloPestana ?? c.halo, c.luz, false)}
-                </g>
-              ))}
-            </g>
-          )}
-          {c.ojos.map((o, i) => (
-            <g key={i} className="pod-ojo">
-              <OjoVivo ojo={o} color={c.nucleo} extra={0} />
-              {pestanas(o, 0, c.nucleo, true)}
-            </g>
-          ))}
-        </g>
-        {!b.tapada && (
-          <g transform={`translate(${b.x} ${b.y}) rotate(${b.giro})`}>
-            <path
-              d={bocaInicial}
-              fill={llena ? c.luz : "none"}
-              stroke={c.luz}
-              strokeWidth={b.grosor + b.halo}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={pensando ? 0 : sonrisa ? c.opacidadHalo : 0.7}
-              filter={`url(#${id}-halo-boca)`}
-              data-parte="brillo"
-            />
-            {/* La lengua va encima del resplandor (si no, se ve azulada) y debajo del trazo. */}
-            {sonrisa && b.lengua && (
-              <g clipPath={`url(#${id}-boca)`} opacity={pensando ? 0 : 1}>
-                <ellipse
-                  cx={-b.ancho * 0.05}
-                  cy={b.alto * APERTURA_EN_REPOSO * 0.84}
-                  rx={b.ancho * 0.31}
-                  ry={b.alto * APERTURA_EN_REPOSO * 0.46}
-                  fill={b.lengua}
-                  data-parte="lengua"
-                />
+        {/* Los rasgos (ojos y boca) se corren juntos dentro del visor: es la mirada (C-PODCAST-6). */}
+        <g data-parte="rasgos">
+          <g
+            className="pod-mirada"
+            data-ojos=""
+            style={{
+              transform: pensando ? `translate(${c.mirada[0]}px, ${c.mirada[1]}px)` : "translate(0px, 0px)",
+            }}
+          >
+            {/* El resplandor de todo junto (ojos y pestañas), para que no se sume donde se tocan. */}
+            {dibujados && (
+              <g filter={`url(#${id}-halo)`} opacity={c.opacidadHalo}>
+                {c.ojos.map((o, i) => (
+                  <g key={i} className="pod-ojo">
+                    <OjoVivo ojo={o} color={c.luz} extra={c.halo} />
+                    {pestanas(o, c.haloPestana ?? c.halo, c.luz, false)}
+                  </g>
+                ))}
               </g>
             )}
-            <path
-              d={bocaInicial}
-              fill={llena ? c.nucleo : "none"}
-              stroke={c.nucleo}
-              strokeWidth={b.grosor}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={pensando ? 0 : 1}
-              data-boca={b.forma}
-              data-parte="boca"
-            />
-            {pensando &&
-              [-34, 0, 34].map((x, i) => (
-                <circle
-                  key={x}
-                  cx={(x * b.ancho) / 150}
-                  cy={sonrisa ? b.alto * 0.22 : 2}
-                  r={Math.max(2, (9 * b.ancho) / 150)}
-                  fill={c.nucleo}
-                  className="pod-punto"
-                  style={{ animationDelay: `${i * 0.18}s` }}
-                />
-              ))}
+            {c.ojos.map((o, i) => (
+              <g key={i} className="pod-ojo">
+                <OjoVivo ojo={o} color={c.nucleo} extra={0} />
+                {pestanas(o, 0, c.nucleo, true)}
+              </g>
+            ))}
           </g>
-        )}
+          {!b.tapada && (
+            <g transform={`translate(${b.x} ${b.y}) rotate(${b.giro})`}>
+              <path
+                d={bocaInicial}
+                fill={llena ? c.luz : "none"}
+                stroke={c.luz}
+                strokeWidth={b.grosor + b.halo}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={pensando ? 0 : sonrisa ? c.opacidadHalo : 0.7}
+                filter={`url(#${id}-halo-boca)`}
+                data-parte="brillo"
+              />
+              {/* La lengua va encima del resplandor (si no, se ve azulada) y debajo del trazo. */}
+              {sonrisa && b.lengua && (
+                <g clipPath={`url(#${id}-boca)`} opacity={pensando ? 0 : 1}>
+                  <ellipse
+                    cx={-b.ancho * 0.05}
+                    cy={b.alto * APERTURA_EN_REPOSO * 0.84}
+                    rx={b.ancho * 0.31}
+                    ry={b.alto * APERTURA_EN_REPOSO * 0.46}
+                    fill={b.lengua}
+                    data-parte="lengua"
+                  />
+                </g>
+              )}
+              <path
+                d={bocaInicial}
+                fill={llena ? c.nucleo : "none"}
+                stroke={c.nucleo}
+                strokeWidth={b.grosor}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={pensando ? 0 : 1}
+                data-boca={b.forma}
+                data-parte="boca"
+              />
+              {pensando &&
+                [-34, 0, 34].map((x, i) => (
+                  <circle
+                    key={x}
+                    cx={(x * b.ancho) / 150}
+                    cy={sonrisa ? b.alto * 0.22 : 2}
+                    r={Math.max(2, (9 * b.ancho) / 150)}
+                    fill={c.nucleo}
+                    className="pod-punto"
+                    style={{ animationDelay: `${i * 0.18}s` }}
+                  />
+                ))}
+            </g>
+          )}
+        </g>
       </g>
       <Luces oidos={c.oidos} luz={c.luz} filtro={`${id}-borde`} />
     </>
@@ -380,6 +395,8 @@ function PersonaViva({ c, id, imagen }: { c: CaraSinVisor; id: string; imagen: R
 type Partes = {
   pose: PoseId;
   grupo: SVGGElement;
+  /** La cabeza como capa propia (Mia): su grupo, sus rasgos y su geometría. */
+  cabeza: { grupo: SVGGElement; rasgos: SVGGElement | null; datos: CabezaDePose } | null;
   boca: BocaAvatar | null;
   trazo: SVGPathElement | null;
   brillo: SVGPathElement | null;
@@ -429,7 +446,11 @@ export function RobotInvitado({
     let caraPiensa = false;
     let visible: PoseId = "tranquila";
     let anterior: PoseId | null = null;
-    let fundidoDesde = Number.NEGATIVE_INFINITY;
+    let cambioDesde = Number.NEGATIVE_INFINITY;
+    // Desde cuándo el motor pide otra pose (hablando, el cambio espera una pausa de la voz).
+    let pideDesde: number | null = null;
+    // La cabeza viva: cada vez con otra semilla, para que dos conversaciones no se muevan igual.
+    let cabeza = cabezaInicial(1 + Math.floor(Math.random() * 1e6), performance.now());
     let guardado: { avatar: string; partes: Partes[]; tiene: Set<PoseId> } | null = null;
     const bandas = new Array<number>(PUNTOS).fill(0);
 
@@ -441,9 +462,14 @@ export function RobotInvitado({
         const grupo = raiz.querySelector<SVGGElement>(`[data-pose="${p.id}"]`);
         if (!grupo) return null;
         const de = <T extends Element>(s: string) => grupo.querySelector<T>(s);
+        const cabeza = de<SVGGElement>("[data-cabeza]");
         partes.push({
           pose: p.id,
           grupo,
+          cabeza:
+            cabeza && p.cabeza
+              ? { grupo: cabeza, rasgos: cabeza.querySelector('[data-parte="rasgos"]'), datos: p.cabeza }
+              : null,
           boca: p.cara.modo === "visor" && !p.cara.boca.tapada ? p.cara.boca : null,
           trazo: de('[data-parte="boca"]'),
           brillo: de('[data-parte="brillo"]'),
@@ -468,6 +494,7 @@ export function RobotInvitado({
         guardado = buscar(a);
         visible = "tranquila";
         anterior = null;
+        pideDesde = null;
         memoria = memoriaInicial(ahora);
       }
       if (!guardado) {
@@ -475,7 +502,7 @@ export function RobotInvitado({
         return;
       }
 
-      // La pose: el motor decide (con calma); el cambio es un fundido con la que llega encima de la que se va.
+      // La pose: el motor decide (con calma); el cambio pone la que llega encima de la que se va.
       memoria = siguientePose(memoria, e, ahora, fuente?.entradas?.() ?? SIN_ENTRADAS, guardado.tiene);
       // La cara piensa con la misma regla que la pose: solo si tarda más de 1,2 s, y en un avatar con la pose de
       // pensar, solo cuando esa pose ya se ve (si la de antes todavía cumple sus 6 s, la cara la espera).
@@ -485,38 +512,48 @@ export function RobotInvitado({
         caraPiensa = pensandoAhora;
         setPiensa(pensandoAhora);
       }
-      if (memoria.pose !== visible) {
-        anterior = visible;
-        visible = memoria.pose;
-        fundidoDesde = ahora;
-        const llega = guardado.partes.find((p) => p.pose === visible)?.grupo;
-        llega?.parentNode?.appendChild(llega);
-        svg.current?.setAttribute("data-pose", visible);
-      }
-      const avance = Math.min(1, Math.max(0, (ahora - fundidoDesde) / FUNDIDO_MS));
-      // La opacidad cruza rápido en el medio (curva suave aplicada dos veces): la doble imagen dura poco, y el
-      // acomodo del cuerpo ocupa los 700 ms enteros.
-      const fundido = suave(suave(avance));
-      if (avance >= 1) anterior = null;
-      // La que se va se apaga más tarde que lo que llega se enciende: el cuerpo nunca se ve transparente.
-      const opacidad = (p: Partes) =>
-        p.pose === visible ? fundido : p.pose === anterior ? 1 - fundido ** 3 : 0;
-      // Mientras dura el fundido, el cuerpo se acomoda: baja, se achica y se inclina apenas, y vuelve.
-      const acomodo = avance < 1 ? Math.sin(Math.PI * avance) : 0;
-
       const crudo = e === "hablando" && fuente ? Math.min(1, Math.max(0, fuente.volumen() * 1.6)) : 0;
+      // El cambio de pose: cuando el motor pide otra, y el cambio anterior ya terminó. Hablando, espera una pausa
+      // de la voz (entre palabras), como mucho medio segundo.
+      let avance = Math.min(1, Math.max(0, (ahora - cambioDesde) / CAMBIO_MS));
+      if (memoria.pose !== visible && avance >= 1) {
+        pideDesde ??= ahora;
+        if (puedeCambiar(e, crudo, ahora - pideDesde)) {
+          anterior = visible;
+          visible = memoria.pose;
+          cambioDesde = ahora;
+          avance = 0;
+          pideDesde = null;
+          const llega = guardado.partes.find((p) => p.pose === visible)?.grupo;
+          llega?.parentNode?.appendChild(llega);
+          svg.current?.setAttribute("data-pose", visible);
+        }
+      } else if (memoria.pose === visible) pideDesde = null;
+      const cambio = cambioDePose(avance);
+      if (avance >= 1) anterior = null;
+      const opacidad = (p: Partes) =>
+        p.pose === visible ? (anterior ? cambio.llega : 1) : p.pose === anterior ? cambio.seVa : 0;
+
+      // La cabeza viva (C-PODCAST-6): asiente con SU voz, se inclina, mira; nunca congelada.
+      cabeza = pasoDeCabeza(cabeza, { estado: e, ahora, volumen: crudo });
+      const mueve = cabeza.salida;
+      const ejeSeVa = guardado.partes.find((p) => p.pose === anterior)?.cabeza?.datos.eje;
+      const ejeLlega = guardado.partes.find((p) => p.pose === visible)?.cabeza?.datos.eje;
+
       // Sube rápido y baja despacio, como un vúmetro: la boca no tiembla.
       volumenSuave += (crudo - volumenSuave) * (crudo > volumenSuave ? 0.55 : 0.18);
 
       // La respiración: lenta (un ciclo de 4,5 s). El vaivén: muy leve, y apenas más cuando habla fuerte.
       const aire = Math.sin((t * 2 * Math.PI) / RESPIRACION_S);
       const respira = e === "hablando" ? 2.5 : 4;
-      let dy = aire * respira + ACOMODO.baja * acomodo;
-      const escala = (1 + aire * 0.004) * (1 - ACOMODO.achica * acomodo);
+      // El cambio de pose mueve el cuerpo (un impulso y un asentamiento), y el cuerpo toma aire al hablar.
+      let dy = aire * respira + cambio.dy + mueve.cuerpoDy;
+      const escala = (1 + aire * 0.004) * cambio.escala;
       let giro =
         Math.sin(t * 0.6) * 0.2 +
         (e === "hablando" ? Math.sin(t * 2.1) * 0.3 * volumenSuave : 0) +
-        ACOMODO.inclina * acomodo;
+        cambio.giro +
+        mueve.cuerpoGiro;
       // Riéndose tiembla un poco; aplaudiendo da saltitos (solo mientras dura el gesto).
       if (visible === "riendo") {
         dy += Math.sin(t * 24) * 2.2;
@@ -553,6 +590,24 @@ export function RobotInvitado({
         p.grupo.setAttribute("opacity", op.toFixed(3));
         p.grupo.style.visibility = op > 0 ? "visible" : "hidden";
         if (op <= 0) continue;
+        if (p.cabeza) {
+          // La cabeza: su movimiento vivo alrededor del cuello y, durante un cambio, la cabeza «de paso» donde
+          // se juntan la que se va y la que llega.
+          const propia = p.cabeza.datos;
+          const mover = movimientoDeCabeza(mueve, propia.cuello);
+          const junta =
+            anterior && ejeSeVa && ejeLlega
+              ? componer(transformarCabeza(propia.eje, ejeSeVa, ejeLlega, cambio.mezcla), mover)
+              : mover;
+          p.cabeza.grupo.setAttribute("transform", matrizSvg(junta));
+          // La mirada: los rasgos se corren dentro del visor y se juntan apenas, como una cara que gira.
+          const [vx, vy] = propia.eje.centro;
+          const giraLaCara = 1 - 0.0016 * Math.abs(mueve.rasgosX);
+          p.cabeza.rasgos?.setAttribute(
+            "transform",
+            `translate(${(vx + mueve.rasgosX).toFixed(2)} ${(vy + mueve.rasgosY).toFixed(2)}) scale(${giraLaCara.toFixed(4)} 1) translate(${-vx} ${-vy})`,
+          );
+        }
         p.resplandor?.setAttribute("opacity", brillo.toFixed(3));
         for (const l of p.luces) {
           l.setAttribute("opacity", latido.toFixed(3));
@@ -689,6 +744,21 @@ export function RobotInvitado({
             >
               {p.cara.modo === "sin_visor" ? (
                 <PersonaViva c={p.cara} id={pid} imagen={imagen} />
+              ) : p.cabeza ? (
+                <>
+                  {/* El cuerpo sin la cabeza y, encima, la cabeza sola con su cara viva: se mueve sola. */}
+                  <image href={p.cabeza.cuerpo} width={avatar.ancho} height={avatar.alto} data-cuerpo="" />
+                  <g data-cabeza="">
+                    <image
+                      href={p.cabeza.imagen}
+                      x={p.cabeza.x}
+                      y={p.cabeza.y}
+                      width={p.cabeza.ancho}
+                      height={p.cabeza.alto}
+                    />
+                    <CaraViva c={p.cara} id={pid} pensando={pensando} />
+                  </g>
+                </>
               ) : (
                 <>
                   {imagen}

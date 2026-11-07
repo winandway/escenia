@@ -219,10 +219,10 @@ simples y deterministas, sin pagar animación por minuto).
 - **La herramienta en el navegador:** el estudio la atiende en `clientTools` de `Conversation.startSession`.
   `leerPedidoDeGesto` solo acepta las cuatro poses, escritas tal cual; cualquier otra cosa se ignora. El SDK
   contesta solo («ok»); la IA no lo espera.
-- **Transiciones que parecen movimiento:** un fundido de 700 ms con curva suave (la opacidad cruza rápido en el
-  medio, para que la doble imagen dure poco) y, a la vez, el cuerpo baja unos 7 píxeles, se achica un 1,4 % y
-  se inclina un tercio de grado, y vuelve: se lee como «se acomoda». En reposo respira lento (un ciclo de 4,5 s),
-  se mece muy poco y parpadea.
+- **Transiciones que parecen movimiento** (desde el 7 nov 2026, C-PODCAST-6; abajo, «La cabeza viva de Mia»): un
+  impulso, el cruce rápido de las dos imágenes en el momento de más movimiento y un asentamiento, en 640 ms. Las
+  dos cabezas se juntan durante el cambio y, hablando, el cambio espera una pausa de la voz. En reposo respira
+  lento (un ciclo de 4,5 s), se mece muy poco y parpadea; la cabeza nunca se queda quieta.
 - **La cara piensa con la misma regla:** los ojos miran hacia arriba con los tres puntos solo si tarda más de
   1,2 s.
 - **Cuántos cambios:** en 60 s de conversación normal, de 3 a 6 cambios de pose (sin contar el parpadeo ni la
@@ -237,8 +237,9 @@ escribió «[riendo]» en el texto (y antes, «[aplaudiendo]»), confundiendo lo
 Por eso el prompt y la descripción de la herramienta dicen ahora que los gestos nunca se escriben entre
 corchetes, y el respaldo de la risa acepta «[riendo]». Ese ajuste se publicó sin otra conversación de prueba.
 
-**El video** (60 s, conversación simulada sin gastar, con su casa y su micrófono):
-`docs/capturas/podcast-mia-movimiento.mp4`. Se graba con
+**El video** (60 s, conversación simulada sin gastar, con su casa, su micrófono y la cabeza viva):
+`docs/capturas/podcast-mia-movimiento.mp4`. El de antes de la cabeza viva (7 nov 2026, la cabeza quieta) quedó en
+la historia de git, en el commit `564c41a`. Se graba con
 `node scripts/podcast-video-movimiento.mjs <id de la ficha local> <archivo.mp4>` contra la vista previa local:
 simula a ElevenLabs en el navegador (la voz de prueba, el texto y la llamada a `gesto`), pone lo que dice Richard
 como subtítulo en su panel, cuenta los cambios de pose y lo pasa a mp4 H.264 de 1280 × 720.
@@ -252,6 +253,71 @@ como subtítulo en su panel, cuenta los cambios de pose y lo pasa a mp4 H.264 de
   si la pintada la tenía.
 - **Riéndose**, la mano tapa la boca: ahí no se dibuja boca y se conserva la pintada que asoma; solo laten los
   ojos felices y tiembla de risa. En la de la tablet se conserva el lápiz, que entra al visor.
+
+### La cabeza viva de Mia (C-PODCAST-6)
+
+**Por qué.** Richard vio el video de prueba el 7 nov 2026: «los movimientos que hace no son muy buenos. No hay
+naturalidad en el movimiento». Entre pose y pose el cuerpo quedaba congelado: la cabeza no asentía al hablar, no
+miraba a ningún lado, y el fundido de 700 ms dejaba una doble imagen que se notaba como un cambio de cuadro. Casi
+todo lo vivo de una persona en un podcast está en la cabeza y los hombros.
+
+**Lo que se eligió y por qué:** la cabeza como capa propia en cada pose, movida por código en el navegador. Es la
+animación de recortes de siempre (sin pagar por minuto) y ataca justo lo que se ve congelado. Un modelo local
+como LivePortrait **no sirve** para Mia: necesita una cara humana con sus puntos (ojos, nariz, boca) y la de Mia
+es un visor negro con dos arcos de luz; además, en la Mac va a un cuadro por segundo, lejos del tiempo real (lo
+dice su propia guía, que lo da como unas 20 veces más lento que una tarjeta gráfica grande, y lo confirman
+pruebas de usuarios en chips M1). No se instaló nada.
+
+**Cómo está hecha.** `scripts/podcast-cabeza.ts` saca de cada pose dos imágenes:
+
+- **La cabeza sola** (`public/podcast/mia-<pose>-cabeza.webp`, de 60 a 80 KB): el casco, el visor, los audífonos,
+  el arranque de la coleta y, en «pensando», «riendo» y «notas», la mano que toca la cara (como quien apoya la
+  cara en la mano: se mueve con ella). Se recorta con la silueta de verdad: lo claro del robot y lo que queda
+  encerrado (el visor), dentro de una zona medida a mano por pose. Donde la zona corta la coleta o el antebrazo,
+  el borde se difumina unos 40 px para que se doble con naturalidad.
+- **El cuerpo sin la cabeza** (`public/podcast/mia-<pose>-cuerpo.webp`, de 145 a 190 KB): el hueco se rellena con
+  lo que hay alrededor (la silla, el cuello, lo transparente de arriba), del borde hacia adentro. Cuando la cabeza
+  se mueve, detrás se ve la silla y no otra cabeza: nunca hay doble imagen.
+
+En reposo, la cabeza encima de su cuerpo es la imagen de siempre (difiere 1,2 de 255 en promedio: el filo de un
+píxel de la silueta y la compresión). La cara viva (ojos, boca, luces de los oídos) va dentro de la cabeza y se
+mueve con ella. La imagen entera de cada pose sigue publicada: es la fuente del script y la de la miniatura.
+
+**Cómo se mueve** (`compartido/podcast-cabeza.ts`, reglas deterministas con una semilla; el estudio usa otra en
+cada conversación):
+
+| Cuándo              | La cabeza                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| Siempre             | Un ruido suave (Perlin) la mece un poco: nunca se queda congelada                               |
+| Hablando            | Asiente en las sílabas fuertes de SU voz (no en todas), levanta la cabeza al empezar cada frase |
+| Hablando            | Se mueve más cuanto más energía tiene la voz; mira a la cámara, a Richard y a veces a un lado   |
+| Escuchando          | Se inclina hacia Richard (está a la izquierda del estudio), lo mira y asiente de vez en cuando  |
+| Pensando            | Levanta la barbilla y mira a un lado                                                            |
+| Al empezar a hablar | El cuerpo toma aire (sube unos 3 px y vuelve)                                                   |
+| Un cambio de pose   | Impulso, cruce rápido de las dos imágenes con el cuerpo en movimiento y asentamiento            |
+
+- **La mirada:** los ojos y la boca se corren juntos dentro del visor (hasta 14 px) y se juntan apenas, como una
+  cara que gira; van rápido, como un vistazo, y la cabeza los sigue despacio (un tercio de ese recorrido, en unos
+  300 ms).
+- **Asentir:** cada sílaba que suena 1,6 veces más que la energía de la voz es fuerte; asiente en tres de cada
+  cuatro, con 340 ms como mínimo entre una y otra (entre 0,6 y 2,5 por segundo). La asentida baja la cara de 3 a
+  11 px de su imagen, suave, y vuelve en medio segundo; los ojos bajan un poco con ella, como cuando se inclina la
+  cara. Escuchando, el «ajá» baja 5 px (a veces dos seguidos).
+- **Límites:** 4 grados de giro alrededor del cuello, 8 px a los lados, 12 px arriba o abajo y 14 px la mirada, en
+  píxeles de su imagen (en el estudio se ve a un tercio: 12 px son unos 4 en la pantalla). La primera versión
+  usaba la mitad y en el video casi no se notaba. Se llega a ellos con suavidad (nunca de golpe) y la prueba los
+  fija; el micrófono deja aire con la cara aun en los extremos.
+- **El cambio de pose** dura 640 ms: el cuerpo baja un poco (el impulso), la pose nueva aparece en 180 ms justo
+  cuando el cuerpo se mueve más rápido, se pasa un poco hacia arriba y se asienta. La doble imagen de los brazos
+  dura menos de 200 ms y **las dos cabezas se juntan**: la que se va y la que llega se dibujan en la misma cabeza
+  «de paso», que viaja del sitio de una al de la otra (`transformarCabeza`), así la cara no se duplica.
+- **Hablando, el cambio espera una pausa de la voz** (entre palabras), como mucho 450 ms.
+
+**Cómo se prepara de nuevo** (si cambian las poses o `scripts/podcast-avatar.ts`):
+`estacion/node_modules/.bin/tsx scripts/podcast-cabeza.ts --revisar <carpeta>`. Escribe
+`compartido/podcast-mia-cabeza.ts` (generado) y deja una hoja con cada pose: el cuerpo sin cabeza y la cabeza en
+sus dos extremos de movimiento, para mirarla antes de publicar. Una pose nueva necesita su zona en `ZONAS` del
+script.
 
 ### La casa y el micrófono de Mia (C-PODCAST-5)
 
@@ -317,6 +383,8 @@ Los originales van en `avatar/` (privado, fuera de git), cada personaje en su ca
    gesto con la herramienta `gesto` (una conversación nueva por gesto) y arma la hoja de poses.
 6. **Si tiene casa o micrófono:** una entrada en `scripts/podcast-escenario.ts` y el campo `escenario` en el
    catálogo (ver «La casa y el micrófono de Mia»).
+7. **Si su cabeza se mueve sola** (como Mia): su zona en `scripts/podcast-cabeza.ts` y el campo `cabeza` de cada
+   pose (ver «La cabeza viva de Mia»).
 
 ### Lo que espera imágenes nuevas
 
@@ -370,8 +438,9 @@ que las voces: sirve para ver el uso, aunque los minutos del plan ya estén paga
 
 Pruebas: `pruebas/podcast.test.ts`, `pruebas/podcast-rutas.test.ts` (ElevenLabs simulado con msw),
 `pruebas/podcast-estudio.test.tsx`, `pruebas/podcast-avatares.test.ts` (el catálogo, la geometría de la cara, la
-casa y el micrófono que nunca tapa la cara: C-PODCAST-5) y `pruebas/podcast-poses.test.ts` (el motor de poses
-de Mia: calma, mínimos y gestos por la IA, C-PODCAST-4).
+casa y el micrófono que nunca tapa la cara: C-PODCAST-5; la cabeza como capa propia: C-PODCAST-6),
+`pruebas/podcast-poses.test.ts` (el motor de poses de Mia: calma, mínimos y gestos por la IA, C-PODCAST-4) y
+`pruebas/podcast-cabeza.test.ts` (la cabeza viva y el cambio de pose: C-PODCAST-6).
 
 ## La clave
 

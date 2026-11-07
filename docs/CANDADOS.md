@@ -20,6 +20,7 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
 | C-PODCAST-3  | El estudio dice que no graba («Abrir en el estudio», la línea de Pantalay)                                 | `src/app/podcast/Estudio.tsx`                                    | `pruebas/podcast-estudio.test.tsx`                            |
 | C-PODCAST-4  | Mia se mueve con calma: escuchando no cambia, pensar tras 1,2 s, mínimo 6 s, gestos de la IA (1 cada 25 s) | `compartido/podcast-poses.ts`, `compartido/podcast.ts` (`gesto`) | `pruebas/podcast-poses.test.ts`, `pruebas/podcast.test.ts`    |
 | C-PODCAST-5  | La casa de Mia detrás y su micrófono delante, que nunca le tapa la cara en ninguna de las siete poses      | `compartido/podcast-avatares.ts` (`escenario`)                   | `pruebas/podcast-avatares.test.ts`                            |
+| C-PODCAST-6  | La cabeza de Mia se mueve sola (asiente, se inclina, mira) y el cambio de pose sin doble imagen            | `compartido/podcast-cabeza.ts` + `scripts/podcast-cabeza.ts`     | `pruebas/podcast-cabeza.test.ts`                              |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
 
@@ -2111,3 +2112,33 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   deja la hoja de las siete poses con la cara marcada, y `docs/capturas/podcast-mia-casa.png` es cómo se ve.
 - **Qué NO tocar:** no subir el micrófono hacia la boca sin correr la prueba (la pose «idea» baja la cabeza); no
   quitarle el oscurecido ni el desenfoque a la casa (Mia deja de resaltar).
+
+## C-PODCAST-6 — La cabeza viva de Mia y el cambio de pose sin doble imagen (7 nov 2026)
+
+- **Qué se rompió y cómo se veía:** Richard vio el video de prueba y dijo «no hay naturalidad en el movimiento».
+  Entre pose y pose el cuerpo de Mia quedaba congelado: la cabeza no asentía al hablar, no miraba a nadie, y el
+  fundido de 700 ms entre dos fotos fijas dejaba una doble imagen que se notaba como un cambio de cuadro.
+- **La causa real:** cada pose era UNA imagen fija; lo único que se movía era el cuerpo entero (respirar y
+  mecerse) y la cara de luz. Sin una cabeza aparte no había cómo asentir ni mirar.
+- **Qué se hizo:** `scripts/podcast-cabeza.ts` recorta la cabeza de cada pose (con la mano en las poses que tocan la
+  cara) y rellena su hueco en el cuerpo con lo que hay detrás; `compartido/podcast-mia-cabeza.ts` (generado) dice
+  dónde va. `compartido/podcast-cabeza.ts` la mueve: ruido Perlin siempre, asentidas en las sílabas fuertes de su
+  voz, inclinación hacia Richard al escuchar, la mirada (los ojos primero, la cabeza después) y el aire al
+  empezar a hablar. El cambio de pose (`cambioDePose`, 640 ms) es un impulso, el cruce rápido en el momento de
+  más movimiento y un asentamiento; las dos cabezas se juntan (`transformarCabeza`) y, hablando, espera una pausa
+  de la voz. `RobotInvitado.tsx` dibuja cada pose como su cuerpo y su cabeza, con la cara viva dentro de la cabeza.
+- **En qué commit quedó funcionando:** ver `git log --grep=C-PODCAST-6`.
+- **Cómo se comprueba:** `pruebas/podcast-cabeza.test.ts`: nunca congelada (se mueve en cada segundo), asiente con
+  la voz y no sin ella, escuchando se inclina hacia Richard y lo mira, hablando reparte la mirada, pensando
+  levanta la barbilla, nunca pasa de sus límites, sin tirones de un cuadro a otro, determinista, la doble imagen
+  dura menos de 200 ms y las dos cabezas coinciden durante el cambio. Se comprobó en rojo cuatro veces: sin el
+  ruido (falla «nunca congelada»), sin asentidas (falla «asiente»), escuchando sin inclinarse (falla
+  «escuchando») y con el fundido largo de antes (falla «la doble imagen»). `pruebas/podcast-avatares.test.ts`
+  («la cabeza de Mia como capa propia»): cada pose trae su cabeza y su cuerpo; en reposo, juntos son la imagen de
+  siempre; el cuerpo ya no tiene casco donde estaba la coronilla; el micrófono deja aire con la cara aun con la
+  cabeza en sus extremos. A ojo: `... podcast-cabeza.ts --revisar <carpeta>` y el video
+  `docs/capturas/podcast-mia-movimiento.mp4`.
+- **Qué NO tocar:** no publicar una pose nueva sin correr `scripts/podcast-cabeza.ts` (sin su cabeza, la pose se
+  ve sin cara viva encima del cuerpo); no subir los límites de la cabeza sin correr la prueba del micrófono; no
+  volver al fundido largo entre dos fotos (es la doble imagen que vio Richard); no sacar la cara viva de la
+  cabeza (los ojos se quedarían quietos mientras la cabeza se mueve).
