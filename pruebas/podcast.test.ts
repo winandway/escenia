@@ -117,14 +117,18 @@ describe("el prompt del invitado: solo la ficha, sin inventar", () => {
     expect(p).toMatch(/primera persona como IA/);
     expect(p).toMatch(/No finges ser humana/);
     // Corto, con gancho; si le piden más, se extiende.
-    expect(p).toMatch(/2 o 3 frases/);
+    expect(p).toMatch(/gran narradora de podcast/);
+    expect(p).toMatch(/de 3 a 5 frases/);
     expect(p).toMatch(/«cuéntame más»/);
-    expect(p).toMatch(/de 5 a 8 frases/);
+    expect(p).toMatch(/de 6 a 10 frases/);
+    // Narra con suspenso, pero sin inventar los hechos de fondo.
+    expect(p).toMatch(/dramatizar como lo haría un buen narrador/);
+    expect(p).toMatch(/no inventas nombres de personas, empresas, fechas ni cifras/);
     expect(p).toMatch(/español neutro/);
     // Ciencia: fiel, dice cuándo es hipótesis o no se sabe, no inventa; puede citar ejemplos conocidos.
     expect(p).toMatch(/hipótesis/);
     expect(p).toMatch(/no se sabe/);
-    expect(p).toMatch(/No inventes datos, nombres, fechas ni cifras/);
+    expect(p).toMatch(/no inventas nombres de personas, empresas, fechas ni cifras/);
     expect(p).toMatch(/K2-18b/);
     expect(p).toMatch(/dilatación del tiempo cerca de un agujero negro/);
     // Religión y muerte: las distintas miradas, sin imponer ni burlarse.
@@ -620,7 +624,8 @@ describe("los datos del tema de hoy en la entrevista a la IA (7 nov 2026)", () =
     const p = construirPrompt({ ...base, historia: "En julio de 2026 dos modelos salieron de su prueba." });
     expect(p).toContain("<<<DATOS");
     expect(p).toContain("En julio de 2026 dos modelos salieron de su prueba.");
-    expect(p).toMatch(/usas SOLO los datos/);
+    expect(p).toMatch(/Úsalos como la base de tu historia/);
+    expect(p).toMatch(/no lo inventas/);
     expect(p).toMatch(/no participaste/);
   });
   it("sin datos, el prompt de la entrevista no cambia y los datos no pueden cerrar su bloque", () => {
