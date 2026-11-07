@@ -477,8 +477,10 @@ export function RobotInvitado({
 
       // La pose: el motor decide (con calma); el cambio es un fundido con la que llega encima de la que se va.
       memoria = siguientePose(memoria, e, ahora, fuente?.entradas?.() ?? SIN_ENTRADAS, guardado.tiene);
-      // La cara piensa con la misma regla que la pose: solo si tarda más de 1,2 s.
-      const pensandoAhora = piensa(memoria, ahora);
+      // La cara piensa con la misma regla que la pose: solo si tarda más de 1,2 s, y en un avatar con la pose de
+      // pensar, solo cuando esa pose ya se ve (si la de antes todavía cumple sus 6 s, la cara la espera).
+      const pensandoAhora =
+        piensa(memoria, ahora) && (memoria.pose === "pensando" || !guardado.tiene.has("pensando"));
       if (pensandoAhora !== caraPiensa) {
         caraPiensa = pensandoAhora;
         setPiensa(pensandoAhora);
