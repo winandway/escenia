@@ -137,7 +137,7 @@ export function Escenario({
         <Ondas tono="cian" />
       </header>
       <p className={css.cinta}>
-        Historias reales<b>·</b>Entrevistas a IAs<b>·</b>Preguntas de la vida
+        Historias que inspiran<b>·</b>Entrevistas a IAs<b>·</b>Preguntas de la vida
       </p>
 
       <section className={`${css.panel} ${css.panelHost}`} aria-label="Richard">

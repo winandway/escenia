@@ -37,7 +37,9 @@ describe("el escenario del estudio", () => {
     expect(screen.getByText("Alma (ejemplo)")).toBeInTheDocument();
     expect(screen.getByText("Invitada especial")).toBeInTheDocument();
     expect(screen.getByText("Del pan a la panadería")).toBeInTheDocument();
-    expect(screen.getByText(/Historias reales/)).toBeInTheDocument();
+    // Las historias son de ficción (Richard, 7 nov 2026): la cinta no puede prometer «historias reales».
+    expect(screen.getByText(/Historias que inspiran/)).toBeInTheDocument();
+    expect(screen.queryByText(/Historias reales/)).toBeNull();
     expect(screen.getByText("En espera")).toBeInTheDocument();
   });
 
