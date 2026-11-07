@@ -426,3 +426,51 @@ CREATE TABLE IF NOT EXISTS ayuda_adjuntos (
 );
 CREATE INDEX IF NOT EXISTS ayuda_adjuntos_por_mensaje ON ayuda_adjuntos(mensaje_id);
 CREATE INDEX IF NOT EXISTS ayuda_adjuntos_por_caso ON ayuda_adjuntos(caso_id, mensaje_id);
+-- Podcast IA (docs/PODCAST.md, C-PODCAST-1): la ficha de cada invitado (la historia que cedió su protagonista
+-- por escrito) y cada conversación del estudio. El invitado solo sabe lo que dice su ficha. Las fichas no se
+-- borran: se archivan. `segundos` queda vacío mientras la conversación está abierta; abierta cuenta como 10
+-- minutos para el tope del día (ajuste podcast_minutos_dia).
+CREATE TABLE IF NOT EXISTS podcast_fichas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT NOT NULL,
+  etiqueta TEXT NOT NULL DEFAULT 'Invitado especial',
+  tema TEXT NOT NULL DEFAULT '',
+  personalidad TEXT NOT NULL DEFAULT '',
+  voz TEXT NOT NULL DEFAULT 'neutra' CHECK (voz IN ('neutra','femenina','venezolana','paisa')),
+  historia TEXT NOT NULL DEFAULT '',
+  primer_mensaje TEXT NOT NULL DEFAULT '',
+  ejemplo INTEGER NOT NULL DEFAULT 0,
+  permiso INTEGER NOT NULL DEFAULT 0,
+  archivada INTEGER NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS podcast_conversaciones (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ficha_id INTEGER NOT NULL REFERENCES podcast_fichas(id),
+  fecha TEXT NOT NULL DEFAULT (date('now')),
+  inicio TEXT NOT NULL DEFAULT (datetime('now')),
+  fin TEXT,
+  segundos INTEGER
+);
+INSERT OR IGNORE INTO ajustes (clave, valor) VALUES ('podcast_minutos_dia', '60');
+-- La historia de EJEMPLO del piloto (ficticia, sin personas reales) mientras llega una real. Entra una sola
+-- vez: si ya existe una ficha de ejemplo (aunque esté archivada), no se vuelve a crear.
+INSERT INTO podcast_fichas (nombre, etiqueta, tema, personalidad, voz, historia, primer_mensaje, ejemplo, permiso)
+SELECT
+  'Alma (ejemplo)',
+  'Invitada especial',
+  'Del pan a escondidas a su propia panadería',
+  'Tímida, cálida y sincera. Habla despacio, se ríe bajito cuando se pone nerviosa y le cuesta hablar de sí misma, pero se emociona cuando habla del pan.',
+  'neutra',
+  'HISTORIA DE EJEMPLO, FICTICIA: no es de una persona real y no se publica.' || char(10) ||
+  'Soy Alma. Crecí en un pueblo pequeño, en una casa con un horno de leña que era de mi abuela. A los once años ya amasaba con ella los domingos.' || char(10) ||
+  'A los diecinueve me fui a la ciudad a estudiar contabilidad. El dinero no alcanzaba, así que empecé a hornear pan en la madrugada, de tres a seis, en la cocina del cuarto que alquilaba, y lo vendía a los vecinos antes de ir a clase.' || char(10) ||
+  'Me daba mucha vergüenza ofrecerlo. Durante meses dejé las bolsas colgadas en las puertas con una nota y el precio, para no tener que tocar el timbre.' || char(10) ||
+  'Un invierno se me quemaron dos hornadas seguidas y pensé en dejarlo. Una vecina mayor me dejó una nota: «el pan de ayer me recordó a mi mamá». Esa nota la tengo todavía.' || char(10) ||
+  'Terminé la carrera, pero nunca trabajé de contadora. Con lo que ahorré en cuatro años alquilé un local muy pequeño y abrí una panadería con un solo horno. Hoy somos tres personas trabajando.' || char(10) ||
+  'Sigo sin poder hablar en público y nunca he salido en una foto de la panadería. Por eso preferí contar mi historia así.',
+  'Hola, Richard. Gracias por invitarme… perdona, estoy un poco nerviosa.',
+  1,
+  0
+WHERE NOT EXISTS (SELECT 1 FROM podcast_fichas WHERE ejemplo = 1);
