@@ -144,7 +144,8 @@ describe("la ficha no pierde lo escrito", () => {
     expect(screen.getByLabelText(/Nombre del invitado/)).toHaveValue("Invitado nuevo");
     expect(leerBorrador("podcast-ficha-nueva")).not.toBeNull();
 
-    await usuario.click(screen.getByRole("button", { name: "Guardar la ficha" }));
+    // El botón dice «Guardando…» hasta que termina el primer intento: se espera a que vuelva (en GitHub tardaba).
+    await usuario.click(await screen.findByRole("button", { name: "Guardar la ficha" }));
     // Esperar la confirmación en vez de dar 1 ms fijo: con toda la suite en paralelo la promesa tardaba más
     // y la prueba fallaba a veces en el pre-push (6 nov 2026).
     await vi.waitFor(() => expect(alGuardar).toHaveBeenCalledWith(7));
