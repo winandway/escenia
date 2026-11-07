@@ -444,3 +444,20 @@ El revisor de calidad devolvió el paquete por dos fallos, ya arreglados y con s
 - **El borrador no recordaba una casilla desmarcada** (una casilla sin marcar no viaja en el formulario): al
   volver, el permiso aparecía marcado otra vez. El arreglo está en `useBorrador` y vale para todos los
   formularios del panel: se anota la casilla que venía marcada y la persona desmarcó.
+
+## Full Código, los datos del tema y el PDF de cada episodio (7 nov 2026)
+
+- **El podcast es una sección del canal Full Código** (@FullCodigo; el arroba de «Podcast AI» ya estaba ocupado).
+  El escenario lleva arriba a la izquierda el logo del canal en círculo, «FULL CÓDIGO_» en el verde del logo y
+  «@FullCodigo». Los dos prompts (historia y entrevista) invitan a suscribirse a Full Código al despedirse
+  (`REGLA_DEL_CANAL` en `compartido/podcast.ts`).
+- **Los datos del tema de hoy.** El modelo de la entrevista no sabe lo que pasó después de su fecha de corte. En
+  una ficha de entrevista a la IA, el campo grande de la ficha (el de la historia) ahora se llama «Los datos del
+  tema de hoy» y es opcional: lo que se escriba ahí entra al prompt entre marcas de DATOS, y la IA usa SOLO eso para
+  los hechos del tema, dice cuando algo no se sabe y deja claro que ella no participó. El episodio 1 (las IAs que
+  se escaparon de sus pruebas en 2026) los trae en `docs/podcast/EPISODIO-1-DATOS-PARA-MIA.md`, con sus fuentes en
+  `docs/podcast/FUENTES-EPISODIO-1.md`.
+- **Cada episodio lleva su PDF para imprimir** (regla de Richard): fondo blanco, letra grande, una sola hoja
+  horizontal, un cuadrito por pregunta para marcarla cuando la IA la responda, la despedida y las frases útiles.
+  El del episodio 1: `docs/podcast/EPISODIO-1-PREGUNTAS.pdf` (y su `.md`). Las preguntas de misterio pasaron al
+  episodio 2 (`docs/podcast/EPISODIO-2-PREGUNTAS-MISTERIOS.md`).

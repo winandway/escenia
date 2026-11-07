@@ -391,6 +391,42 @@
   color: rgba(226, 232, 240, 0.78);
 }
 
+/* ——— La marca del canal (Full Código), arriba a la izquierda, con el verde de su logo ——— */
+.canal {
+  position: absolute;
+  top: 2.1cqw;
+  left: 3.6cqw;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.8cqw;
+}
+.canalLogo {
+  width: 4.2cqw;
+  height: 4.2cqw;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 0.12cqw rgba(16, 240, 140, 0.55),
+    0 0 1.4cqw rgba(16, 240, 140, 0.35);
+}
+.canalTexto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.canalTexto b {
+  font-size: 1.35cqw;
+  font-weight: 700;
+  letter-spacing: 0.06cqw;
+  color: #10f08c;
+  text-shadow: 0 0 0.8cqw rgba(16, 240, 140, 0.55);
+}
+.canalTexto small {
+  font-size: 0.95cqw;
+  color: rgba(226, 232, 240, 0.85);
+}
+
 /* ——— Los controles: fuera del escenario, discretos, se esconden solos mientras se graba ——— */
 .controles {
   position: fixed;

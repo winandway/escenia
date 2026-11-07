@@ -40,6 +40,9 @@ describe("el escenario del estudio", () => {
     expect(screen.getByText("Del pan a la panadería")).toBeInTheDocument();
     // Las historias son de ficción (Richard, 7 nov 2026): la cinta no puede prometer «historias reales».
     expect(screen.getByText(/Historias que inspiran/)).toBeInTheDocument();
+    // La marca del canal va siempre en la grabación.
+    expect(screen.getByLabelText("Un podcast de Full Código")).toBeInTheDocument();
+    expect(screen.getByText("@FullCodigo")).toBeInTheDocument();
     expect(screen.queryByText(/Historias reales/)).toBeNull();
     expect(screen.getByText("En espera")).toBeInTheDocument();
   });

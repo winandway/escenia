@@ -5,7 +5,12 @@
 // su micrófono delante si el catálogo se los da), el tema de hoy y
 // la leyenda obligatoria (C-PODCAST-1: siempre visible, y dice la verdad: ficción o historia real con permiso).
 import type { RefObject } from "react";
-import { leyendaDelPodcast, type OrigenHistoria, type TipoFicha } from "@compartido/podcast";
+import {
+  CANAL_DEL_PODCAST,
+  leyendaDelPodcast,
+  type OrigenHistoria,
+  type TipoFicha,
+} from "@compartido/podcast";
 import { AVATAR_NUEVO, avatarPorId, type AvatarId } from "@compartido/podcast-avatares";
 import { RobotInvitado, type AudioInvitado, type EstadoInvitado } from "./RobotInvitado";
 import css from "./estudio.module.css";
@@ -129,6 +134,15 @@ export function Escenario({
   const fondo = avatar.escenario?.fondo;
   return (
     <div className={css.escenario} data-testid="escenario">
+      {/* El podcast es una sección del canal Full Código (@FullCodigo): la marca va siempre en la grabación. */}
+      <div className={css.canal} aria-label="Un podcast de Full Código">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/podcast/full-codigo.webp" alt="" className={css.canalLogo} />
+        <span className={css.canalTexto}>
+          <b>{CANAL_DEL_PODCAST.nombre}</b>
+          <small>{CANAL_DEL_PODCAST.arroba}</small>
+        </span>
+      </div>
       <header className={css.cabecera}>
         <Ondas tono="rosa" />
         <h1 className={css.marca}>

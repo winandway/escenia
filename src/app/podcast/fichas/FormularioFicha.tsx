@@ -236,20 +236,28 @@ export function FormularioFicha({
             </span>
           </label>
         </div>
-        <div>
-          <label htmlFor="historia" className="etiqueta">
+      </div>
+      {/* La historia (en una ficha de historia) o los datos del tema de hoy (en la entrevista a la IA): el modelo de
+          la entrevista no sabe lo que pasó después de su fecha de corte, así que los hechos recientes van aquí
+          (Richard, 7 nov 2026: el episodio de las IAs que se escaparon de sus pruebas). */}
+      <div>
+        <label htmlFor="historia" className="etiqueta">
+          <span className="group-has-[input[value^=entrevista]:checked]/ficha:hidden">
             La historia, en primera persona (es lo ÚNICO que sabe el invitado)
-          </label>
-          <textarea
-            id="historia"
-            name="historia"
-            rows={14}
-            maxLength={L.historia}
-            defaultValue={ficha?.historia ?? ""}
-            placeholder="La historia en primera persona, con su mensaje. Lo que no esté aquí, el invitado no lo inventa: dice que prefiere no contarlo o que no lo recuerda bien."
-            className="campo font-mono text-[13px] leading-relaxed"
-          />
-        </div>
+          </span>
+          <span className="hidden group-has-[input[value^=entrevista]:checked]/ficha:inline">
+            Los datos del tema de hoy (opcional): los hechos verificados que la IA tiene que saber
+          </span>
+        </label>
+        <textarea
+          id="historia"
+          name="historia"
+          rows={14}
+          maxLength={L.historia}
+          defaultValue={ficha?.historia ?? ""}
+          placeholder="En una historia: el relato en primera persona, con su mensaje. En una entrevista a la IA: los hechos del tema de hoy, con fechas y nombres. Lo que no esté aquí, el invitado no lo inventa."
+          className="campo font-mono text-[13px] leading-relaxed"
+        />
       </div>
       <div>
         <label htmlFor="primer_mensaje" className="etiqueta">
