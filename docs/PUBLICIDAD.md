@@ -406,8 +406,13 @@ termine mandando a descargar la app (Windows, Mac o Android) y a probarla gratis
 escribimos nosotros después de leer la página y los Docs. Guion y lo comprobado en `publicidad/kipuu/guion-empresas.md`.
 Plan `publicidad/kipuu/plan-empresas.json`.
 
-- **Presentadora nueva:** vestido verde esmeralda con cinturón dorado (`empresas/chica-2.png`, la foto original).
-  Su vestido verde destapó C-CROMA-ROPA: la tela detrás de ella va azul.
+- **Presentadora:** americana, rubia, ojos azules, unos 24 años, vestido rojo ajustado (`empresas/americana-b2.png`,
+  la foto original). Antes se probó una latina de vestido verde esmeralda; a Richard le pareció fea y mayor. Su
+  vestido verde destapó C-CROMA-ROPA (la tela detrás va azul cuando la ropa es verde). Para que no salga gruesa:
+  «hourglass figure, slim defined waist, flat stomach, curvy hips, US size 6 to 8, not skinny».
+- **Costó 1,17 $:** fotos 39 ¢ (siete presentadoras y dos salas), voz 7 ¢ y la presentadora hablando 72 ¢. Dura
+  41,7 s. Archivos «Comercial Kipuu Empresas» (y su versión de WhatsApp y la miniatura). Ese día fal.ai tuvo
+  FlashTalk en fila veinte minutos sin arrancar: se canceló el pedido (no se cobra si no corrió) y se volvió a mandar.
 - **Fondo:** sala de juntas de vidrio con seis personas en sus laptops (`empresas/sala-1.png`); los rayos suben de
   las seis laptops a la nube. Música `beat-kick-bass-driving-pulse-neutral.mp3`, tema claro, portada «¿PAGAS LA
   NUBE / POR PERSONA?» con la etiqueta «KIPUU PARA EMPRESAS».
