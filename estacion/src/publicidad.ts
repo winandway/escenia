@@ -14,6 +14,7 @@ import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { bloquesDeSubtitulos } from "./monigotes-plan";
+import { entradaTrasPortada } from "./remotion/publicidad-diseno";
 import {
   aparicionesDelPlan,
   archivoDePersonas,
@@ -1010,6 +1011,15 @@ export async function pasoArmar(
       chips: (m.chips ?? []).map((c, k) => ({ texto: c.texto, inicioMs: chipsInicio[k] ?? inicioMs })),
       ficha: (m.ficha ?? []).map((d) => ({ texto: d.texto, icono: d.icono ?? null })),
     });
+  }
+  // Un texto que termina antes de que la portada se vaya no se llega a ver (C-PORTADA-1): se dice.
+  const portadaProps = plan.portada ? { hastaMs: plan.portada.hasta_ms } : null;
+  for (const [i, t] of tramos.entries()) {
+    const conTexto = t.texto || t.chips.length || t.cifra || t.ficha.length;
+    if (conTexto && entradaTrasPortada(t.inicioMs, portadaProps) >= t.finMs)
+      console.warn(
+        `  ojo: el texto del momento «${plan.momentos[i]?.frase}» queda tapado por la portada y no se ve.`,
+      );
   }
   const duracionMs = voz.duracionMs + plan.cola_ms;
   const props = {

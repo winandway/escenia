@@ -998,6 +998,30 @@ describe("Kipuu, campaña del 7 nov 2026: los cambios del PDF a los cuatro video
       chips: [],
     });
     expect(tramo.ficha).toEqual([]);
+    // La ficha va sola: con texto, etiquetas o cifra en el mismo momento, una de las dos no se vería.
+    expect(() =>
+      esquemaPlanPublicidad.parse({
+        ...base,
+        momentos: [
+          ...base.momentos.slice(0, 2),
+          { frase: "un espejo", texto: "SEGURO", ficha: [{ texto: "Cifrado AES-256" }] },
+        ],
+      }),
+    ).toThrow(/ficha/);
+  });
+
+  it("el armado usa la persona de su versión, para si es de otra y avisa del texto que tapa la portada", async () => {
+    const { readFileSync } = await import("node:fs");
+    const armado = readFileSync(new URL("../estacion/src/publicidad.ts", import.meta.url), "utf8");
+    expect(armado).toContain("existsSync(path.join(trabajo, archivoDePersonas(nombre)))");
+    expect(armado).toContain("const otraVersion = personasDeOtraVersion(");
+    expect(armado).toContain("Corre --paso avatar.");
+    expect(armado).toContain("archivoDePersonas(nombre)), JSON.stringify(salida");
+    // Un texto que termina antes de que se vaya la portada no se ve: el armado lo dice.
+    expect(armado).toContain("queda tapado por la portada");
+    // La insignia también sale en un cierre sin líneas.
+    const fuente = readFileSync(new URL("../estacion/src/remotion/Publicidad.tsx", import.meta.url), "utf8");
+    expect(fuente).toContain("lineas.length === 0 && insignia && <Insignia");
   });
 
   it("cada versión de un anuncio guarda su persona aparte y el armado no usa la de otra versión", async () => {

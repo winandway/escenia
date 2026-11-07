@@ -1236,6 +1236,7 @@ const Cierre: React.FC<{
           </Fragment>
         );
       })}
+      {lineas.length === 0 && insignia && <Insignia insignia={insignia} />}
       {imagen && (
         <Img
           src={staticFile(imagen)}

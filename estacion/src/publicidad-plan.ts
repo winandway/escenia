@@ -218,6 +218,13 @@ export const esquemaPlanPublicidad = z
   .superRefine((p, ctx) => {
     if (!p.texto && !p.partes)
       ctx.addIssue({ code: "custom", message: "Falta lo que dice la voz: `texto` o `partes`." });
+    // La ficha ocupa la franja del texto grande: con texto, etiquetas o cifra, una de las dos no se vería.
+    for (const m of p.momentos)
+      if (m.ficha && (m.texto || m.chips?.length || m.cifra))
+        ctx.addIssue({
+          code: "custom",
+          message: `La ficha va sola: quita el texto, las etiquetas o la cifra del momento «${m.frase}».`,
+        });
   });
 export type PlanPublicidad = z.infer<typeof esquemaPlanPublicidad>;
 
