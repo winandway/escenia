@@ -3,21 +3,23 @@
 Cada candado tiene su prueba automática en `pruebas/`. Si alguien rompe la
 pieza, la prueba se pone en rojo antes de que llegue a producción.
 
-| Candado      | Qué protege                                                                                                | Dónde vive                                                      | Prueba                                                              |
-| ------------ | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------- |
-| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                                       | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`) | `pruebas/modelos.test.ts`                                           |
-| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                                       | `src/lib/presupuesto.ts`                                        | `pruebas/sesion-presupuesto.test.ts`                                |
-| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                             | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`           | `pruebas/guion.test.ts` (inserción)                                 |
-| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                                     | `src/lib/variedad.ts`                                           | `pruebas/variedad.test.ts`                                          |
-| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                                  | `compartido/subtitulos.ts`                                      | `pruebas/subtitulos.test.ts`                                        |
-| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min             | `src/lib/sesion.ts`, `src/lib/clave.ts`                         | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts`       |
-| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                          | `src/componentes/useBorrador.ts`                                | `pruebas/borrador.test.tsx`                                         |
-| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                            | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                           |
-| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí         | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                           |
-| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                               | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                           |
-| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos           | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                         |
-| C-LATIDO-2   | El latido de la Estación se escribe a lo sumo cada 5 minutos (antes, cada 3 s: 28.332 filas en un día)     | `src/lib/estacion-estado.ts`                                    | `pruebas/estacion-estado.test.ts`                                   |
-| C-PODCAST-3  | El estudio dice que no graba («Abrir en el estudio», la línea de Pantalay); Mia cambia de pose sin nervios | `src/app/podcast/Estudio.tsx`, `compartido/podcast-poses.ts`    | `pruebas/podcast-estudio.test.tsx`, `pruebas/podcast-poses.test.ts` |
+| Candado      | Qué protege                                                                                                | Dónde vive                                                       | Prueba                                                        |
+| ------------ | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                                       | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`)  | `pruebas/modelos.test.ts`                                     |
+| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                                       | `src/lib/presupuesto.ts`                                         | `pruebas/sesion-presupuesto.test.ts`                          |
+| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                             | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`            | `pruebas/guion.test.ts` (inserción)                           |
+| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                                     | `src/lib/variedad.ts`                                            | `pruebas/variedad.test.ts`                                    |
+| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                                  | `compartido/subtitulos.ts`                                       | `pruebas/subtitulos.test.ts`                                  |
+| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min             | `src/lib/sesion.ts`, `src/lib/clave.ts`                          | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
+| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                          | `src/componentes/useBorrador.ts`                                 | `pruebas/borrador.test.tsx`                                   |
+| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                            | `src/lib/estacion-auth.ts`                                       | `pruebas/escudos.test.ts`                                     |
+| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí         | `compartido/tematicas/index.ts`                                  | `pruebas/escudos.test.ts`                                     |
+| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                               | `src/lib/prompt.ts`                                              | `pruebas/escudos.test.ts`                                     |
+| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos           | `compartido/podcast.ts`, `src/lib/podcast.ts`                    | `pruebas/podcast*.test.ts*`                                   |
+| C-LATIDO-2   | El latido de la Estación se escribe a lo sumo cada 5 minutos (antes, cada 3 s: 28.332 filas en un día)     | `src/lib/estacion-estado.ts`                                     | `pruebas/estacion-estado.test.ts`                             |
+| C-PODCAST-3  | El estudio dice que no graba («Abrir en el estudio», la línea de Pantalay)                                 | `src/app/podcast/Estudio.tsx`                                    | `pruebas/podcast-estudio.test.tsx`                            |
+| C-PODCAST-4  | Mia se mueve con calma: escuchando no cambia, pensar tras 1,2 s, mínimo 6 s, gestos de la IA (1 cada 25 s) | `compartido/podcast-poses.ts`, `compartido/podcast.ts` (`gesto`) | `pruebas/podcast-poses.test.ts`, `pruebas/podcast.test.ts`    |
+| C-PODCAST-5  | La casa de Mia detrás y su micrófono delante, que nunca le tapa la cara en ninguna de las siete poses      | `compartido/podcast-avatares.ts` (`escenario`)                   | `pruebas/podcast-avatares.test.ts`                            |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
 
@@ -2040,10 +2042,65 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
 - **Qué se hizo:** el botón dice «Abrir en el estudio» y, al lado de «Empezar la conversación», una línea
   discreta dice «Para grabar, usa tu grabador de pantalla (Pantalay)» (`PISTA_GRABAR`), que se esconde con
   los controles. Ningún botón del estudio dice «grabar».
-- **Mia y sus poses (mismo día):** el motor (`compartido/podcast-poses.ts`) nunca cambia de pose más de una vez
-  cada 2,5 s (`MIN_ENTRE_CAMBIOS`) y manda en este orden: la risa, el aplauso, la idea, los datos y el estado.
+- **Mia y sus poses (mismo día):** el primer motor cambiaba de pose cada 2,5 s como mínimo y sacaba gestos de
+  palabras sueltas. **Lo reemplazó C-PODCAST-4** (ese mismo día, después de que Richard lo probara en vivo).
 - **Cómo se comprueba:** `pruebas/podcast-estudio.test.tsx` («dice al lado del botón que el estudio no graba»)
   y `pruebas/podcast-poses.test.ts` («sin nervios» y «el orden manda»). Se comprobaron en rojo con el código de
   antes. En vivo: la tarjeta de la ficha dice «Abrir en el estudio».
-- **Qué NO tocar:** no volver a poner «Grabar» en un botón que no graba; no bajar `MIN_ENTRE_CAMBIOS` (Mia se
-  ve nerviosa).
+- **Qué NO tocar:** no volver a poner «Grabar» en un botón que no graba.
+
+## C-PODCAST-4 — Mia se mueve con calma, y los gestos los decide la IA (7 nov 2026)
+
+- **Qué se rompió y cómo se veía:** Richard probó a Mia en vivo y se movía «como un meme, como un GIF… aplaude
+  cuando tiene que aplaudir, sale lo de las ideas, pone los brazos al frente, pone los brazos para otro lado…
+  no se queda un rato en una sola posición si estoy hablando yo».
+- **La causa real:** el motor sacaba gestos de palabras sueltas del texto («jaja», «genial», cualquier cifra,
+  «imagínate») y los repartía a lo largo de la respuesta a 15 letras por segundo, y además alternaba poses
+  cada 8 a 12 s. Con 2,5 s como único freno, una respuesta normal tenía cinco o seis cambios.
+- **Qué se hizo** (`compartido/podcast-poses.ts`, reescrito):
+  - Escuchando y en espera: manos juntas, sin cambios. Pensando solo si tarda más de 1,2 s (`PENSAR_TRAS_MS`),
+    y se sostiene hasta que habla; si la IA ya pidió un gesto, no piensa. Hablando: las manos en la silla toda
+    la respuesta; una respuesta de menos de 6 s no la mueve; una de más de 25 s descansa una sola vez.
+  - Ninguna pose dura menos de 6 s (`POSE_MINIMA_MS`), salvo un gesto (3 a 4 s, `DURACION_GESTO`).
+  - Los gestos los pide la IA con la herramienta del cliente `gesto({ pose })` de ElevenLabs Agents
+    (`HERRAMIENTA_GESTO` en `compartido/podcast.ts`: enum de las cuatro poses, `expects_response: false`,
+    `execution_mode: "immediate"`), atendida en `clientTools` del estudio con `leerPedidoDeGesto`. El prompt
+    (entrevista e historia) dice: como mucho una vez por respuesta y solo cuando de verdad corresponda. El
+    motor frena igual: uno por respuesta, 25 s entre uno y otro (`ENTRE_GESTOS_MS`), solo hablando.
+  - De respaldo, solo la etiqueta «[laughs]» (`gestoDeRisa` en `Estudio.tsx`).
+  - El cambio es un fundido de 700 ms con curva suave y un acomodo del cuerpo (`ACOMODO` en
+    `RobotInvitado.tsx`); la respiración es de 4,5 s; la cara piensa con la misma regla (`piensa`).
+  - `scripts/podcast-agente.ts` crea o pone al día la herramienta (su id en
+    `~/.config/motor-escenia/podcast-herramienta-gesto`) y la engancha al agente por `tool_ids`.
+- **En qué commit quedó funcionando:** `5d604ee` (rama `podcast-mia-calma`, fusionada a `main`).
+- **Cómo se comprueba que sigue funcionando:** `pruebas/podcast-poses.test.ts` (escuchando no cambia nunca,
+  pensar solo tras 1,2 s, mínimo de 6 s aunque el estado salte cada medio segundo, un gesto por respuesta y 25 s
+  entre gestos, la herramienta solo acepta las cuatro poses, solo «[laughs]» de respaldo, y una conversación
+  de 60 s con 3 a 6 cambios) y `pruebas/podcast.test.ts` («la herramienta gesto de la IA»). Se comprobaron en
+  rojo con el motor de antes (17 de 17 y 3 de 3). A ojo: `node scripts/podcast-video-movimiento.mjs 2
+<archivo.mp4>` contra la vista previa local graba 60 s y cuenta los cambios (el de referencia,
+  `docs/capturas/podcast-mia-movimiento.mp4`, tiene 4).
+- **Qué NO tocar:** no volver a sacar gestos de palabras del texto; no bajar `POSE_MINIMA_MS`, `ENTRE_GESTOS_MS`
+  ni `PENSAR_TRAS_MS`; no poner `expects_response: true` en la herramienta (la respuesta se trabaría esperando
+  al navegador); no quitar la herramienta del agente sin quitarla del prompt.
+
+## C-PODCAST-5 — La casa de Mia detrás y su micrófono delante, sin taparle nunca la cara (7 nov 2026)
+
+- **Qué se pidió:** Richard quiso a Mia en su casa (una sala con sus cuadritos) y con un micrófono de podcast que
+  entra desde la izquierda, cerca de la cara pero sin taparla nunca, ni el visor ni el aro del oído, en ninguna
+  de las siete poses (en «riendo» y «pensando» la mano sube a la cara).
+- **Qué se hizo:** un campo opcional `escenario: { fondo, microfono }` en el catálogo
+  (`compartido/podcast-avatares.ts`). La casa va detrás, en el panel (`Escenario.tsx`, oscurecida a 0,7 y
+  desenfocada 0,13 cqw); el micrófono va delante, dentro del SVG del invitado y en píxeles de la imagen de Mia,
+  sin respirar con ella y con un vaivén de un cuarto de grado. `scripts/podcast-escenario.ts` publica los dos
+  webp y mide la silueta del micrófono (`compartido/podcast-mia-escenario.ts`, generado).
+- **El tropiezo:** a la altura de la boca, el micrófono tapaba el aro del oído en la pose «idea» (ahí la cabeza
+  baja). Se bajó a la altura de la barbilla (`x: -281, y: 752, dibujo: 800, giro: -24`).
+- **En qué commit quedó funcionando:** `5d604ee`.
+- **Cómo se comprueba:** `pruebas/podcast-avatares.test.ts` («el escenario de Mia»): la casa es un webp sin alfa
+  de 1920 × 1080; el micrófono, con alfa; su silueta deja 25 px de aire con el visor y con cada aro en las siete
+  poses y con su vaivén; entra por el borde izquierdo y no baja hasta la etiqueta. Se comprobó en rojo poniendo
+  el micrófono a la altura de la boca (tapaba el aro). A ojo: `... podcast-escenario.ts mia --revisar <carpeta>`
+  deja la hoja de las siete poses con la cara marcada, y `docs/capturas/podcast-mia-casa.png` es cómo se ve.
+- **Qué NO tocar:** no subir el micrófono hacia la boca sin correr la prueba (la pose «idea» baja la cabeza); no
+  quitarle el oscurecido ni el desenfoque a la casa (Mia deja de resaltar).

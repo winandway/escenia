@@ -116,7 +116,8 @@ Las fichas no se borran: se archivan desde los tres puntos.
 - El invitado es la imagen de su avatar con la cara viva dibujada encima en SVG (`RobotInvitado`), en las
   coordenadas de esa imagen: ojos de luz que parpadean, una boca de luz que se mueve con SU voz, los aros de los
   oídos que laten con el volumen y el cuerpo que respira. Pensando, mira hacia arriba con tres puntos en la
-  boca. Mia, además, cambia de pose según lo que hace y lo que dice (abajo, «Mia y sus poses»). Todo lo que
+  boca. Mia, además, cambia de pose con calma según lo que hace, y hace un gesto cuando la IA lo pide con su
+  herramienta `gesto` (abajo, «Cómo se mueve Mia»); está en su casa y con su micrófono. Todo lo que
   cambia de un avatar a otro está en el catálogo (abajo, «Los avatares»).
 - El escenario (16:9, medido en `cqw`) sigue la dirección de arte de
   `capturas/podcast-referencia-escenario-1.webp` y `-2.webp`, construido en CSS y SVG.
@@ -173,34 +174,69 @@ plateada usa el de cámara web: así sus manos levantadas quedan fuera del cuadr
 ### Mia y sus poses (animación por código)
 
 Richard pidió animarla «como se hacía antes de la IA»: varias poses que se alternan, sin pagar por minuto. Mia
-tiene **siete** imágenes del mismo tamaño (1312 × 1199), en la misma silla. El estudio pasa de una a otra con
-un **fundido de 300 ms** (la que llega, encima), con la cara viva siempre encima de la pose que se ve. En todas
-respira y se mece; riéndose tiembla un poco y aplaudiendo da saltitos.
+tiene **siete** imágenes del mismo tamaño (1312 × 1199), en la misma silla, con la cara viva siempre encima de
+la pose que se ve. Desde el 7 nov 2026 está en su casa y con su micrófono (abajo, «La casa y el micrófono de
+Mia»).
 
-![Mia en sus siete poses](capturas/podcast-mia-poses.png)
+![Mia en sus siete poses, en su casa y con su micrófono](capturas/podcast-mia-poses.png)
 
-![Mia hablando en el estudio](capturas/podcast-estudio-mia.png)
+![Mia hablando en el estudio, con su casa y su micrófono](capturas/podcast-mia-casa.png)
 
-**El motor de poses** (`compartido/podcast-poses.ts`, reglas simples y deterministas):
+### Cómo se mueve Mia (calma por defecto, C-PODCAST-4)
 
-| Cuándo                                                                                         | Pose (archivo en `avatar/mia/`)                       |
-| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| En espera o escuchando                                                                         | Manos juntas (`mia-manos-juntas-tranquila.png`)       |
-| Pensando                                                                                       | Mano en la barbilla; un turno sí y otro no, la tablet |
-| Hablando                                                                                       | Manos en los brazos de la silla                       |
-| Hablando mucho rato                                                                            | Cada 8 a 12 s, 3 s con las manos juntas, y sigue      |
-| Dice «jaja», «[laughs]», «[laughing]», «me río»                                                | Riéndose con la mano en la boca (unos 2,6 s)          |
-| Dice «¡qué buena pregunta!», «¡me encanta!», «¡genial!», «¡increíble!», «[excited]», «[happy]» | Aplaudiendo (unos 2,6 s)                              |
-| Dice «imagínate», «¿sabes qué?», «te cuento», «fíjate», «[curious]»                            | El dedo arriba con el bombillo (unos 2,6 s)           |
-| Habla de datos: cifras, «según», «los científicos», «estudios», planetas                       | La tablet tomando notas (unos 4 s)                    |
+**Por qué cambió.** La primera versión sacaba gestos de palabras sueltas del texto («jaja», «genial», cualquier
+cifra) y los repartía a lo largo de la respuesta, y además alternaba poses cada 8 a 12 segundos. Richard la
+probó en vivo el 7 nov 2026: «va como un meme, como un GIF… no se queda un rato en una sola posición si estoy
+hablando yo». Una persona en un podcast casi no cambia de postura: se acomoda al empezar a hablar, gesticula
+de vez en cuando con sentido, y escucha quieta. Eso hace ahora el motor (`compartido/podcast-poses.ts`, reglas
+simples y deterministas, sin pagar animación por minuto).
 
-- **Manda lo que dice** sobre el estado, en este orden: la risa, el aplauso, la idea, los datos y, al final, la
-  pose del estado.
-- **Nunca cambia de pose más de una vez cada 2,5 segundos**, para que no parezca nerviosa.
-- **De dónde sale el texto:** el SDK de ElevenLabs (`@elevenlabs/client` 1.35, `onMessage`) entrega cada
-  respuesta del agente con `role: "agent"` y el texto en `message`, con las etiquetas de emoción de la voz v3
-  (como `[laughs]`), porque no le pedimos `stripAudioTags`. El estudio busca los disparadores y calcula cuándo
-  se dice cada uno por dónde va en el texto (unas 15 letras por segundo).
+| Cuándo                                                          | Pose (archivo en `avatar/mia/`)                                        |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| En espera o escuchando (mientras Richard habla)                 | Manos juntas, **todo el rato, sin cambios**                            |
+| Pensando, solo si tarda **más de 1,2 s** en contestar           | Mano en la barbilla, hasta que empieza a hablar (y nunca menos de 6 s) |
+| Hablando                                                        | Manos en los brazos de la silla, **toda la respuesta**                 |
+| Una respuesta corta (menos de 6 s, como el saludo)              | Se queda con las manos juntas: no vale la pena moverse                 |
+| Una respuesta de más de 25 s                                    | Descansa **una sola vez** con las manos juntas (6 s) y vuelve          |
+| La IA pide `gesto` con «riendo», «aplaudiendo», «idea», «notas» | El gesto, de 3 a 4 s, y vuelve a las manos en la silla                 |
+
+- **Ninguna pose dura menos de 6 s, salvo un gesto.** Si toca cambiar antes, espera.
+- **Los gestos los decide la IA**, no las palabras. El agente tiene la herramienta del cliente `gesto({ pose })`
+  (ElevenLabs Agents, `HERRAMIENTA_GESTO` en `compartido/podcast.ts`), con un enum de las cuatro poses de gesto,
+  `expects_response: false` (la IA no espera respuesta: sigue hablando) y `execution_mode: "immediate"`. El
+  prompt de la entrevista y el de la historia le dicen cuándo: **como mucho una vez por respuesta y solo cuando
+  de verdad corresponda** — riendo si algo es gracioso; aplaudiendo si Richard dijo algo muy bueno o hizo una
+  gran pregunta; idea si arranca a explicar algo nuevo; notas si cita datos o cifras. Si no corresponde, ningún
+  gesto.
+- **El motor le pone freno igual:** un gesto por respuesta, **25 s como mínimo entre uno y otro**, solo mientras
+  habla. Un gesto que llega antes de que hable espera a que empiece (y si la IA ya pidió un gesto antes de los
+  1,2 s, no se pone a pensar: ya sabe qué decir). Si deja de hablar (terminó o Richard la interrumpió) antes de
+  que salga, se tira; uno que llega 8 s tarde, también.
+- **De respaldo** queda solo la etiqueta explícita «[laughs]» de la voz v3, que pide «riendo» con las mismas
+  reglas. Las demás palabras ya no disparan nada.
+- **El texto de cada respuesta** (el SDK `@elevenlabs/client` 1.35 lo entrega en `onMessage` con `role:
+"agent"`) solo sirve para saber si la respuesta es corta o larga, a unas 15 letras por segundo.
+- **La herramienta en el navegador:** el estudio la atiende en `clientTools` de `Conversation.startSession`.
+  `leerPedidoDeGesto` solo acepta las cuatro poses, escritas tal cual; cualquier otra cosa se ignora. El SDK
+  contesta solo («ok»); la IA no lo espera.
+- **Transiciones que parecen movimiento:** un fundido de 700 ms con curva suave (la opacidad cruza rápido en el
+  medio, para que la doble imagen dure poco) y, a la vez, el cuerpo baja unos 7 píxeles, se achica un 1,4 % y
+  se inclina un tercio de grado, y vuelve: se lee como «se acomoda». En reposo respira lento (un ciclo de 4,5 s),
+  se mece muy poco y parpadea.
+- **La cara piensa con la misma regla:** los ojos miran hacia arriba con los tres puntos solo si tarda más de
+  1,2 s.
+- **Cuántos cambios:** en 60 s de conversación normal, de 3 a 6 cambios de pose (sin contar el parpadeo ni la
+  boca). El video de la simulación tiene 4: piensa, levanta el dedo cuando arranca a explicar, vuelve a las
+  manos en la silla y, cuando Richard habla, a las manos juntas.
+
+**El video** (60 s, conversación simulada sin gastar, con su casa y su micrófono):
+`docs/capturas/podcast-mia-movimiento.mp4`. Se graba con
+`node scripts/podcast-video-movimiento.mjs <id de la ficha local> <archivo.mp4>` contra la vista previa local:
+simula a ElevenLabs en el navegador (la voz de prueba, el texto y la llamada a `gesto`), pone lo que dice Richard
+como subtítulo en su panel, cuenta los cambios de pose y lo pasa a mp4 H.264 de 1280 × 720.
+
+**Detalles de la cara:**
+
 - **Los ojos de Mia son los de la imagen**, recortados tal cual con sus pestañas (no se redibujan): el script
   borra la cara pintada del visor y guarda aparte lo que quitó dentro de la caja de cada ojo. Encima de la
   imagen limpia devuelve el ojo exacto, y así parpadea. Las luces de los oídos también son recortes (lo cian de
@@ -208,6 +244,34 @@ respira y se mece; riéndose tiembla un poco y aplaudiendo da saltitos.
   si la pintada la tenía.
 - **Riéndose**, la mano tapa la boca: ahí no se dibuja boca y se conserva la pintada que asoma; solo laten los
   ojos felices y tiembla de risa. En la de la tablet se conserva el lápiz, que entra al visor.
+
+### La casa y el micrófono de Mia (C-PODCAST-5)
+
+Richard pidió (7 nov 2026) que Mia esté en su casa y con un micrófono de podcast. Los dos van en el catálogo,
+en el campo opcional `escenario` del avatar: `{ fondo, microfono }`. Cada invitado puede tener los suyos; el que
+no los tiene se ve como siempre.
+
+- **La casa** (`avatar/mia/escenario/casa-2.png`, publicada como `public/podcast/mia-casa.webp`, 1920 × 1080,
+  sin alfa, 65 KB): una sala acogedora azul marino y violeta con luces de neón, una lámpara, una consola con
+  robotcitos y, en la pared, los cuadritos (el robotcito que va a la escuela con su mochila roja, la foto de
+  familia, el robot graduado y el robot con su dibujo). Va **detrás** de Mia y cubre su panel entero. Está
+  encuadrada (`enfoqueX: 22`) para que se vean el cuadrito de la escuela a la izquierda y los de la derecha.
+  El estudio la oscurece y la desenfoca un poco (brillo 0,7 y 0,13 cqw de desenfoque, unos 2,5 px en una
+  pantalla de 1920) para que Mia resalte y siga leyéndose como su casa.
+- **El micrófono** (`avatar/mia/escenario/microfono-brazo.png`, publicado como `public/podcast/mia-microfono.webp`,
+  con alfa, 50 KB): el brazo negro articulado entra **desde el borde izquierdo** del panel y el micrófono, con su
+  aro cian, apunta a la cara. Va **delante** de Mia, a la altura de la barbilla, y **no respira con ella**: solo
+  tiene un vaivén casi nulo (un cuarto de grado). Se dibuja en píxeles de la imagen de Mia (`x`, `y`, `dibujo`,
+  `giro`), así se comprueba pose por pose.
+- **Nunca le tapa la cara.** Ni el visor ni el aro del oído, en ninguna de las siete poses, ni con su vaivén:
+  la prueba mide la silueta del micrófono (`siluetaDelMicrofono`) contra el visor y las luces de cada pose y
+  exige 25 px de aire. En «riendo» y en «pensando» la mano sube a la cara y el micrófono queda más abajo y a la
+  izquierda. Tampoco baja hasta la etiqueta del nombre. Más arriba tapaba el aro del oído en la pose de idea
+  (la cabeza baja): por eso va a la altura de la barbilla.
+- **Cómo se prepara:** `estacion/node_modules/.bin/tsx scripts/podcast-escenario.ts mia [--revisar <carpeta>]`
+  publica la casa y el micrófono optimizados, mide la silueta del micrófono (la escribe en
+  `compartido/podcast-mia-escenario.ts`) y, con `--revisar`, deja una hoja con las siete poses, el micrófono
+  encima y la cara marcada en rojo, para mirarla antes de publicar.
 
 ### Cómo tienen que ser las imágenes nuevas (para que entren solas al catálogo)
 
@@ -241,8 +305,10 @@ Los originales van en `avatar/` (privado, fuera de git), cada personaje en su ca
    «panel-empaquetado»; antes `npx opennextjs-cloudflare build`, `npx wrangler deploy --dry-run
 --outdir=.dist-worker --minify` y `node scripts/empaquetar-worker.mjs`) y
    `node scripts/podcast-capturas.mjs <id de una ficha local> <carpeta> [prefijo] [--poses]`. Simula a
-   ElevenLabs en el navegador (una voz de prueba con sílabas) y deja las capturas; con `--poses` dispara cada
-   gesto con su frase y arma la hoja de poses.
+   ElevenLabs en el navegador (una voz de prueba con sílabas) y deja las capturas; con `--poses` pide cada
+   gesto con la herramienta `gesto` (una conversación nueva por gesto) y arma la hoja de poses.
+6. **Si tiene casa o micrófono:** una entrada en `scripts/podcast-escenario.ts` y el campo `escenario` en el
+   catálogo (ver «La casa y el micrófono de Mia»).
 
 ### Lo que espera imágenes nuevas
 
@@ -251,15 +317,6 @@ Los originales van en `avatar/` (privado, fuera de git), cada personaje en su ca
   versiones sentadas. El robot **con la boca dibujada** (`robot-el-boca-abierta-cuerpo-entero.png`) nunca va:
   con la cara borrada queda igual que el de sin boca, y su boca la pone el estudio.
 - **La robot de coleta de pie** sigue en el catálogo; Mia es la misma robot, sentada.
-
-### Fase 2 (solo diseño): que el agente elija el gesto
-
-Hoy el gesto sale de palabras del texto. Mejor: que el propio agente lo pida con una **client tool** de
-ElevenLabs Agents, por ejemplo `gesto({ pose: "riendo" | "aplaudiendo" | "idea" | "notas" })`. Se declara en
-el agente (`scripts/podcast-agente.ts`, como herramienta del cliente, sin respuesta que esperar) y en el estudio
-se pasa en `clientTools` de `Conversation.startSession`: la función empuja un gesto con la hora de ahora a la
-misma lista que hoy llena el texto, y el motor de poses no cambia (sigue mandando el orden y los 2,5 s). En el
-prompt se le dice cuándo usarla, con mesura. No cuesta minutos de más. No está construido.
 
 ## Cuánto cuesta
 
@@ -304,8 +361,9 @@ que las voces: sirve para ver el uso, aunque los minutos del plan ya estén paga
    lleva `ALTER TABLE` y su semilla no nombra columnas nuevas.
 
 Pruebas: `pruebas/podcast.test.ts`, `pruebas/podcast-rutas.test.ts` (ElevenLabs simulado con msw),
-`pruebas/podcast-estudio.test.tsx`, `pruebas/podcast-avatares.test.ts` (el catálogo y la geometría de la cara)
-y `pruebas/podcast-poses.test.ts` (el motor de poses de Mia).
+`pruebas/podcast-estudio.test.tsx`, `pruebas/podcast-avatares.test.ts` (el catálogo, la geometría de la cara, la
+casa y el micrófono que nunca tapa la cara: C-PODCAST-5) y `pruebas/podcast-poses.test.ts` (el motor de poses
+de Mia: calma, mínimos y gestos por la IA, C-PODCAST-4).
 
 ## La clave
 
