@@ -1,10 +1,12 @@
 // Los invitados del Podcast IA (docs/PODCAST.md, «Los avatares»): un catálogo en el código con la imagen, el
-// encuadre y la cara medida sobre la imagen. Otro avatar de visor entra con una entrada nueva, sin tocar el
-// componente. La robot de coleta (la favorita de Richard, con voz paisa) va primero.
+// encuadre y la cara medida sobre la imagen. Otro avatar entra con una entrada nueva, sin tocar el componente.
+// La robot plateada (la que eligió Richard para «Mia IA», 7 nov 2026) va primero; las personas entran con el
+// modo «sin_visor» (sin boca dibujada) y las imágenes sentadas, con el encuadre de cámara web.
 import { describe, expect, it } from "vitest";
 import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import {
+  AIRE_CAMARA_WEB,
   ASPECTO_PANEL,
   AVATARES,
   AVATAR_DE_LAS_VIEJAS,
@@ -14,16 +16,44 @@ import {
   cajaDelEncuadre,
   caminoCerrado,
   caminoDeElipse,
+  caminoDeMediaLuna,
   caminoDeSonrisa,
+  conVisor,
   curvaQ,
   esAvatar,
+  esRecorte,
+  posesDe,
   puntoDeCurva,
   trazoAfinado,
+  type AvatarPodcast,
+  type CaraConVisor,
+  type OjoAvatar,
   type Punto,
 } from "@compartido/podcast-avatares";
+import { POSES } from "@compartido/podcast-poses";
 import { limpiarEtiquetasDeEmocion } from "@compartido/podcast";
 
 const raiz = path.resolve(__dirname, "..");
+
+/** La cara de una robot del catálogo (falla si el avatar no tiene visor). */
+function caraDe(id: string): CaraConVisor {
+  const a = avatarPorId(id);
+  if (!conVisor(a)) throw new Error(`${id} no tiene visor`);
+  return a.cara;
+}
+
+/** Los ojos dibujados (no recortados de la imagen) de una cara. */
+function dibujados(c: CaraConVisor): [OjoAvatar, OjoAvatar] {
+  const [a, b] = c.ojos;
+  if (esRecorte(a) || esRecorte(b)) throw new Error("ojos recortados");
+  return [a, b];
+}
+
+/** Los números de un camino del SVG, como pares (x, y). */
+const puntosDe = (d: string): Punto[] => {
+  const n = [...d.matchAll(/-?\d+\.?\d*/g)].map((m) => Number(m[0]));
+  return n.flatMap((_, i) => (i % 2 ? [] : [[n[i]!, n[i + 1]!] as const]));
+};
 
 /** ¿El punto cae dentro del polígono? (rayo horizontal) */
 function dentro([x, y]: Punto, poligono: readonly Punto[]): boolean {
@@ -37,24 +67,103 @@ function dentro([x, y]: Punto, poligono: readonly Punto[]): boolean {
 }
 
 describe("el catálogo de invitados", () => {
-  it("la robot de coleta va primero y es la de las fichas nuevas; las viejas quedan con el robot de siempre", () => {
-    expect(IDS_AVATAR).toEqual(["coleta", "robot"]);
+  it("va completo y en orden: Mia primero (la de las fichas nuevas), la plateada, la coleta y el robot de siempre", () => {
+    expect(IDS_AVATAR).toEqual(["mia", "plateada", "coleta", "robot"]);
     expect(AVATARES.map((a) => a.id)).toEqual([...IDS_AVATAR]);
-    expect(AVATAR_NUEVO).toBe("coleta");
+    expect(AVATAR_NUEVO).toBe("mia");
+    expect(avatarPorId("mia").nombre).toBe("Mia IA");
     expect(AVATAR_DE_LAS_VIEJAS).toBe("robot");
-    expect(avatarPorId("coleta").cara.ojos[0].pestanas?.length).toBe(2);
+    expect(avatarPorId("plateada").imagen).toBe("/podcast/robot-plateada.webp");
+    expect(dibujados(caraDe("coleta"))[0].pestanas?.length).toBe(2);
     expect(avatarPorId("robot").imagen).toBe("/podcast/robot.webp");
+    // Todos son robots de visor hoy; cada uno con su nombre y su descripción para el selector.
+    for (const a of AVATARES) {
+      expect(a.cara.modo).toBe("visor");
+      expect(a.nombre.length).toBeGreaterThan(3);
+      expect(a.descripcion.length).toBeGreaterThan(10);
+    }
+    expect(new Set(AVATARES.map((a) => a.nombre)).size).toBe(AVATARES.length);
+  });
+
+  it("Mia trae sus siete poses, cada una con SU cara: los ojos recortados de su imagen, dentro del visor", () => {
+    const mia = avatarPorId("mia");
+    const poses = posesDe(mia);
+    expect(poses.map((p) => p.id)).toEqual([...POSES]);
+    expect(new Set(poses.map((p) => p.imagen)).size).toBe(POSES.length);
+    for (const p of poses) {
+      expect(p.cara.modo).toBe("visor");
+      if (p.cara.modo !== "visor") continue;
+      const c = p.cara;
+      expect(c.visor!.length).toBeGreaterThanOrEqual(12);
+      expect(c.ojos.every(esRecorte)).toBe(true);
+      for (const o of c.ojos) {
+        if (!esRecorte(o)) continue;
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- rutas del catálogo
+        expect(statSync(path.join(raiz, "public", o.recorte)).size).toBeGreaterThan(500);
+        expect(o.x).toBeGreaterThan(0);
+        expect(o.x + o.ancho).toBeLessThan(mia.ancho);
+        expect(dentro([o.x + o.ancho / 2, o.y + o.alto / 2], c.visor!)).toBe(true);
+      }
+      // Las luces de los dos oídos, recortadas, a cada lado del visor.
+      expect(c.oidos).toHaveLength(2);
+      for (const o of c.oidos) expect(esRecorte(o)).toBe(true);
+      if (p.id === "riendo") {
+        // La mano tapa la boca: no se dibuja (queda la pintada que asoma).
+        expect(c.boca.tapada).toBe(true);
+        continue;
+      }
+      expect(c.boca.tapada).toBeFalsy();
+      expect(dentro([c.boca.x, c.boca.y + c.boca.alto * (c.boca.reposo ?? 0.85) * 0.9], c.visor!)).toBe(true);
+      // La boca chica de la pose tranquila no lleva lengua; las sonrisas abiertas, sí.
+      expect(Boolean(c.boca.lengua)).toBe(p.id !== "tranquila");
+    }
+  });
+
+  it("Mia se ve como en una cámara: la silla entera, centrada y grande en el panel", () => {
+    const caja = cajaDelEncuadre(avatarPorId("mia"));
+    expect(caja.x).toBeLessThanOrEqual(0);
+    expect(caja.x + caja.ancho).toBeGreaterThanOrEqual(1312);
+    expect(caja.y).toBeLessThanOrEqual(0);
+    expect(caja.y + caja.alto).toBeCloseTo(1199, 0);
+    expect(caja.alto).toBeLessThan(1260);
+    expect(caja.x + caja.ancho / 2).toBeCloseTo(656, 0);
+  });
+
+  it("la plateada es fiel a su imagen: ojos rasgados con su ceja y dos pestañas, y una media luna de boca", () => {
+    const c = caraDe("plateada");
+    const ojos = dibujados(c);
+    for (const o of ojos) {
+      expect(o.pestanas).toHaveLength(2);
+      expect(o.ceja).toBeDefined();
+      // Rasgado: romo donde nacen las pestañas, fino junto a la nariz.
+      expect(o.puntas).toBeGreaterThan(o.puntaFinal ?? 0);
+      expect(o.grosor).toBeGreaterThan(o.puntas ?? 0);
+    }
+    // Los dos ojos terminan junto a la nariz (hacia el centro de la cara).
+    const centro = c.boca.x;
+    expect(Math.abs(ojos[0].linea[3][0] - centro)).toBeLessThan(Math.abs(ojos[0].linea[0][0] - centro));
+    expect(Math.abs(ojos[1].linea[3][0] - centro)).toBeLessThan(Math.abs(ojos[1].linea[0][0] - centro));
+    expect(c.boca.forma).toBe("media_luna");
+    expect(c.boca.lengua).toBeUndefined();
+    // Escuchando se ve la media luna chica de la imagen (unos 8 píxeles de alto).
+    expect(c.boca.alto * (c.boca.reposo ?? 0)).toBeGreaterThan(7);
+    expect(c.boca.alto * (c.boca.reposo ?? 0)).toBeLessThan(10);
+    // Sus dos aros: el del oído de la izquierda entero y el de la derecha, que se ve de canto.
+    expect(c.oidos).toHaveLength(2);
   });
 
   it("un avatar desconocido (o vacío) cae en el robot de siempre, nunca rompe el estudio", () => {
+    expect(esAvatar("plateada")).toBe(true);
     expect(esAvatar("coleta")).toBe(true);
     expect(esAvatar("presentadora")).toBe(false);
     expect(avatarPorId("presentadora").id).toBe("robot");
     expect(avatarPorId(null).id).toBe("robot");
   });
 
-  it("cada imagen existe en public/, es un webp con transparencia y pesa poco", () => {
-    for (const a of AVATARES) {
+  it("cada imagen (y cada pose) existe en public/, es un webp con transparencia y pesa poco", () => {
+    const imagenes = AVATARES.flatMap((a) => posesDe(a).map((p) => ({ ...a, imagen: p.imagen })));
+    expect(imagenes.length).toBe(AVATARES.length + 6);
+    for (const a of imagenes) {
       // Rutas del catálogo, fijas en el código.
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       const archivo = readFileSync(path.join(raiz, "public", a.imagen));
@@ -83,6 +192,34 @@ describe("el catálogo de invitados", () => {
     }
   });
 
+  it("la plateada sale como en una cámara web: de la cabeza al pecho, sin las manos levantadas", () => {
+    const caja = cajaDelEncuadre(avatarPorId("plateada"));
+    expect(avatarPorId("plateada").encuadre.tipo).toBe("camara_web");
+    // La coronilla (y≈8) con aire arriba, el «IA» del pecho (y≈390) dentro y el pecho (y≈440) contra el borde.
+    expect(caja.y).toBeLessThan(8);
+    expect(caja.y + caja.alto).toBeGreaterThan(400);
+    expect(caja.y + caja.alto).toBeLessThanOrEqual(445);
+    // Las manos abiertas (de y≈430 para abajo, por fuera de x≈200 y x≈830) no entran; los dos aros, sí.
+    expect(caja.x).toBeGreaterThan(150);
+    expect(caja.x + caja.ancho).toBeLessThan(875);
+    expect(caja.x).toBeLessThan(380);
+    expect(caja.x + caja.ancho).toBeGreaterThan(640);
+  });
+
+  it("el encuadre de cámara web deja la coronilla con aire arriba y el pecho contra el borde de abajo, centrado", () => {
+    const sentada = {
+      encuadre: { tipo: "camara_web", centroX: 500, coronilla: 120, pecho: 900 },
+    } as const satisfies Pick<AvatarPodcast, "encuadre">;
+    const caja = cajaDelEncuadre(sentada);
+    expect(caja.ancho / caja.alto).toBeCloseTo(ASPECTO_PANEL, 6);
+    expect(caja.y + caja.alto).toBeCloseTo(900, 6);
+    expect((120 - caja.y) / caja.alto).toBeCloseTo(AIRE_CAMARA_WEB, 6);
+    expect(caja.x + caja.ancho / 2).toBeCloseTo(500, 6);
+    // Ni tan pegado que corte la cabeza, ni tanto aire que se vea chiquita.
+    expect(AIRE_CAMARA_WEB).toBeGreaterThan(0.05);
+    expect(AIRE_CAMARA_WEB).toBeLessThan(0.25);
+  });
+
   it("la robot de coleta se ve grande: de la cabeza a medio muslo, con las dos manos dentro", () => {
     const caja = cajaDelEncuadre(avatarPorId("coleta"));
     // La coleta empieza en y≈50 y el medio muslo está en y≈900; las manos abiertas van de x≈30 a x≈1006.
@@ -101,11 +238,19 @@ describe("el catálogo de invitados", () => {
     expect(caja.y + caja.alto).toBeCloseTo(1199 - 1.2 / escala, 1);
   });
 
-  it("la cara de cada avatar cae dentro de su imagen, y la de la coleta dentro de su visor", () => {
+  it("la cara de cada avatar cae dentro de su imagen, y la de la coleta y la plateada dentro de su visor", () => {
     for (const a of AVATARES) {
+      if (!conVisor(a)) continue;
       const { ojos, boca } = a.cara;
       const puntos: Punto[] = [
-        ...ojos.flatMap((o) => [...o.linea, ...(o.pestanas ?? []).flat()]),
+        ...ojos.flatMap((o): Punto[] =>
+          esRecorte(o)
+            ? [
+                [o.x, o.y],
+                [o.x + o.ancho, o.y + o.alto],
+              ]
+            : [...o.linea, ...(o.ceja?.linea ?? []), ...(o.pestanas ?? []).flat()],
+        ),
         [boca.x, boca.y],
       ];
       for (const [x, y] of puntos) {
@@ -115,16 +260,22 @@ describe("el catálogo de invitados", () => {
         expect(y).toBeLessThan(a.alto);
       }
     }
-    const coleta = avatarPorId("coleta").cara;
-    expect(coleta.visor).toBeDefined();
-    for (const o of coleta.ojos) {
-      for (let t = 0; t <= 1; t += 0.1) expect(dentro(puntoDeCurva(o.linea, t), coleta.visor!)).toBe(true);
-      for (const p of o.pestanas ?? []) expect(dentro(p[3], coleta.visor!)).toBe(true);
+    for (const id of ["coleta", "plateada"]) {
+      const c = caraDe(id);
+      expect(c.visor).toBeDefined();
+      for (const o of dibujados(c)) {
+        for (let t = 0; t <= 1; t += 0.1) {
+          expect(dentro(puntoDeCurva(o.linea, t), c.visor!)).toBe(true);
+          if (o.ceja) expect(dentro(puntoDeCurva(o.ceja.linea, t), c.visor!)).toBe(true);
+        }
+        for (const p of o.pestanas ?? []) expect(dentro(p[3], c.visor!)).toBe(true);
+      }
+      // La boca abierta del todo (hablando) tampoco se sale del vidrio.
+      expect(dentro([c.boca.x, c.boca.y + c.boca.alto * 1.05], c.visor!)).toBe(true);
+      // Las dos traen el visor ya limpio (scripts/podcast-avatar.ts): no hace falta taparles nada.
+      expect(c.tapas).toBeUndefined();
     }
-    expect(dentro([coleta.boca.x, coleta.boca.y + coleta.boca.alto], coleta.visor!)).toBe(true);
-    // La coleta trae el visor ya limpio (scripts/podcast-avatar.ts): no hace falta taparle nada.
-    expect(coleta.tapas).toBeUndefined();
-    expect(avatarPorId("robot").cara.tapas?.elipses.length).toBe(2);
+    expect(caraDe("robot").tapas?.elipses.length).toBe(2);
   });
 });
 
@@ -147,6 +298,38 @@ describe("la geometría de la cara viva", () => {
     // El grosor sube del extremo (10) al centro (20): la figura mide ~20 de alto en el medio.
     const ys = numeros.filter((_, i) => i % 2 === 1);
     expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(40);
+  });
+
+  it("el ojo rasgado tiene cada punta de su grosor y lo más grueso donde se le dice", () => {
+    const linea = curvaQ([0, 0], [50, 0], [100, 0]);
+    // Una línea recta: el alto de la figura en cada x es el grosor del trazo ahí.
+    const altoEn = (d: string, x: number) => {
+      const ys = puntosDe(d)
+        .filter(([px]) => Math.abs(px - x) < 2.5)
+        .map(([, y]) => y);
+      return Math.max(...ys) - Math.min(...ys);
+    };
+    const parejo = trazoAfinado(linea, 12, 6);
+    const rasgado = trazoAfinado(linea, 12, 6, 1);
+    expect(altoEn(rasgado, 97)).toBeLessThan(altoEn(parejo, 97));
+    expect(altoEn(rasgado, 3)).toBeCloseTo(altoEn(parejo, 3), 0);
+    // Sin decir dónde, lo más grueso es el medio; con vientre 0,3, antes del medio.
+    const adelante = trazoAfinado(linea, 12, 2, 2, 0.3);
+    expect(altoEn(adelante, 30)).toBeGreaterThan(altoEn(adelante, 70));
+    expect(trazoAfinado(linea, 12, 6, 6, 0.5)).toBe(parejo);
+  });
+
+  it("la media luna se abre con la voz, nunca se da vuelta y tiene las puntas finas", () => {
+    const quieta = caminoDeMediaLuna(36, 8.6, 0.17);
+    const abierta = caminoDeMediaLuna(36, 19, 0.17);
+    expect(quieta.endsWith("Z")).toBe(true);
+    const fondo = (d: string) => Math.max(...puntosDe(d).map(([, y]) => y));
+    expect(fondo(abierta)).toBeGreaterThan(fondo(quieta));
+    expect(caminoDeMediaLuna(36, -5)).toBe(caminoDeMediaLuna(36, 0));
+    // Las puntas: el borde de abajo sale de cada punta inclinado, no en vertical como la D de la coleta.
+    const salida = (d: string) => puntosDe(d.slice(d.indexOf("C")))[0]!;
+    expect(Math.abs(salida(quieta)[0])).toBeLessThan(18 * 0.6);
+    expect(Math.abs(salida(caminoDeSonrisa(36, 8.6))[0])).toBeGreaterThan(18 * 0.9);
   });
 
   it("la sonrisa se abre con la voz y nunca se da vuelta", () => {

@@ -33,6 +33,7 @@ import {
   fichaPorId,
   fichasActivas,
   guardarFicha,
+  ponerAvatarALaFicha,
   segundosUsadosHoy,
 } from "@/lib/podcast";
 import { PresupuestoAgotado } from "@/lib/presupuesto";
@@ -500,6 +501,40 @@ describe("el avatar y el origen de la ficha (columnas nuevas en una base que ya 
       [id],
     );
     expect(await fichaPorId(db, id)).toMatchObject({ avatar: "robot", origen: "ficcion", tipo: "historia" });
+  });
+
+  it("la ficha de «Mia IA» queda con Mia y solo cambia el avatar (ni la voz ni nada más)", async () => {
+    const db = baseEnMemoria();
+    const mia = {
+      nombre: "Mia IA",
+      etiqueta: "Invitada especial",
+      tema: "Pregúntale a la IA: los grandes misterios",
+      personalidad: "Curiosa y cálida.",
+      voz: "femenina" as const,
+      avatar: "coleta" as const,
+      origen: "ficcion" as const,
+      tipo: "entrevista_ia" as const,
+      historia: "",
+      primer_mensaje: "",
+      permiso: false,
+    };
+    const id = await guardarFicha(db, null, mia);
+    const otra = await guardarFicha(db, null, {
+      ...mia,
+      nombre: "Otra",
+      tipo: "historia",
+      historia: "Una historia.",
+    });
+    const antes = await fichaPorId(db, id);
+    expect(await ponerAvatarALaFicha(db, "Mia IA", "mia")).toEqual({ id, antes: "coleta" });
+    expect(await fichaPorId(db, id)).toEqual({ ...antes, avatar: "mia" });
+    expect((await fichaPorId(db, otra))?.avatar).toBe("coleta");
+    // Sin escribir nada: un avatar que no está en el catálogo, un nombre que no existe o uno repetido.
+    await expect(ponerAvatarALaFicha(db, "Mia IA", "rubia")).rejects.toThrow(/catálogo/);
+    await expect(ponerAvatarALaFicha(db, "Nadie", "mia")).rejects.toThrow(/ninguna ficha/);
+    await guardarFicha(db, null, { ...mia, avatar: "robot" });
+    await expect(ponerAvatarALaFicha(db, "Mia IA", "robot")).rejects.toThrow(/2 fichas/);
+    expect((await fichaPorId(db, id))?.avatar).toBe("mia");
   });
 
   it("schema.sql corre sin romperse sobre una base vieja (sin las columnas nuevas) que todavía no se migró", async () => {

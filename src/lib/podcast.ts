@@ -173,6 +173,35 @@ export async function guardarFicha(db: BaseDatos, id: number | null, d: DatosFic
   return r.ultimoId;
 }
 
+/**
+ * Cambia SOLO el avatar de una ficha, buscándola por su nombre exacto entre las que no están archivadas. Lo
+ * usa scripts/podcast-poner-avatar.ts para dejar una ficha en vivo con un avatar nuevo sin tocar su voz, su
+ * historia ni nada más (7 nov 2026: «Mia IA» con Mia, sentada en su silla). Falla, sin escribir nada, si el avatar no
+ * está en el catálogo o si no hay exactamente una ficha con ese nombre. Devuelve la ficha y el avatar de antes.
+ */
+export async function ponerAvatarALaFicha(
+  db: BaseDatos,
+  nombre: string,
+  avatar: string,
+): Promise<{ id: number; antes: string }> {
+  if (!esAvatar(avatar)) throw new Error(`«${avatar}» no está en el catálogo de avatares.`);
+  const filas = await conColumnasNuevas(db, () =>
+    db.todos<{ id: number; avatar: string }>(
+      "SELECT id, avatar FROM podcast_fichas WHERE nombre = ? AND archivada = 0",
+      [nombre],
+    ),
+  );
+  const [ficha] = filas;
+  if (!ficha || filas.length > 1)
+    throw new Error(
+      filas.length
+        ? `Hay ${filas.length} fichas que se llaman «${nombre}»: no se sabe cuál cambiar.`
+        : `No hay ninguna ficha activa que se llame «${nombre}».`,
+    );
+  await db.ejecutar("UPDATE podcast_fichas SET avatar = ? WHERE id = ?", [avatar, ficha.id]);
+  return { id: ficha.id, antes: ficha.avatar };
+}
+
 /** Archivar, nunca borrar: la ficha sale de las listas y del estudio, pero la historia queda guardada. */
 export async function archivarFicha(db: BaseDatos, id: number): Promise<void> {
   await db.ejecutar(

@@ -8,8 +8,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 import { Escenario } from "@/app/podcast/Escenario";
-import { Estudio } from "@/app/podcast/Estudio";
-import { caminoDeOnda } from "@/app/podcast/RobotInvitado";
+import { Estudio, PISTA_GRABAR } from "@/app/podcast/Estudio";
+import { RobotInvitado, caminoDeOnda } from "@/app/podcast/RobotInvitado";
+import { AVATARES, avatarPorId, type AvatarPodcast } from "@compartido/podcast-avatares";
 import { FormularioFicha } from "@/app/podcast/fichas/FormularioFicha";
 import { leerBorrador } from "@/componentes/useBorrador";
 import { LEYENDAS, LEYENDA_ENTREVISTA_IA } from "@compartido/podcast";
@@ -84,6 +85,50 @@ describe("el escenario del estudio", () => {
     expect(escenario).not.toHaveTextContent(/ficción/i);
   });
 
+  it("dibuja a Mia con sus siete poses, cada una con su cara; empieza tranquila y riéndose no tiene boca", () => {
+    const { container } = render(
+      <Escenario invitado={{ ...invitado, avatar: "mia" }} estado="escuchando" camara={false} />,
+    );
+    const mia = screen.getByRole("img", { name: /El invitado/ });
+    expect(mia).toHaveAttribute("data-avatar", "mia");
+    expect(mia).toHaveAttribute("data-pose", "tranquila");
+    const poses = [...container.querySelectorAll<SVGGElement>("g[data-pose]")];
+    expect(poses.map((g) => g.getAttribute("data-pose"))).toEqual([
+      "tranquila",
+      "hablando",
+      "pensando",
+      "notas",
+      "riendo",
+      "aplaudiendo",
+      "idea",
+    ]);
+    // Solo se ve una pose a la vez: la primera.
+    expect(poses.map((g) => g.style.visibility)).toEqual(["visible", ...Array(6).fill("hidden")]);
+    for (const g of poses) {
+      expect(g.querySelector("image")?.getAttribute("href")).toMatch(/^\/podcast\/mia-.+\.webp$/);
+      // Los ojos son los de la imagen, recortados, y las luces de los oídos laten encima.
+      expect(g.querySelectorAll("[data-recorte]")).toHaveLength(2);
+      expect(g.querySelectorAll("[data-luz]")).toHaveLength(2);
+      expect(g.querySelector("[data-boca]") === null).toBe(g.getAttribute("data-pose") === "riendo");
+    }
+  });
+
+  it("dibuja a la robot plateada con su cara viva: ojos con ceja y pestañas y la media luna de boca", () => {
+    const { container } = render(
+      <Escenario invitado={{ ...invitado, avatar: "plateada" }} estado="hablando" camara={false} />,
+    );
+    const robot = screen.getByRole("img", { name: /El invitado/ });
+    expect(robot).toHaveAttribute("data-avatar", "plateada");
+    expect(robot).toHaveAttribute("data-cara", "visor");
+    expect(container.querySelector("image")).toHaveAttribute("href", "/podcast/robot-plateada.webp");
+    expect(container.querySelectorAll("[data-pestana]")).toHaveLength(4);
+    // La boca es una media luna de luz llena (sin lengua) y sus dos aros laten.
+    expect(container.querySelector("[data-boca]")).toHaveAttribute("data-boca", "media_luna");
+    expect(container.querySelector("[data-boca]")).toHaveAttribute("fill", "#f4fbff");
+    expect(container.querySelectorAll("[data-luz]")).toHaveLength(2);
+    expect(container.querySelector("clipPath")).not.toBeNull();
+  });
+
   it("dibuja al invitado de la ficha: la robot de coleta o el robot clásico, cada uno con su imagen", () => {
     const { container, rerender } = render(
       <Escenario invitado={{ ...invitado, avatar: "coleta" }} estado="hablando" camara={false} />,
@@ -109,6 +154,70 @@ describe("el escenario del estudio", () => {
   });
 });
 
+describe("una persona en el estudio (modo sin visor)", () => {
+  // Una presentadora de prueba con la imagen de un robot: lo que importa es lo que el estudio le dibuja.
+  const presentadora: AvatarPodcast = {
+    id: "robot",
+    nombre: "Presentadora de prueba",
+    descripcion: "Audífonos de luz roja. La boca no se mueve.",
+    imagen: "/podcast/robot.webp",
+    ancho: 1312,
+    alto: 1199,
+    encuadre: { tipo: "camara_web", centroX: 656, coronilla: 40, pecho: 900 },
+    pivote: [656, 1000],
+    miniatura: { x: 300, y: 30, lado: 860 },
+    cara: {
+      modo: "sin_visor",
+      luz: "#ff3344",
+      desenfoque: 8,
+      oidos: [
+        { d: "M100 200 L140 260", grosor: 6 },
+        { d: "M900 200 L940 260", grosor: 6 },
+      ],
+      resplandor: { cx: 656, cy: 400, rx: 400, ry: 500, giro: 0 },
+    },
+  };
+
+  it("no lleva boca ni ojos dibujados: laten las luces de sus audífonos, en su color, y la acompaña un resplandor", () => {
+    const { container } = render(<RobotInvitado estado="hablando" avatar={presentadora} />);
+    const svg = screen.getByRole("img", { name: /El invitado/ });
+    expect(svg).toHaveAttribute("data-cara", "sin_visor");
+    expect(container.querySelector("[data-boca]")).toBeNull();
+    expect(container.querySelectorAll("[data-pestana]")).toHaveLength(0);
+    expect(container.querySelector("clipPath")).toBeNull();
+    const luces = container.querySelectorAll("[data-luz]");
+    expect(luces).toHaveLength(2);
+    for (const l of luces) expect(l).toHaveAttribute("stroke", "#ff3344");
+    // El resplandor va detrás de la imagen, de su color, y arranca apagado (lo enciende la voz).
+    const resplandor = container.querySelector("[data-resplandor]");
+    expect(resplandor).not.toBeNull();
+    expect(resplandor!.compareDocumentPosition(container.querySelector("image")!)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(resplandor).toHaveAttribute("opacity", "0");
+    expect(container.querySelector("stop")).toHaveAttribute("stop-color", "#ff3344");
+    // El brillo de la silueta es de su color, no el cian de las robots.
+    expect(svg.getAttribute("style")).toContain("#ff3344");
+  });
+
+  it("se encuadra como una cámara web y las robots no cambian", () => {
+    render(<RobotInvitado estado="escuchando" avatar={presentadora} />);
+    const [x, y, ancho, alto] = screen
+      .getByRole("img", { name: /El invitado/ })
+      .getAttribute("viewBox")!
+      .split(" ")
+      .map(Number);
+    expect(y! + alto!).toBeCloseTo(900, 0);
+    expect(x! + ancho! / 2).toBeCloseTo(656, 0);
+    for (const a of AVATARES) {
+      const { unmount, container } = render(<RobotInvitado estado="escuchando" avatar={avatarPorId(a.id)} />);
+      expect(container.querySelector("svg")).toHaveAttribute("data-cara", "visor");
+      expect(container.querySelector("[data-boca]")).not.toBeNull();
+      unmount();
+    }
+  });
+});
+
 describe("el estudio sin la clave de ElevenLabs", () => {
   it("carga, muestra al invitado y la leyenda, y dice con claridad lo que falta", () => {
     render(
@@ -125,6 +234,23 @@ describe("el estudio sin la clave de ElevenLabs", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Falta conectar la voz del invitado.");
     expect(screen.getByRole("button", { name: "Empezar la conversación" })).toBeDisabled();
     expect(screen.getByRole("switch", { name: "Mi cámara" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("dice al lado del botón que el estudio no graba: se graba con el grabador de pantalla", () => {
+    render(
+      <Estudio
+        fichas={[{ ...invitado, id: 1, falta: null }]}
+        conectado
+        minutosHoy={0}
+        topeMinutos={60}
+        errorConexion={null}
+      />,
+    );
+    expect(PISTA_GRABAR).toBe("Para grabar, usa tu grabador de pantalla (Pantalay)");
+    const controles = screen.getByRole("toolbar", { name: "Controles del estudio" });
+    expect(controles).toHaveTextContent(PISTA_GRABAR);
+    // Ningún botón del estudio promete grabar.
+    expect(screen.queryByRole("button", { name: /grabar/i })).toBeNull();
   });
 
   it("una historia real sin permiso tampoco deja empezar, y dice por qué", () => {
@@ -149,11 +275,25 @@ describe("el estudio sin la clave de ElevenLabs", () => {
 });
 
 describe("el avatar de la ficha", () => {
-  it("una ficha nueva empieza con la robot de coleta y de ficción, y lo elegido se guarda en el borrador", async () => {
+  it("el selector muestra todo el catálogo en orden, cada uno con su miniatura", () => {
+    render(<FormularioFicha ficha={null} guardar={vi.fn()} />);
+    const opciones = screen.getAllByRole("radio").filter((r) => r.getAttribute("name") === "avatar");
+    expect(opciones.map((r) => r.getAttribute("value"))).toEqual(AVATARES.map((a) => a.id));
+    expect(opciones.map((r) => r.getAttribute("aria-label"))).toEqual([
+      "Mia IA",
+      "Robot plateada",
+      "Robot de coleta",
+      "Robot clásico",
+    ]);
+    for (const a of AVATARES)
+      expect(screen.getByRole("img", { name: a.nombre })).toHaveAttribute("src", a.imagen);
+  });
+
+  it("una ficha nueva empieza con Mia y de ficción, y lo elegido se guarda en el borrador", async () => {
     const usuario = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const guardar = vi.fn();
     const { unmount } = render(<FormularioFicha ficha={null} guardar={guardar} />);
-    expect(screen.getByRole("radio", { name: /Robot de coleta/ })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /Mia IA/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /De ficción/ })).toBeChecked();
     await usuario.click(screen.getByRole("radio", { name: /Real, con permiso/ }));
     // Cada opción lleva su miniatura.
@@ -168,7 +308,7 @@ describe("el avatar de la ficha", () => {
     render(<FormularioFicha ficha={null} guardar={guardar} />);
     expect(screen.getByRole("radio", { name: /Robot clásico/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Real, con permiso/ })).toBeChecked();
-    expect(screen.getByRole("radio", { name: /Robot de coleta/ })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: /Mia IA/ })).not.toBeChecked();
   });
 
   it("una ficha que ya existe muestra el avatar que tiene", () => {

@@ -1,28 +1,57 @@
 "use client";
 
-// El invitado del Podcast IA: la imagen de su avatar (compartido/podcast-avatares.ts) con la cara viva encima,
-// dibujada DENTRO del visor en las coordenadas de esa imagen y con el color de sus luces. Parpadea en reposo,
-// la boca se mueve con SU voz (la onda del robot clásico sigue las frecuencias; la sonrisa de la coleta se abre
-// con el volumen), los aros de los oídos laten cuando habla y el cuerpo respira mientras escucha. Todo se
-// mueve tocando atributos del SVG en cada cuadro (sin volver a pintar React 60 veces por segundo). Un avatar
-// nuevo de visor entra con una entrada del catálogo, sin tocar este archivo.
-import { useEffect, useId, useRef } from "react";
+// El invitado del Podcast IA: la imagen de su avatar (compartido/podcast-avatares.ts) viva en el panel.
+// - Una robot (modo «visor»): la cara viva encima, dentro del visor y en las coordenadas de esa imagen. Los ojos
+//   parpadean (dibujados con su geometría o recortados de la propia imagen, como los de Mia), la boca se mueve
+//   con SU voz (la onda del robot clásico sigue las frecuencias; la sonrisa y la media luna se abren con el
+//   volumen) y las luces de los oídos laten cuando habla.
+// - Una persona (modo «sin_visor»): sin boca dibujada (se vería falso). Las luces de sus audífonos laten con la
+//   voz y un resplandor de su color la acompaña cuando habla.
+// - Un avatar con poses (Mia): cada pose es su imagen con su cara; el motor de poses (podcast-poses.ts) elige
+//   cuál se ve y el cambio es un fundido de 300 ms, con la cara viva siempre encima de la pose que se ve.
+// Todos respiran y se mecen; riéndose tiembla un poco y aplaudiendo da saltitos. Todo se mueve tocando
+// atributos del SVG en cada cuadro (sin volver a pintar React 60 veces por segundo). Un avatar nuevo entra con
+// una entrada del catálogo, sin tocar este archivo.
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import {
   AVATAR_NUEVO,
   avatarPorId,
   cajaDelEncuadre,
   caminoCerrado,
   caminoDeCurva,
+  caminoDeMediaLuna,
   caminoDeSonrisa,
+  esRecorte,
+  posesDe,
   trazoAfinado,
   type AvatarPodcast,
-  type OjoAvatar,
+  type BocaAvatar,
+  type CaraConVisor,
+  type CaraSinVisor,
+  type Ojo,
+  type OidoAvatar,
+  type TrazoAfinado,
 } from "@compartido/podcast-avatares";
+import {
+  FUNDIDO_MS,
+  memoriaInicial,
+  siguientePose,
+  type EstadoDelInvitado,
+  type Gesto,
+  type PoseId,
+} from "@compartido/podcast-poses";
 
-export type EstadoInvitado = "reposo" | "conectando" | "escuchando" | "pensando" | "hablando";
+export type EstadoInvitado = EstadoDelInvitado;
 
-/** De dónde sale el sonido del invitado: el volumen (0 a 1) y, si hay, las frecuencias de su voz. */
-export type AudioInvitado = { volumen: () => number; frecuencias: () => Uint8Array | null };
+/**
+ * De dónde sale el sonido del invitado: el volumen (0 a 1), las frecuencias de su voz si hay, y los gestos que
+ * salen de lo que dice (la risa, el aplauso, la idea, las notas), para el motor de poses.
+ */
+export type AudioInvitado = {
+  volumen: () => number;
+  frecuencias: () => Uint8Array | null;
+  gestos?: () => readonly Gesto[];
+};
 
 const PUNTOS = 11;
 const sonrisaDeOnda = "M-40 -4 Q0 16 40 -4";
@@ -51,6 +80,12 @@ export function caminoDeOnda(alturas: number[], ancho = 150): string {
 /** Cuánto se abre la sonrisa (en partes de lo más que se abre) mientras escucha: como en la imagen. */
 const APERTURA_EN_REPOSO = 0.85;
 const APERTURA_CERRADA = 0.18;
+/** La media luna llena se aclara al abrirse: abierta del todo, su relleno queda en esta luz (el borde, entero). */
+const RELLENO_ABIERTA = 0.45;
+
+/** La boca que se abre con el volumen (la sonrisa y la media luna), en su abertura `alto`. */
+const caminoDeBoca = (b: BocaAvatar, ancho: number, alto: number) =>
+  b.forma === "media_luna" ? caminoDeMediaLuna(ancho, alto, b.curva) : caminoDeSonrisa(ancho, alto, b.curva);
 
 /** Qué tan fuerte suena la voz donde vive (las bandas graves y medias), de 0 a 1. */
 function nivelDeVoz(f: Uint8Array | null, volumen: number): number {
@@ -61,208 +96,105 @@ function nivelDeVoz(f: Uint8Array | null, volumen: number): number {
   return Math.min(1, (suma / (hasta - 2) / 255) * 1.35);
 }
 
-function Ojo({ ojo, color, extra }: { ojo: OjoAvatar; color: string; extra: number }) {
-  // Afinado: una figura cerrada (con borde para el resplandor). Parejo: un trazo de puntas redondas.
-  if (ojo.puntas !== undefined)
-    return (
-      <path
-        d={trazoAfinado(ojo.linea, ojo.grosor, ojo.puntas)}
-        fill={color}
-        stroke={extra > 0 ? color : "none"}
-        strokeWidth={extra}
-        strokeLinejoin="round"
-      />
-    );
+/** Un trazo afinado: una figura cerrada (con borde para el resplandor). */
+function Afinado({ t, color, extra }: { t: TrazoAfinado; color: string; extra: number }) {
   return (
     <path
-      d={caminoDeCurva(ojo.linea)}
-      fill="none"
-      stroke={color}
-      strokeWidth={ojo.grosor + extra}
-      strokeLinecap="round"
+      d={trazoAfinado(t.linea, t.grosor, t.puntas, t.puntaFinal ?? t.puntas, t.vientre)}
+      fill={color}
+      stroke={extra > 0 ? color : "none"}
+      strokeWidth={extra}
+      strokeLinejoin="round"
     />
   );
 }
 
-export function RobotInvitado({
-  estado,
-  audio,
-  avatar = avatarPorId(AVATAR_NUEVO),
-  className,
-}: {
-  estado: EstadoInvitado;
-  audio?: AudioInvitado | null;
-  avatar?: AvatarPodcast;
-  className?: string;
-}) {
-  const id = useId().replaceAll(":", "");
-  const cuerpo = useRef<SVGGElement>(null);
-  const boca = useRef<SVGPathElement>(null);
-  const bocaBrillo = useRef<SVGPathElement>(null);
-  const bocaRecorte = useRef<SVGPathElement>(null);
-  const lengua = useRef<SVGEllipseElement>(null);
-  const oidos = useRef<(SVGPathElement | null)[]>([]);
-  const ojos = useRef<SVGGElement>(null);
-  const cara = useRef<SVGGElement>(null);
-  const estadoRef = useRef(estado);
-  const audioRef = useRef(audio);
-  const avatarRef = useRef(avatar);
-
-  useEffect(() => {
-    estadoRef.current = estado;
-    audioRef.current = audio;
-    avatarRef.current = avatar;
-  }, [estado, audio, avatar]);
-
-  // El cuadro a cuadro: respiración, la boca, el latido de los oídos.
-  useEffect(() => {
-    let vivo = true;
-    let marco = 0;
-    let volumenSuave = 0;
-    let vozSuave = 0;
-    let apertura = APERTURA_EN_REPOSO;
-    const bandas = new Array<number>(PUNTOS).fill(0);
-    const pintar = () => {
-      if (!vivo) return;
-      const t = performance.now() / 1000;
-      const e = estadoRef.current;
-      const fuente = audioRef.current;
-      const a = avatarRef.current;
-      const b = a.cara.boca;
-      const crudo = e === "hablando" && fuente ? Math.min(1, Math.max(0, fuente.volumen() * 1.6)) : 0;
-      // Sube rápido y baja despacio, como un vúmetro: la boca no tiembla.
-      volumenSuave += (crudo - volumenSuave) * (crudo > volumenSuave ? 0.55 : 0.18);
-
-      const respira = e === "hablando" ? 2 : 5;
-      const dy = Math.sin(t * 1.5) * respira;
-      const escala = 1 + Math.sin(t * 1.5) * 0.004;
-      const giro = e === "hablando" ? Math.sin(t * 6.3) * 0.7 * volumenSuave : Math.sin(t * 0.7) * 0.25;
-      const [px, py] = a.pivote;
-      cuerpo.current?.setAttribute(
-        "transform",
-        `translate(${px} ${py}) rotate(${giro.toFixed(3)}) scale(${escala.toFixed(4)}) translate(${-px} ${-py + dy})`,
-      );
-
-      if (b.forma === "onda") {
-        if (e === "hablando") {
-          const f = fuente?.frecuencias() ?? null;
-          for (let i = 0; i < PUNTOS; i++) {
-            const envolvente = Math.sin((Math.PI * i) / (PUNTOS - 1));
-            let nivel: number;
-            if (f && f.length > 8) {
-              // Las bandas graves y medias, donde vive la voz.
-              const desde = 2 + Math.floor((i * Math.min(f.length - 2, 48)) / PUNTOS);
-              nivel = (f[desde] ?? 0) / 255;
-            } else {
-              nivel = volumenSuave * (0.6 + 0.4 * Math.sin(t * 17 + i * 1.3));
-            }
-            const meta = (8 + Math.min(1, nivel * 1.7) * b.alto * (0.6 + volumenSuave)) * envolvente;
-            bandas[i] = bandas[i]! + (meta - bandas[i]!) * 0.5;
-          }
-          const d = caminoDeOnda(bandas, b.ancho);
-          boca.current?.setAttribute("d", d);
-          bocaBrillo.current?.setAttribute("d", d);
-          boca.current?.setAttribute("fill", a.cara.nucleo);
-        } else {
-          for (let i = 0; i < PUNTOS; i++) bandas[i] = 0;
-          boca.current?.setAttribute("d", sonrisaDeOnda);
-          bocaBrillo.current?.setAttribute("d", sonrisaDeOnda);
-          boca.current?.setAttribute("fill", "none");
-        }
-      } else {
-        // La sonrisa: abierta y feliz mientras escucha (como en la imagen); hablando se abre y se cierra con
-        // las sílabas de su voz.
-        const voz = e === "hablando" && fuente ? nivelDeVoz(fuente.frecuencias(), crudo) : 0;
-        vozSuave += (voz - vozSuave) * (voz > vozSuave ? 0.6 : 0.25);
-        const meta =
-          e === "hablando"
-            ? APERTURA_CERRADA + (1.05 - APERTURA_CERRADA) * vozSuave
-            : e === "pensando"
-              ? APERTURA_CERRADA
-              : APERTURA_EN_REPOSO;
-        apertura += (meta - apertura) * 0.55;
-        const ancho = b.ancho * (1 - 0.1 * Math.max(0, apertura - APERTURA_EN_REPOSO));
-        const alto = b.alto * apertura;
-        const d = caminoDeSonrisa(ancho, alto);
-        boca.current?.setAttribute("d", d);
-        bocaBrillo.current?.setAttribute("d", d);
-        bocaRecorte.current?.setAttribute("d", d);
-        if (lengua.current) {
-          lengua.current.setAttribute("cy", (alto * 0.84).toFixed(1));
-          lengua.current.setAttribute("rx", (ancho * 0.31).toFixed(1));
-          lengua.current.setAttribute("ry", (alto * 0.46).toFixed(1));
-          lengua.current.setAttribute("opacity", Math.min(1, Math.max(0, (alto - 12) / 12)).toFixed(2));
-        }
-      }
-
-      const latido =
-        e === "hablando" ? 0.25 + volumenSuave * 0.75 : e === "pensando" ? 0.3 + 0.2 * Math.sin(t * 5) : 0.12;
-      a.cara.oidos.forEach((o, i) => {
-        const el = oidos.current[i];
-        el?.setAttribute("opacity", latido.toFixed(3));
-        el?.setAttribute("stroke-width", (o.grosor * (1 + volumenSuave * 1.25)).toFixed(1));
-      });
-      cara.current?.setAttribute(
-        "opacity",
-        e === "conectando" ? (0.55 + 0.4 * Math.sin(t * 4)).toFixed(3) : "1",
-      );
-      marco = requestAnimationFrame(pintar);
-    };
-    marco = requestAnimationFrame(pintar);
-    return () => {
-      vivo = false;
-      cancelAnimationFrame(marco);
-    };
-  }, []);
-
-  // El parpadeo: cada 2,5 a 6 segundos, 150 milisegundos con los ojos cerrados.
-  useEffect(() => {
-    let reloj: ReturnType<typeof setTimeout>;
-    const siguiente = () => {
-      reloj = setTimeout(
-        () => {
-          ojos.current?.classList.add("pod-parpadeo");
-          setTimeout(() => ojos.current?.classList.remove("pod-parpadeo"), 150);
-          siguiente();
-        },
-        2500 + Math.random() * 3500,
-      );
-    };
-    siguiente();
-    return () => clearTimeout(reloj);
-  }, []);
-
-  const { cara: c } = avatar;
-  const b = c.boca;
-  const caja = cajaDelEncuadre(avatar);
-  const pensando = estado === "pensando";
-  const grosorPestana = c.grosorPestana ?? 6;
-  const pestanas = (extra: number, color: string, marcar: boolean) =>
-    c.ojos.map((o, i) =>
-      (o.pestanas ?? []).map((p, j) => (
+/** Un ojo dibujado (afinado o parejo, con su ceja) o recortado de la imagen (ya trae su resplandor). */
+function OjoVivo({ ojo, color, extra }: { ojo: Ojo; color: string; extra: number }) {
+  if (esRecorte(ojo))
+    return extra > 0 ? null : (
+      <image href={ojo.recorte} x={ojo.x} y={ojo.y} width={ojo.ancho} height={ojo.alto} data-recorte="" />
+    );
+  const { puntas } = ojo;
+  return (
+    <>
+      {puntas !== undefined ? (
+        <Afinado t={{ ...ojo, puntas }} color={color} extra={extra} />
+      ) : (
         <path
-          key={`${i}-${j}`}
-          d={caminoDeCurva(p)}
+          d={caminoDeCurva(ojo.linea)}
           fill="none"
           stroke={color}
-          strokeWidth={grosorPestana + extra}
+          strokeWidth={ojo.grosor + extra}
           strokeLinecap="round"
-          data-pestana={marcar ? "" : undefined}
         />
-      )),
-    );
-  const sonrisa = b.forma === "sonrisa";
-  const bocaInicial = sonrisa ? caminoDeSonrisa(b.ancho, b.alto * APERTURA_EN_REPOSO) : sonrisaDeOnda;
+      )}
+      {ojo.ceja && <Afinado t={ojo.ceja} color={color} extra={extra} />}
+    </>
+  );
+}
+
+/** Las luces que laten con la voz: un trazo difuminado o un recorte de la imagen, encima, en modo pantalla. */
+function Luces({ oidos, luz, filtro }: { oidos: readonly OidoAvatar[]; luz: string; filtro: string }) {
+  return oidos.map((o, i) =>
+    esRecorte(o) ? (
+      <image
+        key={i}
+        href={o.recorte}
+        x={o.x}
+        y={o.y}
+        width={o.ancho}
+        height={o.alto}
+        opacity="0.12"
+        filter={`url(#${filtro})`}
+        style={{ mixBlendMode: "screen" }}
+        data-luz=""
+      />
+    ) : (
+      <path
+        key={i}
+        d={o.d}
+        fill="none"
+        stroke={luz}
+        strokeWidth={o.grosor}
+        strokeLinecap="round"
+        opacity="0.12"
+        filter={`url(#${filtro})`}
+        style={{ mixBlendMode: "screen" }}
+        data-luz=""
+        data-grosor={o.grosor}
+      />
+    ),
+  );
+}
+
+/** La cara viva de una robot en una pose: los ojos, la boca y las luces, dentro de su visor. */
+function CaraViva({ c, id, pensando }: { c: CaraConVisor; id: string; pensando: boolean }) {
+  const b = c.boca;
+  const grosorPestana = c.grosorPestana ?? 6;
+  const pestanas = (o: Ojo, extra: number, color: string, marcar: boolean) =>
+    esRecorte(o)
+      ? null
+      : (o.pestanas ?? []).map((p, j) => (
+          <path
+            key={j}
+            d={caminoDeCurva(p)}
+            fill="none"
+            stroke={color}
+            strokeWidth={grosorPestana + extra}
+            strokeLinecap="round"
+            data-pestana={marcar ? "" : undefined}
+          />
+        ));
+  const sonrisa = b.forma !== "onda";
+  const llena = b.llena === true;
+  const bocaInicial = sonrisa
+    ? caminoDeBoca(b, b.ancho, b.alto * (b.reposo ?? APERTURA_EN_REPOSO))
+    : sonrisaDeOnda;
+  const dibujados = c.ojos.some((o) => !esRecorte(o));
 
   return (
-    <svg
-      viewBox={`${caja.x.toFixed(1)} ${caja.y.toFixed(1)} ${caja.ancho.toFixed(1)} ${caja.alto.toFixed(1)}`}
-      className={className}
-      role="img"
-      aria-label={`El invitado (${estado})`}
-      data-estado={estado}
-      data-avatar={avatar.id}
-    >
+    <>
       <defs>
         <filter id={`${id}-halo`} x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation={c.desenfoque} />
@@ -293,92 +225,87 @@ export function RobotInvitado({
         )}
         {sonrisa && (
           <clipPath id={`${id}-boca`}>
-            <path ref={bocaRecorte} d={bocaInicial} />
+            <path d={bocaInicial} data-parte="recorte" />
           </clipPath>
         )}
       </defs>
-      <style>{`
-        .pod-parpadeo .pod-ojo { transform: scaleY(0.08); }
-        .pod-ojo { transform-box: fill-box; transform-origin: 50% 70%; transition: transform 70ms ease-in-out; }
-        .pod-mirada { transition: transform 450ms ease; }
-        @keyframes pod-pensar { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
-        .pod-punto { animation: pod-pensar 1.1s ease-in-out infinite; }
-      `}</style>
-      <g ref={cuerpo}>
-        <image href={avatar.imagen} width={avatar.ancho} height={avatar.alto} />
-        {/* Si la imagen trae la cara pintada, se apaga con el negro del visor y la cara la dibuja el estudio. */}
-        {c.tapas && (
-          <g fill={c.tapas.color} filter={`url(#${id}-tapa)`}>
-            {c.tapas.elipses.map((t) => (
-              <ellipse
-                key={`${t.cx}-${t.cy}`}
-                cx={t.cx}
-                cy={t.cy}
-                rx={t.rx}
-                ry={t.ry}
-                transform={`rotate(${t.giro} ${t.cx} ${t.cy})`}
-              />
-            ))}
-          </g>
-        )}
-        <g ref={cara} clipPath={c.visor ? `url(#${id}-visor)` : undefined}>
-          <g
-            ref={ojos}
-            className="pod-mirada"
-            style={{
-              transform: pensando ? `translate(${c.mirada[0]}px, ${c.mirada[1]}px)` : "translate(0px, 0px)",
-            }}
-          >
-            {/* El resplandor de todo junto (ojos y pestañas), para que no se sume donde se tocan. */}
+      {/* Si la imagen trae la cara pintada, se apaga con el negro del visor y la cara la dibuja el estudio. */}
+      {c.tapas && (
+        <g fill={c.tapas.color} filter={`url(#${id}-tapa)`}>
+          {c.tapas.elipses.map((t) => (
+            <ellipse
+              key={`${t.cx}-${t.cy}`}
+              cx={t.cx}
+              cy={t.cy}
+              rx={t.rx}
+              ry={t.ry}
+              transform={`rotate(${t.giro} ${t.cx} ${t.cy})`}
+            />
+          ))}
+        </g>
+      )}
+      <g clipPath={c.visor ? `url(#${id}-visor)` : undefined} data-parte="cara">
+        <g
+          className="pod-mirada"
+          data-ojos=""
+          style={{
+            transform: pensando ? `translate(${c.mirada[0]}px, ${c.mirada[1]}px)` : "translate(0px, 0px)",
+          }}
+        >
+          {/* El resplandor de todo junto (ojos y pestañas), para que no se sume donde se tocan. */}
+          {dibujados && (
             <g filter={`url(#${id}-halo)`} opacity={c.opacidadHalo}>
               {c.ojos.map((o, i) => (
                 <g key={i} className="pod-ojo">
-                  <Ojo ojo={o} color={c.luz} extra={c.halo} />
-                  {pestanas(c.halo, c.luz, false)[i]}
+                  <OjoVivo ojo={o} color={c.luz} extra={c.halo} />
+                  {pestanas(o, c.haloPestana ?? c.halo, c.luz, false)}
                 </g>
               ))}
             </g>
-            {c.ojos.map((o, i) => (
-              <g key={i} className="pod-ojo">
-                <Ojo ojo={o} color={c.nucleo} extra={0} />
-                {pestanas(0, c.nucleo, true)[i]}
-              </g>
-            ))}
-          </g>
+          )}
+          {c.ojos.map((o, i) => (
+            <g key={i} className="pod-ojo">
+              <OjoVivo ojo={o} color={c.nucleo} extra={0} />
+              {pestanas(o, 0, c.nucleo, true)}
+            </g>
+          ))}
+        </g>
+        {!b.tapada && (
           <g transform={`translate(${b.x} ${b.y}) rotate(${b.giro})`}>
             <path
-              ref={bocaBrillo}
               d={bocaInicial}
-              fill="none"
+              fill={llena ? c.luz : "none"}
               stroke={c.luz}
               strokeWidth={b.grosor + b.halo}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity={pensando ? 0 : sonrisa ? c.opacidadHalo : 0.7}
               filter={`url(#${id}-halo-boca)`}
+              data-parte="brillo"
             />
             {/* La lengua va encima del resplandor (si no, se ve azulada) y debajo del trazo. */}
-            {sonrisa && (
+            {sonrisa && b.lengua && (
               <g clipPath={`url(#${id}-boca)`} opacity={pensando ? 0 : 1}>
                 <ellipse
-                  ref={lengua}
                   cx={-b.ancho * 0.05}
                   cy={b.alto * APERTURA_EN_REPOSO * 0.84}
                   rx={b.ancho * 0.31}
                   ry={b.alto * APERTURA_EN_REPOSO * 0.46}
-                  fill={b.lengua ?? "#ff8ab9"}
+                  fill={b.lengua}
+                  data-parte="lengua"
                 />
               </g>
             )}
             <path
-              ref={boca}
               d={bocaInicial}
-              fill="none"
+              fill={llena ? c.nucleo : "none"}
               stroke={c.nucleo}
               strokeWidth={b.grosor}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity={pensando ? 0 : 1}
+              data-boca={b.forma}
+              data-parte="boca"
             />
             {pensando &&
               [-34, 0, 34].map((x, i) => (
@@ -386,30 +313,344 @@ export function RobotInvitado({
                   key={x}
                   cx={(x * b.ancho) / 150}
                   cy={sonrisa ? b.alto * 0.22 : 2}
-                  r={Math.max(4, (9 * b.ancho) / 150)}
+                  r={Math.max(2, (9 * b.ancho) / 150)}
                   fill={c.nucleo}
                   className="pod-punto"
                   style={{ animationDelay: `${i * 0.18}s` }}
                 />
               ))}
           </g>
-        </g>
-        {c.oidos.map((o, i) => (
-          <path
-            key={o.d}
-            ref={(el) => {
-              oidos.current[i] = el;
-            }}
-            d={o.d}
-            fill="none"
-            stroke={c.luz}
-            strokeWidth={o.grosor}
-            strokeLinecap="round"
-            opacity="0.12"
-            filter={`url(#${id}-borde)`}
-            style={{ mixBlendMode: "screen" }}
-          />
-        ))}
+        )}
+      </g>
+      <Luces oidos={c.oidos} luz={c.luz} filtro={`${id}-borde`} />
+    </>
+  );
+}
+
+/** Una persona en una pose: el resplandor detrás de la imagen y las luces de sus audífonos encima. */
+function PersonaViva({ c, id, imagen }: { c: CaraSinVisor; id: string; imagen: ReactNode }) {
+  const r = c.resplandor;
+  return (
+    <>
+      <defs>
+        <filter id={`${id}-borde`} x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation={c.desenfoque * 0.75} />
+        </filter>
+        <radialGradient id={`${id}-resplandor`}>
+          <stop offset="0" stopColor={c.luz} stopOpacity="0.55" />
+          <stop offset="0.55" stopColor={c.luz} stopOpacity="0.18" />
+          <stop offset="1" stopColor={c.luz} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Detrás de la imagen: la acompaña cuando habla. Sin boca dibujada: se vería falso. */}
+      <ellipse
+        cx={r.cx}
+        cy={r.cy}
+        rx={r.rx}
+        ry={r.ry}
+        transform={`rotate(${r.giro} ${r.cx} ${r.cy})`}
+        fill={`url(#${id}-resplandor)`}
+        opacity="0"
+        data-resplandor=""
+      />
+      {imagen}
+      <Luces oidos={c.oidos} luz={c.luz} filtro={`${id}-borde`} />
+    </>
+  );
+}
+
+/** Lo que el cuadro a cuadro toca de cada pose (se busca una vez por avatar). */
+type Partes = {
+  pose: PoseId;
+  grupo: SVGGElement;
+  boca: BocaAvatar | null;
+  trazo: SVGPathElement | null;
+  brillo: SVGPathElement | null;
+  recorte: SVGPathElement | null;
+  lengua: SVGEllipseElement | null;
+  cara: SVGGElement | null;
+  resplandor: SVGEllipseElement | null;
+  luces: SVGElement[];
+};
+
+export function RobotInvitado({
+  estado,
+  audio,
+  avatar = avatarPorId(AVATAR_NUEVO),
+  className,
+}: {
+  estado: EstadoInvitado;
+  audio?: AudioInvitado | null;
+  avatar?: AvatarPodcast;
+  className?: string;
+}) {
+  const id = useId().replaceAll(":", "");
+  const svg = useRef<SVGSVGElement>(null);
+  const cuerpo = useRef<SVGGElement>(null);
+  const estadoRef = useRef(estado);
+  const audioRef = useRef(audio);
+  const avatarRef = useRef(avatar);
+
+  useEffect(() => {
+    estadoRef.current = estado;
+    audioRef.current = audio;
+    avatarRef.current = avatar;
+  }, [estado, audio, avatar]);
+
+  // El cuadro a cuadro: la pose, la respiración, la boca, el latido de las luces.
+  useEffect(() => {
+    let vivo = true;
+    let marco = 0;
+    let volumenSuave = 0;
+    let vozSuave = 0;
+    let brillo = 0;
+    let apertura = APERTURA_EN_REPOSO;
+    let memoria = memoriaInicial(performance.now());
+    let visible: PoseId = "tranquila";
+    let anterior: PoseId | null = null;
+    let fundidoDesde = Number.NEGATIVE_INFINITY;
+    let guardado: { avatar: string; partes: Partes[]; tiene: Set<PoseId> } | null = null;
+    const bandas = new Array<number>(PUNTOS).fill(0);
+
+    const buscar = (a: AvatarPodcast) => {
+      const raiz = svg.current;
+      if (!raiz) return null;
+      const partes: Partes[] = [];
+      for (const p of posesDe(a)) {
+        const grupo = raiz.querySelector<SVGGElement>(`[data-pose="${p.id}"]`);
+        if (!grupo) return null;
+        const de = <T extends Element>(s: string) => grupo.querySelector<T>(s);
+        partes.push({
+          pose: p.id,
+          grupo,
+          boca: p.cara.modo === "visor" && !p.cara.boca.tapada ? p.cara.boca : null,
+          trazo: de('[data-parte="boca"]'),
+          brillo: de('[data-parte="brillo"]'),
+          recorte: de('[data-parte="recorte"]'),
+          lengua: de('[data-parte="lengua"]'),
+          cara: de('[data-parte="cara"]'),
+          resplandor: de("[data-resplandor]"),
+          luces: [...grupo.querySelectorAll<SVGElement>("[data-luz]")],
+        });
+      }
+      return { avatar: a.id, partes, tiene: new Set(partes.map((p) => p.pose)) };
+    };
+
+    const pintar = () => {
+      if (!vivo) return;
+      const ahora = performance.now();
+      const t = ahora / 1000;
+      const e = estadoRef.current;
+      const fuente = audioRef.current;
+      const a = avatarRef.current;
+      if (!guardado || guardado.avatar !== a.id) {
+        guardado = buscar(a);
+        visible = "tranquila";
+        anterior = null;
+        memoria = memoriaInicial(ahora);
+      }
+      if (!guardado) {
+        marco = requestAnimationFrame(pintar);
+        return;
+      }
+
+      // La pose: el motor decide; el cambio es un fundido, con la que llega encima de la que se va.
+      memoria = siguientePose(memoria, e, ahora, fuente?.gestos?.() ?? [], guardado.tiene);
+      if (memoria.pose !== visible) {
+        anterior = visible;
+        visible = memoria.pose;
+        fundidoDesde = ahora;
+        const llega = guardado.partes.find((p) => p.pose === visible)?.grupo;
+        llega?.parentNode?.appendChild(llega);
+        svg.current?.setAttribute("data-pose", visible);
+      }
+      const fundido = Math.min(1, (ahora - fundidoDesde) / FUNDIDO_MS);
+      if (fundido >= 1) anterior = null;
+      const opacidad = (p: Partes) =>
+        p.pose === visible ? fundido : p.pose === anterior ? 1 - fundido ** 3 : 0;
+
+      const crudo = e === "hablando" && fuente ? Math.min(1, Math.max(0, fuente.volumen() * 1.6)) : 0;
+      // Sube rápido y baja despacio, como un vúmetro: la boca no tiembla.
+      volumenSuave += (crudo - volumenSuave) * (crudo > volumenSuave ? 0.55 : 0.18);
+
+      const respira = e === "hablando" ? 2 : 5;
+      let dy = Math.sin(t * 1.5) * respira;
+      const escala = 1 + Math.sin(t * 1.5) * 0.004;
+      let giro = e === "hablando" ? Math.sin(t * 6.3) * 0.7 * volumenSuave : Math.sin(t * 0.7) * 0.25;
+      // Riéndose tiembla un poco; aplaudiendo da saltitos.
+      if (visible === "riendo") {
+        dy += Math.sin(t * 31) * 3.5;
+        giro += Math.sin(t * 17) * 0.5;
+      } else if (visible === "aplaudiendo") dy -= Math.abs(Math.sin(t * 9)) * 5;
+      const [px, py] = a.pivote;
+      cuerpo.current?.setAttribute(
+        "transform",
+        `translate(${px} ${py}) rotate(${giro.toFixed(3)}) scale(${escala.toFixed(4)}) translate(${-px} ${-py + dy})`,
+      );
+
+      // La abertura de la boca (la misma para todas las poses; cada una con su tamaño).
+      const voz = e === "hablando" && fuente ? nivelDeVoz(fuente.frecuencias(), crudo) : 0;
+      vozSuave += (voz - vozSuave) * (voz > vozSuave ? 0.6 : 0.25);
+      const ondaViva = e === "hablando" ? (fuente?.frecuencias() ?? null) : null;
+
+      // Una persona: el resplandor de su color aparece cuando habla y sigue el volumen de su voz.
+      const metaBrillo = e === "hablando" ? 0.18 + 0.62 * volumenSuave : e === "pensando" ? 0.08 : 0;
+      brillo += (metaBrillo - brillo) * (metaBrillo > brillo ? 0.3 : 0.08);
+      const latido =
+        e === "hablando" ? 0.25 + volumenSuave * 0.75 : e === "pensando" ? 0.3 + 0.2 * Math.sin(t * 5) : 0.12;
+      const nucleo = a.cara.modo === "visor" ? a.cara.nucleo : a.cara.luz;
+
+      let primera = true;
+      for (const p of guardado.partes) {
+        const op = opacidad(p);
+        p.grupo.setAttribute("opacity", op.toFixed(3));
+        p.grupo.style.visibility = op > 0 ? "visible" : "hidden";
+        if (op <= 0) continue;
+        p.resplandor?.setAttribute("opacity", brillo.toFixed(3));
+        for (const l of p.luces) {
+          l.setAttribute("opacity", latido.toFixed(3));
+          const g = Number(l.dataset.grosor);
+          if (g) l.setAttribute("stroke-width", (g * (1 + volumenSuave * 1.25)).toFixed(1));
+        }
+        p.cara?.setAttribute("opacity", e === "conectando" ? (0.55 + 0.4 * Math.sin(t * 4)).toFixed(3) : "1");
+        const b = p.boca;
+        if (!b) continue;
+        if (b.forma === "onda") {
+          if (e === "hablando") {
+            if (primera)
+              for (let i = 0; i < PUNTOS; i++) {
+                const envolvente = Math.sin((Math.PI * i) / (PUNTOS - 1));
+                let nivel: number;
+                if (ondaViva && ondaViva.length > 8) {
+                  // Las bandas graves y medias, donde vive la voz.
+                  const desde = 2 + Math.floor((i * Math.min(ondaViva.length - 2, 48)) / PUNTOS);
+                  nivel = (ondaViva[desde] ?? 0) / 255;
+                } else {
+                  nivel = volumenSuave * (0.6 + 0.4 * Math.sin(t * 17 + i * 1.3));
+                }
+                const meta = (8 + Math.min(1, nivel * 1.7) * b.alto * (0.6 + volumenSuave)) * envolvente;
+                bandas[i] = bandas[i]! + (meta - bandas[i]!) * 0.5;
+              }
+            const d = caminoDeOnda(bandas, b.ancho);
+            p.trazo?.setAttribute("d", d);
+            p.brillo?.setAttribute("d", d);
+            p.trazo?.setAttribute("fill", nucleo);
+          } else {
+            if (primera) for (let i = 0; i < PUNTOS; i++) bandas[i] = 0;
+            p.trazo?.setAttribute("d", sonrisaDeOnda);
+            p.brillo?.setAttribute("d", sonrisaDeOnda);
+            p.trazo?.setAttribute("fill", "none");
+          }
+        } else {
+          // La sonrisa y la media luna: abiertas y felices mientras escucha (como en la imagen); hablando se
+          // abren y se cierran con las sílabas de su voz.
+          const reposo = b.reposo ?? APERTURA_EN_REPOSO;
+          if (primera) {
+            const meta =
+              e === "hablando"
+                ? APERTURA_CERRADA + (1.05 - APERTURA_CERRADA) * vozSuave
+                : e === "pensando"
+                  ? APERTURA_CERRADA
+                  : reposo;
+            apertura += (meta - apertura) * 0.55;
+          }
+          const ancho = b.ancho * (1 - 0.1 * Math.max(0, apertura - reposo));
+          const alto = b.alto * apertura;
+          const d = caminoDeBoca(b, ancho, alto);
+          p.trazo?.setAttribute("d", d);
+          p.brillo?.setAttribute("d", d);
+          p.recorte?.setAttribute("d", d);
+          if (b.llena) {
+            // Llena mientras escucha; al abrirse para hablar, el relleno se aclara y el borde sigue encendido.
+            const abierta = Math.min(1, Math.max(0, (apertura - reposo) / (1.05 - reposo)));
+            const relleno = (1 - (1 - RELLENO_ABIERTA) * abierta).toFixed(3);
+            p.trazo?.setAttribute("fill-opacity", relleno);
+            p.brillo?.setAttribute("fill-opacity", relleno);
+          }
+          if (p.lengua) {
+            p.lengua.setAttribute("cy", (alto * 0.84).toFixed(1));
+            p.lengua.setAttribute("rx", (ancho * 0.31).toFixed(1));
+            p.lengua.setAttribute("ry", (alto * 0.46).toFixed(1));
+            p.lengua.setAttribute("opacity", Math.min(1, Math.max(0, (alto - 12) / 12)).toFixed(2));
+          }
+        }
+        primera = false;
+      }
+      marco = requestAnimationFrame(pintar);
+    };
+    marco = requestAnimationFrame(pintar);
+    return () => {
+      vivo = false;
+      cancelAnimationFrame(marco);
+    };
+  }, []);
+
+  // El parpadeo: cada 2,5 a 6 segundos, 150 milisegundos con los ojos cerrados (los de todas las poses).
+  useEffect(() => {
+    let reloj: ReturnType<typeof setTimeout>;
+    const siguiente = () => {
+      reloj = setTimeout(
+        () => {
+          const ojos = svg.current?.querySelectorAll("[data-ojos]") ?? [];
+          ojos.forEach((o) => o.classList.add("pod-parpadeo"));
+          setTimeout(() => ojos.forEach((o) => o.classList.remove("pod-parpadeo")), 150);
+          siguiente();
+        },
+        2500 + Math.random() * 3500,
+      );
+    };
+    siguiente();
+    return () => clearTimeout(reloj);
+  }, []);
+
+  const caja = cajaDelEncuadre(avatar);
+  const pensando = estado === "pensando";
+  const persona = avatar.cara.modo === "sin_visor";
+
+  return (
+    <svg
+      ref={svg}
+      viewBox={`${caja.x.toFixed(1)} ${caja.y.toFixed(1)} ${caja.ancho.toFixed(1)} ${caja.alto.toFixed(1)}`}
+      className={className}
+      // El brillo alrededor de la silueta de una persona, del color de SUS luces (el de las robots, en el CSS).
+      style={persona ? { filter: `drop-shadow(0 0 1.4cqw ${avatar.cara.luz}59)` } : undefined}
+      role="img"
+      aria-label={`El invitado (${estado})`}
+      data-estado={estado}
+      data-avatar={avatar.id}
+      data-cara={avatar.cara.modo}
+      data-pose="tranquila"
+    >
+      <style>{`
+        .pod-parpadeo .pod-ojo { transform: scaleY(0.08); }
+        .pod-ojo { transform-box: fill-box; transform-origin: 50% 70%; transition: transform 70ms ease-in-out; }
+        .pod-mirada { transition: transform 450ms ease; }
+        @keyframes pod-pensar { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
+        .pod-punto { animation: pod-pensar 1.1s ease-in-out infinite; }
+      `}</style>
+      {/* Una capa por pose; el cuadro a cuadro muestra la que toca (si cambia el avatar, se arman de nuevo). */}
+      <g ref={cuerpo} key={avatar.id}>
+        {posesDe(avatar).map((p, i) => {
+          const pid = `${id}-${p.id}`;
+          const imagen = <image href={p.imagen} width={avatar.ancho} height={avatar.alto} />;
+          return (
+            <g
+              key={p.id}
+              data-pose={p.id}
+              opacity={i === 0 ? 1 : 0}
+              style={{ visibility: i === 0 ? "visible" : "hidden" }}
+            >
+              {p.cara.modo === "sin_visor" ? (
+                <PersonaViva c={p.cara} id={pid} imagen={imagen} />
+              ) : (
+                <>
+                  {imagen}
+                  <CaraViva c={p.cara} id={pid} pensando={pensando} />
+                </>
+              )}
+            </g>
+          );
+        })}
       </g>
     </svg>
   );

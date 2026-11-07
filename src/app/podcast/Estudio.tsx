@@ -7,11 +7,15 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MAX_SEGUNDOS_CONVERSACION } from "@compartido/podcast";
+import { gestosDelTexto, type Gesto } from "@compartido/podcast-poses";
 import { Escenario, type InvitadoEnEscena } from "./Escenario";
 import type { AudioInvitado, EstadoInvitado } from "./RobotInvitado";
 import css from "./estudio.module.css";
 
 export type FichaDelEstudio = InvitadoEnEscena & { id: number; falta: string | null };
+
+/** Al lado de «Empezar la conversación», y se esconde con los controles. */
+export const PISTA_GRABAR = "Para grabar, usa tu grabador de pantalla (Pantalay)";
 
 type Inicio = {
   conversacionId: number;
@@ -50,6 +54,15 @@ const guardar = (clave: string, valor: string) => {
   }
 };
 
+/** Los gestos de una respuesta nueva, sin los que ya pasaron. */
+export function gestosDeLaRespuesta(
+  antes: readonly Gesto[],
+  texto: string,
+  ahora = performance.now(),
+): Gesto[] {
+  return [...antes.filter((g) => g.hasta > ahora), ...gestosDelTexto(texto, ahora)];
+}
+
 const reloj = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
@@ -82,6 +95,9 @@ export function Estudio({
   const video = useRef<HTMLVideoElement | null>(null);
   const escondido = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inicioMs = useRef<number | null>(null);
+  // Los gestos que salen de lo que dice el invitado (la risa, el aplauso, la idea, las notas): el motor de
+  // poses los lee en cada cuadro (podcast-poses.ts).
+  const gestos = useRef<Gesto[]>([]);
 
   const ficha = fichas.find((f) => f.id === fichaId) ?? fichas[0] ?? null;
   const enVivo = estado !== "reposo";
@@ -177,6 +193,7 @@ export function Estudio({
     () => ({
       volumen: () => sesion.current?.getOutputVolume() ?? 0,
       frecuencias: () => sesion.current?.getOutputByteFrequencyData() ?? null,
+      gestos: () => gestos.current,
     }),
     [],
   );
@@ -210,9 +227,11 @@ export function Estudio({
         overrides: inicio.overrides,
         ...WORKLETS,
         onModeChange: ({ mode }) => setEstado(mode === "speaking" ? "hablando" : "escuchando"),
-        onMessage: ({ role }) => {
+        onMessage: ({ role, message }) => {
           // Richard terminó de hablar: el invitado piensa hasta que empiece a contestar.
           if (role === "user") setEstado((e) => (e === "hablando" ? e : "pensando"));
+          // El texto de la respuesta (llega con las etiquetas de emoción, como «[laughs]»): sus gestos.
+          if (role === "agent") gestos.current = gestosDeLaRespuesta(gestos.current, message);
         },
         onDisconnect: (detalle) => {
           sesion.current = null;
@@ -323,6 +342,8 @@ export function Estudio({
             Empezar la conversación
           </button>
         )}
+        {/* El estudio no graba: lo graba el grabador de pantalla (Richard lo creyó, 7 nov 2026). */}
+        <span className={css.pista}>{PISTA_GRABAR}</span>
         <button
           type="button"
           role="switch"

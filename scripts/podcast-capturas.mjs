@@ -6,7 +6,9 @@
 //
 // Antes: la vista previa corriendo (launch «panel-empaquetado») y la base local con el esquema
 // (npx wrangler d1 execute escenia-local --local -c wrangler.prueba.jsonc --file=schema.sql).
-// Uso: node scripts/podcast-capturas.mjs <id de la ficha local> <carpeta de salida> [prefijo]
+// Uso: node scripts/podcast-capturas.mjs <id de la ficha local> <carpeta de salida> [prefijo] [--poses]
+//   --poses   además pasa por las siete poses de Mia (lo que dice dispara la risa, el aplauso, la idea y la
+//             tablet) y arma la hoja <prefijo>-poses.png con todas.
 // Crea una sesión del panel SOLO en la base local (nunca en la de producción).
 import { execFileSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
@@ -15,7 +17,9 @@ import path from "node:path";
 import { chromium } from "playwright";
 
 const BASE = "http://localhost:8787";
-const [fichaId = "1", salida = "capturas-podcast", prefijo = "podcast"] = process.argv.slice(2);
+const [fichaId = "1", salida = "capturas-podcast", prefijo = "podcast"] = process.argv
+  .slice(2)
+  .filter((a) => !a.startsWith("--"));
 // La carpeta la elige quien corre el script (es una herramienta local).
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 mkdirSync(salida, { recursive: true });
@@ -112,9 +116,11 @@ await pagina.routeWebSocket(/api\.elevenlabs\.io/, (ws) => {
       );
   });
 });
+const decir = (texto) =>
+  agente?.send(JSON.stringify({ type: "agent_response", agent_response_event: { agent_response: texto } }));
 const hablar = (segundos) => {
   const pcm = vozDePrueba(segundos);
-  agente?.send(JSON.stringify({ type: "agent_response", agent_response_event: { agent_response: "Hola." } }));
+  decir("Hola.");
   for (let i = 0, id = 1; i < pcm.length; i += 3200, id++)
     agente?.send(
       JSON.stringify({
@@ -173,5 +179,73 @@ for (let i = 0; i < 6; i++) {
     });
 }
 console.log(`hablando: ${path.join(salida, `${prefijo}-hablando.png`)} (estado ${await estado()})`);
+
+if (process.argv.includes("--poses")) {
+  // Las siete poses de Mia, de cerca: lo que dice el invitado dispara cada gesto (podcast-poses.ts). Entre un
+  // gesto y otro se espera a que vuelva a hablar con las manos en la silla (nunca cambia más de una vez cada
+  // 2,5 s).
+  const { default: sharp } = await import("sharp");
+  const pose = () => pagina.getAttribute('[role="img"][aria-label^="El invitado"]', "data-pose");
+  const cerca = async (nombre) => {
+    await esperar(700);
+    const archivo = path.join(salida, `${prefijo}-pose-${nombre}.png`);
+    if (panel) await pagina.screenshot({ path: archivo, clip: panel });
+    console.log(`pose ${nombre}: ${archivo} (se ve ${await pose()})`);
+    return archivo;
+  };
+  const hojas = [];
+  await pagina.reload({ waitUntil: "networkidle" });
+  await esperar(800);
+  hojas.push(["Tranquila (escucha)", await cerca("tranquila")]);
+  agente = null;
+  await pagina.getByRole("button", { name: "Empezar la conversación" }).click();
+  for (let i = 0; i < 50 && !agente; i++) await esperar(100);
+  await esperar(500);
+  agente?.send(
+    JSON.stringify({ type: "user_transcript", user_transcription_event: { user_transcript: "¿Y eso?" } }),
+  );
+  await pagina.waitForSelector('[data-pose="pensando"][role="img"]', { timeout: 10_000 });
+  hojas.push(["Pensando", await cerca("pensando")]);
+  hablar(60);
+  await pagina.waitForSelector('[data-pose="hablando"][role="img"]', { timeout: 10_000 });
+  hojas.push(["Hablando", await cerca("hablando")]);
+  for (const [nombre, texto, titulo] of [
+    ["riendo", "¡Jajaja! Qué cosas dices.", "Riéndose"],
+    ["aplaudiendo", "¡Qué buena pregunta!", "Aplaudiendo"],
+    ["idea", "Imagínate esto.", "Una idea"],
+    ["notas", "Según los científicos, hay 42.", "Tomando notas"],
+  ]) {
+    await pagina.waitForSelector('[data-pose="hablando"][role="img"]', { timeout: 15_000 });
+    await esperar(2600);
+    decir(texto);
+    await pagina.waitForSelector(`[data-pose="${nombre}"][role="img"]`, { timeout: 10_000 });
+    hojas.push([titulo, await cerca(nombre)]);
+  }
+  // La hoja: cuatro arriba y tres abajo, con su nombre.
+  const ancho = 640;
+  const { width = 1, height = 1 } = await sharp(hojas[0][1]).metadata();
+  const alto = Math.round((ancho * height) / width);
+  const capas = [];
+  for (const [i, [titulo, archivo]] of hojas.entries()) {
+    const x = (i % 4) * (ancho + 16) + (i >= 4 ? (ancho + 16) / 2 : 0);
+    const y = Math.floor(i / 4) * (alto + 56) + 16;
+    capas.push({ input: await sharp(archivo).resize(ancho, alto).png().toBuffer(), left: x + 16, top: y });
+    const texto = `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="40"><text x="${ancho / 2}" y="28" font-family="Helvetica, Arial" font-size="24" fill="#e5e7eb" text-anchor="middle">${titulo}</text></svg>`;
+    capas.push({ input: Buffer.from(texto), left: x + 16, top: y + alto + 6 });
+  }
+  const hoja = path.join(salida, `${prefijo}-poses.png`);
+  await sharp({
+    create: {
+      width: 4 * (ancho + 16) + 16,
+      height: 2 * (alto + 56) + 16,
+      channels: 3,
+      background: "#0b1020",
+    },
+  })
+    .composite(capas)
+    .png()
+    .toFile(hoja);
+  console.log(`hoja de poses: ${hoja}`);
+}
 
 await navegador.close();

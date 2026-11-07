@@ -134,8 +134,9 @@ export default async function PaginaFichas({ searchParams }: PageProps<"/podcast
                   <Link href={`/podcast/fichas?ficha=${f.id}`} className="boton-suave px-3 py-1.5">
                     Editar
                   </Link>
+                  {/* Solo abre el estudio: la grabación la hace el grabador de pantalla de Richard. */}
                   <Link href={`/podcast?ficha=${f.id}`} className="boton-suave px-3 py-1.5">
-                    Grabar con esta ficha
+                    Abrir en el estudio
                   </Link>
                 </div>
               </li>
