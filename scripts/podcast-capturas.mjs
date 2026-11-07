@@ -7,8 +7,8 @@
 // Antes: la vista previa corriendo (launch «panel-empaquetado») y la base local con el esquema
 // (npx wrangler d1 execute escenia-local --local -c wrangler.prueba.jsonc --file=schema.sql).
 // Uso: node scripts/podcast-capturas.mjs <id de la ficha local> <carpeta de salida> [prefijo] [--poses]
-//   --poses   además pasa por las siete poses de Mia (lo que dice dispara la risa, el aplauso, la idea y la
-//             tablet) y arma la hoja <prefijo>-poses.png con todas.
+//   --poses   además pasa por las siete poses de Mia (cada gesto lo pide la IA con la herramienta «gesto», como
+//             en una conversación de verdad) y arma la hoja <prefijo>-poses.png con todas.
 // Crea una sesión del panel SOLO en la base local (nunca en la de producción).
 import { execFileSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
@@ -118,17 +118,34 @@ await pagina.routeWebSocket(/api\.elevenlabs\.io/, (ws) => {
 });
 const decir = (texto) =>
   agente?.send(JSON.stringify({ type: "agent_response", agent_response_event: { agent_response: texto } }));
-const hablar = (segundos) => {
+// Una respuesta larga (más de 6 s): con ella pasa a las manos en la silla. Una corta la deja con las manos juntas.
+const LARGA =
+  "Es una gran pregunta. Hasta hoy no tenemos ninguna prueba de vida fuera de la Tierra, pero sí miles de planetas donde podría haberla, y algunos están a la distancia justa de su estrella para tener agua líquida.";
+let evento = 1;
+const hablar = (segundos, texto = LARGA) => {
   const pcm = vozDePrueba(segundos);
-  decir("Hola.");
-  for (let i = 0, id = 1; i < pcm.length; i += 3200, id++)
+  decir(texto);
+  for (let i = 0; i < pcm.length; i += 3200)
     agente?.send(
       JSON.stringify({
         type: "audio",
-        audio_event: { audio_base_64: pcm.subarray(i, i + 3200).toString("base64"), event_id: id },
+        audio_event: { audio_base_64: pcm.subarray(i, i + 3200).toString("base64"), event_id: evento++ },
       }),
     );
 };
+/** La IA pide un gesto con su herramienta (C-PODCAST-4). */
+const gesto = (pose) =>
+  agente?.send(
+    JSON.stringify({
+      type: "client_tool_call",
+      client_tool_call: {
+        tool_name: "gesto",
+        tool_call_id: `gesto-${evento}`,
+        parameters: { pose },
+        event_id: evento++,
+      },
+    }),
+  );
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 const estado = () => pagina.getAttribute('[role="img"][aria-label^="El invitado"]', "data-estado");
 const capturar = async (nombre) => {
@@ -150,7 +167,7 @@ await pagina.getByRole("button", { name: "Empezar la conversación" }).click();
 // Como el agente de verdad, el invitado saluda primero; cuando termina de hablar, escucha.
 for (let i = 0; i < 50 && !agente; i++) await esperar(100);
 await esperar(500);
-hablar(2.5);
+hablar(2.5, "Hola, Richard.");
 await pagina.waitForSelector('[data-estado="hablando"]', { timeout: 15_000 });
 await pagina.waitForSelector('[data-estado="escuchando"]', { timeout: 20_000 });
 await capturar("escuchando");
@@ -163,11 +180,14 @@ agente?.send(
   }),
 );
 await pagina.waitForSelector('[data-estado="pensando"]', { timeout: 10_000 });
+// La pose de pensar sale si tarda más de 1,2 s; capturar() ya espera 2,9 s.
 await capturar("pensando");
 
-hablar(9);
+hablar(16);
 await pagina.waitForSelector('[data-estado="hablando"]', { timeout: 10_000 });
-await esperar(600);
+// Si pensó, la mano en la barbilla se sostiene sus 6 s: se espera a las manos en la silla.
+await pagina.waitForSelector('[data-pose="hablando"][role="img"]', { timeout: 10_000 });
+await esperar(900);
 await pagina.screenshot({ path: path.join(salida, `${prefijo}-hablando.png`) });
 const panel = await pagina.locator('section[aria-label]:has([role="img"])').boundingBox();
 for (let i = 0; i < 6; i++) {
@@ -181,43 +201,55 @@ for (let i = 0; i < 6; i++) {
 console.log(`hablando: ${path.join(salida, `${prefijo}-hablando.png`)} (estado ${await estado()})`);
 
 if (process.argv.includes("--poses")) {
-  // Las siete poses de Mia, de cerca: lo que dice el invitado dispara cada gesto (podcast-poses.ts). Entre un
-  // gesto y otro se espera a que vuelva a hablar con las manos en la silla (nunca cambia más de una vez cada
-  // 2,5 s).
+  // Las siete poses de Mia, de cerca. Cada gesto, en una conversación nueva (el motor deja 25 s entre gestos y
+  // uno por respuesta): Richard pregunta, la IA pide el gesto con su herramienta y contesta.
   const { default: sharp } = await import("sharp");
   const pose = () => pagina.getAttribute('[role="img"][aria-label^="El invitado"]', "data-pose");
   const cerca = async (nombre) => {
-    await esperar(700);
+    await esperar(1000);
     const archivo = path.join(salida, `${prefijo}-pose-${nombre}.png`);
-    if (panel) await pagina.screenshot({ path: archivo, clip: panel });
+    const caja = await pagina.locator('section[aria-label]:has([role="img"])').boundingBox();
+    if (caja) await pagina.screenshot({ path: archivo, clip: caja });
     console.log(`pose ${nombre}: ${archivo} (se ve ${await pose()})`);
     return archivo;
   };
+  const conversacionNueva = async () => {
+    await pagina.reload({ waitUntil: "networkidle" });
+    await esperar(800);
+    agente = null;
+    await pagina.getByRole("button", { name: "Empezar la conversación" }).click();
+    for (let i = 0; i < 50 && !agente; i++) await esperar(100);
+    await esperar(500);
+    await pagina.mouse.move(5, 5);
+  };
+  const preguntar = () =>
+    agente?.send(
+      JSON.stringify({ type: "user_transcript", user_transcription_event: { user_transcript: "¿Y eso?" } }),
+    );
   const hojas = [];
   await pagina.reload({ waitUntil: "networkidle" });
-  await esperar(800);
+  await pagina.mouse.move(5, 5);
+  await esperar(2900);
   hojas.push(["Tranquila (escucha)", await cerca("tranquila")]);
-  agente = null;
-  await pagina.getByRole("button", { name: "Empezar la conversación" }).click();
-  for (let i = 0; i < 50 && !agente; i++) await esperar(100);
-  await esperar(500);
-  agente?.send(
-    JSON.stringify({ type: "user_transcript", user_transcription_event: { user_transcript: "¿Y eso?" } }),
-  );
+  await conversacionNueva();
+  preguntar();
   await pagina.waitForSelector('[data-pose="pensando"][role="img"]', { timeout: 10_000 });
   hojas.push(["Pensando", await cerca("pensando")]);
-  hablar(60);
+  await conversacionNueva();
+  hablar(20);
   await pagina.waitForSelector('[data-pose="hablando"][role="img"]', { timeout: 10_000 });
   hojas.push(["Hablando", await cerca("hablando")]);
-  for (const [nombre, texto, titulo] of [
-    ["riendo", "¡Jajaja! Qué cosas dices.", "Riéndose"],
-    ["aplaudiendo", "¡Qué buena pregunta!", "Aplaudiendo"],
-    ["idea", "Imagínate esto.", "Una idea"],
-    ["notas", "Según los científicos, hay 42.", "Tomando notas"],
+  for (const [nombre, titulo] of [
+    ["riendo", "Riéndose"],
+    ["aplaudiendo", "Aplaudiendo"],
+    ["idea", "Una idea"],
+    ["notas", "Tomando notas"],
   ]) {
-    await pagina.waitForSelector('[data-pose="hablando"][role="img"]', { timeout: 15_000 });
-    await esperar(2600);
-    decir(texto);
+    await conversacionNueva();
+    preguntar();
+    await esperar(400);
+    gesto(nombre);
+    hablar(12);
     await pagina.waitForSelector(`[data-pose="${nombre}"][role="img"]`, { timeout: 10_000 });
     hojas.push([titulo, await cerca(nombre)]);
   }

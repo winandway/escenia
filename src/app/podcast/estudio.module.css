@@ -207,6 +207,15 @@
   object-fit: cover;
   transform: scaleX(-1);
 }
+/* La casa del invitado (su escenario en el catálogo): cubre el panel entero, detrás de él. Un poco más grande
+   que el panel para que el desenfoque no deje un borde claro. */
+.casa {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform: scale(1.04);
+}
 /* El invitado llena el panel: qué parte de su imagen se ve lo dice su encuadre en el catálogo
    (compartido/podcast-avatares.ts), con la forma exacta de este panel (ASPECTO_PANEL). */
 .robot {

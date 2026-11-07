@@ -1,7 +1,8 @@
 "use client";
 
 // El escenario 16:9 del Podcast IA, lo que sale en la grabación: el título, la cinta, Richard a la
-// izquierda (su cámara o un fondo limpio), el invitado a la derecha (su avatar, de la ficha), el tema de hoy y
+// izquierda (su cámara o un fondo limpio), el invitado a la derecha (su avatar, de la ficha, con su casa detrás y
+// su micrófono delante si el catálogo se los da), el tema de hoy y
 // la leyenda obligatoria (C-PODCAST-1: siempre visible, y dice la verdad: ficción o historia real con permiso).
 import type { RefObject } from "react";
 import { leyendaDelPodcast, type OrigenHistoria, type TipoFicha } from "@compartido/podcast";
@@ -124,6 +125,8 @@ export function Escenario({
   camara: boolean;
   video?: RefObject<HTMLVideoElement | null>;
 }) {
+  const avatar = avatarPorId(invitado.avatar ?? AVATAR_NUEVO);
+  const fondo = avatar.escenario?.fondo;
   return (
     <div className={css.escenario} data-testid="escenario">
       <header className={css.cabecera}>
@@ -146,6 +149,19 @@ export function Escenario({
       </section>
 
       <section className={`${css.panel} ${css.panelInvitado}`} aria-label={invitado.nombre}>
+        {/* Su casa detrás (si su avatar la tiene): oscurecida y desenfocada para que el invitado resalte. */}
+        {fondo && (
+          <div
+            className={css.casa}
+            data-casa={fondo.imagen}
+            aria-hidden="true"
+            style={{
+              backgroundImage: `url(${fondo.imagen})`,
+              backgroundPosition: `${fondo.enfoqueX}% 50%`,
+              filter: `brightness(${fondo.brillo}) blur(${fondo.desenfoque}cqw)`,
+            }}
+          />
+        )}
         {invitado.ejemplo && (
           <span className={css.ejemplo}>Historia de ejemplo (ficticia) · no publicar</span>
         )}
@@ -153,12 +169,7 @@ export function Escenario({
           <span className={css.estadoPunto} />
           {TEXTO_ESTADO[estado]}
         </span>
-        <RobotInvitado
-          estado={estado}
-          audio={audio}
-          avatar={avatarPorId(invitado.avatar ?? AVATAR_NUEVO)}
-          className={css.robot}
-        />
+        <RobotInvitado estado={estado} audio={audio} avatar={avatar} className={css.robot} />
         <Etiqueta
           icono={<IconoRobot />}
           nombre={invitado.nombre}

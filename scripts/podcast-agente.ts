@@ -10,10 +10,18 @@
 // Lee la clave de ~/.config/motor-escenia/elevenlabs-agentes (carpeta 700, archivo 600), las voces del
 // banco de estacion/.env (nunca la de Richard) y guarda en la base del panel, por la API de YaDominios: el id
 // del agente, las voces y la clave (ajustes podcast_agente_id, podcast_voces, podcast_elevenlabs_clave).
+//
+// Antes del agente crea (o pone al día) la herramienta del cliente `gesto` (C-PODCAST-4: la IA decide el gesto
+// de Mia y sigue hablando sin esperar respuesta) y guarda su id en ~/.config/motor-escenia/podcast-herramienta-gesto.
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { configuracionDelAgente, TOPE_MINUTOS_MAXIMO, MAX_SEGUNDOS_CONVERSACION } from "@compartido/podcast";
+import {
+  configuracionDelAgente,
+  HERRAMIENTA_GESTO,
+  TOPE_MINUTOS_MAXIMO,
+  MAX_SEGUNDOS_CONVERSACION,
+} from "@compartido/podcast";
 import { VARIABLE_DE_VOZ } from "@compartido/voces";
 
 const CARPETA = path.join(os.homedir(), ".config", "motor-escenia");
@@ -22,6 +30,7 @@ const RUTA_CLAVE =
   ["elevenlabs-agents", "elevenlabs-agentes"].map((n) => path.join(CARPETA, n)).find((r) => existsSync(r)) ??
   path.join(CARPETA, "elevenlabs-agents");
 const RUTA_AGENTE = path.join(CARPETA, "podcast-agente-id");
+const RUTA_HERRAMIENTA = path.join(CARPETA, "podcast-herramienta-gesto");
 const API = "https://api.elevenlabs.io";
 const prueba = process.argv.includes("--prueba");
 const sinClaveEnBase = process.argv.includes("--sin-clave-en-base");
@@ -70,14 +79,41 @@ const guardarPrivado = (ruta: string, valor: string) => {
   chmodSync(ruta, 0o600);
 };
 
+/** Crea la herramienta `gesto` en ElevenLabs, o la pone al día si ya existe, y devuelve su id. */
+async function herramientaGesto(clave: string): Promise<string> {
+  let id = existsSync(RUTA_HERRAMIENTA) ? readFileSync(RUTA_HERRAMIENTA, "utf8").trim() : "";
+  const cuerpo = { tool_config: HERRAMIENTA_GESTO };
+  if (id) {
+    const r = await llamar("PATCH", `/v1/convai/tools/${encodeURIComponent(id)}`, clave, cuerpo);
+    if (r.estado === 404) id = "";
+    else if (!r.ok)
+      throw new Error(
+        `ElevenLabs no actualizó la herramienta «gesto» (${r.estado}): ${JSON.stringify(r.datos)}`,
+      );
+    else console.log(`Herramienta «gesto» puesta al día: ${id}`);
+  }
+  if (!id) {
+    const r = await llamar("POST", "/v1/convai/tools", clave, cuerpo);
+    const nuevo = (r.datos as { id?: string } | null)?.id;
+    if (!r.ok || !nuevo)
+      throw new Error(`ElevenLabs no creó la herramienta «gesto» (${r.estado}): ${JSON.stringify(r.datos)}`);
+    id = nuevo;
+    console.log(`Herramienta «gesto» creada: ${id}`);
+  }
+  guardarPrivado(RUTA_HERRAMIENTA, id);
+  return id;
+}
+
 async function principal() {
   const voces = vocesDelInvitado();
-  const config = configuracionDelAgente({
+  const opciones = {
     vozPorDefecto: voces.neutra!,
     // Con el tope más alto del panel (4 horas) caben 24 conversaciones de 10 minutos.
     conversacionesPorDia: Math.ceil((TOPE_MINUTOS_MAXIMO * 60) / MAX_SEGUNDOS_CONVERSACION),
-  });
+  };
   if (prueba) {
+    console.log(JSON.stringify({ tool_config: HERRAMIENTA_GESTO }, null, 2));
+    const config = configuracionDelAgente({ ...opciones, herramientas: ["<id de la herramienta gesto>"] });
     console.log(JSON.stringify(config, null, 2));
     console.log(`Voces del invitado: ${Object.keys(voces).join(", ")}`);
     return;
@@ -92,6 +128,8 @@ async function principal() {
   chmodSync(RUTA_CLAVE, 0o600);
   const clave = readFileSync(RUTA_CLAVE, "utf8").trim();
   if (clave.length < 10) throw new Error(`El archivo ${RUTA_CLAVE} está vacío.`);
+
+  const config = configuracionDelAgente({ ...opciones, herramientas: [await herramientaGesto(clave)] });
 
   // La base del panel se carga recién aquí: con --prueba no hace falta el token.
   const { db } = await import("./base-remota");

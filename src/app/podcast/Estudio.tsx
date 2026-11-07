@@ -6,8 +6,17 @@
 // se graba y vuelven al mover el ratón.
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MAX_SEGUNDOS_CONVERSACION } from "@compartido/podcast";
-import { gestosDelTexto, type Gesto } from "@compartido/podcast-poses";
+import {
+  MAX_SEGUNDOS_CONVERSACION,
+  NOMBRE_HERRAMIENTA_GESTO,
+  limpiarEtiquetasDeEmocion,
+} from "@compartido/podcast";
+import {
+  leerPedidoDeGesto,
+  type PedidoDeGesto,
+  type PoseDeGesto,
+  type TextoDeRespuesta,
+} from "@compartido/podcast-poses";
 import { Escenario, type InvitadoEnEscena } from "./Escenario";
 import type { AudioInvitado, EstadoInvitado } from "./RobotInvitado";
 import css from "./estudio.module.css";
@@ -54,21 +63,21 @@ const guardar = (clave: string, valor: string) => {
   }
 };
 
-/**
- * Cuando el invitado deja de hablar (terminó o Richard lo interrumpió), los gestos que quedaban programados de
- * esa respuesta se tiran: si no, Mia podía aplaudir o reírse mientras Richard hablaba (revisor, 7 nov 2026).
- */
-export function gestosAlCambiarDeModo(actuales: Gesto[], hablando: boolean): Gesto[] {
-  return hablando ? actuales : [];
+/** Unas 15 letras por segundo al hablar: con eso se calcula cuánto dura una respuesta. */
+export const LETRAS_POR_SEGUNDO = 15;
+
+/** Cuánto se calcula que dura una respuesta dicha en voz alta (sin las etiquetas de emoción, que no se leen). */
+export function msDeLaRespuesta(texto: string): number {
+  return Math.round((limpiarEtiquetasDeEmocion(texto).length / LETRAS_POR_SEGUNDO) * 1000);
 }
 
-/** Los gestos de una respuesta nueva, sin los que ya pasaron. */
-export function gestosDeLaRespuesta(
-  antes: readonly Gesto[],
-  texto: string,
-  ahora = performance.now(),
-): Gesto[] {
-  return [...antes.filter((g) => g.hasta > ahora), ...gestosDelTexto(texto, ahora)];
+/**
+ * El único gesto que todavía sale del texto: la risa, y solo con la etiqueta explícita «[laughs]» de la voz. Es
+ * el respaldo de la herramienta `gesto`; las palabras sueltas («jaja», «genial», cifras) ya no disparan nada
+ * porque Mia parecía un GIF (Richard, 7 nov 2026). El motor le aplica la misma pausa de 25 s.
+ */
+export function gestoDeRisa(texto: string): PoseDeGesto | null {
+  return /\[laughs\]/i.test(texto) ? "riendo" : null;
 }
 
 const reloj = (s: number) =>
@@ -103,9 +112,13 @@ export function Estudio({
   const video = useRef<HTMLVideoElement | null>(null);
   const escondido = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inicioMs = useRef<number | null>(null);
-  // Los gestos que salen de lo que dice el invitado (la risa, el aplauso, la idea, las notas): el motor de
-  // poses los lee en cada cuadro (podcast-poses.ts).
-  const gestos = useRef<Gesto[]>([]);
+  // Lo que el motor de poses lee en cada cuadro (podcast-poses.ts): los gestos que pide la IA con su herramienta
+  // (o la risa de respaldo) y el texto de cada respuesta, para saber si es corta o larga. Una conversación nueva
+  // empieza con listas nuevas.
+  const entradas = useRef<{ gestos: PedidoDeGesto[]; respuestas: TextoDeRespuesta[] }>({
+    gestos: [],
+    respuestas: [],
+  });
 
   const ficha = fichas.find((f) => f.id === fichaId) ?? fichas[0] ?? null;
   const enVivo = estado !== "reposo";
@@ -201,7 +214,7 @@ export function Estudio({
     () => ({
       volumen: () => sesion.current?.getOutputVolume() ?? 0,
       frecuencias: () => sesion.current?.getOutputByteFrequencyData() ?? null,
-      gestos: () => gestos.current,
+      entradas: () => entradas.current,
     }),
     [],
   );
@@ -227,8 +240,9 @@ export function Estudio({
       return;
     }
     conversacion.current = inicio.conversacionId;
-    // Una conversación nueva no hereda gestos de la anterior.
-    gestos.current = [];
+    // Una conversación nueva no hereda gestos ni textos de la anterior.
+    entradas.current = { gestos: [], respuestas: [] };
+    const pedir = (pose: PoseDeGesto) => entradas.current.gestos.push({ pose, hora: performance.now() });
     try {
       const { Conversation } = await import("@elevenlabs/client");
       const s = await Conversation.startSession({
@@ -236,19 +250,29 @@ export function Estudio({
         connectionType: "websocket",
         overrides: inicio.overrides,
         ...WORKLETS,
-        onModeChange: ({ mode }) => {
-          gestos.current = gestosAlCambiarDeModo(gestos.current, mode === "speaking");
-          setEstado(mode === "speaking" ? "hablando" : "escuchando");
+        // La herramienta de la IA (C-PODCAST-4): pide un gesto y sigue hablando, sin esperar nada de vuelta. Solo
+        // acepta las cuatro poses de gesto; el motor decide si sale (uno por respuesta, 25 s entre uno y otro).
+        clientTools: {
+          [NOMBRE_HERRAMIENTA_GESTO]: (parametros: unknown) => {
+            const pose = leerPedidoDeGesto(parametros);
+            if (pose) pedir(pose);
+            return pose ? "ok" : "pose desconocida";
+          },
         },
+        onModeChange: ({ mode }) => setEstado(mode === "speaking" ? "hablando" : "escuchando"),
         onMessage: ({ role, message }) => {
-          // Richard terminó de hablar: el invitado piensa hasta que empiece a contestar.
+          // Richard terminó de hablar: el invitado piensa hasta que empiece a contestar (la pose de pensar sale
+          // solo si tarda más de 1,2 s).
           if (role === "user") setEstado((e) => (e === "hablando" ? e : "pensando"));
-          // El texto de la respuesta (llega con las etiquetas de emoción, como «[laughs]»): sus gestos.
-          if (role === "agent") gestos.current = gestosDeLaRespuesta(gestos.current, message);
+          if (role === "agent") {
+            const ahora = performance.now();
+            entradas.current.respuestas.push({ hora: ahora, ms: msDeLaRespuesta(message) });
+            if (gestoDeRisa(message)) pedir("riendo");
+          }
         },
         onDisconnect: (detalle) => {
           sesion.current = null;
-          gestos.current = [];
+          entradas.current = { gestos: [], respuestas: [] };
           setEstado("reposo");
           cerrarEnElPanel();
           if (detalle.reason === "agent")

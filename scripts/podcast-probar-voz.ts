@@ -6,6 +6,10 @@
 // Uso, desde la raíz: estacion/node_modules/.bin/tsx scripts/podcast-probar-voz.ts
 //   (la ficha de ejemplo, con «¿cómo empezó todo?» y «¿eres una persona real?»)
 //   … --ficha 2 --pregunta "¿Crees que hay vida fuera de este planeta?"
+//
+// También registra la herramienta `gesto` (C-PODCAST-4): cada vez que la IA la llama, con qué pose, en qué
+// momento de la respuesta (antes o después del texto y del primer audio) y si la voz siguió después (que la
+// respuesta no se trabe). La contesta como el SDK del estudio, sin que la IA espere nada.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -87,6 +91,14 @@ async function principal() {
   let audio = 0;
   const textos: string[] = [];
   let respondidas = 0;
+  // La línea de tiempo de cada respuesta, para ver dónde cae el gesto y si la voz sigue después.
+  const inicio = Date.now();
+  const ms = () => Date.now() - inicio;
+  let esperandoRespuesta = true;
+  let turno = 0;
+  type Turno = { texto?: number; primerAudio?: number; ultimoAudio?: number; bytes: number };
+  const turnos: Turno[] = [{ bytes: 0 }];
+  const gestos: { pose: unknown; ms: number; turno: number; audioAntes: number }[] = [];
   const salida = path.join(os.tmpdir(), "podcast-prueba-voz.txt");
   await new Promise<void>((listo, falla) => {
     const reloj = setTimeout(() => falla(new Error("El agente no contestó en 60 s.")), 60_000);
@@ -126,15 +138,53 @@ async function principal() {
         const id = (e.ping_event as { event_id: number }).event_id;
         ws.send(JSON.stringify({ type: "pong", event_id: id }));
       }
-      if (e.type === "audio")
-        audio += String((e.audio_event as { audio_base_64?: string })?.audio_base_64 ?? "").length;
-      if (e.type === "user_transcript")
+      if (e.type === "audio") {
+        const largo = String((e.audio_event as { audio_base_64?: string })?.audio_base_64 ?? "").length;
+        audio += largo;
+        const t = turnos[turno]!;
+        t.primerAudio ??= ms();
+        t.ultimoAudio = ms();
+        t.bytes += largo;
+      }
+      if (e.type === "client_tool_call") {
+        const c = e.client_tool_call as {
+          tool_name: string;
+          tool_call_id: string;
+          parameters: { pose?: unknown };
+        };
+        gestos.push({ pose: c.parameters?.pose, ms: ms(), turno, audioAntes: turnos[turno]!.bytes });
         console.log(
-          "Richard (lo que oyó):",
+          `  [${(ms() / 1000).toFixed(1)} s] la IA llamó «${c.tool_name}»: ${JSON.stringify(c.parameters)}`,
+        );
+        // Como el SDK del estudio: contesta enseguida (la IA no lo espera).
+        ws.send(
+          JSON.stringify({
+            type: "client_tool_result",
+            tool_call_id: c.tool_call_id,
+            result: "ok",
+            is_error: false,
+          }),
+        );
+      }
+      if (e.type === "user_transcript") {
+        console.log(
+          `  [${(ms() / 1000).toFixed(1)} s] Richard (lo que oyó):`,
           (e.user_transcription_event as { user_transcript: string }).user_transcript,
         );
+        esperandoRespuesta = true;
+        turno++;
+        turnos[turno] = { bytes: 0 };
+      }
       if (e.type === "agent_response") {
-        textos.push((e.agent_response_event as { agent_response: string }).agent_response);
+        const texto = (e.agent_response_event as { agent_response: string }).agent_response;
+        turnos[turno]!.texto ??= ms();
+        // Un segundo texto en la misma respuesta (si la IA partió su turno) se junta con el primero.
+        if (!esperandoRespuesta) {
+          textos[textos.length - 1] += ` ${texto}`;
+          return;
+        }
+        esperandoRespuesta = false;
+        textos.push(texto);
         const siguiente = preguntas[respondidas];
         respondidas++;
         if (siguiente) {
@@ -166,6 +216,21 @@ async function principal() {
   );
   if (etiquetas.length) console.log(`Etiquetas de emoción quitadas del texto: ${etiquetas.join(" ")}`);
   console.log(`Audio recibido: ${Math.round((audio * 3) / 4 / 1024)} KB`);
+  turnos.forEach((t, i) =>
+    console.log(
+      `${i === 0 ? "Saludo" : `Respuesta ${i}`}: texto a los ${((t.texto ?? 0) / 1000).toFixed(1)} s, audio de ${((t.primerAudio ?? 0) / 1000).toFixed(1)} a ${((t.ultimoAudio ?? 0) / 1000).toFixed(1)} s (${Math.round((t.bytes * 3) / 4 / 1024)} KB)`,
+    ),
+  );
+  if (!gestos.length) console.log("Gestos: la IA no llamó a «gesto» en esta conversación.");
+  for (const g of gestos) {
+    const t = turnos[g.turno]!;
+    const siguio = (t.ultimoAudio ?? 0) > g.ms;
+    console.log(
+      `Gesto «${String(g.pose)}» en la ${g.turno === 0 ? "bienvenida" : `respuesta ${g.turno}`}: a los ${(g.ms / 1000).toFixed(1)} s, ` +
+        `${t.primerAudio && t.primerAudio < g.ms ? "después" : "antes"} del primer audio, con ${Math.round((g.audioAntes * 3) / 4 / 1024)} KB de voz antes; ` +
+        `${siguio ? "la voz siguió después (no se trabó)" : "OJO: no llegó voz después"}.`,
+    );
+  }
 
   // ¿ElevenLabs usó la voz de la ficha? Lo dice la propia conversación guardada (los datos de inicio).
   let vozUsada = "";

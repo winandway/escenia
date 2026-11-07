@@ -8,11 +8,16 @@
 // - Una persona (modo «sin_visor»): sin boca dibujada (se vería falso). Las luces de sus audífonos laten con la
 //   voz y un resplandor de su color la acompaña cuando habla.
 // - Un avatar con poses (Mia): cada pose es su imagen con su cara; el motor de poses (podcast-poses.ts) elige
-//   cuál se ve y el cambio es un fundido de 300 ms, con la cara viva siempre encima de la pose que se ve.
-// Todos respiran y se mecen; riéndose tiembla un poco y aplaudiendo da saltitos. Todo se mueve tocando
+//   cuál se ve, con calma (C-PODCAST-4). El cambio es un fundido de 700 ms con curva suave y, a la vez, el cuerpo
+//   baja unos píxeles, se achica un poco más del 1 % y se inclina apenas, y vuelve: se lee como «se acomoda»,
+//   no como un cambio de cuadro.
+// - Un avatar con escenario (Mia): su micrófono de podcast delante, entrando desde el borde izquierdo, con un
+//   vaivén casi nulo (su casa va detrás, en el panel: Escenario.tsx).
+// Todos respiran (un ciclo de 4,5 s) y se mecen muy poco; riéndose tiembla un poco y aplaudiendo da saltitos.
+// Todo se mueve tocando
 // atributos del SVG en cada cuadro (sin volver a pintar React 60 veces por segundo). Un avatar nuevo entra con
 // una entrada del catálogo, sin tocar este archivo.
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   AVATAR_NUEVO,
   avatarPorId,
@@ -22,7 +27,10 @@ import {
   caminoDeMediaLuna,
   caminoDeSonrisa,
   esRecorte,
+  altoDelMicrofono,
+  pivoteDelMicrofono,
   posesDe,
+  VAIVEN_MICROFONO,
   trazoAfinado,
   type AvatarPodcast,
   type BocaAvatar,
@@ -34,24 +42,33 @@ import {
 } from "@compartido/podcast-avatares";
 import {
   FUNDIDO_MS,
+  SIN_ENTRADAS,
   memoriaInicial,
+  piensa,
   siguientePose,
+  type EntradasDelMotor,
   type EstadoDelInvitado,
-  type Gesto,
   type PoseId,
 } from "@compartido/podcast-poses";
 
 export type EstadoInvitado = EstadoDelInvitado;
 
 /**
- * De dónde sale el sonido del invitado: el volumen (0 a 1), las frecuencias de su voz si hay, y los gestos que
- * salen de lo que dice (la risa, el aplauso, la idea, las notas), para el motor de poses.
+ * De dónde sale el sonido del invitado: el volumen (0 a 1), las frecuencias de su voz si hay, y lo que lee el
+ * motor de poses (los gestos que pide la IA y el texto de cada respuesta).
  */
 export type AudioInvitado = {
   volumen: () => number;
   frecuencias: () => Uint8Array | null;
-  gestos?: () => readonly Gesto[];
+  entradas?: () => EntradasDelMotor;
 };
+
+/** Curva suave de ida y vuelta (sin tirones al empezar ni al terminar). */
+const suave = (x: number) => x * x * (3 - 2 * x);
+/** Cuánto se acomoda el cuerpo en un cambio de pose: baja (px de su imagen), se achica y se inclina, y vuelve. */
+export const ACOMODO = { baja: 7, achica: 0.014, inclina: 0.35 } as const;
+/** Un ciclo de respiración (segundos). */
+export const RESPIRACION_S = 4.5;
 
 const PUNTOS = 11;
 const sonrisaDeOnda = "M-40 -4 Q0 16 40 -4";
@@ -387,6 +404,9 @@ export function RobotInvitado({
   const id = useId().replaceAll(":", "");
   const svg = useRef<SVGSVGElement>(null);
   const cuerpo = useRef<SVGGElement>(null);
+  const microfono = useRef<SVGGElement>(null);
+  // La cara mira hacia arriba con los tres puntos solo si tarda más de 1,2 s (lo decide el motor de poses).
+  const [piensaLaCara, setPiensa] = useState(false);
   const estadoRef = useRef(estado);
   const audioRef = useRef(audio);
   const avatarRef = useRef(avatar);
@@ -406,6 +426,7 @@ export function RobotInvitado({
     let brillo = 0;
     let apertura = APERTURA_EN_REPOSO;
     let memoria = memoriaInicial(performance.now());
+    let caraPiensa = false;
     let visible: PoseId = "tranquila";
     let anterior: PoseId | null = null;
     let fundidoDesde = Number.NEGATIVE_INFINITY;
@@ -454,8 +475,14 @@ export function RobotInvitado({
         return;
       }
 
-      // La pose: el motor decide; el cambio es un fundido, con la que llega encima de la que se va.
-      memoria = siguientePose(memoria, e, ahora, fuente?.gestos?.() ?? [], guardado.tiene);
+      // La pose: el motor decide (con calma); el cambio es un fundido con la que llega encima de la que se va.
+      memoria = siguientePose(memoria, e, ahora, fuente?.entradas?.() ?? SIN_ENTRADAS, guardado.tiene);
+      // La cara piensa con la misma regla que la pose: solo si tarda más de 1,2 s.
+      const pensandoAhora = piensa(memoria, ahora);
+      if (pensandoAhora !== caraPiensa) {
+        caraPiensa = pensandoAhora;
+        setPiensa(pensandoAhora);
+      }
       if (memoria.pose !== visible) {
         anterior = visible;
         visible = memoria.pose;
@@ -464,29 +491,47 @@ export function RobotInvitado({
         llega?.parentNode?.appendChild(llega);
         svg.current?.setAttribute("data-pose", visible);
       }
-      const fundido = Math.min(1, (ahora - fundidoDesde) / FUNDIDO_MS);
-      if (fundido >= 1) anterior = null;
+      const avance = Math.min(1, Math.max(0, (ahora - fundidoDesde) / FUNDIDO_MS));
+      // La opacidad cruza rápido en el medio (curva suave aplicada dos veces): la doble imagen dura poco, y el
+      // acomodo del cuerpo ocupa los 700 ms enteros.
+      const fundido = suave(suave(avance));
+      if (avance >= 1) anterior = null;
+      // La que se va se apaga más tarde que lo que llega se enciende: el cuerpo nunca se ve transparente.
       const opacidad = (p: Partes) =>
         p.pose === visible ? fundido : p.pose === anterior ? 1 - fundido ** 3 : 0;
+      // Mientras dura el fundido, el cuerpo se acomoda: baja, se achica y se inclina apenas, y vuelve.
+      const acomodo = avance < 1 ? Math.sin(Math.PI * avance) : 0;
 
       const crudo = e === "hablando" && fuente ? Math.min(1, Math.max(0, fuente.volumen() * 1.6)) : 0;
       // Sube rápido y baja despacio, como un vúmetro: la boca no tiembla.
       volumenSuave += (crudo - volumenSuave) * (crudo > volumenSuave ? 0.55 : 0.18);
 
-      const respira = e === "hablando" ? 2 : 5;
-      let dy = Math.sin(t * 1.5) * respira;
-      const escala = 1 + Math.sin(t * 1.5) * 0.004;
-      let giro = e === "hablando" ? Math.sin(t * 6.3) * 0.7 * volumenSuave : Math.sin(t * 0.7) * 0.25;
-      // Riéndose tiembla un poco; aplaudiendo da saltitos.
+      // La respiración: lenta (un ciclo de 4,5 s). El vaivén: muy leve, y apenas más cuando habla fuerte.
+      const aire = Math.sin((t * 2 * Math.PI) / RESPIRACION_S);
+      const respira = e === "hablando" ? 2.5 : 4;
+      let dy = aire * respira + ACOMODO.baja * acomodo;
+      const escala = (1 + aire * 0.004) * (1 - ACOMODO.achica * acomodo);
+      let giro =
+        Math.sin(t * 0.6) * 0.2 +
+        (e === "hablando" ? Math.sin(t * 2.1) * 0.3 * volumenSuave : 0) +
+        ACOMODO.inclina * acomodo;
+      // Riéndose tiembla un poco; aplaudiendo da saltitos (solo mientras dura el gesto).
       if (visible === "riendo") {
-        dy += Math.sin(t * 31) * 3.5;
-        giro += Math.sin(t * 17) * 0.5;
-      } else if (visible === "aplaudiendo") dy -= Math.abs(Math.sin(t * 9)) * 5;
+        dy += Math.sin(t * 24) * 2.2;
+        giro += Math.sin(t * 13) * 0.3;
+      } else if (visible === "aplaudiendo") dy -= Math.abs(Math.sin(t * 7)) * 3.5;
       const [px, py] = a.pivote;
       cuerpo.current?.setAttribute(
         "transform",
         `translate(${px} ${py}) rotate(${giro.toFixed(3)}) scale(${escala.toFixed(4)}) translate(${-px} ${-py + dy})`,
       );
+      // El micrófono: quieto en su brazo, con un vaivén casi nulo alrededor de donde entra.
+      const mic = a.escenario?.microfono;
+      if (mic && microfono.current) {
+        const [mx, my] = pivoteDelMicrofono(mic);
+        const vaiven = Math.sin(t * 0.8) * VAIVEN_MICROFONO;
+        microfono.current.setAttribute("transform", `rotate(${(mic.giro + vaiven).toFixed(3)} ${mx} ${my})`);
+      }
 
       // La abertura de la boca (la misma para todas las poses; cada una con su tamaño).
       const voz = e === "hablando" && fuente ? nivelDeVoz(fuente.frecuencias(), crudo) : 0;
@@ -604,7 +649,7 @@ export function RobotInvitado({
   }, []);
 
   const caja = cajaDelEncuadre(avatar);
-  const pensando = estado === "pensando";
+  const pensando = piensaLaCara && estado === "pensando";
   const persona = avatar.cara.modo === "sin_visor";
 
   return (
@@ -652,6 +697,18 @@ export function RobotInvitado({
           );
         })}
       </g>
+      {/* El micrófono va delante del invitado y no respira con él (C-PODCAST-5: nunca le tapa la cara). */}
+      {avatar.escenario?.microfono && (
+        <g ref={microfono} key={`mic-${avatar.id}`} data-microfono="">
+          <image
+            href={avatar.escenario.microfono.imagen}
+            x={avatar.escenario.microfono.x}
+            y={avatar.escenario.microfono.y}
+            width={avatar.escenario.microfono.dibujo}
+            height={altoDelMicrofono(avatar.escenario.microfono)}
+          />
+        </g>
+      )}
     </svg>
   );
 }
