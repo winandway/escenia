@@ -1046,6 +1046,7 @@ export async function pasoArmar(
       : null,
     etiquetaFija: plan.etiqueta_fija ?? null,
     tarjetaOpaca: plan.tarjeta_opaca,
+    entradaPersona: plan.entrada_persona,
     avatar: conPersonas ? null : avatarProps,
     apariciones,
     audio,

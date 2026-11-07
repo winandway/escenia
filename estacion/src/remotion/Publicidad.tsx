@@ -22,6 +22,7 @@ import {
   cierreConFoto,
   contenidoDelTelefono,
   curvaDelRayo,
+  entradaDePersona,
   entradaTrasPortada,
   etiquetaDePortada,
   formatoCifra,
@@ -274,24 +275,30 @@ const Aparicion: React.FC<{
   entra: boolean;
   /** Alto del medio cuerpo (en el diseño «teléfono» va un poco más chica para no tapar la tarjeta). */
   altoMedio?: number;
-}> = ({ a, entra, altoMedio = Z.medio.alto }) => {
+  /** «directa»: ya en su sitio y completa (sin deslizarse desde el borde). */
+  modo?: "deslizar" | "directa";
+}> = ({ a, entra, altoMedio = Z.medio.alto, modo = "deslizar" }) => {
   const frame = useCurrentFrame();
   const cuerpo = a.encuadre === "cuerpo";
   const alto = cuerpo ? Z.cuerpo.alto : altoMedio;
   const ancho = (alto * a.ancho) / a.alto;
-  const mov = entra
-    ? interpolate(frame, [0, 9], [1, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) })
-    : 0;
+  const e = entradaDePersona(frame, entra ? modo : null, a.encuadre);
   return (
     <div
       style={{
         position: "absolute",
-        left: (cuerpo ? (1080 - ancho) / 2 : Z.medio.x) - (cuerpo ? 0 : 420 * mov),
+        left: (cuerpo ? (1080 - ancho) / 2 : Z.medio.x) + e.dx,
         bottom: 0,
         height: alto,
         width: ancho,
-        transform: cuerpo ? `translateY(${260 * mov}px)` : undefined,
-        opacity: cuerpo ? 1 - mov * 0.8 : 1,
+        transform:
+          e.escala !== 1
+            ? `translateY(${e.dy}px) scale(${e.escala})`
+            : cuerpo
+              ? `translateY(${e.dy}px)`
+              : undefined,
+        transformOrigin: "50% 100%",
+        opacity: e.opacidad,
       }}
     >
       <OffthreadVideo src={staticFile(a.ruta)} transparent muted style={{ width: "100%", height: "100%" }} />
@@ -1525,6 +1532,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
                 a={a}
                 entra={!seguida && a.inicioMs > 0}
                 altoMedio={telefono ? Z.telefono.persona : Z.medio.alto}
+                modo={p.entradaPersona}
               />
             )}
           </Sequence>

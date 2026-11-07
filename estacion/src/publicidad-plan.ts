@@ -77,6 +77,11 @@ export const esquemaPlanPublicidad = z
     etiqueta_fija: z.string().min(2).max(40).optional(),
     /** La tarjeta de cada momento entra ya opaca, sin fundido (Kipuu, 7 nov 2026: «entra casi transparente»). */
     tarjeta_opaca: z.boolean().default(false),
+    /**
+     * Cómo entra la persona (diseños «centro» y «teléfono»): «deslizar» desde el borde, como siempre, o
+     * «directa», ya completa en su sitio (Kipuu, 7 nov 2026: deslizando se veía cortada en el borde).
+     */
+    entrada_persona: z.enum(["deslizar", "directa"]).default("deslizar"),
     /** Letras por segundo de la voz (11,6 es el ritmo de los documentales; un comercial va a 13,5). */
     letras_por_segundo: z.number().min(8).max(16).optional(),
     /**

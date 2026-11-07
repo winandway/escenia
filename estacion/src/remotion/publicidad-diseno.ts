@@ -87,6 +87,12 @@ export const esquemaPublicidad = z.object({
    */
   tarjetaOpaca: z.boolean().default(false),
   /**
+   * Cómo entra la persona en los diseños «centro» y «teléfono»: «deslizar» (de siempre: el medio cuerpo
+   * desde la izquierda, el cuerpo entero desde abajo) o «directa» (ya en su sitio, completa, con un rebote
+   * suave). Deslizando se veía cortada en el borde en los primeros cuadros (Kipuu, video 3, 7 nov 2026).
+   */
+  entradaPersona: z.enum(["deslizar", "directa"]).default("deslizar"),
+  /**
    * Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. Con
    * `recuadro`, la persona trae su fondo y va dentro de un marco redondeado del color de la marca.
    */
@@ -618,4 +624,26 @@ export function medidasDeInsignia(img: { ancho: number; alto: number }): {
   const ancho = ANCHO_INSIGNIA;
   const alto = Math.max(28, Math.round((ancho * img.alto) / Math.max(1, img.ancho)));
   return { ancho, alto, aire: Math.ceil(alto / 4) };
+}
+
+/**
+ * La entrada de la persona en el cuadro `frame` desde que aparece (diseños «centro» y «teléfono»): cuánto
+ * va corrida (dx, dy en px), su escala y su opacidad. «deslizar» es la de siempre (9 cuadros: el medio cuerpo
+ * desde 420 px a la izquierda, el cuerpo entero desde 260 px abajo y apareciendo); «directa» la deja en su
+ * sitio y completa desde el primer cuadro, con un rebote de 0,94 a 1 en 6 cuadros. `null`: ya estaba.
+ */
+export function entradaDePersona(
+  frame: number,
+  modo: "deslizar" | "directa" | null,
+  encuadre: "medio" | "cuerpo",
+): { dx: number; dy: number; escala: number; opacidad: number } {
+  if (modo === "directa") {
+    const t = Math.min(1, Math.max(0, frame / 6));
+    return { dx: 0, dy: 0, escala: 0.94 + 0.06 * (1 - (1 - t) ** 3), opacidad: 1 };
+  }
+  const t = Math.min(1, Math.max(0, frame / 9));
+  const mov = modo === "deslizar" ? (1 - t) ** 3 : 0;
+  return encuadre === "cuerpo"
+    ? { dx: 0, dy: 260 * mov, escala: 1, opacidad: 1 - mov * 0.8 }
+    : { dx: -420 * mov, dy: 0, escala: 1, opacidad: 1 };
 }

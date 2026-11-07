@@ -1054,3 +1054,49 @@ describe("Kipuu, campaña del 7 nov 2026: los cambios del PDF a los cuatro video
     ).toEqual([]);
   });
 });
+
+describe("Kipuu, 7 nov 2026: la presentadora entra ya completa (sin verse cortada en el borde)", () => {
+  // Video 3 de la campaña: cerca del segundo 4,5 la presentadora entraba deslizándose desde la izquierda y en
+  // los primeros cuadros se veía cortada en el borde. Con «directa» aparece en su sitio con un rebote suave.
+  it("el plan y el video aceptan la entrada directa; por defecto sigue deslizándose", () => {
+    const base = {
+      marca: "Kipuu",
+      logo: "l.png",
+      partes: ["¿Tu nube es un espejo? Kipuu no es un espejo. Descárgalo gratis hoy."],
+      momentos: [{ frase: "Tu nube es" }, { frase: "Kipuu no es" }, { frase: "un espejo" }],
+      cierre: { frase: "Descárgalo gratis", lineas: [] },
+    };
+    expect(esquemaPlanPublicidad.parse(base).entrada_persona).toBe("deslizar");
+    expect(esquemaPlanPublicidad.parse({ ...base, entrada_persona: "directa" }).entrada_persona).toBe(
+      "directa",
+    );
+    expect(esquemaPublicidad.shape.entradaPersona.parse(undefined)).toBe("deslizar");
+  });
+
+  it("con la entrada directa no se corre ni se apaga en ningún cuadro; deslizando, sí (como antes)", async () => {
+    const { entradaDePersona } = await import("../estacion/src/remotion/publicidad-diseno");
+    for (let cuadro = 0; cuadro <= 12; cuadro++) {
+      for (const encuadre of ["medio", "cuerpo"] as const) {
+        const e = entradaDePersona(cuadro, "directa", encuadre);
+        expect(e.dx).toBe(0);
+        expect(e.dy).toBe(0);
+        expect(e.opacidad).toBe(1);
+        expect(e.escala).toBeGreaterThanOrEqual(0.94);
+        expect(e.escala).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(entradaDePersona(12, "directa", "medio").escala).toBe(1);
+    // Deslizando, el medio cuerpo arranca 420 px a la izquierda (cortado en el borde) y llega a su sitio en 9 cuadros.
+    expect(entradaDePersona(0, "deslizar", "medio")).toEqual({ dx: -420, dy: 0, escala: 1, opacidad: 1 });
+    expect(entradaDePersona(9, "deslizar", "medio").dx).toBeCloseTo(0);
+    // El cuerpo entero sube desde abajo y aparece.
+    const cuerpo = entradaDePersona(0, "deslizar", "cuerpo");
+    expect(cuerpo.dy).toBe(260);
+    expect(cuerpo.opacidad).toBeCloseTo(0.2);
+    const { readFileSync } = await import("node:fs");
+    const fuente = readFileSync(new URL("../estacion/src/remotion/Publicidad.tsx", import.meta.url), "utf8");
+    expect(fuente).toContain("entradaDePersona(frame, entra ? modo : null, a.encuadre)");
+    const armado = readFileSync(new URL("../estacion/src/publicidad.ts", import.meta.url), "utf8");
+    expect(armado).toContain("entradaPersona: plan.entrada_persona");
+  });
+});

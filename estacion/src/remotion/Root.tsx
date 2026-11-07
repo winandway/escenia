@@ -25,6 +25,7 @@ const publicidadVacia: PropsPublicidad = {
   portada: null,
   etiquetaFija: null,
   tarjetaOpaca: false,
+  entradaPersona: "deslizar",
   avatar: null,
   apariciones: [],
   audio: "",
