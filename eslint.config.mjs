@@ -31,6 +31,8 @@ export default defineConfig([
     rules: { "security/detect-non-literal-fs-filename": "off" },
   },
   globalIgnores([
+    // Las copias de trabajo de otras sesiones (git worktree) viven aquí dentro: no son de esta revisión.
+    ".claude/**",
     ".next/**",
     ".open-next/**",
     ".wrangler/**",
