@@ -2,5 +2,6 @@
 
 Una línea por trabajo, la más nueva arriba: `AAAA-MM-DD · puesto · qué hice · resultado · commit`.
 
+2026-11-07 · desarrollador · Podcast IA: catálogo de avatares con la robot de coleta (visor limpio, cara viva generalizada, selector con miniatura), origen ficción/real con la leyenda que dice la verdad, formato «entrevista a la IA» con su prompt, columnas avatar/origen/tipo que se agregan solas (migradas en vivo), ficha Luna IA del episodio 1 y la de ejemplo con coleta y voz paisa; dos pruebas de voz (paisa confirmada) · ok, falta la revisión de calidad · ver commits del 7 nov
 2026-11-06 · revisor-calidad · revisión única del Podcast IA (cf24774) · APROBADO, con dos débiles arreglados después: el canario ya ve la falta de voces y el día del tope es UTC−5 · ver commit siguiente
 2026-11-06 · desarrollador · Podcast IA: estudio /podcast con el robot animado y el escenario de neón, fichas en /podcast/fichas, URL firmada de ElevenLabs Agents, tope de minutos (C-PODCAST-1), canario, script del agente y docs/PODCAST.md · a medias: todo publicado; la voz del invitado espera la clave de Agents de Richard · cf24774

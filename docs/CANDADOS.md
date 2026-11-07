@@ -15,7 +15,7 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
 | C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                    | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                     |
 | C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
 | C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                       | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
-| C-PODCAST-1  | El invitado del podcast solo sabe su ficha; tope de minutos por día y 10 min por conversación      | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                   |
+| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos   | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                   |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
 
@@ -1984,5 +1984,30 @@ pruebas/podcast-estudio.test.tsx`. Comprobado en rojo el 6 nov 2026 metiendo cad
   `podcast` (apagado sin clave; error si la última conversación no se pudo abrir).
 - **Qué NO tocar:** no encender el permiso de cambiar el modelo por conversación (`llm`); no quitar la URL
   firmada (`enable_auth`); no contar una conversación abierta como cero; no mandar la historia al navegador
-  (el estudio solo recibe nombre, etiqueta y tema); si se actualiza `@elevenlabs/client`, volver a copiar sus
-  worklets a `public/podcast/worklets/` (la prueba se pone en rojo si no coinciden).
+  (el estudio solo recibe nombre, etiqueta, tema, tipo, origen y avatar); si se actualiza `@elevenlabs/client`,
+  volver a copiar sus worklets a `public/podcast/worklets/` (la prueba se pone en rojo si no coinciden).
+- **Ampliado el 7 nov 2026 (la leyenda que dice la verdad, los formatos y los avatares):**
+  - Las historias pasaron a ser de **ficción** (las escribimos nosotros) y llegó la **entrevista a la IA**. La
+    ficha ganó `origen` («ficcion» o «real») y `tipo` («historia» o «entrevista_ia»). El permiso por escrito solo
+    se exige en una historia real (`fichaLista`). La leyenda sale de `leyendaDelPodcast(origen, tipo)`: ficción
+    «Voz y avatar generados por IA · Historia de ficción creada para inspirar», real la de siempre, entrevista
+    «Voz y avatar generados por IA». **Una ficha de ficción jamás dice «historia real»** (y un origen raro cae en
+    ficción, nunca en real). El letrero amarillo «no publicar» es solo de la ficha marcada como ejemplo. Protege
+    al canal: YouTube exige avisar del contenido sintético realista y castiga presentar como real algo inventado.
+  - El prompt de ficción: si le preguntan si es una persona real, no lo afirma (es un personaje creado para el
+    podcast). El de la entrevista a la IA: habla como IA sin fingir ser humana, 2 o 3 frases (5 a 8 si piden
+    más), fiel a la ciencia y diciendo cuándo es hipótesis, respetuosa con la fe y la muerte, sin consejos
+    médicos, legales ni financieros personales. `max_tokens` del agente subió de 220 a 400 para las respuestas
+    largas (la prueba falla si baja).
+  - El **avatar** de la ficha sale de un catálogo (`compartido/podcast-avatares.ts`): la robot de coleta (primera)
+    y el robot clásico, con la cara medida sobre cada imagen.
+  - **Las columnas nuevas** (`avatar`, `origen`, `tipo`): `schema.sql` corre en cada publicación y SQLite no tiene
+    «ADD COLUMN IF NOT EXISTS»; el `ALTER TABLE` no va ahí. Las agrega `asegurarColumnasDeLaFicha` (solo las que
+    faltan; un «duplicate column» de otro pedido simultáneo no es falla), que el panel corre solo cuando una
+    consulta de fichas dice «no such column», y `scripts/migrar-podcast-fichas.ts` (corrido en vivo dos veces el
+    7 nov 2026; la segunda no hizo nada). La semilla de `schema.sql` no nombra columnas nuevas, para no romperse
+    en una base vieja.
+  - **Cómo se comprueba:** `npx vitest run pruebas/podcast.test.ts pruebas/podcast-rutas.test.ts
+pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado en rojo antes de construir cada parte (el origen, el tipo y el avatar: las pruebas fallaban y después pasaron) y metiendo a propósito una columna nueva en la semilla de `schema.sql` (se puso en rojo «schema.sql corre sin romperse sobre una base vieja»).
+  - **Qué NO tocar:** no poner `ALTER TABLE` en `schema.sql`; no hacer que un origen desconocido caiga en «real»;
+    no quitar la regla de «personaje creado para el podcast» del prompt de ficción.
