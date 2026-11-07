@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MAX_SEGUNDOS_CONVERSACION,
+  avisoDeTiempo,
   NOMBRE_HERRAMIENTA_GESTO,
   limpiarEtiquetasDeEmocion,
 } from "@compartido/podcast";
@@ -177,14 +178,25 @@ export function Estudio({
     return () => clearTimeout(t);
   }, [enVivo, mostrarControles]);
 
-  // El reloj de la conversación (el corte de los 10 minutos lo hace el propio agente).
+  // El reloj de la conversación (el corte de los 20 minutos lo hace el propio agente). Cuando quedan 3 minutos y
+  // 1 minuto, los controles se asoman con el aviso, para que Richard alcance a cerrar (7 nov 2026).
+  const ultimoAvisoDeTiempo = useRef<string | null>(null);
   useEffect(() => {
     if (!enVivo) return;
+    ultimoAvisoDeTiempo.current = null;
     const t = setInterval(() => {
-      if (inicioMs.current) setSegundos(Math.floor((Date.now() - inicioMs.current) / 1000));
+      if (!inicioMs.current) return;
+      const s = Math.floor((Date.now() - inicioMs.current) / 1000);
+      setSegundos(s);
+      const avisoNuevo = avisoDeTiempo(s);
+      if (avisoNuevo && avisoNuevo !== ultimoAvisoDeTiempo.current) {
+        ultimoAvisoDeTiempo.current = avisoNuevo;
+        setAviso(avisoNuevo);
+        mostrarControles();
+      }
     }, 500);
     return () => clearInterval(t);
-  }, [enVivo]);
+  }, [enVivo, mostrarControles]);
 
   const cerrarEnElPanel = useCallback(() => {
     inicioMs.current = null;
@@ -197,7 +209,7 @@ export function Estudio({
         if (d?.segundos != null) setUsados((u) => u + Math.ceil(d.segundos! / 60));
       })
       .catch(() => {
-        // Si no llega, la próxima conversación la cierra contando los 10 minutos: nunca de menos.
+        // Si no llega, la próxima conversación la cierra contando los 20 minutos: nunca de menos.
       });
   }, []);
 
@@ -277,7 +289,7 @@ export function Estudio({
           setEstado("reposo");
           cerrarEnElPanel();
           if (detalle.reason === "agent")
-            setAviso("La conversación terminó (cada una dura como mucho 10 minutos).");
+            setAviso("La conversación terminó (cada una dura como mucho 20 minutos).");
           else if (detalle.reason === "error") setAviso(`Se cortó la conversación: ${detalle.message}`);
         },
         onError: (mensaje) => setAviso(`El invitado tuvo un problema: ${mensaje}`),

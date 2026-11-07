@@ -1974,10 +1974,10 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   cobra por minuto. Sin candado, una pestaña olvidada o un día de pruebas se comen los minutos del plan y
   después cobran; y un invitado que inventa le pone en la boca a una persona real cosas que nunca dijo.
 - **Qué se hizo:** (1) tope de minutos por día en la base (`podcast_minutos_dia`, 60 por defecto, editable en
-  Fichas; sin número válido es 0) y cada conversación abierta cuenta como 10 minutos: solo se abre si caben
-  10 más (`cabeOtraConversacion`, `abrirConversacion`); (2) 10 minutos como mucho, en el agente y en la cuenta
+  Fichas; sin número válido es 0) y cada conversación abierta cuenta como 20 minutos: solo se abre si caben
+  20 más (`cabeOtraConversacion`, `abrirConversacion`); (2) 20 minutos como mucho (eran 10 y cortaron el episodio 1 antes del cierre, 7 nov 2026), en el agente y en la cuenta
   del panel, que mide con SU reloj; (3) también pregunta al tope de gasto del día; (4) la conversación que
-  quedó abierta se cierra contando los 10 minutos; (5) el prompt es SOLO la ficha, con las reglas de no
+  quedó abierta se cierra contando los 20 minutos; (5) el prompt es SOLO la ficha, con las reglas de no
   inventar, y la historia no puede cerrar su bloque (`construirPrompt`); (6) solo Gemini 2.5 Flash y
   Flash-Lite, y el navegador no puede cambiar el modelo (`configuracionDelAgente`, permiso `llm: false`);
   (7) la clave nunca llega al navegador: solo una URL firmada por conversación; (8) una historia real sin

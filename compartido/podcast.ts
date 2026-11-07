@@ -43,8 +43,21 @@ export const esTipoFicha = (v: unknown): v is TipoFicha =>
 /** El de las fichas nuevas y el de las que ya estaban (el valor por defecto de la columna). */
 export const TIPO_POR_DEFECTO: TipoFicha = "historia";
 
-/** Ninguna conversación pasa de 10 minutos: el agente la corta solo (y el panel la cuenta así). */
-export const MAX_SEGUNDOS_CONVERSACION = 600;
+/**
+ * Ninguna conversación pasa de 20 minutos: el agente la corta solo (y el panel la cuenta así). Eran 10, y el 7 nov
+ * 2026 el episodio 1 de Richard se cortó justo antes de las dos últimas preguntas y la despedida: un episodio de
+ * catorce preguntas con «cuéntame más» pasa de 10 minutos. El estudio avisa cuando quedan 3 minutos y 1 minuto.
+ */
+export const MAX_SEGUNDOS_CONVERSACION = 1200;
+
+/** El aviso que ve Richard cuando se acerca el corte (null si todavía falta). */
+export function avisoDeTiempo(segundos: number, maximo = MAX_SEGUNDOS_CONVERSACION): string | null {
+  const quedan = maximo - segundos;
+  if (quedan <= 0) return null;
+  if (quedan <= 60) return "Queda 1 minuto de conversación: despídete ya.";
+  if (quedan <= 180) return "Quedan 3 minutos de conversación: ve a las preguntas del cierre.";
+  return null;
+}
 export const AJUSTE_TOPE_MINUTOS = "podcast_minutos_dia";
 export const TOPE_MINUTOS_POR_DEFECTO = 60;
 /** El tope que se puede poner en el panel: de 0 (apagado) a 4 horas al día. */
@@ -278,8 +291,8 @@ export function idDeVozInvitado(voz: string, mapa: Partial<Record<string, string
 }
 
 /**
- * ¿Se puede abrir otra conversación hoy? Cada una se cuenta como 10 minutos mientras está abierta (lo
- * más que puede durar), así que solo se abre si caben 10 minutos más debajo del tope.
+ * ¿Se puede abrir otra conversación hoy? Cada una se cuenta como 20 minutos mientras está abierta (lo
+ * más que puede durar), así que solo se abre si caben 20 minutos más debajo del tope.
  */
 export function cabeOtraConversacion(segundosUsadosHoy: number, topeMinutos: number): string | null {
   const tope = Math.max(0, topeMinutos) * 60;

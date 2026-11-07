@@ -239,7 +239,7 @@ export class TopeDelPodcast extends Error {
 }
 
 /**
- * Cierra una conversación que sigue abierta: cuenta lo que pasó desde que empezó, sin pasar de 10 minutos,
+ * Cierra una conversación que sigue abierta: cuenta lo que pasó desde que empezó, sin pasar de 20 minutos,
  * y anota su costo en el libro de gastos. Si ya estaba cerrada no hace nada (un doble cierre no cobra dos veces).
  */
 export async function cerrarConversacion(
@@ -272,7 +272,7 @@ export async function cerrarConversacion(
 
 /**
  * Abre una conversación nueva si cabe en el tope del día y en el tope de gasto. Las que quedaron abiertas
- * (una pestaña cerrada de golpe) se cierran antes contando los 10 minutos completos: así nunca se cuenta
+ * (una pestaña cerrada de golpe) se cierran antes contando los 20 minutos completos: así nunca se cuenta
  * de menos.
  */
 export async function abrirConversacion(db: BaseDatos, fichaId: number): Promise<number> {

@@ -41,7 +41,7 @@ Episodios de 5 a 8 minutos. No se monta nada después: Richard abre **el estudio
 6. Conversa. Arriba a la derecha del invitado se ve su estado: **Escuchando**, **Pensando** o **Hablando**.
    Los controles se esconden solos a los 2,5 segundos (y el puntero del ratón también); al mover el ratón
    vuelven.
-7. **Terminar** (o espera: a los 10 minutos el invitado se despide y la conversación se corta sola).
+7. **Terminar** (o espera: a los 20 minutos el invitado se despide y la conversación se corta sola; cuando quedan 3 minutos y 1 minuto, los controles se asoman con el aviso).
 
 Siempre está a la vista, también en la grabación, la leyenda que dice la verdad según la ficha:
 
@@ -101,7 +101,7 @@ Las fichas no se borran: se archivan desde los tres puntos.
   lo dice. No hay un segundo motor de voz.
 - `scripts/podcast-agente.ts` crea (o pone al día) **un agente** con Gemini 2.5 Flash (respaldo: Flash-Lite),
   voz `eleven_v3_conversational` (la que sirve para las voces hechas con Voice Design v3), idioma español,
-  10 minutos por conversación, una conversación a la vez, **URL firmada obligatoria** y sin recargo por pasar
+  20 minutos por conversación, una conversación a la vez, **URL firmada obligatoria** y sin recargo por pasar
   el límite de llamadas. Solo se pueden cambiar por conversación el prompt, el primer mensaje y la voz; **el
   modelo de texto no se puede cambiar desde el navegador**.
 - Al tocar «Empezar», el panel (`POST /datos/podcast/conversaciones`) revisa los dos topes, pide a ElevenLabs
@@ -417,11 +417,11 @@ que las voces: sirve para ver el uso, aunque los minutos del plan ya estén paga
 ## Los candados (C-PODCAST-1)
 
 1. **Tope de minutos por día** en la base (`podcast_minutos_dia`, 60 por defecto; se cambia en Fichas, de 0
-   a 240). Cada conversación abierta cuenta como 10 minutos: solo se abre si caben 10 más. Sin un número
+   a 240). Cada conversación abierta cuenta como 20 minutos: solo se abre si caben 20 más. Sin un número
    válido el tope es cero.
-2. **10 minutos por conversación**, en el agente (`max_duration_seconds`) y en la cuenta del panel.
+2. **20 minutos por conversación** (eran 10: el 7 nov 2026 el episodio 1 se cortó antes del cierre), en el agente (`max_duration_seconds`) y en la cuenta del panel.
 3. **El tope de gasto del día** (Ajustes) también se pregunta antes de abrir.
-4. Una pestaña cerrada de golpe deja la conversación abierta: la siguiente la cierra contando los 10 minutos
+4. Una pestaña cerrada de golpe deja la conversación abierta: la siguiente la cierra contando los 20 minutos
    completos. Nunca se cuenta de menos.
 5. **Solo la ficha:** el prompt lleva la historia entre marcas y las reglas de no inventar; la historia no
    puede cerrar el bloque para meter reglas nuevas.

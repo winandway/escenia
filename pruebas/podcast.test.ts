@@ -9,6 +9,7 @@ import {
   LEYENDAS,
   LEYENDA_ENTREVISTA_IA,
   MAX_SEGUNDOS_CONVERSACION,
+  avisoDeTiempo,
   VOCES_INVITADO,
   cabeOtraConversacion,
   HERRAMIENTA_GESTO,
@@ -216,10 +217,10 @@ describe("la leyenda", () => {
 });
 
 describe("los topes del podcast (C-PODCAST-1)", () => {
-  it("cada conversación abierta cuenta como 10 minutos", () => {
-    expect(MAX_SEGUNDOS_CONVERSACION).toBe(600);
-    expect(cabeOtraConversacion(50 * 60, 60)).toBeNull();
-    expect(cabeOtraConversacion(50 * 60 + 1, 60)).toMatch(/tope de minutos/);
+  it("cada conversación abierta cuenta como 20 minutos (con 10 se cortó el episodio 1 antes del cierre)", () => {
+    expect(MAX_SEGUNDOS_CONVERSACION).toBe(1200);
+    expect(cabeOtraConversacion(60 * 60 - MAX_SEGUNDOS_CONVERSACION, 60)).toBeNull();
+    expect(cabeOtraConversacion(60 * 60 - MAX_SEGUNDOS_CONVERSACION + 1, 60)).toMatch(/tope de minutos/);
     expect(cabeOtraConversacion(0, 0)).toMatch(/tope de minutos/);
     expect(cabeOtraConversacion(0, -5)).toMatch(/tope de minutos/);
   });
@@ -241,13 +242,15 @@ describe("los topes del podcast (C-PODCAST-1)", () => {
   });
 
   it("no abre otra conversación si se pasa del tope del día, y cuenta de más las que quedaron abiertas", async () => {
-    await guardarAjuste(db, AJUSTE_TOPE_MINUTOS, "20");
+    // Aquí se mide el tope de MINUTOS: el de gasto (aparte, en su propia prueba) queda holgado.
+    await guardarAjuste(db, "presupuesto_diario_usd", "100");
+    await guardarAjuste(db, AJUSTE_TOPE_MINUTOS, String((2 * MAX_SEGUNDOS_CONVERSACION) / 60));
     const a = await abrirConversacion(db, fichaId);
-    expect(await segundosUsadosHoy(db)).toBe(600);
+    expect(await segundosUsadosHoy(db)).toBe(MAX_SEGUNDOS_CONVERSACION);
     const b = await abrirConversacion(db, fichaId);
-    // La primera quedó abierta (pestaña cerrada de golpe): se cerró contando los 10 minutos completos.
+    // La primera quedó abierta (pestaña cerrada de golpe): se cerró contando los 20 minutos completos.
     expect(await db.uno("SELECT segundos FROM podcast_conversaciones WHERE id = ?", [a])).toEqual({
-      segundos: 600,
+      segundos: MAX_SEGUNDOS_CONVERSACION,
     });
     await expect(abrirConversacion(db, fichaId)).rejects.toBeInstanceOf(TopeDelPodcast);
     expect(b).toBeGreaterThan(a);
@@ -264,7 +267,7 @@ describe("los topes del podcast (C-PODCAST-1)", () => {
     expect(await db.todos("SELECT id FROM podcast_conversaciones")).toHaveLength(0);
   });
 
-  it("al cerrar cuenta con el reloj del panel, sin pasar de 10 minutos, y un doble cierre no cobra dos veces", async () => {
+  it("al cerrar cuenta con el reloj del panel, sin pasar de 20 minutos, y un doble cierre no cobra dos veces", async () => {
     const id = await abrirConversacion(db, fichaId);
     await db.ejecutar(
       "UPDATE podcast_conversaciones SET inicio = datetime('now', '-3 minutes') WHERE id = ?",
@@ -285,7 +288,7 @@ describe("los topes del podcast (C-PODCAST-1)", () => {
       "UPDATE podcast_conversaciones SET inicio = datetime('now', '-45 minutes') WHERE id = ?",
       [larga],
     );
-    expect((await cerrarConversacion(db, larga))?.segundos).toBe(600);
+    expect((await cerrarConversacion(db, larga))?.segundos).toBe(MAX_SEGUNDOS_CONVERSACION);
   });
 });
 
@@ -310,7 +313,8 @@ describe("el modelo de texto del invitado y lo que cuesta", () => {
     expect(agente.prompt.llm).toBe("gemini-2.5-flash");
     expect(agente.prompt.backup_llm_config.order.every((m) => m in LLM_AGENTE_PERMITIDOS)).toBe(true);
     expect(agente.language).toBe("es");
-    expect(c.conversation_config.conversation.max_duration_seconds).toBe(600);
+    expect(c.conversation_config.conversation.max_duration_seconds).toBe(MAX_SEGUNDOS_CONVERSACION);
+    expect(MAX_SEGUNDOS_CONVERSACION).toBe(1200);
     expect(c.platform_settings.auth.enable_auth).toBe(true);
     expect(c.platform_settings.call_limits).toEqual({
       agent_concurrency_limit: 1,
@@ -647,5 +651,15 @@ describe("el podcast es de Full Código (7 nov 2026)", () => {
       expect(p).toContain("Full Código (@FullCodigo)");
       expect(p).toMatch(/suscribirse a Full Código/);
     }
+  });
+});
+
+describe("el aviso antes del corte (7 nov 2026: el episodio 1 se cortó antes del cierre)", () => {
+  it("avisa a los 3 minutos y al minuto del final, y antes no dice nada", () => {
+    expect(avisoDeTiempo(0)).toBeNull();
+    expect(avisoDeTiempo(MAX_SEGUNDOS_CONVERSACION - 181)).toBeNull();
+    expect(avisoDeTiempo(MAX_SEGUNDOS_CONVERSACION - 180)).toMatch(/Quedan 3 minutos/);
+    expect(avisoDeTiempo(MAX_SEGUNDOS_CONVERSACION - 60)).toMatch(/Queda 1 minuto/);
+    expect(avisoDeTiempo(MAX_SEGUNDOS_CONVERSACION)).toBeNull();
   });
 });

@@ -16,6 +16,11 @@ describe("C-GITIGNORE-1: git no esconde código", () => {
       ["ls-files", "--others", "--ignored", "--exclude-standard", "--", ...CARPETAS_DE_CODIGO],
       { cwd: raiz, encoding: "utf8" },
     );
-    expect(ignorados.trim().split("\n").filter(Boolean)).toEqual([]);
+    // El .DS_Store lo crea el Finder de la Mac cada vez que alguien abre la carpeta: no es código (7 nov 2026).
+    const deCodigo = ignorados
+      .trim()
+      .split("\n")
+      .filter((f) => f && !f.endsWith(".DS_Store"));
+    expect(deCodigo).toEqual([]);
   });
 });
