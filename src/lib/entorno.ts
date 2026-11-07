@@ -16,6 +16,11 @@ const esquemaEntorno = z.object({
   GERENTE_SECRETO: z.string().min(32).optional(),
   // El token del sitio para mandar correos (API de YaDominios). Sin él vale el ajuste correo_token.
   YAD_TOKEN: z.string().min(10).optional(),
+  // El invitado del Podcast IA (docs/PODCAST.md): la clave de ElevenLabs con permiso de Agents y el id del
+  // agente. Sin ellas valen las que cargó el script en la base (ajustes podcast_elevenlabs_clave y
+  // podcast_agente_id). Nunca llegan al navegador.
+  ELEVENLABS_AGENTES_KEY: z.string().min(10).optional(),
+  ELEVENLABS_AGENTE_ID: z.string().min(5).optional(),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;

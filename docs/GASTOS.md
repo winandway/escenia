@@ -30,16 +30,17 @@ clave «Escenia» y se lee el uso por clave).
 Del libro `gastos` de la base del panel (`fecha`, `servicio`, `detalle`, `costo_usd`). La pieza se deduce del
 `detalle` con `piezaDelGasto` (`src/lib/gastos-mes.ts`):
 
-| Detalle anotado                    | Pieza                                 |
-| ---------------------------------- | ------------------------------------- |
-| `voz guion 13`, `imagen guion 4 …` | Guion N                               |
-| `anuncio 1: …`                     | Anuncio N                             |
-| `director, trabajo 1: …`           | Director · video N                    |
-| `director: encargo 7`              | Director · proyecto N                 |
-| `transcripción grabación 1`        | Grabación N                           |
-| `plan de anuncio: …`               | Planes de anuncios                    |
-| `guion: <título>`                  | Guiones escritos por la IA            |
-| `imagen escena N`                  | Imágenes de escenas sin guion anotado |
+| Detalle anotado                            | Pieza                                 |
+| ------------------------------------------ | ------------------------------------- |
+| `voz guion 13`, `imagen guion 4 …`         | Guion N                               |
+| `anuncio 1: …`                             | Anuncio N                             |
+| `director, trabajo 1: …`                   | Director · video N                    |
+| `director: encargo 7`                      | Director · proyecto N                 |
+| `transcripción grabación 1`                | Grabación N                           |
+| `podcast: conversación 3 (ficha 1, 8 min)` | Podcast IA (docs/PODCAST.md)          |
+| `plan de anuncio: …`                       | Planes de anuncios                    |
+| `guion: <título>`                          | Guiones escritos por la IA            |
+| `imagen escena N`                          | Imágenes de escenas sin guion anotado |
 
 Si se agrega un gasto nuevo con otro formato de `detalle`, se suma su caso aquí y en la prueba
 `pruebas/gastos-mes.test.ts`, o caerá en «Otros».

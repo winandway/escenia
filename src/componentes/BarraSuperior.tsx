@@ -18,6 +18,11 @@ export const GRUPOS = [
       },
       { href: "/comerciales", texto: "Comerciales", icono: "M3 11l18-6v14L3 13zM7 13v5" },
       { href: "/publicidad", texto: "Publicidad", icono: "M7 3h10v18H7zM10 18h4M10 8l4 2.5-4 2.5z" },
+      {
+        href: "/podcast/fichas",
+        texto: "Podcast IA",
+        icono: "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6",
+      },
     ],
   },
   {

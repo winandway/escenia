@@ -216,3 +216,36 @@ export function costoAnimacionUsd(modelo: ModeloAnimacion, clips: number, segund
   const usd = precio.por === "clip" ? precio.usd * clips : precio.usd * segundos * clips;
   return Math.round(usd * 1000) / 1000;
 }
+
+// El invitado del Podcast IA (docs/PODCAST.md): una conversación de voz en tiempo real con ElevenLabs
+// Agents. Se cobra por minuto de conexión (0,08 $ el minuto que pasa de los incluidos en el plan; el
+// Creator trae 275 al mes) y, aparte, el modelo de texto al precio del proveedor (Gemini con un 10 % más,
+// el precio regional de Vertex que aplica ElevenLabs). Leído en elevenlabs.io/pricing/agents y en
+// elevenlabs.io/docs/eleven-agents/customization/llm el 6 nov 2026. Solo corren estos dos modelos de
+// texto, ni como respaldo (C-PODCAST-1).
+export const PRECIO_MINUTO_AGENTE_USD = 0.08;
+export const LLM_AGENTE_PERMITIDOS = {
+  "gemini-2.5-flash": { entrada: 0.33, salida: 2.75 },
+  "gemini-2.5-flash-lite": { entrada: 0.11, salida: 0.44 },
+} as const satisfies Record<string, { entrada: number; salida: number }>;
+export type LlmAgente = keyof typeof LLM_AGENTE_PERMITIDOS;
+export const LLM_AGENTE: LlmAgente = "gemini-2.5-flash";
+export const LLM_AGENTE_RESPALDO: LlmAgente = "gemini-2.5-flash-lite";
+
+export function asegurarLlmAgente(modelo: string): LlmAgente {
+  if (!Object.prototype.hasOwnProperty.call(LLM_AGENTE_PERMITIDOS, modelo))
+    throw new Error(`Modelo de texto del invitado bloqueado: «${modelo}».`);
+  return modelo as LlmAgente;
+}
+
+/**
+ * Lo que cuesta, a precio de lista, una conversación de `segundos`: los minutos de conexión más el
+ * modelo de texto (unas dos respuestas por minuto, de ~3.500 letras de entrada y ~80 de salida cada una,
+ * redondeado hacia arriba a medio centavo por minuto).
+ */
+export const LLM_AGENTE_USD_POR_MINUTO = 0.005;
+export function costoAgenteUsd(segundos: number): number {
+  if (!(segundos >= 0)) throw new Error("La duración de la conversación no es válida.");
+  const minutos = segundos / 60;
+  return Math.round(minutos * (PRECIO_MINUTO_AGENTE_USD + LLM_AGENTE_USD_POR_MINUTO) * 1000) / 1000;
+}

@@ -1,0 +1,416 @@
+/* El estudio del Podcast IA (docs/PODCAST.md). La dirección de arte la mandó Richard el 6 nov 2026
+   (docs/capturas/podcast-referencia-escenario-*.webp): estudio oscuro de neón morado y azul, título con
+   micrófono y ondas, dos paneles con borde de neón, etiquetas rojas, la barra «Tema de hoy» y la leyenda.
+   Todo se mide en cqw (1 cqw = 1 % del ancho del escenario): a pantalla completa se ve igual en
+   cualquier tamaño, siempre 16:9. */
+
+.pantalla {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #04020b;
+}
+.sinCursor,
+.sinCursor * {
+  cursor: none !important;
+}
+
+.escenario {
+  position: relative;
+  width: min(100vw, calc(100dvh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+  overflow: hidden;
+  color: #fff;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background:
+    radial-gradient(42% 48% at 14% 34%, rgba(147, 51, 234, 0.42), transparent 72%),
+    radial-gradient(42% 48% at 86% 34%, rgba(37, 99, 235, 0.42), transparent 72%),
+    radial-gradient(34% 26% at 50% 104%, rgba(236, 72, 153, 0.22), transparent 70%),
+    radial-gradient(30% 22% at 50% 0%, rgba(99, 102, 241, 0.28), transparent 75%),
+    linear-gradient(180deg, #0e0a27 0%, #0a0720 55%, #06041a 100%);
+}
+
+/* Luces del estudio: tiras de neón en los costados y puntos desenfocados al fondo. */
+.escenario::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+        180deg,
+        transparent 8%,
+        rgba(217, 70, 239, 0.75) 30%,
+        rgba(139, 92, 246, 0.6) 70%,
+        transparent 92%
+      )
+      0.9cqw 0 / 0.16cqw 100% no-repeat,
+    linear-gradient(
+        180deg,
+        transparent 8%,
+        rgba(56, 189, 248, 0.75) 30%,
+        rgba(59, 130, 246, 0.6) 70%,
+        transparent 92%
+      )
+      calc(100% - 0.9cqw) 0 / 0.16cqw 100% no-repeat,
+    radial-gradient(0.9cqw 0.9cqw at 9% 12%, rgba(244, 114, 182, 0.55), transparent 70%),
+    radial-gradient(1.3cqw 1.3cqw at 21% 6%, rgba(167, 139, 250, 0.4), transparent 70%),
+    radial-gradient(1.1cqw 1.1cqw at 79% 8%, rgba(96, 165, 250, 0.45), transparent 70%),
+    radial-gradient(0.8cqw 0.8cqw at 92% 15%, rgba(34, 211, 238, 0.5), transparent 70%),
+    radial-gradient(1.6cqw 1.6cqw at 4% 84%, rgba(192, 132, 252, 0.3), transparent 70%),
+    radial-gradient(1.4cqw 1.4cqw at 96% 80%, rgba(56, 189, 248, 0.3), transparent 70%);
+  filter: blur(0.05cqw);
+}
+.escenario::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 60%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* ——— Arriba: el título con el micrófono, las ondas y la cinta ——— */
+.cabecera {
+  position: absolute;
+  top: 1.7cqw;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.3cqw;
+}
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 0.8cqw;
+  font-size: 3.6cqw;
+  font-weight: 800;
+  letter-spacing: -0.06cqw;
+  line-height: 1;
+  text-shadow: 0 0 1.2cqw rgba(167, 139, 250, 0.45);
+}
+.marcaIA {
+  background: linear-gradient(90deg, #67e8f9, #60a5fa 55%, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 0.6cqw rgba(56, 189, 248, 0.55));
+}
+.microfono {
+  width: 3.3cqw;
+  height: 3.3cqw;
+  filter: drop-shadow(0 0 0.5cqw rgba(236, 72, 153, 0.7)) drop-shadow(0 0 1cqw rgba(56, 189, 248, 0.45));
+}
+.ondas {
+  display: flex;
+  align-items: center;
+  gap: 0.32cqw;
+  height: 3.4cqw;
+}
+.ondas span {
+  display: block;
+  width: 0.26cqw;
+  border-radius: 1cqw;
+  animation: latir 1.6s ease-in-out infinite;
+  transform-origin: center;
+}
+.ondasRosa span {
+  background: linear-gradient(180deg, #f472b6, #ec4899);
+  box-shadow: 0 0 0.5cqw rgba(236, 72, 153, 0.8);
+}
+.ondasCian span {
+  background: linear-gradient(180deg, #67e8f9, #22d3ee);
+  box-shadow: 0 0 0.5cqw rgba(34, 211, 238, 0.8);
+}
+@keyframes latir {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.cinta {
+  position: absolute;
+  top: 6.6cqw;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0.5cqw 1.9cqw;
+  border-radius: 10cqw;
+  font-size: 1.12cqw;
+  font-weight: 500;
+  letter-spacing: 0.02cqw;
+  color: #eef2ff;
+  border: 0.12cqw solid transparent;
+  background:
+    linear-gradient(#130e2e, #130e2e) padding-box,
+    linear-gradient(90deg, #f472b6, #a78bfa 50%, #22d3ee) border-box;
+  box-shadow:
+    0 0 1cqw rgba(167, 139, 250, 0.45),
+    inset 0 0 0.8cqw rgba(167, 139, 250, 0.2);
+}
+.cinta b {
+  margin: 0 0.7cqw;
+  color: #c4b5fd;
+}
+
+/* ——— Los dos paneles ——— */
+.panel {
+  position: absolute;
+  top: 10.3cqw;
+  width: 44.6cqw;
+  height: 32.2cqw;
+  z-index: 1;
+  border-radius: 1.6cqw;
+  overflow: hidden;
+  border: 0.16cqw solid;
+}
+.panelHost {
+  left: 3.6cqw;
+  border-color: #d8b4fe;
+  background:
+    radial-gradient(60% 70% at 30% 40%, rgba(168, 85, 247, 0.25), transparent 70%),
+    linear-gradient(160deg, #24133f, #120a26 70%);
+  box-shadow:
+    0 0 0.9cqw rgba(217, 70, 239, 0.75),
+    0 0 2.6cqw rgba(139, 92, 246, 0.45),
+    inset 0 0 1.4cqw rgba(217, 70, 239, 0.3);
+}
+.panelInvitado {
+  right: 3.6cqw;
+  border-color: #93c5fd;
+  background:
+    radial-gradient(42% 52% at 50% 46%, rgba(34, 211, 238, 0.22), transparent 72%),
+    radial-gradient(70% 60% at 50% 110%, rgba(59, 130, 246, 0.35), transparent 70%),
+    linear-gradient(160deg, #0d1d4a, #071029 70%);
+  box-shadow:
+    0 0 0.9cqw rgba(59, 130, 246, 0.8),
+    0 0 2.6cqw rgba(34, 211, 238, 0.4),
+    inset 0 0 1.4cqw rgba(59, 130, 246, 0.35);
+}
+.camara {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.robot {
+  position: absolute;
+  left: 50%;
+  bottom: -1.2cqw;
+  height: 98%;
+  aspect-ratio: 1312 / 1199;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 1.4cqw rgba(56, 189, 248, 0.35));
+}
+
+/* La etiqueta roja con el nombre */
+.etiqueta {
+  position: absolute;
+  left: 1.3cqw;
+  bottom: 1.3cqw;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  max-width: 80%;
+  border-radius: 0.9cqw;
+  overflow: hidden;
+  box-shadow: 0 0.4cqw 1.6cqw rgba(0, 0, 0, 0.45);
+}
+.etiquetaIcono {
+  display: grid;
+  place-items: center;
+  width: 3.7cqw;
+  background: linear-gradient(160deg, #ff4d4d, #d90429);
+}
+.etiquetaIcono svg {
+  width: 1.9cqw;
+  height: 1.9cqw;
+}
+.etiquetaTexto {
+  padding: 0.55cqw 1.6cqw 0.6cqw 1.1cqw;
+  background: rgba(255, 255, 255, 0.94);
+  color: #0f0f1a;
+  line-height: 1.12;
+}
+.etiquetaNombre {
+  display: block;
+  font-size: 1.55cqw;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.etiquetaRol {
+  display: block;
+  font-size: 0.95cqw;
+  font-weight: 500;
+  color: #3b3b4f;
+}
+
+/* El estado del invitado (escuchando / pensando / hablando), discreto arriba del panel */
+.estado {
+  position: absolute;
+  top: 1.1cqw;
+  right: 1.1cqw;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.55cqw;
+  padding: 0.35cqw 0.95cqw;
+  border-radius: 10cqw;
+  font-size: 0.92cqw;
+  font-weight: 600;
+  color: #e0f2fe;
+  background: rgba(6, 12, 34, 0.72);
+  border: 0.08cqw solid rgba(125, 211, 252, 0.45);
+}
+.estadoPunto {
+  width: 0.62cqw;
+  height: 0.62cqw;
+  border-radius: 50%;
+  background: #64748b;
+}
+.estado[data-estado="escuchando"] .estadoPunto {
+  background: #22d3ee;
+  box-shadow: 0 0 0.6cqw #22d3ee;
+}
+.estado[data-estado="pensando"] .estadoPunto {
+  background: #a78bfa;
+  box-shadow: 0 0 0.6cqw #a78bfa;
+  animation: titilar 0.9s ease-in-out infinite;
+}
+.estado[data-estado="hablando"] .estadoPunto {
+  background: #f472b6;
+  box-shadow: 0 0 0.6cqw #f472b6;
+  animation: titilar 0.5s ease-in-out infinite;
+}
+.estado[data-estado="conectando"] .estadoPunto {
+  background: #fbbf24;
+  animation: titilar 0.7s ease-in-out infinite;
+}
+@keyframes titilar {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.ejemplo {
+  position: absolute;
+  top: 1.1cqw;
+  left: 1.1cqw;
+  z-index: 2;
+  padding: 0.35cqw 0.95cqw;
+  border-radius: 10cqw;
+  font-size: 0.85cqw;
+  font-weight: 700;
+  color: #1c1300;
+  background: #fbbf24;
+}
+
+/* ——— Abajo: el tema de hoy y la leyenda ——— */
+.tema {
+  position: absolute;
+  left: 3.6cqw;
+  right: 3.6cqw;
+  top: 44.2cqw;
+  height: 6.7cqw;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 1.5cqw;
+  padding: 0 2cqw;
+  border-radius: 1.3cqw;
+  background: linear-gradient(90deg, rgba(20, 10, 44, 0.86), rgba(10, 14, 40, 0.86));
+  border: 0.1cqw solid rgba(167, 139, 250, 0.5);
+  box-shadow:
+    0 0 1.2cqw rgba(139, 92, 246, 0.35),
+    inset 0 0.08cqw 0 rgba(255, 255, 255, 0.06);
+}
+.temaRotulo {
+  flex: none;
+  padding: 0.65cqw 1.7cqw;
+  border-radius: 10cqw;
+  font-size: 1.45cqw;
+  font-weight: 800;
+  background: linear-gradient(160deg, #ff4d4d, #d90429);
+  box-shadow: 0 0 1cqw rgba(239, 68, 68, 0.55);
+}
+.temaBarra {
+  flex: none;
+  width: 0.14cqw;
+  height: 3.6cqw;
+  background: rgba(255, 255, 255, 0.75);
+  transform: rotate(18deg);
+}
+.temaIcono {
+  flex: none;
+  width: 2.7cqw;
+  height: 2.7cqw;
+}
+.temaTexto {
+  font-size: 1.8cqw;
+  font-weight: 700;
+  line-height: 1.18;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.leyenda {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.5cqw;
+  z-index: 2;
+  text-align: center;
+  font-size: 0.92cqw;
+  letter-spacing: 0.02cqw;
+  color: rgba(226, 232, 240, 0.78);
+}
+
+/* ——— Los controles: fuera del escenario, discretos, se esconden solos mientras se graba ——— */
+.controles {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 30;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 10px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  color: #e5e7eb;
+  background: rgba(9, 9, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  transition: opacity 0.35s ease;
+}
+.controlesOcultos {
+  opacity: 0;
+  pointer-events: none;
+}
+.aviso {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+}

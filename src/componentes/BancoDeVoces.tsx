@@ -15,7 +15,18 @@ export const DESCRIPCION_VOZ: Record<Voz, string> = {
 
 export const muestraDeVoz = (voz: Voz) => `/datos/archivos/voces/${voz}.mp3`;
 
-export function BancoDeVoces({ nombre = "voz", porDefecto }: { nombre?: string; porDefecto: Voz }) {
+export function BancoDeVoces({
+  nombre = "voz",
+  porDefecto,
+  voces = VOCES,
+  titulo = "Quién narra (dale play para oír cada voz)",
+}: {
+  nombre?: string;
+  porDefecto: Voz;
+  /** Las voces que se pueden elegir (el invitado del podcast no puede usar la de Richard). */
+  voces?: readonly Voz[];
+  titulo?: string;
+}) {
   const [sonando, setSonando] = useState<Voz | null>(null);
   const [sinMuestra, setSinMuestra] = useState<Voz[]>([]);
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -42,9 +53,9 @@ export function BancoDeVoces({ nombre = "voz", porDefecto }: { nombre?: string; 
 
   return (
     <fieldset>
-      <legend className="etiqueta">Quién narra (dale play para oír cada voz)</legend>
+      <legend className="etiqueta">{titulo}</legend>
       <div className="grid gap-2 sm:grid-cols-3">
-        {VOCES.map((v) => (
+        {voces.map((v) => (
           <label
             key={v}
             className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-700 p-3 text-sm has-[:checked]:border-amber-500 has-[:checked]:bg-amber-500/10"

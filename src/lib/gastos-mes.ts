@@ -8,6 +8,13 @@ export type Pieza = { clave: string; nombre: string; enlace: string | null };
 
 /** De qué pieza es un gasto, según cómo quedó descrito en el libro. */
 export function piezaDelGasto(detalle: string): Pieza {
+  // El invitado del Podcast IA (docs/PODCAST.md): todas sus conversaciones van juntas.
+  if (/^podcast:/i.test(detalle))
+    return {
+      clave: "podcast",
+      nombre: "Podcast IA (conversaciones del invitado)",
+      enlace: "/podcast/fichas",
+    };
   const guion = /guion (\d+)/i.exec(detalle)?.[1];
   if (guion) return { clave: `guion-${guion}`, nombre: `Guion ${guion}`, enlace: `/guiones/${guion}` };
   const anuncio = /anuncio (\d+)/i.exec(detalle)?.[1];

@@ -15,6 +15,7 @@ pieza, la prueba se pone en rojo antes de que llegue a producción.
 | C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                    | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                     |
 | C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
 | C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                       | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
+| C-PODCAST-1  | El invitado del podcast solo sabe su ficha; tope de minutos por día y 10 min por conversación      | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                   |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
 
@@ -1961,3 +1962,27 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   hay que cambiar la ropa de la foto, no el umbral.
 - **El candado:** `pruebas/publicidad.test.ts`, bloque «la tela detrás de la persona no se come la ropa verde».
   Comprobado en rojo el 6 nov 2026.
+
+## C-PODCAST-1 — El invitado del Podcast IA solo sabe su ficha, y los minutos tienen tope (6 nov 2026)
+
+- **Qué protege:** el estudio del Podcast IA (docs/PODCAST.md) conversa en vivo con ElevenLabs Agents, que
+  cobra por minuto. Sin candado, una pestaña olvidada o un día de pruebas se comen los minutos del plan y
+  después cobran; y un invitado que inventa le pone en la boca a una persona real cosas que nunca dijo.
+- **Qué se hizo:** (1) tope de minutos por día en la base (`podcast_minutos_dia`, 60 por defecto, editable en
+  Fichas; sin número válido es 0) y cada conversación abierta cuenta como 10 minutos: solo se abre si caben
+  10 más (`cabeOtraConversacion`, `abrirConversacion`); (2) 10 minutos como mucho, en el agente y en la cuenta
+  del panel, que mide con SU reloj; (3) también pregunta al tope de gasto del día; (4) la conversación que
+  quedó abierta se cierra contando los 10 minutos; (5) el prompt es SOLO la ficha, con las reglas de no
+  inventar, y la historia no puede cerrar su bloque (`construirPrompt`); (6) solo Gemini 2.5 Flash y
+  Flash-Lite, y el navegador no puede cambiar el modelo (`configuracionDelAgente`, permiso `llm: false`);
+  (7) la clave nunca llega al navegador: solo una URL firmada por conversación; (8) una historia real sin
+  permiso confirmado no entra al estudio y la voz de Richard no puede ser la del invitado.
+- **Cómo se comprueba:** `npx vitest run pruebas/podcast.test.ts pruebas/podcast-rutas.test.ts
+pruebas/podcast-estudio.test.tsx`. Comprobado en rojo el 6 nov 2026 metiendo cada fallo a propósito: sin la
+  regla de no inventar, sin el tope de minutos, devolviendo la clave al navegador, sin exigir sesión, sin la
+  leyenda y limpiando el borrador antes de que el panel confirme. En vivo: `/datos/salud` muestra la pieza
+  `podcast` (apagado sin clave; error si la última conversación no se pudo abrir).
+- **Qué NO tocar:** no encender el permiso de cambiar el modelo por conversación (`llm`); no quitar la URL
+  firmada (`enable_auth`); no contar una conversación abierta como cero; no mandar la historia al navegador
+  (el estudio solo recibe nombre, etiqueta y tema); si se actualiza `@elevenlabs/client`, volver a copiar sus
+  worklets a `public/podcast/worklets/` (la prueba se pone en rojo si no coinciden).

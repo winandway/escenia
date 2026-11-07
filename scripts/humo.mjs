@@ -19,6 +19,12 @@ const rutas = [
   { ruta: "/support", esperado: [200] },
   { ruta: "/es/support", esperado: [200] },
   { ruta: "/datos/app/encargos", esperado: [401] },
+  // El estudio del Podcast IA: detrás del inicio de sesión, y sin sesión no se abre ninguna conversación.
+  { ruta: "/podcast", esperado: [307, 308], redirigeA: "/entrar" },
+  { ruta: "/podcast/fichas", esperado: [307, 308], redirigeA: "/entrar" },
+  { ruta: "/datos/podcast/conversaciones", metodo: "POST", esperado: [401] },
+  { ruta: "/podcast/robot.webp", esperado: [200] },
+  { ruta: "/podcast/worklets/rawAudioProcessor.js", esperado: [200] },
   { ruta: "/muestras/escenia-muestra.mp4", esperado: [200] },
 ];
 

@@ -19,6 +19,8 @@ describe("piezaDelGasto", () => {
     expect(piezaDelGasto("plan de comercial: Cliente").clave).toBe("planes-comercial");
     expect(piezaDelGasto("dibujo de web-1a2b.jpg").clave).toBe("dibujos");
     expect(piezaDelGasto("figura de la miniatura").clave).toBe("miniaturas");
+    // El Podcast IA: la ficha 1 no se confunde con un guion ni con un encargo (C-PODCAST-1).
+    expect(piezaDelGasto("podcast: conversación 3 (ficha 1, 8 min)").clave).toBe("podcast");
     expect(piezaDelGasto("algo nuevo").clave).toBe("otros");
   });
 

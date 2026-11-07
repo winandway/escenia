@@ -6,3 +6,4 @@ node_modules
 estacion/node_modules
 estacion/out
 package-lock.json
+public/podcast/worklets

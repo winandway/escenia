@@ -21,6 +21,11 @@ export default defineConfig([
     rules: { "security/detect-non-literal-fs-filename": "off" },
   },
   {
+    // El guion del agente del podcast lee y guarda la clave en una carpeta fija de la Mac (~/.config).
+    files: ["scripts/podcast-agente.ts"],
+    rules: { "security/detect-non-literal-fs-filename": "off" },
+  },
+  {
     // La Estación trabaja con sus propias carpetas en la Mac: las rutas armadas son suyas.
     files: ["estacion/**"],
     rules: { "security/detect-non-literal-fs-filename": "off" },
@@ -41,5 +46,7 @@ export default defineConfig([
     ".dist-worker/**",
     // La app de iPhone (Expo) tiene su propio lint y sus tipos dentro de movil/.
     "movil/**",
+    // Los worklets de audio del invitado del podcast son copias exactas de sus paquetes (C-PODCAST-1).
+    "public/podcast/worklets/**",
   ]),
 ]);

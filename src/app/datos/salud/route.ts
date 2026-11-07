@@ -6,6 +6,7 @@ import { comercialesAtascados } from "@/lib/comerciales";
 import { grabacionesAtascadas } from "@/lib/grabaciones";
 import { problemaAbiertoDeIA } from "@/lib/ia-estado";
 import { avisosDeAyudaAtascados, estadoDelCorreo } from "@/lib/ayuda";
+import { estadoDelPodcast } from "@/lib/podcast";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,16 @@ export async function GET() {
       if (correo.motivo) detalle = detalle || correo.motivo;
     } catch (e) {
       piezas.ayuda = "error";
+      detalle = detalle || (e instanceof Error ? e.message : String(e));
+    }
+    try {
+      // El invitado del Podcast IA (C-PODCAST-1): apagado sin la clave de Agents o sin el agente; error si
+      // la última conversación no se pudo abrir (clave revocada, agente borrado, sin minutos).
+      const podcast = await estadoDelPodcast(db, env);
+      piezas.podcast = podcast.estado;
+      if (podcast.motivo) detalle = detalle || podcast.motivo;
+    } catch (e) {
+      piezas.podcast = "error";
       detalle = detalle || (e instanceof Error ? e.message : String(e));
     }
   } catch (e) {

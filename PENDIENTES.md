@@ -1,6 +1,13 @@
 # Pendientes — Motor Escenia
 
+## Para otros puestos
+
+- [para: revisor-calidad] Revisar el paquete del Podcast IA (commit de hoy, docs/PODCAST.md, C-PODCAST-1): se publicó por orden de Gerencia con `npm run verify` en verde; falta la revisión de calidad del paquete.
+
 ## 👤 Esperando por Richard
+
+- 👤 Podcast IA: crear en ElevenLabs UNA clave nueva «Escenia podcast agentes» (sin vencimiento; permisos: ElevenAgents escribir, Text to Speech y Voices leer; lo demás sin acceso) y pegarla una vez en la sesión → la IA la guarda en ~/.config/motor-escenia/elevenlabs-agentes, corre scripts/podcast-agente.ts y el invitado del estudio queda hablando (docs/PODCAST.md, «La clave»).
+- 👤 Podcast IA: conseguir la primera historia real, escrita y aprobada por su protagonista, y el nombre del canal → se carga como ficha y se archiva la de ejemplo.
 
 - ⏸ Apple rechazó Escenia (3 nov 2026, pautas 4.3 y 4.2.6). **Congelado por decisión de Richard (3 nov):** va primero Divoox, Bley después en la cuenta del cliente, y el resto congelado. Escenia no sube nada a Apple ni contesta hasta que Gerencia avise; lo de pasar el Director a Beellon se decide más adelante. Si Apple escribe, se lee y se le avisa a Gerencia, sin responder (planes/tiendas/TUTORIAL-RECHAZO-APPLE.md).
 - 👤 Pedirle a YaDominios que conecte un dominio al sitio de Escenia (por ejemplo escenia.windoce.com) con «Correos desde tu dominio» → las respuestas de soporte a los casos de ayuda también le llegan a la persona por correo (hoy le llegan en su chat y en la app). Lo demás lo hace la IA (docs/AYUDA.md).
