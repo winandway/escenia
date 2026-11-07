@@ -406,10 +406,16 @@ termine mandando a descargar la app (Windows, Mac o Android) y a probarla gratis
 escribimos nosotros después de leer la página y los Docs. Guion y lo comprobado en `publicidad/kipuu/guion-empresas.md`.
 Plan `publicidad/kipuu/plan-empresas.json`.
 
-- **Presentadora:** americana, rubia, ojos azules, unos 24 años, vestido rojo ajustado (`empresas/americana-b2.png`,
+- **Presentadora:** americana, rubia, ojos azules, unos 26 años, vestido rojo ajustado (`empresas/natural-c3.png`,
   la foto original). Antes se probó una latina de vestido verde esmeralda; a Richard le pareció fea y mayor. Su
   vestido verde destapó C-CROMA-ROPA (la tela detrás va azul cuando la ropa es verde). Para que no salga gruesa:
   «hourglass figure, slim defined waist, flat stomach, curvy hips, US size 6 to 8, not skinny».
+- **La primera rubia parecía una muñeca** (`empresas/americana-b2.png`): el prompt pedía «stunningly beautiful»,
+  «big open eyes», «glossy hair» y «magazine quality, 8k», y salió una cara de Barbie. Richard: «se ve muy muñeca,
+  muy IA… es un error grave». Se rehízo con una foto que parece de verdad: «realistic candid photograph of a real
+  person, 85mm, soft window light», «not a model and not a doll», piel con poros y unas pecas, ojos de tamaño
+  normal, sonrisa un poco asimétrica, «unretouched, no CGI, no plastic skin». Con «about 30 years old» salieron
+  mayores; con 26 quedó bien. Rehacerla costó 36 ¢ de fotos (dos tandas de seis) y unos 72 ¢ de FlashTalk.
 - **Costó 1,17 $:** fotos 39 ¢ (siete presentadoras y dos salas), voz 7 ¢ y la presentadora hablando 72 ¢. Dura
   41,7 s. Archivos «Comercial Kipuu Empresas» (y su versión de WhatsApp y la miniatura). Ese día fal.ai tuvo
   FlashTalk en fila veinte minutos sin arrancar: se canceló el pedido (no se cobra si no corrió) y se volvió a mandar.
