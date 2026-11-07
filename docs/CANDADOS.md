@@ -1948,3 +1948,16 @@ https://escenia.sitios.dev` en un navegador de teléfono real.
   texto, y una captura de otro caso o ya usada hace que el mensaje no salga.
 - **El candado:** `pruebas/ayuda.test.ts`, bloque «las capturas de los casos». Comprobado en rojo el 1 nov 2026
   (tipo por bytes, firma, subida, capturas ajenas o repetidas).
+
+## C-CROMA-ROPA — La tela detrás de la persona no se come la ropa verde (6 nov 2026)
+
+- **Qué se rompía:** para hacer hablar a la persona de un anuncio, el motor la pone sobre tela verde y después la
+  recorta. La presentadora de Kipuu para empresas lleva vestido verde esmeralda: el recorte le habría borrado el
+  vestido y el «quitar reflejo» lo habría dejado gris. Se vio en la figura antes de pagar FlashTalk.
+- **El arreglo:** `telaParaFigura` (en `compartido/croma.ts`) mira la figura recortada: si más del 2 % de lo
+  visible es verde y hay más verde que azul, la tela va azul (`#0047bb`); si no, verde como siempre. El recorte ya
+  sabía detectar tela azul sola. Lo usan las dos figuras que se hacen hablar en `estacion/src/publicidad.ts`.
+- **Qué NO tocar:** nunca volver a pintar la tela con un color fijo. Si la ropa tiene verde y azul a la vez,
+  hay que cambiar la ropa de la foto, no el umbral.
+- **El candado:** `pruebas/publicidad.test.ts`, bloque «la tela detrás de la persona no se come la ropa verde».
+  Comprobado en rojo el 6 nov 2026.

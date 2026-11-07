@@ -843,3 +843,34 @@ describe("los rayos de los teléfonos a la nube (Kipuu de verano, 6 nov 2026)", 
     expect(fuente).toContain("conNube={false}");
   });
 });
+
+describe("la tela detrás de la persona no se come la ropa verde (C-CROMA-ROPA, 6 nov 2026)", () => {
+  // La presentadora de Kipuu para empresas lleva vestido verde esmeralda: sobre la tela verde de siempre,
+  // el recorte le habría borrado el vestido y el quitar reflejo lo habría dejado gris.
+  const figura = (colores: [number, number, number, number][]) => {
+    const datos = new Uint8Array(colores.length * 4);
+    colores.forEach((c, i) => datos.set(c, i * 4));
+    return datos;
+  };
+  const repetir = <T>(c: T, n: number) => Array.from({ length: n }, () => c);
+  it("con ropa verde la tela va azul; sin verde, sigue verde", async () => {
+    const { telaParaFigura, TELA_AZUL, TELA_VERDE } = await import("@compartido/croma");
+    const piel: [number, number, number, number] = [205, 160, 130, 255];
+    const esmeralda: [number, number, number, number] = [12, 110, 62, 255];
+    const azulRey: [number, number, number, number] = [25, 60, 190, 255];
+    const blanco: [number, number, number, number] = [245, 245, 245, 255];
+    const vacio: [number, number, number, number] = [0, 200, 0, 0];
+    const conVestido = figura([...repetir(piel, 40), ...repetir(esmeralda, 50), ...repetir(vacio, 300)]);
+    expect(telaParaFigura(conVestido, 390, 1)).toBe(TELA_AZUL);
+    const conFaldaAzul = figura([...repetir(piel, 40), ...repetir(blanco, 30), ...repetir(azulRey, 40)]);
+    expect(telaParaFigura(conFaldaAzul, 110, 1)).toBe(TELA_VERDE);
+    // Lo transparente (el verde que rodea la figura) no cuenta.
+    expect(telaParaFigura(figura([...repetir(piel, 10), ...repetir(vacio, 500)]), 510, 1)).toBe(TELA_VERDE);
+  });
+  it("las dos figuras que se hacen hablar eligen su tela", async () => {
+    const { readFileSync } = await import("node:fs");
+    const fuente = readFileSync(new URL("../estacion/src/publicidad.ts", import.meta.url), "utf8");
+    expect(fuente.match(/telaParaFigura\(pixeles\.data/g)?.length).toBe(2);
+    expect(fuente).not.toMatch(/background: VERDE/);
+  });
+});

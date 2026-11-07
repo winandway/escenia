@@ -6,6 +6,7 @@
 //   armar  → el video con la plantilla «Publicidad».
 // Uso (desde estacion/): npx tsx src/publicidad.ts ../publicidad/proinshop/plan-generador.json --paso voz|avatar|armar
 // Los mismos pasos los usa `publicidades.ts` para los anuncios pedidos desde el panel (rutas absolutas).
+import { telaParaFigura } from "@compartido/croma";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
@@ -579,8 +580,11 @@ export async function pasoPersonas(
     const altoFigura = meta.height ?? 0;
     const izquierdaFigura = Math.round((896 - anchoFigura) / 2);
     const arribaFigura = 1536 - altoFigura;
-    // Sobre verde parejo, centrada y apoyada abajo: el medio cuerpo sigue fuera de cuadro.
-    const verde = await sharp({ create: { width: 896, height: 1536, channels: 3, background: VERDE } })
+    // Sobre verde parejo, centrada y apoyada abajo: el medio cuerpo sigue fuera de cuadro. Si la ropa
+    // tiene verde, la tela va azul (el recorte le borraría el vestido).
+    const pixeles = await sharp(figura).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const tela = telaParaFigura(pixeles.data, pixeles.info.width, pixeles.info.height);
+    const verde = await sharp({ create: { width: 896, height: 1536, channels: 3, background: tela } })
       .composite([
         {
           input: figura,
@@ -759,7 +763,9 @@ export async function pasoAvatar(
     .toBuffer();
   const meta = await sharp(figura).metadata();
   const verde = path.join(trabajo, "avatar-verde.png");
-  await sharp({ create: { width: lienzo.ancho, height: lienzo.alto, channels: 3, background: VERDE } })
+  const pixeles = await sharp(figura).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const tela = telaParaFigura(pixeles.data, pixeles.info.width, pixeles.info.height);
+  await sharp({ create: { width: lienzo.ancho, height: lienzo.alto, channels: 3, background: tela } })
     .composite([
       {
         input: figura,

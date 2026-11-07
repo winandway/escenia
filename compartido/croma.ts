@@ -163,3 +163,30 @@ export function umbralesDeCroma(color: string): { verde: boolean; bajo: number; 
   const bajo = Math.max(6, Math.round(exceso * 0.13));
   return { verde, bajo, alto: Math.max(bajo + 12, Math.round(exceso * 0.4)) };
 }
+
+/** La tela de siempre (verde) y la de reserva (azul), para cuando la ropa es verde. */
+export const TELA_VERDE = "#00b140";
+export const TELA_AZUL = "#0047bb";
+
+/**
+ * De qué color se pinta la tela detrás de una figura recortada (RGBA) antes de hacerla hablar. Verde,
+ * salvo que la ropa tenga verde: el recorte borraría ese verde y el «quitar reflejo» lo volvería gris
+ * (presentadora de vestido esmeralda de Kipuu, 6 nov 2026). Entonces va azul, si la ropa no tiene más
+ * azul que verde. El recorte después detecta solo cuál de las dos telas trae el video.
+ */
+export function telaParaFigura(rgba: Uint8Array, ancho: number, alto: number): string {
+  let visibles = 0;
+  let verdes = 0;
+  let azules = 0;
+  for (let i = 0; i + 3 < Math.min(rgba.length, ancho * alto * 4); i += 4) {
+    if ((rgba[i + 3] ?? 0) < 200) continue;
+    const r = rgba[i] ?? 0;
+    const g = rgba[i + 1] ?? 0;
+    const b = rgba[i + 2] ?? 0;
+    visibles++;
+    if (g > 45 && g > r * 1.15 && g > b * 1.1) verdes++;
+    else if (b > 45 && b > r * 1.15 && b > g * 1.1) azules++;
+  }
+  if (visibles === 0) return TELA_VERDE;
+  return verdes / visibles > 0.02 && verdes > azules ? TELA_AZUL : TELA_VERDE;
+}

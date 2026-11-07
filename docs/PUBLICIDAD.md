@@ -398,3 +398,22 @@ habla. «Que se diferencie y que venda»: es para una campaña en Facebook con v
   tapar el salto de la música. Ojo: la imagen nueva entra unos cuadros después de la primera palabra. Por eso el
   video de la última parte arranca 0,12 s más tarde que su audio y se congela su primer cuadro (`tpad`); si no,
   se cuelan tres cuadros del gráfico anterior. Archivo «Comercial Kipuu Verano 16s» (y su versión de WhatsApp).
+
+## Kipuu para empresas: descarga la app y pruébala gratis (6 nov 2026)
+
+Richard pidió un comercial para empresas grandes que guardan muchos datos en equipo y que, por primera vez,
+termine mandando a descargar la app (Windows, Mac o Android) y a probarla gratis antes de elegir un plan. Lo
+escribimos nosotros después de leer la página y los Docs. Guion y lo comprobado en `publicidad/kipuu/guion-empresas.md`.
+Plan `publicidad/kipuu/plan-empresas.json`.
+
+- **Presentadora nueva:** vestido verde esmeralda con cinturón dorado (`empresas/chica-2.png`, la foto original).
+  Su vestido verde destapó C-CROMA-ROPA: la tela detrás de ella va azul.
+- **Fondo:** sala de juntas de vidrio con seis personas en sus laptops (`empresas/sala-1.png`); los rayos suben de
+  las seis laptops a la nube. Música `beat-kick-bass-driving-pulse-neutral.mp3`, tema claro, portada «¿PAGAS LA
+  NUBE / POR PERSONA?» con la etiqueta «KIPUU PARA EMPRESAS».
+- **Las pantallas:** recortes de la página en celular (`pantallas/empresas/`): la comparación de 10 personas con
+  2 TB (Kipuu 24,99 contra 140 y 150, de la propia página de precios), la de descargas, la de funciones, la de
+  «todo esto viene en cada plan» y la de seguridad.
+- **El cierre:** tres tarjetas dibujadas (Windows, Mac, Android) con «Descargar» (`empresas/descargas.png`) y
+  «kipuu.com · Gratis 14 días con 10 GB · Sin tarjeta · Descárgala hoy». La prueba es de 14 días o 10 GB, lo que
+  llegue primero: la voz dice las dos cosas. iPhone no se nombra («muy pronto» en la página).
