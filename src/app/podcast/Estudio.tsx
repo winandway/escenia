@@ -54,6 +54,14 @@ const guardar = (clave: string, valor: string) => {
   }
 };
 
+/**
+ * Cuando el invitado deja de hablar (terminó o Richard lo interrumpió), los gestos que quedaban programados de
+ * esa respuesta se tiran: si no, Mia podía aplaudir o reírse mientras Richard hablaba (revisor, 7 nov 2026).
+ */
+export function gestosAlCambiarDeModo(actuales: Gesto[], hablando: boolean): Gesto[] {
+  return hablando ? actuales : [];
+}
+
 /** Los gestos de una respuesta nueva, sin los que ya pasaron. */
 export function gestosDeLaRespuesta(
   antes: readonly Gesto[],
@@ -219,6 +227,8 @@ export function Estudio({
       return;
     }
     conversacion.current = inicio.conversacionId;
+    // Una conversación nueva no hereda gestos de la anterior.
+    gestos.current = [];
     try {
       const { Conversation } = await import("@elevenlabs/client");
       const s = await Conversation.startSession({
@@ -226,7 +236,10 @@ export function Estudio({
         connectionType: "websocket",
         overrides: inicio.overrides,
         ...WORKLETS,
-        onModeChange: ({ mode }) => setEstado(mode === "speaking" ? "hablando" : "escuchando"),
+        onModeChange: ({ mode }) => {
+          gestos.current = gestosAlCambiarDeModo(gestos.current, mode === "speaking");
+          setEstado(mode === "speaking" ? "hablando" : "escuchando");
+        },
         onMessage: ({ role, message }) => {
           // Richard terminó de hablar: el invitado piensa hasta que empiece a contestar.
           if (role === "user") setEstado((e) => (e === "hablando" ? e : "pensando"));
@@ -235,6 +248,7 @@ export function Estudio({
         },
         onDisconnect: (detalle) => {
           sesion.current = null;
+          gestos.current = [];
           setEstado("reposo");
           cerrarEnElPanel();
           if (detalle.reason === "agent")

@@ -16,7 +16,7 @@ import {
   type MemoriaDePoses,
   type PoseId,
 } from "@compartido/podcast-poses";
-import { gestosDeLaRespuesta } from "@/app/podcast/Estudio";
+import { gestosAlCambiarDeModo, gestosDeLaRespuesta } from "@/app/podcast/Estudio";
 
 const TODAS = new Set<PoseId>(POSES);
 
@@ -175,5 +175,14 @@ describe("sin nervios", () => {
     ];
     const nuevos = gestosDeLaRespuesta(viejos, "¡Me encanta!", 5000);
     expect(nuevos.map((g) => g.pose)).toEqual(["idea", "aplaudiendo"]);
+  });
+});
+
+describe("los gestos no sobreviven a la respuesta (revisor, 7 nov 2026)", () => {
+  it("si el invitado deja de hablar (terminó o lo interrumpieron), los gestos pendientes se tiran", () => {
+    const pendientes = gestosDeLaRespuesta([], "¡Me encanta! Jajaja, imagínate", 0);
+    expect(pendientes.length).toBeGreaterThan(0);
+    expect(gestosAlCambiarDeModo(pendientes, true)).toEqual(pendientes);
+    expect(gestosAlCambiarDeModo(pendientes, false)).toEqual([]);
   });
 });
