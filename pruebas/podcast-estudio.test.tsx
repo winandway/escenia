@@ -145,10 +145,9 @@ describe("la ficha no pierde lo escrito", () => {
     expect(leerBorrador("podcast-ficha-nueva")).not.toBeNull();
 
     await usuario.click(screen.getByRole("button", { name: "Guardar la ficha" }));
-    await act(async () => {
-      vi.advanceTimersByTime(1);
-    });
-    expect(alGuardar).toHaveBeenCalledWith(7);
+    // Esperar la confirmación en vez de dar 1 ms fijo: con toda la suite en paralelo la promesa tardaba más
+    // y la prueba fallaba a veces en el pre-push (6 nov 2026).
+    await vi.waitFor(() => expect(alGuardar).toHaveBeenCalledWith(7));
     expect(leerBorrador("podcast-ficha-nueva")).toBeNull();
   });
 });
