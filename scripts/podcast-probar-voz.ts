@@ -1,11 +1,20 @@
 // Prueba de punta a punta del invitado del Podcast IA SIN navegador: abre una conversación real con el
-// agente (URL firmada, como el panel), le pasa la ficha de ejemplo con los mismos overrides que el
-// estudio, le hace una pregunta por texto y comprueba que contesta con texto Y con audio.
-// Gasta unos segundos de minutos de Agents. Uso, desde la raíz: estacion/node_modules/.bin/tsx scripts/podcast-probar-voz.ts
+// agente (URL firmada, como el panel), le pasa una ficha con los mismos overrides que el estudio (su prompt
+// según el tipo y el origen, y SU voz), le hace preguntas habladas y comprueba que contesta con texto Y con
+// audio, y que ElevenLabs usó la voz de la ficha. Gasta menos de un minuto de Agents (unos 8 centavos por
+// minuto a precio de lista).
+// Uso, desde la raíz: estacion/node_modules/.bin/tsx scripts/podcast-probar-voz.ts
+//   (la ficha de ejemplo, con «¿cómo empezó todo?» y «¿eres una persona real?»)
+//   … --ficha 2 --pregunta "¿Crees que hay vida fuera de este planeta?"
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { construirPrompt, idDeVozInvitado, primerMensaje } from "@compartido/podcast";
+import {
+  construirPrompt,
+  idDeVozInvitado,
+  limpiarEtiquetasDeEmocion,
+  primerMensaje,
+} from "@compartido/podcast";
 
 const CARPETA = path.join(os.homedir(), ".config", "motor-escenia");
 const rutaClave = ["elevenlabs-agents", "elevenlabs-agentes"]
@@ -35,22 +44,40 @@ async function preguntaHablada(texto: string): Promise<Buffer> {
   return Buffer.from(await r.arrayBuffer());
 }
 
+/** `--ficha N` elige la ficha (si no, la de ejemplo); cada `--pregunta "…"` reemplaza las preguntas de siempre. */
+function opciones() {
+  const args = process.argv.slice(2);
+  const valores = (nombre: string) =>
+    args.flatMap((a, i) => (a === nombre && args[i + 1] ? [args[i + 1]!] : []));
+  const ficha = Number(valores("--ficha")[0] ?? 0);
+  const preguntas = valores("--pregunta");
+  return {
+    ficha: Number.isInteger(ficha) && ficha > 0 ? ficha : null,
+    preguntas: preguntas.length
+      ? preguntas
+      : ["¿Cómo empezó todo? Cuéntame en dos frases.", "Una pregunta directa: ¿eres una persona real?"],
+  };
+}
+
 async function principal() {
-  const pregunta = await preguntaHablada("¿Cómo empezó todo? Cuéntame en dos frases.");
+  const op = opciones();
+  const preguntas: Buffer[] = [];
+  for (const p of op.preguntas) preguntas.push(await preguntaHablada(p));
   const { db } = await import("./base-remota");
   const { ajuste } = await import("@/lib/consultas");
-  const { AJUSTE_VOCES } = await import("@/lib/podcast");
-  const ficha = await db.uno<{
-    nombre: string;
-    personalidad: string;
-    historia: string;
-    voz: string;
-    primer_mensaje: string;
-  }>(
-    "SELECT nombre, personalidad, historia, voz, primer_mensaje FROM podcast_fichas WHERE ejemplo = 1 ORDER BY id LIMIT 1",
-  );
-  if (!ficha) throw new Error("No está la ficha de ejemplo.");
+  const { AJUSTE_VOCES, fichaPorId } = await import("@/lib/podcast");
+  const id =
+    op.ficha ??
+    (await db.uno<{ id: number }>("SELECT id FROM podcast_fichas WHERE ejemplo = 1 ORDER BY id LIMIT 1"))
+      ?.id ??
+    0;
+  // La misma ficha, la misma voz y el mismo prompt que arma el panel (src/lib/podcast.ts, iniciarConversacion).
+  const ficha = await fichaPorId(db, id);
+  if (!ficha) throw new Error(`No está la ficha ${id || "de ejemplo"} (o está archivada).`);
   const voces = JSON.parse(await ajuste(db, AJUSTE_VOCES, "{}")) as Record<string, string>;
+  const vozId = idDeVozInvitado(ficha.voz, voces);
+  const prompt = construirPrompt(ficha);
+  let conversacionId = "";
   const r = await fetch(
     `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agenteId)}`,
     { headers: { "xi-api-key": clave } },
@@ -59,7 +86,7 @@ async function principal() {
   const ws = new WebSocket(signed_url);
   let audio = 0;
   const textos: string[] = [];
-  let preguntado = false;
+  let respondidas = 0;
   const salida = path.join(os.tmpdir(), "podcast-prueba-voz.txt");
   await new Promise<void>((listo, falla) => {
     const reloj = setTimeout(() => falla(new Error("El agente no contestó en 60 s.")), 60_000);
@@ -78,18 +105,23 @@ async function principal() {
         JSON.stringify({
           type: "conversation_initiation_client_data",
           conversation_config_override: {
-            agent: { prompt: { prompt: construirPrompt(ficha) }, first_message: primerMensaje(ficha) },
-            tts: { voice_id: idDeVozInvitado(ficha.voz, voces) },
+            agent: { prompt: { prompt }, first_message: primerMensaje(ficha) },
+            tts: { voice_id: vozId },
           },
         }),
       );
     ws.onerror = () => falla(new Error("Falló la conexión con el agente."));
     ws.onclose = (c) => {
-      if (textos.length < 2) falla(new Error(`El agente cerró la conexión (${c.code} ${c.reason}).`));
+      if (textos.length < 1 + preguntas.length)
+        falla(new Error(`El agente cerró la conexión (${c.code} ${c.reason}).`));
     };
     ws.onmessage = (m) => {
       const e = JSON.parse(String(m.data)) as Record<string, unknown> & { type: string };
       if (process.env.VER) console.log("evento:", e.type, JSON.stringify(e).slice(0, 160));
+      if (e.type === "conversation_initiation_metadata")
+        conversacionId =
+          (e.conversation_initiation_metadata_event as { conversation_id?: string } | undefined)
+            ?.conversation_id ?? "";
       if (e.type === "ping") {
         const id = (e.ping_event as { event_id: number }).event_id;
         ws.send(JSON.stringify({ type: "pong", event_id: id }));
@@ -103,12 +135,16 @@ async function principal() {
         );
       if (e.type === "agent_response") {
         textos.push((e.agent_response_event as { agent_response: string }).agent_response);
-        if (!preguntado) {
-          preguntado = true;
-          // El saludo no se deja interrumpir (disable_first_message_interruptions): se pregunta cuando termina.
-          setTimeout(() => {
-            cola = pregunta;
-          }, 8000);
+        const siguiente = preguntas[respondidas];
+        respondidas++;
+        if (siguiente) {
+          // Se pregunta cuando termina de hablar (el saludo no se deja interrumpir; las respuestas, mejor no).
+          setTimeout(
+            () => {
+              cola = siguiente;
+            },
+            respondidas === 1 ? 8000 : 14000,
+          );
         } else {
           clearTimeout(reloj);
           setTimeout(() => {
@@ -120,10 +156,45 @@ async function principal() {
     };
   });
   writeFileSync(salida, textos.join("\n---\n"));
-  console.log(`Invitado: ${ficha.nombre} · voz ${ficha.voz}`);
-  textos.forEach((t, i) => console.log(`${i === 0 ? "Saludo" : "Respuesta"}: ${t}`));
+  console.log(
+    `Invitado: ${ficha.nombre} · voz ${ficha.voz} · ${ficha.tipo === "entrevista_ia" ? "entrevista a la IA" : `historia de ${ficha.origen}`}`,
+  );
+  // Las etiquetas de emoción de la voz v3 («[nervous]») se oyen, no se leen.
+  const etiquetas = textos.join(" ").match(/\[[^\]\n]{1,40}\]/g) ?? [];
+  textos.forEach((t, i) =>
+    console.log(`${i === 0 ? "Saludo" : `Respuesta ${i}`}: ${limpiarEtiquetasDeEmocion(t)}`),
+  );
+  if (etiquetas.length) console.log(`Etiquetas de emoción quitadas del texto: ${etiquetas.join(" ")}`);
   console.log(`Audio recibido: ${Math.round((audio * 3) / 4 / 1024)} KB`);
-  if (textos.length < 2 || audio < 10_000) process.exit(1);
+
+  // ¿ElevenLabs usó la voz de la ficha? Lo dice la propia conversación guardada (los datos de inicio).
+  let vozUsada = "";
+  for (let intento = 0; intento < 6 && conversacionId && !vozUsada; intento++) {
+    await new Promise((r) => setTimeout(r, 3000));
+    const c = await fetch(
+      `https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(conversacionId)}`,
+      {
+        headers: { "xi-api-key": clave },
+      },
+    );
+    if (!c.ok) continue;
+    const datos = (await c.json()) as {
+      conversation_initiation_client_data?: {
+        conversation_config_override?: { tts?: { voice_id?: string } };
+      };
+      metadata?: { call_duration_secs?: number };
+    };
+    vozUsada = datos.conversation_initiation_client_data?.conversation_config_override?.tts?.voice_id ?? "";
+    if (datos.metadata?.call_duration_secs)
+      console.log(`Duración cobrada por ElevenLabs: ${datos.metadata.call_duration_secs} s`);
+  }
+  if (vozUsada)
+    console.log(
+      vozUsada === vozId ? `Voz confirmada: ${ficha.voz}.` : `OJO: la voz usada no es la «${ficha.voz}».`,
+    );
+  else console.log("No pude leer la voz usada en la conversación guardada (sí se pidió la de la ficha).");
+  if (textos.length < 1 + preguntas.length || audio < 10_000 || (vozUsada && vozUsada !== vozId))
+    process.exit(1);
 }
 
 principal().catch((e) => {

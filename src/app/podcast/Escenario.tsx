@@ -1,14 +1,26 @@
 "use client";
 
 // El escenario 16:9 del Podcast IA, lo que sale en la grabación: el título, la cinta, Richard a la
-// izquierda (su cámara o un fondo limpio), el invitado a la derecha, el tema de hoy y la leyenda
-// obligatoria (C-PODCAST-1: siempre visible).
+// izquierda (su cámara o un fondo limpio), el invitado a la derecha (su avatar, de la ficha), el tema de hoy y
+// la leyenda obligatoria (C-PODCAST-1: siempre visible, y dice la verdad: ficción o historia real con permiso).
 import type { RefObject } from "react";
-import { LEYENDA_PODCAST } from "@compartido/podcast";
+import { leyendaDelPodcast, type OrigenHistoria, type TipoFicha } from "@compartido/podcast";
+import { AVATAR_NUEVO, avatarPorId, type AvatarId } from "@compartido/podcast-avatares";
 import { RobotInvitado, type AudioInvitado, type EstadoInvitado } from "./RobotInvitado";
 import css from "./estudio.module.css";
 
-export type InvitadoEnEscena = { nombre: string; etiqueta: string; tema: string; ejemplo: boolean };
+export type InvitadoEnEscena = {
+  nombre: string;
+  etiqueta: string;
+  tema: string;
+  /** La ficha de prueba: lleva el letrero amarillo «no publicar». */
+  ejemplo: boolean;
+  /** Sin origen es ficción: la leyenda nunca dice «historia real» si la ficha no lo dice. */
+  origen?: OrigenHistoria;
+  /** En una entrevista a la IA la leyenda solo dice que la voz y el avatar son de IA. */
+  tipo?: TipoFicha;
+  avatar?: AvatarId;
+};
 
 const TEXTO_ESTADO: Record<EstadoInvitado, string> = {
   reposo: "En espera",
@@ -141,7 +153,12 @@ export function Escenario({
           <span className={css.estadoPunto} />
           {TEXTO_ESTADO[estado]}
         </span>
-        <RobotInvitado estado={estado} audio={audio} className={css.robot} />
+        <RobotInvitado
+          estado={estado}
+          audio={audio}
+          avatar={avatarPorId(invitado.avatar ?? AVATAR_NUEVO)}
+          className={css.robot}
+        />
         <Etiqueta
           icono={<IconoRobot />}
           nombre={invitado.nombre}
@@ -154,11 +171,16 @@ export function Escenario({
         <span className={css.temaBarra} aria-hidden="true" />
         <IconoClaqueta className={css.temaIcono} />
         <span className={css.temaTexto}>
-          {invitado.tema || "Una historia real contada por su protagonista"}
+          {invitado.tema ||
+            (invitado.tipo === "entrevista_ia"
+              ? "Pregúntale a la IA"
+              : invitado.origen === "real"
+                ? "Una historia real contada por su protagonista"
+                : "Una historia para inspirar")}
         </span>
       </div>
 
-      <p className={css.leyenda}>{LEYENDA_PODCAST}</p>
+      <p className={css.leyenda}>{leyendaDelPodcast(invitado.origen, invitado.tipo)}</p>
     </div>
   );
 }

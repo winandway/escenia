@@ -13,10 +13,11 @@ import {
   topeMinutos,
   ultimoErrorDelPodcast,
 } from "@/lib/podcast";
-import { LEYENDA_PODCAST, fichaLista, minutosParaMostrar } from "@compartido/podcast";
+import { fichaLista, minutosParaMostrar } from "@compartido/podcast";
 import { archivarFichaAccion, guardarFichaAccion, guardarTopeAccion } from "./acciones";
 import { FormularioFicha } from "./FormularioFicha";
 import { FormularioTope } from "./FormularioTope";
+import { MiniaturaAvatar } from "./SelectorAvatar";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Podcast IA" };
@@ -38,15 +39,17 @@ export default async function PaginaFichas({ searchParams }: PageProps<"/podcast
   return (
     <Marco titulo="Podcast IA">
       <p className="mb-5 max-w-3xl text-sm text-neutral-400">
-        Entrevistas a una IA que cuenta, en primera persona, la historia real de alguien que la cedió por
-        escrito. Abre el estudio, ponlo a pantalla completa y grábalo con tu grabador de siempre. El invitado
-        solo sabe lo que dice su ficha.
+        Entrevistas a una IA en vivo: la propia IA contesta preguntas de misterio, o cuenta en primera persona
+        una historia de ficción escrita para inspirar (o, con su permiso por escrito, la historia real de
+        alguien). Abre el estudio, ponlo a pantalla completa y grábalo con tu grabador de siempre.
       </p>
       <div className="mb-6 grid gap-3 text-sm sm:grid-cols-3">
         <div className="tarjeta flex flex-col justify-between gap-3">
           <div>
             <div className="text-neutral-400">El estudio</div>
-            <div className="text-xs text-neutral-500">16:9, con la leyenda: «{LEYENDA_PODCAST}».</div>
+            <div className="text-xs text-neutral-500">
+              16:9, con la leyenda que toca según la ficha (IA, ficción o historia real con permiso).
+            </div>
           </div>
           <Link href="/podcast" className="boton self-start">
             Abrir el estudio
@@ -95,7 +98,8 @@ export default async function PaginaFichas({ searchParams }: PageProps<"/podcast
             return (
               <li key={f.id} className={`tarjeta ${f.id === enEdicion?.id ? "border-amber-500/60" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+                  <MiniaturaAvatar avatar={f.avatar} lado={48} />
+                  <div className="min-w-0 flex-1">
                     <div className="font-semibold">{f.nombre}</div>
                     <div className="text-xs text-neutral-400">{f.tema || "Sin tema todavía"}</div>
                   </div>
@@ -109,7 +113,15 @@ export default async function PaginaFichas({ searchParams }: PageProps<"/podcast
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {f.ejemplo && <span className="chip bg-amber-500/20 text-amber-200">Ejemplo ficticio</span>}
+                  {f.tipo === "entrevista_ia" && (
+                    <span className="chip bg-violet-500/15 text-violet-200">Entrevista a la IA</span>
+                  )}
+                  {!f.ejemplo && f.tipo === "historia" && f.origen === "ficcion" && (
+                    <span className="chip bg-sky-500/15 text-sky-200">Ficción</span>
+                  )}
                   {!f.ejemplo &&
+                    f.tipo === "historia" &&
+                    f.origen === "real" &&
                     (f.permiso ? (
                       <span className="chip bg-green-500/15 text-green-300">Permiso confirmado</span>
                     ) : (

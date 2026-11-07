@@ -65,6 +65,9 @@ beforeEach(async () => {
     tema: "Tejer",
     personalidad: "Tranquila.",
     voz: "neutra",
+    avatar: "robot",
+    origen: "real",
+    tipo: "historia",
     historia: "Aprendí a tejer con mi tía.",
     primer_mensaje: "",
     permiso: true,
@@ -125,6 +128,29 @@ describe("abrir una conversación del podcast", () => {
     const r = await abrir(pedido({ fichaId }));
     expect(r.status).toBe(409);
     expect(pedidosAElevenLabs).toHaveLength(0);
+  });
+
+  it("una historia de ficción (la escribimos nosotros) entra sin permiso, y el invitado no dice que es real", async () => {
+    await conectar();
+    await db.ejecutar("UPDATE podcast_fichas SET permiso = 0, origen = 'ficcion' WHERE id = ?", [fichaId]);
+    const r = await abrir(pedido({ fichaId }));
+    expect(r.status).toBe(200);
+    const datos = (await r.json()) as { overrides: { agent: { prompt: { prompt: string } } } };
+    expect(datos.overrides.agent.prompt.prompt).toMatch(/personaje creado para el podcast/);
+    expect(datos.overrides.agent.prompt.prompt).not.toMatch(/historia real/i);
+  });
+
+  it("una entrevista a la IA entra sin historia ni permiso, y el invitado habla como IA", async () => {
+    await conectar();
+    await db.ejecutar(
+      "UPDATE podcast_fichas SET permiso = 0, historia = '', tipo = 'entrevista_ia' WHERE id = ?",
+      [fichaId],
+    );
+    const r = await abrir(pedido({ fichaId }));
+    expect(r.status).toBe(200);
+    const datos = (await r.json()) as { overrides: { agent: { prompt: { prompt: string } } } };
+    expect(datos.overrides.agent.prompt.prompt).toMatch(/una inteligencia artificial invitada/);
+    expect(datos.overrides.agent.prompt.prompt).not.toContain("HISTORIA");
   });
 
   it("si ElevenLabs rechaza la clave: lo dice, no gasta minutos y el canario se pone en rojo", async () => {

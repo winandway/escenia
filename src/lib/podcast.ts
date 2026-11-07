@@ -10,12 +10,17 @@ import {
   TOPE_MINUTOS_POR_DEFECTO,
   cabeOtraConversacion,
   construirPrompt,
+  ORIGEN_POR_DEFECTO,
+  TIPO_POR_DEFECTO,
+  esOrigen,
+  esTipoFicha,
   esVozInvitado,
   fichaLista,
   idDeVozInvitado,
   primerMensaje,
   type FichaPodcast,
 } from "@compartido/podcast";
+import { AVATAR_DE_LAS_VIEJAS, esAvatar } from "@compartido/podcast-avatares";
 import { costoAgenteUsd } from "@compartido/modelos";
 
 export const AJUSTE_AGENTE_ID = "podcast_agente_id";
@@ -24,8 +29,11 @@ export const AJUSTE_VOCES = "podcast_voces";
 export const AJUSTE_ERROR = "podcast_error";
 export const FALTA_CONECTAR = "Falta conectar la voz del invitado.";
 
-type FilaFicha = Omit<FichaPodcast, "ejemplo" | "permiso" | "voz"> & {
+type FilaFicha = Omit<FichaPodcast, "ejemplo" | "permiso" | "voz" | "avatar" | "origen" | "tipo"> & {
   voz: string;
+  avatar: string;
+  origen: string;
+  tipo: string;
   ejemplo: number;
   permiso: number;
   archivada: number;
@@ -38,6 +46,10 @@ const aFicha = (f: FilaFicha): FichaPodcast => ({
   tema: f.tema,
   personalidad: f.personalidad,
   voz: esVozInvitado(f.voz) ? f.voz : "neutra",
+  // Un avatar que ya no está en el catálogo se ve como el robot de siempre: el estudio no se cae.
+  avatar: esAvatar(f.avatar) ? f.avatar : AVATAR_DE_LAS_VIEJAS,
+  origen: esOrigen(f.origen) ? f.origen : ORIGEN_POR_DEFECTO,
+  tipo: esTipoFicha(f.tipo) ? f.tipo : TIPO_POR_DEFECTO,
   historia: f.historia,
   primer_mensaje: f.primer_mensaje,
   ejemplo: f.ejemplo === 1,
@@ -45,20 +57,79 @@ const aFicha = (f: FilaFicha): FichaPodcast => ({
 });
 
 const COLUMNAS =
-  "id, nombre, etiqueta, tema, personalidad, voz, historia, primer_mensaje, ejemplo, permiso, archivada";
+  "id, nombre, etiqueta, tema, personalidad, voz, avatar, origen, tipo, historia, primer_mensaje, ejemplo, permiso, archivada";
+
+// Las columnas que la tabla de fichas ganó el 7 nov 2026, con lo que toman las fichas que ya estaban: el robot
+// de siempre, la historia de ficción (desde ese día las historias las escribimos nosotros) y el formato de
+// historia (la entrevista a la IA llegó ese mismo día).
+const COLUMNAS_NUEVAS = [
+  { nombre: "avatar", tipo: `TEXT NOT NULL DEFAULT '${AVATAR_DE_LAS_VIEJAS}'` },
+  { nombre: "origen", tipo: `TEXT NOT NULL DEFAULT '${ORIGEN_POR_DEFECTO}'` },
+  { nombre: "tipo", tipo: `TEXT NOT NULL DEFAULT '${TIPO_POR_DEFECTO}'` },
+] as const;
+const NOMBRES_NUEVOS = COLUMNAS_NUEVAS.map((c) => c.nombre).join("|");
+// Lo que dice SQLite (y D1, que lo envuelve) cuando falta una columna o cuando ya existe.
+// eslint-disable-next-line security/detect-non-literal-regexp -- armada con los dos nombres fijos de arriba
+const FALTA_COLUMNA = new RegExp(
+  `no such column:\\s*"?(${NOMBRES_NUEVOS})\\b|has no column named\\s*"?(${NOMBRES_NUEVOS})\\b`,
+  "i",
+);
+const YA_ESTA_COLUMNA = /duplicate column name/i;
+
+/**
+ * Las columnas nuevas de las fichas (`avatar`, `origen` y `tipo`) en una base que ya existía. schema.sql corre en cada
+ * publicación y SQLite no tiene «ADD COLUMN IF NOT EXISTS», así que el ALTER no puede ir ahí (la segunda vez
+ * fallaría). Se mira primero cuáles faltan y se agregan solo esas; si dos pedidos agregan la misma a la vez, el
+ * «ya existe» del segundo no es una falla. Las fichas que ya estaban toman el valor por defecto. No borra nada.
+ * Devuelve las que agregó (vacío si ya estaban todas).
+ */
+export async function asegurarColumnasDeLaFicha(db: BaseDatos): Promise<string[]> {
+  const tabla = await db.uno<{ sql: string }>(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'podcast_fichas'",
+  );
+  if (!tabla) throw new Error("No existe la tabla podcast_fichas: publica el panel primero.");
+  const agregadas: string[] = [];
+  for (const c of COLUMNAS_NUEVAS) {
+    // eslint-disable-next-line security/detect-non-literal-regexp -- el nombre es uno de los dos fijos
+    if (new RegExp(`\\b${c.nombre}\\b`, "i").test(tabla.sql)) continue;
+    try {
+      await db.ejecutar(`ALTER TABLE podcast_fichas ADD COLUMN ${c.nombre} ${c.tipo}`);
+      agregadas.push(c.nombre);
+    } catch (e) {
+      if (!YA_ESTA_COLUMNA.test(e instanceof Error ? e.message : String(e))) throw e;
+    }
+  }
+  return agregadas;
+}
+
+/**
+ * Corre una consulta de las fichas; si la base todavía no tiene una columna nueva, la agrega y la repite UNA
+ * vez. Con las columnas puestas no cuesta nada (ni una lectura de más). Cualquier otro error sube tal cual.
+ */
+async function conColumnasNuevas<T>(db: BaseDatos, consulta: () => Promise<T>): Promise<T> {
+  try {
+    return await consulta();
+  } catch (e) {
+    if (!FALTA_COLUMNA.test(e instanceof Error ? e.message : String(e))) throw e;
+    await asegurarColumnasDeLaFicha(db);
+    return consulta();
+  }
+}
 
 export async function fichasActivas(db: BaseDatos): Promise<FichaPodcast[]> {
-  const filas = await db.todos<FilaFicha>(
-    `SELECT ${COLUMNAS} FROM podcast_fichas WHERE archivada = 0 ORDER BY ejemplo ASC, actualizado_en DESC, id DESC`,
+  const filas = await conColumnasNuevas(db, () =>
+    db.todos<FilaFicha>(
+      `SELECT ${COLUMNAS} FROM podcast_fichas WHERE archivada = 0 ORDER BY ejemplo ASC, actualizado_en DESC, id DESC`,
+    ),
   );
   return filas.map(aFicha);
 }
 
 export async function fichaPorId(db: BaseDatos, id: number): Promise<FichaPodcast | null> {
   if (!Number.isInteger(id) || id < 1) return null;
-  const f = await db.uno<FilaFicha>(`SELECT ${COLUMNAS} FROM podcast_fichas WHERE id = ? AND archivada = 0`, [
-    id,
-  ]);
+  const f = await conColumnasNuevas(db, () =>
+    db.uno<FilaFicha>(`SELECT ${COLUMNAS} FROM podcast_fichas WHERE id = ? AND archivada = 0`, [id]),
+  );
   return f ? aFicha(f) : null;
 }
 
@@ -71,23 +142,32 @@ export async function guardarFicha(db: BaseDatos, id: number | null, d: DatosFic
     d.tema,
     d.personalidad,
     d.voz,
+    d.avatar,
+    d.origen,
+    d.tipo,
     d.historia,
     d.primer_mensaje,
     d.permiso ? 1 : 0,
   ];
   if (id) {
-    const r = await db.ejecutar(
-      `UPDATE podcast_fichas SET nombre = ?, etiqueta = ?, tema = ?, personalidad = ?, voz = ?, historia = ?,
-         primer_mensaje = ?, permiso = ?, actualizado_en = datetime('now') WHERE id = ? AND archivada = 0`,
-      [...valores, id],
+    const r = await conColumnasNuevas(db, () =>
+      db.ejecutar(
+        `UPDATE podcast_fichas SET nombre = ?, etiqueta = ?, tema = ?, personalidad = ?, voz = ?, avatar = ?,
+           origen = ?, tipo = ?, historia = ?, primer_mensaje = ?, permiso = ?, actualizado_en = datetime('now')
+         WHERE id = ? AND archivada = 0`,
+        [...valores, id],
+      ),
     );
     if (r.cambios === 0) throw new Error("Esa ficha no existe o está archivada.");
     return id;
   }
-  const r = await db.ejecutar(
-    `INSERT INTO podcast_fichas (nombre, etiqueta, tema, personalidad, voz, historia, primer_mensaje, permiso)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    valores,
+  const r = await conColumnasNuevas(db, () =>
+    db.ejecutar(
+      `INSERT INTO podcast_fichas (nombre, etiqueta, tema, personalidad, voz, avatar, origen, tipo, historia,
+         primer_mensaje, permiso)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      valores,
+    ),
   );
   if (!r.ultimoId) throw new Error("No se pudo guardar la ficha.");
   return r.ultimoId;
@@ -226,7 +306,10 @@ export async function estadoDelPodcast(
   env: { ELEVENLABS_AGENTES_KEY?: string; ELEVENLABS_AGENTE_ID?: string },
 ): Promise<{ estado: "ok" | "apagado" | "error"; motivo: string }> {
   await db.uno("SELECT COUNT(id) AS n FROM podcast_conversaciones");
-  await db.uno("SELECT COUNT(id) AS n FROM podcast_fichas");
+  // Las fichas con su avatar, su origen y su tipo: si a la base le falta una columna, aquí se agrega (si no se puede, error).
+  await conColumnasNuevas(db, () =>
+    db.uno("SELECT COUNT(avatar) + COUNT(origen) + COUNT(tipo) AS n FROM podcast_fichas"),
+  );
   const conexion = await conexionDelPodcast(db, env);
   if (!conexion) return { estado: "apagado", motivo: "" };
   // Clave y agente sin voces (o con la lista dañada): cada conversación daría 503 y el estudio no abriría nada.

@@ -430,6 +430,12 @@ CREATE INDEX IF NOT EXISTS ayuda_adjuntos_por_caso ON ayuda_adjuntos(caso_id, me
 -- por escrito) y cada conversación del estudio. El invitado solo sabe lo que dice su ficha. Las fichas no se
 -- borran: se archivan. `segundos` queda vacío mientras la conversación está abierta; abierta cuenta como 10
 -- minutos para el tope del día (ajuste podcast_minutos_dia).
+-- Desde el 7 nov 2026: `avatar` es quién sale en el estudio (compartido/podcast-avatares.ts), `origen` dice si la
+-- historia es de ficción (la escribimos nosotros; no pide permiso) o real (con el permiso por escrito de su
+-- protagonista) y `tipo` es el formato: «historia» o «entrevista_ia» (el invitado es la propia IA; sin historia). Se validan en el código, no con un CHECK (el catálogo va a crecer). En una base que ya existía
+-- estas columnas NO se agregan aquí (este archivo corre en cada publicación y un ALTER TABLE fallaría la segunda
+-- vez): las agrega el panel la primera vez que las necesita (asegurarColumnasDeLaFicha en src/lib/podcast.ts) o
+-- scripts/migrar-podcast-fichas.ts.
 CREATE TABLE IF NOT EXISTS podcast_fichas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nombre TEXT NOT NULL,
@@ -437,6 +443,9 @@ CREATE TABLE IF NOT EXISTS podcast_fichas (
   tema TEXT NOT NULL DEFAULT '',
   personalidad TEXT NOT NULL DEFAULT '',
   voz TEXT NOT NULL DEFAULT 'neutra' CHECK (voz IN ('neutra','femenina','venezolana','paisa')),
+  avatar TEXT NOT NULL DEFAULT 'robot',
+  origen TEXT NOT NULL DEFAULT 'ficcion',
+  tipo TEXT NOT NULL DEFAULT 'historia',
   historia TEXT NOT NULL DEFAULT '',
   primer_mensaje TEXT NOT NULL DEFAULT '',
   ejemplo INTEGER NOT NULL DEFAULT 0,
@@ -455,14 +464,17 @@ CREATE TABLE IF NOT EXISTS podcast_conversaciones (
 );
 INSERT OR IGNORE INTO ajustes (clave, valor) VALUES ('podcast_minutos_dia', '60');
 -- La historia de EJEMPLO del piloto (ficticia, sin personas reales) mientras llega una real. Entra una sola
--- vez: si ya existe una ficha de ejemplo (aunque esté archivada), no se vuelve a crear.
+-- vez: si ya existe una ficha de ejemplo (aunque esté archivada), no se vuelve a crear. Va con la voz paisa. Este
+-- INSERT solo nombra columnas que existían antes del 7 nov 2026: así schema.sql no se cae en una base vieja que
+-- todavía no tiene avatar, origen ni tipo (un INSERT con una columna que no existe falla aunque no inserte nada).
+-- En la base en vivo la de ejemplo tiene la robot de coleta (UPDATE de esa fila, 7 nov 2026).
 INSERT INTO podcast_fichas (nombre, etiqueta, tema, personalidad, voz, historia, primer_mensaje, ejemplo, permiso)
 SELECT
   'Alma (ejemplo)',
   'Invitada especial',
   'Del pan a escondidas a su propia panadería',
   'Tímida, cálida y sincera. Habla despacio, se ríe bajito cuando se pone nerviosa y le cuesta hablar de sí misma, pero se emociona cuando habla del pan.',
-  'neutra',
+  'paisa',
   'HISTORIA DE EJEMPLO, FICTICIA: no es de una persona real y no se publica.' || char(10) ||
   'Soy Alma. Crecí en un pueblo pequeño, en una casa con un horno de leña que era de mi abuela. A los once años ya amasaba con ella los domingos.' || char(10) ||
   'A los diecinueve me fui a la ciudad a estudiar contabilidad. El dinero no alcanzaba, así que empecé a hornear pan en la madrugada, de tres a seis, en la cocina del cuarto que alquilaba, y lo vendía a los vecinos antes de ir a clase.' || char(10) ||

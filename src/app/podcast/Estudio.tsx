@@ -273,7 +273,15 @@ export function Estudio({
       onMouseMove={enVivo ? mostrarControles : undefined}
     >
       <Escenario
-        invitado={ficha ?? { nombre: "Invitado", etiqueta: "Invitado especial", tema: "", ejemplo: false }}
+        invitado={
+          ficha ?? {
+            nombre: "Invitado",
+            etiqueta: "Invitado especial",
+            tema: "",
+            ejemplo: false,
+            origen: "ficcion",
+          }
+        }
         estado={estado}
         audio={audio}
         camara={camara}

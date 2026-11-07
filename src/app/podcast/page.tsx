@@ -32,6 +32,9 @@ export default async function PaginaEstudio({ searchParams }: PageProps<"/podcas
     nombre: f.nombre,
     etiqueta: f.etiqueta,
     tema: f.tema,
+    avatar: f.avatar,
+    origen: f.origen,
+    tipo: f.tipo,
     ejemplo: f.ejemplo,
     falta: fichaLista(f),
   }));
