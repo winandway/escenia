@@ -9,6 +9,7 @@
 // «Mia IA») va primero.
 
 import { MEDIDAS_MIA } from "./podcast-mia";
+import { MICROFONO_MIA } from "./podcast-mia-escenario";
 import { POSES, type PoseId } from "./podcast-poses";
 
 export type Punto = readonly [number, number];
@@ -153,9 +154,68 @@ export type AvatarPodcast = {
    * «tranquila» es la de arriba (`imagen` y `cara`). El motor de poses (podcast-poses.ts) elige cuál se ve.
    */
   poses?: Partial<Record<Exclude<PoseId, "tranquila">, PoseAvatar>>;
+  /** Su casa detrás y su micrófono delante (Mia). */
+  escenario?: EscenarioAvatar;
 };
 
 export type PoseAvatar = { imagen: string; cara: CaraConVisor | CaraSinVisor };
+
+/**
+ * La casa del invitado: una imagen 16:9 sin alfa que cubre su panel, detrás de él. El estudio la oscurece y la
+ * desenfoca un poco para que el invitado resalte y siga leyéndose como su casa.
+ */
+export type FondoAvatar = {
+  imagen: string;
+  /** Qué parte se ve de lado a lado (0 = la izquierda, 100 = la derecha), como `object-position`. */
+  enfoqueX: number;
+  /** El brillo (1 = tal cual). */
+  brillo: number;
+  /** El desenfoque, en cqw del estudio (escala con la pantalla: igual en 1080p que en 4K). */
+  desenfoque: number;
+};
+
+/**
+ * El micrófono de podcast del invitado, delante de él, entrando desde el borde izquierdo del panel. Va en
+ * píxeles de la imagen del avatar: así la prueba comprueba, pose por pose, que nunca le tapa la cara (C-PODCAST-5).
+ */
+export type MicrofonoAvatar = {
+  /** La imagen publicada (webp con alfa) y su tamaño. */
+  imagen: string;
+  ancho: number;
+  alto: number;
+  /** Lo que se ve del micrófono, en píxeles de SU imagen (lo mide scripts/podcast-escenario.ts). */
+  silueta: readonly Punto[];
+  /** La esquina de arriba a la izquierda donde va, y el ancho con que se dibuja (px de la imagen del avatar). */
+  x: number;
+  y: number;
+  dibujo: number;
+  /** El giro (grados) alrededor de donde entra (el medio del borde izquierdo de su imagen). */
+  giro: number;
+};
+
+/** Lo que rodea al invitado. Opcional: un avatar sin escenario se ve como siempre. */
+export type EscenarioAvatar = { fondo?: FondoAvatar; microfono?: MicrofonoAvatar };
+
+/** El vaivén del micrófono (grados, para cada lado): casi nada. */
+export const VAIVEN_MICROFONO = 0.25;
+
+export const altoDelMicrofono = (m: MicrofonoAvatar) => (m.alto * m.dibujo) / m.ancho;
+/** Alrededor de dónde gira el micrófono: el medio de su borde izquierdo, por donde entra. */
+export const pivoteDelMicrofono = (m: MicrofonoAvatar): Punto => [m.x, m.y + altoDelMicrofono(m) / 2];
+
+/** La silueta del micrófono donde va, en píxeles de la imagen del avatar (con un giro de más, si se pide). */
+export function siluetaDelMicrofono(m: MicrofonoAvatar, giroExtra = 0): Punto[] {
+  const k = m.dibujo / m.ancho;
+  const [px, py] = pivoteDelMicrofono(m);
+  const g = ((m.giro + giroExtra) * Math.PI) / 180;
+  const cos = Math.cos(g);
+  const sin = Math.sin(g);
+  return m.silueta.map(([sx, sy]) => {
+    const x = m.x + sx * k - px;
+    const y = m.y + sy * k - py;
+    return [px + x * cos - y * sin, py + x * sin + y * cos];
+  });
+}
 
 /** Lo que mide scripts/podcast-avatar.ts en cada pose de Mia (compartido/podcast-mia.ts, generado). */
 export type MedidaDePose = {
@@ -289,6 +349,13 @@ const MIA: AvatarPodcast = {
     riendo: poseDeMia("riendo"),
     aplaudiendo: poseDeMia("aplaudiendo"),
     idea: poseDeMia("idea"),
+  },
+  // Su casa (avatar/mia/escenario/casa-2.png): encuadrada para que se vean el cuadrito de la escuela a la
+  // izquierda y los de la derecha; y su micrófono, que entra por la izquierda a la altura de la barbilla y
+  // apunta a su boca sin tocarle la cara en ninguna pose (C-PODCAST-5).
+  escenario: {
+    fondo: { imagen: "/podcast/mia-casa.webp", enfoqueX: 22, brillo: 0.7, desenfoque: 0.13 },
+    microfono: { ...MICROFONO_MIA, x: -281, y: 752, dibujo: 800, giro: -24 },
   },
 };
 

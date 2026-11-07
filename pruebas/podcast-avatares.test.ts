@@ -24,6 +24,8 @@ import {
   esRecorte,
   posesDe,
   puntoDeCurva,
+  siluetaDelMicrofono,
+  VAIVEN_MICROFONO,
   trazoAfinado,
   type AvatarPodcast,
   type CaraConVisor,
@@ -276,6 +278,112 @@ describe("el catálogo de invitados", () => {
       expect(c.tapas).toBeUndefined();
     }
     expect(caraDe("robot").tapas?.elipses.length).toBe(2);
+  });
+});
+
+/** ¿Se cruzan los segmentos ab y cd? */
+function seCruzan(a: Punto, b: Punto, c: Punto, d: Punto): boolean {
+  const lado = (p: Punto, q: Punto, r: Punto) =>
+    Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  return lado(a, b, c) * lado(a, b, d) < 0 && lado(c, d, a) * lado(c, d, b) < 0;
+}
+function adentro([x, y]: Punto, poligono: readonly Punto[]): boolean {
+  let dentro = false;
+  for (let i = 0, j = poligono.length - 1; i < poligono.length; j = i++) {
+    const [xi, yi] = poligono[i]!;
+    const [xj, yj] = poligono[j]!;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+  }
+  return dentro;
+}
+function aSegmento(p: Punto, a: Punto, b: Punto): number {
+  const vx = b[0] - a[0];
+  const vy = b[1] - a[1];
+  const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy || 1)));
+  return Math.hypot(p[0] - a[0] - t * vx, p[1] - a[1] - t * vy);
+}
+/** Cuánto aire hay entre dos figuras (0 si se tocan o una tapa a la otra). */
+function holgura(a: readonly Punto[], b: readonly Punto[]): number {
+  const lados = (f: readonly Punto[]) => f.map((p, i) => [p, f[(i + 1) % f.length]!] as const);
+  for (const [p, q] of lados(a)) for (const [r, t] of lados(b)) if (seCruzan(p, q, r, t)) return 0;
+  if (a.some((p) => adentro(p, b)) || b.some((p) => adentro(p, a))) return 0;
+  let d = Infinity;
+  for (const p of a) for (const [r, t] of lados(b)) d = Math.min(d, aSegmento(p, r, t));
+  for (const p of b) for (const [r, t] of lados(a)) d = Math.min(d, aSegmento(p, r, t));
+  return d;
+}
+
+describe("el escenario de Mia: su casa detrás y su micrófono delante (C-PODCAST-5)", () => {
+  const mia = avatarPorId("mia");
+  const fondo = mia.escenario?.fondo;
+  const mic = mia.escenario?.microfono;
+
+  it("la casa es un webp sin alfa de 1920 × 1080, liviano, oscurecida y apenas desenfocada", () => {
+    expect(fondo).toBeDefined();
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    const archivo = readFileSync(path.join(raiz, "public", fondo!.imagen));
+    expect(archivo.subarray(8, 12).toString()).toBe("WEBP");
+    // «VP8 » es el webp simple: sin alfa (un fondo entero).
+    expect(archivo.subarray(12, 16).toString()).toBe("VP8 ");
+    expect([archivo.readUInt16LE(26) & 0x3fff, archivo.readUInt16LE(28) & 0x3fff]).toEqual([1920, 1080]);
+    expect(archivo.length).toBeLessThan(250 * 1024);
+    expect(fondo!.brillo).toBeGreaterThanOrEqual(0.6);
+    expect(fondo!.brillo).toBeLessThanOrEqual(0.8);
+    // De 2 a 3 px en una pantalla de 1920 (el estudio mide 100 cqw de ancho).
+    expect(fondo!.desenfoque * 19.2).toBeGreaterThanOrEqual(2);
+    expect(fondo!.desenfoque * 19.2).toBeLessThanOrEqual(3);
+  });
+
+  it("el micrófono es un webp con alfa del tamaño que dice el catálogo, y pesa poco", () => {
+    expect(mic).toBeDefined();
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    const archivo = readFileSync(path.join(raiz, "public", mic!.imagen));
+    expect(archivo.subarray(12, 16).toString()).toBe("VP8X");
+    expect(archivo[20]! & 0x10).toBe(0x10);
+    expect([1 + archivo.readUIntLE(24, 3), 1 + archivo.readUIntLE(27, 3)]).toEqual([mic!.ancho, mic!.alto]);
+    expect(archivo.length).toBeLessThan(120 * 1024);
+  });
+
+  it("nunca le tapa la cara: ni el visor ni los aros de los oídos, en ninguna de las siete poses, ni con su vaivén", () => {
+    const poses = posesDe(mia);
+    expect(poses).toHaveLength(7);
+    for (const giro of [-VAIVEN_MICROFONO, 0, VAIVEN_MICROFONO]) {
+      const silueta = siluetaDelMicrofono(mic!, giro);
+      for (const pose of poses) {
+        const cara = pose.cara as CaraConVisor;
+        expect(holgura(silueta, cara.visor!), `${pose.id}: el visor`).toBeGreaterThanOrEqual(25);
+        for (const o of cara.oidos) {
+          const r = o as { x: number; y: number; ancho: number; alto: number };
+          const caja: Punto[] = [
+            [r.x, r.y],
+            [r.x + r.ancho, r.y],
+            [r.x + r.ancho, r.y + r.alto],
+            [r.x, r.y + r.alto],
+          ];
+          expect(holgura(silueta, caja), `${pose.id}: el aro del oído`).toBeGreaterThanOrEqual(25);
+        }
+      }
+    }
+  });
+
+  it("entra desde el borde izquierdo del panel y no baja hasta la etiqueta del nombre", () => {
+    const caja = cajaDelEncuadre(mia);
+    const silueta = siluetaDelMicrofono(mic!);
+    expect(Math.min(...silueta.map(([x]) => x))).toBeLessThan(caja.x);
+    // La etiqueta empieza al 84 % del alto del panel (1,3 cqw del borde y 3,95 cqw de alto, en 32,2 cqw).
+    const etiqueta = caja.y + caja.alto * ((32.2 - 1.3 - 3.95) / 32.2);
+    const visible = silueta.filter(([x]) => x >= caja.x);
+    expect(Math.max(...visible.map(([, y]) => y))).toBeLessThan(etiqueta - 60);
+    // La punta queda cerca de la cara: a la altura de la boca o un poco más abajo, a la izquierda del visor.
+    const punta = silueta.reduce((a, b) => (b[0] > a[0] ? b : a));
+    const boca = (mia.cara as CaraConVisor).boca;
+    expect(punta[0]).toBeLessThan(boca.x);
+    expect(punta[1]).toBeGreaterThan(boca.y - 40);
+    expect(punta[1]).toBeLessThan(boca.y + 200);
+  });
+
+  it("los demás avatares no tienen escenario y se ven como siempre", () => {
+    for (const a of AVATARES) if (a.id !== "mia") expect(a.escenario).toBeUndefined();
   });
 });
 

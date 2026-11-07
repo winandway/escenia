@@ -1,79 +1,80 @@
-// El motor de poses del invitado (docs/PODCAST.md, «Mia y sus poses»): animación por código, como antes de la
-// IA. Un avatar con poses (Mia) tiene varias imágenes y el estudio pasa de una a otra con un fundido, según lo
-// que está haciendo y lo que dice. Reglas simples y deterministas (las mismas entradas dan la misma pose):
+// El motor de poses del invitado (docs/PODCAST.md, «Cómo se mueve Mia»; candado C-PODCAST-4): animación por
+// código, como antes de la IA. Un avatar con poses (Mia) tiene varias imágenes y el estudio pasa de una a otra
+// con un fundido que se lee como «se acomoda».
 //
-// - En espera o escuchando: manos juntas («tranquila»).
-// - Pensando: la mano en la barbilla; la tablet («notas») es su segunda pose, alternada (un turno una, el
-//   siguiente la otra, y cada 5 segundos si piensa mucho).
-// - Hablando: las manos en los brazos de la silla. En una respuesta larga vuelve un rato (3 s) a manos juntas
-//   cada 8 a 12 segundos.
-// - Lo que dice manda sobre el estado, en este orden: la risa, el aplauso (entusiasmo), la idea (empieza una
-//   explicación) y las notas (habla de datos). Cada gesto dura unos segundos y vuelve.
-// - Nunca cambia de pose más de una vez cada 2,5 segundos: que no parezca nerviosa.
+// Richard lo probó en vivo el 7 nov 2026: la versión de las palabras clave «va como un meme, como un GIF», sin
+// quedarse quieta mientras él hablaba. Desde entonces manda la CALMA, como una persona sentada en un podcast:
 //
-// Sin DOM: corre igual en el navegador y en las pruebas.
+// - Escuchando (y en espera): manos juntas, todo el rato, sin cambios.
+// - Pensando: SOLO si tarda más de 1,2 s en contestar, y se sostiene hasta que empieza a hablar. Si la IA ya
+//   pidió un gesto, no se pone a pensar: ya sabe qué va a decir.
+// - Hablando: las manos en la silla toda la respuesta. Una respuesta corta (menos de 6 s, como el saludo) no la
+//   saca de las manos juntas. Solo si la respuesta pasa de 25 s descansa UNA vez con las manos juntas.
+// - Ninguna pose dura menos de 6 s, salvo un gesto.
+// - Los gestos (riendo, aplaudiendo, idea, notas) los pide la IA con la herramienta `gesto` (o, de respaldo, la
+//   etiqueta «[laughs]» de la voz): uno por respuesta como mucho, de 3 a 4 s, solo mientras habla, y con 25 s
+//   por lo menos entre uno y otro. Un gesto que llega antes de que hable espera a que empiece; si deja de hablar
+//   (terminó o la interrumpieron) antes de que salga, se tira.
+//
+// Reglas simples y deterministas (las mismas entradas dan la misma pose). Sin DOM: corre igual en el navegador
+// y en las pruebas.
 
 export const POSES = ["tranquila", "hablando", "pensando", "notas", "riendo", "aplaudiendo", "idea"] as const;
 export type PoseId = (typeof POSES)[number];
 
 export type EstadoDelInvitado = "reposo" | "conectando" | "escuchando" | "pensando" | "hablando";
 
-/** Los gestos que salen de lo que dice, de mayor a menor prioridad. */
+/** Los gestos que puede pedir la IA (el enum de la herramienta `gesto`). */
 export const GESTOS = ["riendo", "aplaudiendo", "idea", "notas"] as const;
 export type PoseDeGesto = (typeof GESTOS)[number];
-export type Gesto = { pose: PoseDeGesto; desde: number; hasta: number };
+export const esGesto = (pose: string): pose is PoseDeGesto => (GESTOS as readonly string[]).includes(pose);
 
-/** Nunca dos cambios de pose más seguidos que esto (milisegundos). */
-export const MIN_ENTRE_CAMBIOS = 2500;
-/** El fundido entre dos poses (milisegundos). */
-export const FUNDIDO_MS = 300;
-/** Cuánto dura cada gesto (milisegundos). */
+/** Un gesto pedido (por la IA o por la risa de respaldo) y la hora en que llegó. */
+export type PedidoDeGesto = { pose: PoseDeGesto; hora: number };
+/** El texto de una respuesta: cuándo llegó y cuánto se calcula que dura dicha en voz alta. */
+export type TextoDeRespuesta = { hora: number; ms: number };
+/** Lo que el estudio le cuenta al motor. Son listas que solo crecen: el motor recuerda hasta dónde leyó. */
+export type EntradasDelMotor = {
+  gestos: readonly PedidoDeGesto[];
+  respuestas: readonly TextoDeRespuesta[];
+};
+export const SIN_ENTRADAS: EntradasDelMotor = { gestos: [], respuestas: [] };
+
+/** Ninguna pose dura menos que esto (salvo un gesto). */
+export const POSE_MINIMA_MS = 6000;
+/** Pensando solo aparece si tarda más que esto en contestar. */
+export const PENSAR_TRAS_MS = 1200;
+/** Cuánto dura cada gesto. */
 export const DURACION_GESTO: Record<PoseDeGesto, number> = {
-  riendo: 2600,
-  aplaudiendo: 2600,
-  idea: 2600,
+  riendo: 3200,
+  aplaudiendo: 3400,
+  idea: 3600,
   notas: 4000,
 };
-/** Hablando: cuánto habla con las manos en la silla antes de cada descanso (se repite en este orden). */
-export const HABLA_ANTES_DE_DESCANSAR = [10_000, 8_000, 12_000, 9_000, 11_000] as const;
-/** Cuánto dura el descanso con las manos juntas en medio de una respuesta larga. */
-export const DESCANSO_MS = 3000;
-/** Pensando mucho rato: cada cuánto alterna la barbilla y la tablet. */
-export const PENSAR_ALTERNA_MS = 5000;
-/** Para saber cuándo llega a una palabra: unas 15 letras por segundo al hablar. */
-export const LETRAS_POR_SEGUNDO = 15;
+/** Si deja de hablar en medio de un gesto, el gesto se corta, pero nunca antes de esto (que no parpadee). */
+export const GESTO_MINIMO_MS = 1500;
+/** Entre un gesto y el siguiente pasan por lo menos esto. */
+export const ENTRE_GESTOS_MS = 25_000;
+/** Un gesto que no pudo salir en este tiempo (no habló, o la pose de antes no cumplió los 6 s) se tira. */
+export const GESTO_CADUCA_MS = 8000;
+/** Una respuesta más corta que esto no la saca de las manos juntas. */
+export const RESPUESTA_CORTA_MS = POSE_MINIMA_MS;
+/** Si el texto de la respuesta no llegó, pasa a las manos en la silla después de hablar esto. */
+export const SIN_TEXTO_MS = 2000;
+/** Una respuesta que pasa de esto descansa una vez con las manos juntas… */
+export const RESPUESTA_LARGA_MS = 25_000;
+/** …durante esto. */
+export const DESCANSO_MS = POSE_MINIMA_MS;
+/** El texto de una respuesta vale para la que empieza hasta este tiempo después de llegar. */
+const TEXTO_VALE_MS = 6000;
+/** El fundido entre dos poses (milisegundos): lento y con curva suave, para que se lea como movimiento. */
+export const FUNDIDO_MS = 700;
 
-/**
- * Qué dispara cada gesto en el texto de la respuesta (con sus etiquetas de emoción de la voz v3, que el SDK
- * deja en el texto). Las palabras van en español, que es como habla el invitado.
- */
-export const DISPARADORES: Record<PoseDeGesto, RegExp> = {
-  riendo: /\b(?:ja){2,}\b|\bje(?:je)+\b|\[(?:laughs?|laughing|chuckles?|giggles?)\]|\bme r[ií]o\b/giu,
-  aplaudiendo: /qu[eé] buena pregunta|me encanta|\bgenial\b|incre[ií]ble|\[(?:excited|happy)\]/giu,
-  idea: /imag[ií]nate|sabes qu[eé]|te cuento|f[ií]jate|\[curious\]/giu,
-  notas:
-    /\d|\bseg[uú]n\b|los cient[ií]ficos|\bestudios?\b|\b(?:mercurio|venus|marte|j[uú]piter|saturno|urano|neptuno|plut[oó]n)\b/giu,
-};
-
-/**
- * Los gestos de una respuesta: cada disparador, a la hora en que se dice (por dónde va en el texto). Dos del
- * mismo gesto que se pisan se juntan en uno.
- */
-export function gestosDelTexto(texto: string, ahora: number): Gesto[] {
-  const gestos: Gesto[] = [];
-  for (const pose of GESTOS) {
-    let ultimo: Gesto | null = null;
-    for (const m of texto.matchAll(DISPARADORES[pose])) {
-      const desde = ahora + ((m.index ?? 0) / LETRAS_POR_SEGUNDO) * 1000;
-      if (ultimo && desde <= ultimo.hasta) {
-        ultimo.hasta = desde + DURACION_GESTO[pose];
-        continue;
-      }
-      ultimo = { pose, desde, hasta: desde + DURACION_GESTO[pose] };
-      gestos.push(ultimo);
-    }
-  }
-  return gestos.sort((a, b) => a.desde - b.desde);
+/** Lee lo que manda la herramienta `gesto` de la IA: solo una de las cuatro poses de gesto, escrita tal cual. */
+export function leerPedidoDeGesto(parametros: unknown): PoseDeGesto | null {
+  if (!parametros || typeof parametros !== "object" || Array.isArray(parametros)) return null;
+  const pose = (parametros as { pose?: unknown }).pose;
+  return typeof pose === "string" && esGesto(pose) ? pose : null;
 }
 
 export type MemoriaDePoses = {
@@ -84,69 +85,157 @@ export type MemoriaDePoses = {
   estado: EstadoDelInvitado;
   /** Desde cuándo está en este estado. */
   desde: number;
-  /** Cuántas veces se puso a pensar (para alternar la barbilla y la tablet). */
-  turnosPensando: number;
+  /** El gesto que se está viendo termina a esta hora (null: no hay gesto en curso). */
+  gestoHasta: number | null;
+  /** Cuándo empezó el último gesto. */
+  ultimoGesto: number;
+  /** Ya hubo un gesto en esta respuesta. */
+  gestoEnRespuesta: boolean;
+  /** Un gesto pedido que espera su momento. */
+  pendiente: PedidoDeGesto | null;
+  /** Cuánto se calcula que dura la respuesta de ahora (null: no llegó el texto). */
+  respuestaMs: number | null;
+  /** El último texto que llegó, para la respuesta que está por empezar. */
+  ultimoTexto: TextoDeRespuesta | null;
+  /** Hasta dónde leyó las listas de entradas. */
+  leidos: { gestos: number; respuestas: number };
 };
 
 export const memoriaInicial = (ahora = 0): MemoriaDePoses => ({
   pose: "tranquila",
+  // Las manos juntas ya estaban: no cuentan los 6 s desde que se abrió el estudio.
   cambio: Number.NEGATIVE_INFINITY,
   estado: "reposo",
   desde: ahora,
-  turnosPensando: 0,
+  gestoHasta: null,
+  ultimoGesto: Number.NEGATIVE_INFINITY,
+  gestoEnRespuesta: false,
+  pendiente: null,
+  respuestaMs: null,
+  ultimoTexto: null,
+  leidos: { gestos: 0, respuestas: 0 },
 });
 
-/** La pose que le toca por su estado (sin gestos). */
-export function poseDelEstado(m: MemoriaDePoses, ahora: number): PoseId {
-  const t = Math.max(0, ahora - m.desde);
-  if (m.estado === "pensando") {
-    const vuelta = m.turnosPensando - 1 + Math.floor(t / PENSAR_ALTERNA_MS);
-    return vuelta % 2 === 0 ? "pensando" : "notas";
-  }
-  if (m.estado !== "hablando") return "tranquila";
-  let acumulado = 0;
-  for (let i = 0; ; i++) {
-    acumulado += HABLA_ANTES_DE_DESCANSAR[i % HABLA_ANTES_DE_DESCANSAR.length]!;
-    if (t < acumulado) return "hablando";
-    acumulado += DESCANSO_MS;
-    if (t < acumulado) return "tranquila";
-  }
+/** ¿La cara está pensando (mira hacia arriba con los tres puntos)? Igual que la pose: solo si tarda. */
+export function piensa(m: MemoriaDePoses, ahora: number): boolean {
+  if (m.estado !== "pensando") return false;
+  return m.pose === "pensando" || (ahora - m.desde >= PENSAR_TRAS_MS && m.pendiente === null);
 }
 
-/** La pose que querría ahora: el gesto más importante que esté corriendo o, si no hay, la de su estado. */
-export function poseDeseada(m: MemoriaDePoses, ahora: number, gestos: readonly Gesto[]): PoseId {
-  if (m.estado !== "reposo" && m.estado !== "conectando")
-    for (const pose of GESTOS)
-      if (gestos.some((g) => g.pose === pose && g.desde <= ahora && ahora < g.hasta)) return pose;
-  return poseDelEstado(m, ahora);
+/** La pose que le toca por su estado (sin gestos). */
+function poseDelEstado(m: MemoriaDePoses, ahora: number): PoseId {
+  const t = Math.max(0, ahora - m.desde);
+  switch (m.estado) {
+    case "pensando":
+      // Si ya está pensando, se sostiene hasta que hable; si no, solo después de 1,2 s y sin un gesto en camino.
+      return m.pose === "pensando" || piensa(m, ahora) ? "pensando" : "tranquila";
+    case "hablando": {
+      if (m.respuestaMs === null) return t < SIN_TEXTO_MS ? "tranquila" : "hablando";
+      if (m.respuestaMs < RESPUESTA_CORTA_MS) return "tranquila";
+      if (t >= RESPUESTA_LARGA_MS && t < RESPUESTA_LARGA_MS + DESCANSO_MS) return "tranquila";
+      return "hablando";
+    }
+    default:
+      return "tranquila";
+  }
 }
 
 /** Si el avatar no tiene esa pose, la más parecida que sí tenga. */
-function poseQueTiene(pose: PoseId, estado: EstadoDelInvitado, tiene: ReadonlySet<PoseId>): PoseId {
+function poseQueTiene(pose: PoseId, tiene: ReadonlySet<PoseId>): PoseId {
   if (tiene.has(pose)) return pose;
-  if (pose === "notas" && tiene.has("pensando")) return "pensando";
-  if (estado === "hablando" && tiene.has("hablando")) return "hablando";
   return "tranquila";
 }
 
-/** Un paso del motor: la memoria al día con el estado de ahora y, si toca y se puede, la pose nueva. */
+/**
+ * Un paso del motor: la memoria al día con el estado de ahora, lo que llegó del estudio (gestos y textos) y,
+ * si toca y se puede, la pose nueva.
+ */
 export function siguientePose(
-  m: MemoriaDePoses,
+  anterior: MemoriaDePoses,
   estado: EstadoDelInvitado,
   ahora: number,
-  gestos: readonly Gesto[],
+  entradas: EntradasDelMotor,
   tiene: ReadonlySet<PoseId>,
 ): MemoriaDePoses {
-  let memoria = m;
-  if (estado !== m.estado)
-    memoria = {
-      ...m,
-      estado,
-      desde: ahora,
-      turnosPensando: m.turnosPensando + (estado === "pensando" ? 1 : 0),
-    };
-  const quiere = poseQueTiene(poseDeseada(memoria, ahora, gestos), estado, tiene);
-  if (quiere !== memoria.pose && ahora - memoria.cambio >= MIN_ENTRE_CAMBIOS)
-    memoria = { ...memoria, pose: quiere, cambio: ahora };
-  return memoria;
+  const m: MemoriaDePoses = { ...anterior, leidos: { ...anterior.leidos } };
+  // Conectando ya cuenta: el texto del saludo puede llegar antes de que suene.
+  const enConversacion = estado !== "reposo";
+
+  // 1. El estado.
+  if (estado !== m.estado) {
+    // Dejó de hablar (terminó o la interrumpieron): lo que estaba por salir de esa respuesta ya no sale.
+    if (m.estado === "hablando") {
+      m.pendiente = null;
+      m.respuestaMs = null;
+    }
+    if (estado === "hablando") {
+      m.gestoEnRespuesta = false;
+      const texto = m.ultimoTexto;
+      m.respuestaMs = texto && ahora - texto.hora <= TEXTO_VALE_MS ? texto.ms : null;
+      m.ultimoTexto = null;
+    }
+    if (!enConversacion) {
+      m.pendiente = null;
+      m.ultimoTexto = null;
+    }
+    m.estado = estado;
+    m.desde = ahora;
+  }
+
+  // 2. Lo que llegó del estudio desde el último paso (si las listas empezaron de nuevo, una conversación nueva,
+  // se leen desde el principio).
+  if (entradas.respuestas.length < m.leidos.respuestas) m.leidos.respuestas = 0;
+  if (entradas.gestos.length < m.leidos.gestos) m.leidos.gestos = 0;
+  for (const r of entradas.respuestas.slice(m.leidos.respuestas)) {
+    if (!enConversacion) continue;
+    // Si ya está hablando, es el texto de ESTA respuesta (llegó un poco tarde); si no, el de la que viene.
+    if (estado === "hablando" && m.respuestaMs === null && ahora - m.desde <= TEXTO_VALE_MS)
+      m.respuestaMs = r.ms;
+    else if (estado !== "hablando") m.ultimoTexto = r;
+  }
+  m.leidos.respuestas = entradas.respuestas.length;
+  for (const g of entradas.gestos.slice(m.leidos.gestos)) {
+    if (!enConversacion || m.pendiente) continue;
+    // Uno por respuesta: si ya hizo su gesto, los demás de esta respuesta no cuentan.
+    if (estado === "hablando" && m.gestoEnRespuesta) continue;
+    m.pendiente = g;
+  }
+  m.leidos.gestos = entradas.gestos.length;
+  if (m.pendiente && ahora - m.pendiente.hora > GESTO_CADUCA_MS) m.pendiente = null;
+
+  // 3. Un gesto en curso sigue hasta su hora (o se corta si dejó de hablar, sin parpadear).
+  if (m.gestoHasta !== null) {
+    const cortado = estado !== "hablando" && ahora - m.cambio >= GESTO_MINIMO_MS;
+    if (ahora < m.gestoHasta && !cortado) return m;
+    m.gestoHasta = null;
+  }
+  const tras = esGesto(m.pose);
+  const cumplio = tras || ahora - m.cambio >= POSE_MINIMA_MS;
+
+  // 4. ¿Empieza un gesto? Solo hablando, uno por respuesta, 25 s después del anterior y si la pose de ahora ya
+  // cumplió sus 6 s (si no, espera; si caduca, se tira).
+  if (m.pendiente && estado === "hablando") {
+    const p = m.pendiente;
+    if (m.gestoEnRespuesta || ahora - m.ultimoGesto < ENTRE_GESTOS_MS || !tiene.has(p.pose))
+      m.pendiente = null;
+    else if (cumplio) {
+      return {
+        ...m,
+        pose: p.pose,
+        cambio: ahora,
+        gestoHasta: ahora + DURACION_GESTO[p.pose],
+        ultimoGesto: ahora,
+        gestoEnRespuesta: true,
+        pendiente: null,
+      };
+    }
+  }
+
+  // 5. La pose de su estado, si la de ahora ya cumplió sus 6 s (al terminar un gesto vuelve enseguida).
+  const quiere = poseQueTiene(poseDelEstado(m, ahora), tiene);
+  if (quiere !== m.pose && cumplio) {
+    m.pose = quiere;
+    m.cambio = ahora;
+  }
+  return m;
 }
