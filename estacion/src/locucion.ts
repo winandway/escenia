@@ -49,6 +49,7 @@ async function grabarParte(
     femenina: config.ELEVENLABS_VOICE_ID_FEMENINA,
     venezolana: config.ELEVENLABS_VOICE_ID_VENEZOLANA,
     neutra: config.ELEVENLABS_VOICE_ID_NEUTRA,
+    paisa: config.ELEVENLABS_VOICE_ID_PAISA,
   });
   const texto = plan.partes[i]?.texto ?? "";
   const cuerpo = {

@@ -32,13 +32,14 @@ export const TIPOS_VISUAL = [
 ] as const;
 
 // Quién narra el video: la voz clonada de Richard o la voz femenina de la Estación.
-export const VOCES = ["richard", "femenina", "venezolana", "neutra"] as const;
+export const VOCES = ["richard", "femenina", "venezolana", "neutra", "paisa"] as const;
 export type Voz = (typeof VOCES)[number];
 export const ETIQUETA_VOZ: Record<Voz, string> = {
   richard: "Mi voz",
   femenina: "Voz femenina",
   venezolana: "Voz venezolana (chica joven)",
   neutra: "Voz neutra latina (mujer joven)",
+  paisa: "Voz paisa (mujer joven de Medellín)",
 };
 
 // Un PLANO es un cambio de imagen DENTRO de una escena, pegado a la frase que

@@ -18,6 +18,8 @@ export const TEXTO_MUESTRA: Record<Voz, string> = {
     "¡Hola! ¿Se te va la luz en casa? Mira esto: así sueno vendiendo un producto, alegre y natural. ¡Pídelo hoy mismo!",
   neutra:
     "Hola, soy la voz neutra del banco. Sin acento de ningún país, así sueno en un comercial que corre en toda Latinoamérica.",
+  paisa:
+    "¡Hola, pues! Soy la voz paisa del banco, de Medellín. Así sueno vendiendo tu producto: cálida, alegre y con mucho sabor.",
 };
 
 async function principal() {

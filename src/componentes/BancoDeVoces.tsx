@@ -10,6 +10,7 @@ export const DESCRIPCION_VOZ: Record<Voz, string> = {
   femenina: "Mujer, tono neutro de catálogo.",
   venezolana: "Chica joven de Caracas, alegre: ideal para anuncios.",
   neutra: "Mujer joven sin acento de ningún país: sirve para anuncios en varios países.",
+  paisa: "Mujer joven de Medellín, cálida y alegre: anuncios con acento colombiano.",
 };
 
 export const muestraDeVoz = (voz: Voz) => `/datos/archivos/voces/${voz}.mp3`;

@@ -57,3 +57,13 @@ describe("la voz neutra latina (comerciales para varios países, 5 nov 2026)", (
     expect(modeloDeVoz("neutra", "eleven_flash_v2_5")).toBe("eleven_v3");
   });
 });
+
+describe("la voz paisa (comerciales con acento colombiano, 6 nov 2026)", () => {
+  it("está en el banco, sale de su variable y se lee con Eleven v3", () => {
+    expect(VOCES).toContain("paisa");
+    expect(elegirIdDeVoz("paisa", { paisa: "pa1" })).toBe("pa1");
+    expect(() => elegirIdDeVoz("paisa", { neutra: "ne1" })).toThrow(/ELEVENLABS_VOICE_ID_PAISA/);
+    expect(VARIABLE_DE_VOZ.paisa).toBe("ELEVENLABS_VOICE_ID_PAISA");
+    expect(modeloDeVoz("paisa", "eleven_flash_v2_5")).toBe("eleven_v3");
+  });
+});

@@ -83,6 +83,7 @@ export function nombreDeVoz(voz: string, idioma: Idioma): string {
     femenina: ["Female voice", "Voz de mujer"],
     venezolana: ["Latina female voice", "Voz de mujer latina"],
     neutra: ["Neutral female voice", "Voz de mujer neutra"],
+    paisa: ["Colombian female voice", "Voz de mujer paisa"],
   };
   const par = nombres[voz];
   return par ? (idioma === "en" ? par[0] : par[1]) : voz;

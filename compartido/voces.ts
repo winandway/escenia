@@ -4,20 +4,32 @@
 import type { Voz } from "./guion";
 import type { ModeloVoz } from "./modelos";
 
-export type IdsDeVoz = { richard?: string; femenina?: string; venezolana?: string; neutra?: string };
+export type IdsDeVoz = {
+  richard?: string;
+  femenina?: string;
+  venezolana?: string;
+  neutra?: string;
+  paisa?: string;
+};
 
 export const VARIABLE_DE_VOZ: Record<Voz, string> = {
   richard: "ELEVENLABS_VOICE_ID",
   femenina: "ELEVENLABS_VOICE_ID_FEMENINA",
   venezolana: "ELEVENLABS_VOICE_ID_VENEZOLANA",
   neutra: "ELEVENLABS_VOICE_ID_NEUTRA",
+  paisa: "ELEVENLABS_VOICE_ID_PAISA",
 };
 
 /**
- * El modelo con que se lee cada voz. La venezolana (17 oct 2026) y la neutra (5 nov 2026) se diseñaron con
- * Voice Design v3 y se leen con Eleven v3: con el modelo rápido pierden su tono. Las demás, con el de siempre.
+ * El modelo con que se lee cada voz. La venezolana (17 oct 2026), la neutra (5 nov 2026) y la paisa (6 nov 2026)
+ * se diseñaron con Voice Design v3 y se leen con Eleven v3: con el modelo rápido pierden su tono. Las demás, con
+ * el de siempre.
  */
-const MODELO_PROPIO: Partial<Record<Voz, ModeloVoz>> = { venezolana: "eleven_v3", neutra: "eleven_v3" };
+const MODELO_PROPIO: Partial<Record<Voz, ModeloVoz>> = {
+  venezolana: "eleven_v3",
+  neutra: "eleven_v3",
+  paisa: "eleven_v3",
+};
 
 export function modeloDeVoz(narrador: Voz, deSiempre: string): string {
   return MODELO_PROPIO[narrador] ?? deSiempre;
