@@ -438,7 +438,8 @@ Plan `publicidad/kipuu/plan-empresas.json`.
 ## Kipuu: los cambios de la campaña del 7 nov 2026 (prueba en México, Colombia, Chile e hispanos de EE. UU.)
 
 La sesión de campaña pasó el PDF «Kipuu-Cambios-Videos_1» con el segundo exacto de cada cambio. Se hicieron con
-`--paso armar`: la misma voz y las mismas presentadoras ya pagadas. **Costó 0 $.** Los cuatro quedaron en
+`--paso armar`: la misma voz y las mismas presentadoras ya pagadas. Después, para dejarlos al 100 %, se rehicieron
+dos frases de la voz y los tramos de presentadora que las dicen (abajo). **Costó 0,36 $ en total.** Los cuatro quedaron en
 Descargas como `Kipuu-1-Pagas.mp4`, `Kipuu-2-Seguros.mp4`, `Kipuu-3-Borra.mp4` y `Kipuu-4-Espejo.mp4` (1080×1920),
 cada uno con su versión «(WhatsApp)» de 720×1280.
 
@@ -450,6 +451,7 @@ Lo nuevo en el motor (todo opcional: un plan que no lo pide sale igual que antes
 | `tarjeta_opaca`   | La tarjeta de cada momento entra ya entera (crece un poco, sin fundido). Con el fundido, un cuadro a mitad de la entrada la dejaba «lavada».                                                                                    |
 | momento `ficha`   | De uno a tres datos con su ícono (`servidor`, `candado`, `escudo`, `nube`) en una tarjeta blanca arriba, un dato por renglón: «Datacenters en EE. UU. · Cifrado AES-256». Va en vez del texto grande y de las etiquetas.        |
 | `cierre.insignia` | La insignia oficial de una tienda debajo de la primera línea del cierre, tal cual, y su línea legal chiquita abajo. Con insignia, el producto del cierre va más bajo (600 px) para que quepa todo.                              |
+| `entrada_persona` | `"directa"`: la persona aparece ya completa en su sitio, con un rebote suave (diseños «centro» y «teléfono»). Deslizándose desde el borde (lo de siempre) se veía cortada en los primeros cuadros.                              |
 
 Y dos arreglos que valen para todos los anuncios:
 
@@ -472,12 +474,21 @@ Video por video:
    etiqueta fija «14 DÍAS GRATIS · SIN TARJETA». Los 30 días para recuperar lo borrado se quedan: lo dicen la
    página de seguridad de Kipuu en español y su guía de Docs «papelera y versiones» (comprobado con curl el 7 nov 2026).
 2. **«Tus archivos seguros en la nube»** (`plan-comercial-v2.json`, a la web): sin el título fantasma; la ficha
-   «Datacenters en EE. UU. · Cifrado AES-256» en vez de las etiquetas «Empresas · Alcaldías» (la voz sigue
-   diciendo «empresas y alcaldías»); en el cierre, «14 días gratis · Sin tarjeta» debajo del precio.
-3. **«¿Tu nube borra tus fotos?»** (`plan-verano.json`, a Google Play): la tarjeta del espejo entra ya opaca y el
-   cierre dice «Descárgalo gratis», la insignia de Google Play y «14 días gratis, sin tarjeta», sin precio.
-4. **«¿Tu nube es un espejo?»** (`plan-copia.json`, a Google Play): el mismo cierre del 3, para que la
-   comparación entre los dos sea justa.
+   «Datacenters en EE. UU. · Cifrado AES-256» en vez de las etiquetas «Empresas · Alcaldías»; la voz ahora dice
+   «Ideal para empresas y equipos que cuidan su información» (parte 4 rehecha); en el cierre, «14 días gratis ·
+   Sin tarjeta» debajo del precio. Dura 41,5 s.
+3. **«¿Tu nube borra tus fotos?»** (`plan-verano.json`, a Google Play): la tarjeta del espejo entra ya opaca, la
+   presentadora entra ya completa (`entrada_persona: "directa"`, revisado cuadro por cuadro del segundo 4 al 6) y
+   el cierre dice «Descárgalo gratis», la insignia de Google Play y «14 días gratis, sin tarjeta», sin precio. La
+   voz del final ahora dice «Descárgalo gratis en Google Play: catorce días gratis, sin tarjeta» y el cierre entra
+   cuando dice «Descárgalo». Dura 31,5 s.
+4. **«¿Tu nube es un espejo?»** (`plan-copia.json`, a Google Play): la misma voz nueva, el mismo cierre y la misma
+   entrada de la presentadora que el 3, para que la comparación entre los dos sea justa. Dura 31,5 s.
 
-Ojo: en el 3 y el 4 la voz del final todavía dice «Entra a Kipuu punto com y elige el tuyo hoy». Cambiarla
-costaría una parte de voz y los dos tramos finales de las dos presentadoras (unos 25 centavos); no se autorizó.
+**Lo que costó (0,36 $):** la parte 6 de la voz del 3 y el 4 (1,1 ¢) y su tramo final de presentadora en los dos
+(5,3 ¢ cada uno); la parte 4 de la voz del 2 (0,6 ¢) y dos tramos de Maggie (7,2 ¢ el de esa frase y 16,4 ¢ uno de
+8,2 s que no se pudo recortar gratis de lo ya pagado); y la transcripción para comprobar las dos frases (0,1 ¢).
+Ojo para la próxima: `recortarDeAnterior` compara con un solo desfase, y un tramo que cruza el hueco entre dos
+partes no cuadra si ese hueco cambió un milisegundo al rehacer otra parte; ese tramo se paga de nuevo.
+Cambiar la voz del 2 también cambió la de la versión 1 (`plan-comercial.json`, retirada): comparten carpeta, así
+que su plan quedó con la misma frase.

@@ -2,6 +2,7 @@
 
 Una línea por trabajo, la más nueva arriba: `AAAA-MM-DD · puesto · qué hice · resultado · commit`.
 
+2026-11-07 · desarrollador · Kipuu al 100 %: voz final del 3 y el 4 («Descárgalo gratis en Google Play: catorce días gratis, sin tarjeta», cierre sincronizado), frase del 2 sin alcaldías, presentadora del 3 y el 4 que entra ya completa (revisado cuadro por cuadro del 4 al 6 s); frases comprobadas con transcripción, −14 LUFS, reexportados en Descargas; 0,36 $ · ok · 33af239 y el commit de docs
 2026-11-07 · desarrollador · los cuatro menores de la revisión de Kipuu: la ficha va sola, la insignia sale sin líneas, aviso del texto tapado por la portada y prueba del cableado de la persona por versión · ok · 9f04bda
 2026-11-07 · revisor-calidad · revisó kipuu-cambios-7nov (bd29063, a36f0e6) · ok, APROBADO con cuatro menores (arreglados en 9f04bda) · a36f0e6
 2026-11-07 · desarrollador · Kipuu, los cuatro videos de la campaña según el PDF del 7 nov: motor con etiqueta fija, ficha con íconos, insignia oficial de Google Play y tarjeta opaca; arreglos del título fantasma (C-PORTADA-1) y de la persona pisada entre versiones (C-PERSONAS-1); 30 días comprobados en kipuu.com; videos y versiones de WhatsApp en Descargas, cuadros y volumen revisados (−14 LUFS), 0 $ · ok · bd29063 y el commit de docs
