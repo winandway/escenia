@@ -81,10 +81,12 @@ página), las rutas `/datos/publicidades` y `/datos/estacion/publicidades/*`,
 
 ## El banco de voces
 
-Las cuatro voces: la de Richard (clonada), la femenina de catálogo, la **venezolana** (chica joven de
-Caracas, diseñada en ElevenLabs el 17 oct 2026; se lee con el modelo v3) y la **neutra** (mujer joven sin
-acento de ningún país, diseñada el 5 nov 2026 con Voice Design v3 y leída con v3; `ELEVENLABS_VOICE_ID_NEUTRA`).
-Richard la eligió para los comerciales que corren en varios países. El banco sale en Publicidad,
+Las cinco voces: la de Richard (clonada), la femenina de catálogo, la **venezolana** (chica joven de
+Caracas, diseñada en ElevenLabs el 17 oct 2026; se lee con el modelo v3), la **neutra** (mujer joven sin
+acento de ningún país, diseñada el 5 nov 2026 con Voice Design v3 y leída con v3; `ELEVENLABS_VOICE_ID_NEUTRA`),
+que Richard eligió para los comerciales que corren en varios países, y la **paisa** (mujer joven de Medellín,
+la «paisa 1» que le gustó el 5 nov; creada en la cuenta el 6 nov a partir de su vista previa con
+`POST /v1/text-to-voice` y leída con v3; `ELEVENLABS_VOICE_ID_PAISA`). El banco sale en Publicidad,
 Comerciales y Nuevo video. Las muestras viven en el almacén del panel (`voces/<voz>.mp3`) y se rehacen
 con `npx tsx src/muestras-voces.ts` desde `estacion/` (unos 2 centavos por voz).
 
@@ -415,7 +417,11 @@ Plan `publicidad/kipuu/plan-empresas.json`.
   muy IA… es un error grave». Se rehízo con una foto que parece de verdad: «realistic candid photograph of a real
   person, 85mm, soft window light», «not a model and not a doll», piel con poros y unas pecas, ojos de tamaño
   normal, sonrisa un poco asimétrica, «unretouched, no CGI, no plastic skin». Con «about 30 years old» salieron
-  mayores; con 26 quedó bien. Rehacerla costó 36 ¢ de fotos (dos tandas de seis) y unos 72 ¢ de FlashTalk.
+  mayores; con 26 quedó bien. Rehacerla costó 36 ¢ de fotos (dos tandas de seis) y 72 ¢ de FlashTalk.
+- **Con la voz paisa (6 nov 2026):** con la cara nueva ya armada, Richard pidió una voz paisa o mexicana. Se usó la
+  paisa 1 (ya le había gustado) y quedó en el banco. Voz 7 ¢ y la presentadora otra vez 71 ¢: la boca sigue al
+  audio, así que cambiar la voz obliga a rehacerla. La versión con la voz neutra quedó guardada como
+  «Comercial Kipuu Empresas voz neutra» para campañas fuera de Colombia. El comercial con la paisa dura 41,6 s.
 - **Costó 1,17 $:** fotos 39 ¢ (siete presentadoras y dos salas), voz 7 ¢ y la presentadora hablando 72 ¢. Dura
   41,7 s. Archivos «Comercial Kipuu Empresas» (y su versión de WhatsApp y la miniatura). Ese día fal.ai tuvo
   FlashTalk en fila veinte minutos sin arrancar: se canceló el pedido (no se cobra si no corrió) y se volvió a mandar.
