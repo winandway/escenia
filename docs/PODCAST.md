@@ -28,7 +28,10 @@ Episodios de 5 a 8 minutos. No se monta nada después: Richard abre **el estudio
 1. **Fichas → elige o escribe la ficha** del invitado (el formato, nombre, tema de hoy, quién sale en el
    estudio, voz, cómo habla y, si es una historia, si es de ficción o real y la historia). Solo una historia
    real necesita la casilla «Tengo el permiso por escrito de su protagonista».
-2. **Abrir el estudio** (o «Grabar con esta ficha» en la tarjeta de la ficha).
+2. **Abrir el estudio** (o «Abrir en el estudio» en la tarjeta de la ficha). **El estudio no graba**: lo graba
+   tu grabador de pantalla. Por eso al lado de «Empezar la conversación» está la línea discreta «Para grabar,
+   usa tu grabador de pantalla (Pantalay)», que se esconde con los controles. (El botón de la tarjeta decía
+   «Grabar con esta ficha» y Richard creyó que grababa: el 7 nov 2026 pasó a decir «Abrir en el estudio».)
 3. **Mi cámara** (interruptor): si se enciende, tu cámara sale en el panel de la izquierda y el escenario
    completo queda en la grabación sin montar nada. Si prefieres grabar tu cámara aparte, déjalo apagado: el
    panel queda con un fondo limpio. La preferencia se recuerda.
@@ -54,19 +57,19 @@ YouTube se marca «contenido alterado o sintético: Sí».
 
 ## La ficha
 
-| Campo                | Para qué                                                                                                          |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| El formato           | «Una historia» o «Entrevista a la IA». En la entrevista se esconden la historia, el origen y el permiso.          |
-| Nombre               | Sale en la etiqueta roja del invitado. En una historia de ficción, inventado.                                     |
-| Debajo del nombre    | «Invitado especial» si no se pone otra cosa.                                                                      |
-| Tema de hoy          | Sale en la barra de abajo.                                                                                        |
-| Quién sale           | El avatar del catálogo, con su miniatura (ver «Los avatares»). Las fichas nuevas empiezan con la robot de coleta. |
-| Voz                  | Del banco de Escenia (neutra, femenina, venezolana, paisa). Nunca la de Richard ni un clon de la persona real.    |
-| De dónde sale        | Solo en una historia: de ficción (por defecto) o real. Cambia la leyenda y si hace falta el permiso.              |
-| Cómo es y cómo habla | La personalidad (tímido, cálido, se ríe cuando se pone nervioso…).                                                |
-| La historia          | Solo en una historia: lo ÚNICO que sabe el invitado, en primera persona. Hasta 12.000 letras.                     |
-| Primer mensaje       | Opcional; si no, saluda con su nombre.                                                                            |
-| Permiso              | Solo se ve (y solo se exige) en una historia real. Sin él esa ficha no entra al estudio.                          |
+| Campo                | Para qué                                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| El formato           | «Una historia» o «Entrevista a la IA». En la entrevista se esconden la historia, el origen y el permiso.       |
+| Nombre               | Sale en la etiqueta roja del invitado. En una historia de ficción, inventado.                                  |
+| Debajo del nombre    | «Invitado especial» si no se pone otra cosa.                                                                   |
+| Tema de hoy          | Sale en la barra de abajo.                                                                                     |
+| Quién sale           | El avatar del catálogo, con su miniatura (ver «Los avatares»). Las fichas nuevas empiezan con Mia.             |
+| Voz                  | Del banco de Escenia (neutra, femenina, venezolana, paisa). Nunca la de Richard ni un clon de la persona real. |
+| De dónde sale        | Solo en una historia: de ficción (por defecto) o real. Cambia la leyenda y si hace falta el permiso.           |
+| Cómo es y cómo habla | La personalidad (tímido, cálido, se ríe cuando se pone nervioso…).                                             |
+| La historia          | Solo en una historia: lo ÚNICO que sabe el invitado, en primera persona. Hasta 12.000 letras.                  |
+| Primer mensaje       | Opcional; si no, saluda con su nombre.                                                                         |
+| Permiso              | Solo se ve (y solo se exige) en una historia real. Sin él esa ficha no entra al estudio.                       |
 
 En una **historia**, lo que no está en la ficha el invitado **no lo inventa**: dice con naturalidad «eso
 prefiero no contarlo» o «no lo recuerdo bien». Responde corto (2 a 4 frases), en primera persona y en español.
@@ -84,9 +87,10 @@ Las fichas no se borran: se archivan desde los tres puntos.
 
 **Las fichas en vivo (7 nov 2026):**
 
-- **«Luna IA»** (ficha 2): el episodio 1. Entrevista a la IA, «Invitada especial», tema «Pregúntale a la IA:
-  los grandes misterios», la robot de coleta con la voz paisa, curiosa, cálida, con humor ligero y honesta
-  sobre lo que no sabe. Richard le puede cambiar el nombre en Fichas.
+- **«Mia IA»** (ficha 2, antes «Luna IA»; Richard le cambió el nombre y la voz): el episodio 1. Entrevista a la
+  IA, «Invitada especial», tema «Pregúntale a la IA: los grandes misterios», con **Mia** sentada en su silla
+  (desde el 7 nov 2026; se puso con `scripts/podcast-poner-avatar.ts "Mia IA" mia`, que cambia solo el
+  avatar) y la voz femenina. Curiosa, cálida, con humor ligero y honesta sobre lo que no sabe.
 - **«Alma (ejemplo)»** (ficha 1, la panadera tímida): de ficción, para probar el estudio, y no se publica: en
   escena lleva el letrero amarillo «Historia de ejemplo (ficticia) · no publicar». Ese letrero es SOLO de la
   ficha marcada como ejemplo; las de ficción normales no lo llevan. Tiene la robot de coleta y la voz paisa.
@@ -112,7 +116,8 @@ Las fichas no se borran: se archivan desde los tres puntos.
 - El invitado es la imagen de su avatar con la cara viva dibujada encima en SVG (`RobotInvitado`), en las
   coordenadas de esa imagen: ojos de luz que parpadean, una boca de luz que se mueve con SU voz, los aros de los
   oídos que laten con el volumen y el cuerpo que respira. Pensando, mira hacia arriba con tres puntos en la
-  boca. Todo lo que cambia de un avatar a otro está en el catálogo (abajo, «Los avatares»).
+  boca. Mia, además, cambia de pose según lo que hace y lo que dice (abajo, «Mia y sus poses»). Todo lo que
+  cambia de un avatar a otro está en el catálogo (abajo, «Los avatares»).
 - El escenario (16:9, medido en `cqw`) sigue la dirección de arte de
   `capturas/podcast-referencia-escenario-1.webp` y `-2.webp`, construido en CSS y SVG.
 - Tablas `podcast_fichas` y `podcast_conversaciones` (en `schema.sql`, se crean solas al publicar). Las
@@ -133,52 +138,128 @@ Las fichas no se borran: se archivan desde los tres puntos.
 
 ## Los avatares
 
-El catálogo está en `compartido/podcast-avatares.ts`. Hoy hay dos, y la **robot de coleta va primero**: es la
-favorita de Richard («la que tiene ojitos así con pestañas bonitas»), con la voz paisa.
+El catálogo está en `compartido/podcast-avatares.ts`. Hoy hay cuatro, en este orden (el del selector de la
+ficha, cada uno con su miniatura):
 
-| Id       | Nombre en la ficha | Imagen                             | La cara viva                                                        |
-| -------- | ------------------ | ---------------------------------- | ------------------------------------------------------------------- |
-| `coleta` | Robot de coleta    | `public/podcast/robot-coleta.webp` | Ojos felices con dos pestañas cada uno; boca en D con lengua rosada |
-| `robot`  | Robot clásico      | `public/podcast/robot.webp`        | Ojos en arco; boca de onda que sigue las frecuencias de la voz      |
+| Id         | Nombre en la ficha | Cómo es                                                                                     |
+| ---------- | ------------------ | ------------------------------------------------------------------------------------------- |
+| `mia`      | Mia IA             | La robot de coleta **sentada en su silla gamer**, con siete poses. La de las fichas nuevas. |
+| `plateada` | Robot plateada     | Esbelta, ojos rasgados con ceja y pestañas, boca de media luna. Encuadre de cámara web.     |
+| `coleta`   | Robot de coleta    | De pie, ojos felices con pestañas y boca en D con lengua.                                   |
+| `robot`    | Robot clásico      | El robot de medio cuerpo, ojos en arco y boca de onda.                                      |
 
-![La robot de coleta hablando](capturas/podcast-estudio-robot-ella.png)
+![Los cuatro invitados del catálogo](capturas/podcast-avatares.png)
 
-![La robot de coleta en espera](capturas/podcast-estudio-robot-ella-reposo.png)
+Cada entrada lleva, medido en píxeles de SU imagen: el **encuadre** (qué parte se ve en el panel), el
+**pivote** de la respiración, la **miniatura** del selector y la **cara**. El componente (`RobotInvitado`) no
+sabe de ningún avatar en particular. Hay dos modos de cara:
 
-Cada entrada lleva, medido en píxeles de SU imagen: el **encuadre** (qué parte se ve en el panel derecho: la
-coleta, de la cabeza a medio muslo), el **pivote** de la respiración, la **miniatura** del selector, el
-**visor** (la luz de la cara no sale del vidrio), los **ojos** (la línea central, el grosor, si se afinan en las
-puntas y sus **pestañas**), la **boca** («onda» o «sonrisa», dónde va, cuánto se abre y el color de la
-lengua), los **aros de los oídos** y el **color** de las luces. El componente no sabe de ningún avatar en
-particular.
+- **`visor`** (las robots): la imagen con la cara pintada borrada y la **cara viva** dibujada encima, dentro del
+  vidrio: ojos que parpadean (dibujados con su geometría, o **recortados de la propia imagen**, como los de Mia),
+  una boca de luz que se mueve con SU voz («onda», «sonrisa» en D o «media luna» de puntas finas; llena de luz o
+  solo el borde; con lengua o sin ella) y las luces de los oídos, que laten. Pensando, mira hacia arriba con
+  tres puntos en la boca.
+- **`sin_visor`** (las personas, cuando lleguen): **sin boca dibujada** (encima de una cara real se vería falso).
+  Respiran y se mecen como las robots, las luces de sus audífonos laten con la voz, cada una en su color, y un
+  resplandor suave de ese color las acompaña cuando hablan. En el selector su descripción dice «la boca no se
+  mueve». El tipo y el componente ya lo admiten (con su prueba); falta la imagen buena.
 
-La boca de la coleta: abierta y feliz mientras escucha (como en la imagen); hablando, se abre y se cierra con
-las sílabas de su voz (las bandas graves y medias de `getOutputByteFrequencyData`); pensando, tres puntos.
+Y dos encuadres: **«cuerpo»** (de `arriba` a `abajo`, la robot de pie) y **«camara_web»** (de la coronilla al
+pecho, como en una videollamada: el pecho contra el borde de abajo y un 14 % de aire sobre la cabeza). La
+plateada usa el de cámara web: así sus manos levantadas quedan fuera del cuadro.
 
-### Cómo se agrega un avatar de visor
+![La robot plateada hablando](capturas/podcast-estudio-plateada.png)
 
-1. El original va en `avatar/` (privado, fuera de git), en PNG con transparencia.
-2. **Visor limpio:** si la imagen trae la cara pintada, se borra del visor con el negro del propio visor,
-   siguiendo su forma: se agrega una entrada en `scripts/podcast-avatar.ts` (el original, el destino, un punto
-   oscuro dentro del visor y la caja del visor) y se corre
-   `estacion/node_modules/.bin/tsx scripts/podcast-avatar.ts <id> --medir`. Deja el webp con transparencia en
-   `public/podcast/` y dice el contorno del visor. (Si no se puede limpiar, el catálogo admite `tapas`: manchas
-   del negro del visor encima de la cara pintada, como el robot clásico.)
-3. **Medir la cara** sobre el original: la línea central de cada ojo (cuatro puntos), el grosor, las pestañas,
-   el centro y el ancho de la boca, y los aros de los oídos. Se agrega la entrada al catálogo (`IDS_AVATAR` y
-   `AVATARES`). La prueba `pruebas/podcast-avatares.test.ts` revisa que la imagen exista con transparencia, que
-   el encuadre tenga la forma del panel y que la cara caiga dentro de la imagen y del visor.
-4. **Mirarlo en los cuatro estados**, sin gastar: la vista previa local (launch «panel-empaquetado») y
-   `node scripts/podcast-capturas.mjs <id de una ficha local> <carpeta>`. Simula a ElevenLabs en el navegador
-   (una voz de prueba con sílabas) y deja las capturas de reposo, escuchando, pensando y hablando, enteras y de
-   cerca.
+### Mia y sus poses (animación por código)
 
-### Las presentadoras humanas (todavía no)
+Richard pidió animarla «como se hacía antes de la IA»: varias poses que se alternan, sin pagar por minuto. Mia
+tiene **siete** imágenes del mismo tamaño (1312 × 1199), en la misma silla. El estudio pasa de una a otra con
+un **fundido de 300 ms** (la que llega, encima), con la cara viva siempre encima de la pose que se ve. En todas
+respira y se mece; riéndose tiembla un poco y aplaudiendo da saltitos.
 
-Las chicas animadas de `avatar/presentadoras/` no tienen visor: no se les puede dibujar una cara de luz encima.
-Para que hablen haría falta mover su boca de verdad: un modelo que anime la cara con el audio en vivo (de los
-que cobran por minuto, con precio aprobado por Richard) o una boca recortada en capas (la imagen con la boca
-cerrada y varias bocas dibujadas que se cambian con las sílabas), hecha a mano para cada una.
+![Mia en sus siete poses](capturas/podcast-mia-poses.png)
+
+![Mia hablando en el estudio](capturas/podcast-estudio-mia.png)
+
+**El motor de poses** (`compartido/podcast-poses.ts`, reglas simples y deterministas):
+
+| Cuándo                                                                                         | Pose (archivo en `avatar/mia/`)                       |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| En espera o escuchando                                                                         | Manos juntas (`mia-manos-juntas-tranquila.png`)       |
+| Pensando                                                                                       | Mano en la barbilla; un turno sí y otro no, la tablet |
+| Hablando                                                                                       | Manos en los brazos de la silla                       |
+| Hablando mucho rato                                                                            | Cada 8 a 12 s, 3 s con las manos juntas, y sigue      |
+| Dice «jaja», «[laughs]», «[laughing]», «me río»                                                | Riéndose con la mano en la boca (unos 2,6 s)          |
+| Dice «¡qué buena pregunta!», «¡me encanta!», «¡genial!», «¡increíble!», «[excited]», «[happy]» | Aplaudiendo (unos 2,6 s)                              |
+| Dice «imagínate», «¿sabes qué?», «te cuento», «fíjate», «[curious]»                            | El dedo arriba con el bombillo (unos 2,6 s)           |
+| Habla de datos: cifras, «según», «los científicos», «estudios», planetas                       | La tablet tomando notas (unos 4 s)                    |
+
+- **Manda lo que dice** sobre el estado, en este orden: la risa, el aplauso, la idea, los datos y, al final, la
+  pose del estado.
+- **Nunca cambia de pose más de una vez cada 2,5 segundos**, para que no parezca nerviosa.
+- **De dónde sale el texto:** el SDK de ElevenLabs (`@elevenlabs/client` 1.35, `onMessage`) entrega cada
+  respuesta del agente con `role: "agent"` y el texto en `message`, con las etiquetas de emoción de la voz v3
+  (como `[laughs]`), porque no le pedimos `stripAudioTags`. El estudio busca los disparadores y calcula cuándo
+  se dice cada uno por dónde va en el texto (unas 15 letras por segundo).
+- **Los ojos de Mia son los de la imagen**, recortados tal cual con sus pestañas (no se redibujan): el script
+  borra la cara pintada del visor y guarda aparte lo que quitó dentro de la caja de cada ojo. Encima de la
+  imagen limpia devuelve el ojo exacto, y así parpadea. Las luces de los oídos también son recortes (lo cian de
+  esa zona), que laten con la voz. La boca viva va donde estaba la pintada, del mismo ancho y alto, y con lengua
+  si la pintada la tenía.
+- **Riéndose**, la mano tapa la boca: ahí no se dibuja boca y se conserva la pintada que asoma; solo laten los
+  ojos felices y tiembla de risa. En la de la tablet se conserva el lápiz, que entra al visor.
+
+### Cómo tienen que ser las imágenes nuevas (para que entren solas al catálogo)
+
+1. **PNG con transparencia** (sin fondo), vertical o cuadrada, de unos 1000 a 1500 píxeles de lado.
+2. **El personaje sentado y encuadrado de los hombros para arriba** (o con la silla entera, como Mia), con las
+   manos abajo o fuera del cuadro. De pie y con las manos en el aire «es como ver una muñeca que no se mueve».
+3. **Robots:** el visor negro con la cara pintada (ojos de luz y boca), como Mia: el estudio la borra y pone la
+   cara viva en el mismo sitio.
+4. **Personas:** la boca cerrada (no se mueve; se nota menos si está cerrada).
+5. **Poses de un mismo personaje:** todas del mismo tamaño, en la misma silla y en el mismo sitio del cuadro, para
+   que el fundido no salte.
+
+Los originales van en `avatar/` (privado, fuera de git), cada personaje en su carpeta (ver `avatar/LEEME.txt`).
+
+### Cómo se agrega una entrada al catálogo
+
+1. **El original** en `avatar/<personaje>/`.
+2. **La preparación:** una entrada en `scripts/podcast-avatar.ts` con el original, el destino en
+   `public/podcast/` y, si es una robot, el visor (un punto oscuro adentro, la caja del visor y hasta dónde
+   llega el resplandor de los trazos), las cajas de los ojos, de la boca y de las luces de los oídos, y lo que
+   haya que conservar (una mano o un lápiz encima del visor). Las cajas se miran sobre la imagen con una
+   rejilla. Se corre `estacion/node_modules/.bin/tsx scripts/podcast-avatar.ts <id> --medir` (un personaje con
+   poses: `... podcast-avatar.ts mia`, que además escribe la geometría en `compartido/podcast-mia.ts`). Una
+   persona va sin visor: el script solo limpia el alfa y la pasa a webp.
+3. **La entrada del catálogo** en `compartido/podcast-avatares.ts` (`IDS_AVATAR` y `AVATARES`, en el orden del
+   selector): nombre, descripción, encuadre («camara_web» con la coronilla y el pecho, o «cuerpo»), pivote,
+   miniatura y cara («visor» o «sin_visor»). Si tiene poses, en `poses`.
+4. **Las pruebas:** `pruebas/podcast-avatares.test.ts` revisa que cada imagen exista con transparencia y pese
+   poco, que el encuadre tenga la forma del panel y que la cara caiga dentro de la imagen y del visor.
+5. **Mirarlo en los cuatro estados** (y en sus poses), sin gastar: la vista previa local (launch
+   «panel-empaquetado»; antes `npx opennextjs-cloudflare build`, `npx wrangler deploy --dry-run
+--outdir=.dist-worker --minify` y `node scripts/empaquetar-worker.mjs`) y
+   `node scripts/podcast-capturas.mjs <id de una ficha local> <carpeta> [prefijo] [--poses]`. Simula a
+   ElevenLabs en el navegador (una voz de prueba con sílabas) y deja las capturas; con `--poses` dispara cada
+   gesto con su frase y arma la hoja de poses.
+
+### Lo que espera imágenes nuevas
+
+- **El robot blanco de cuerpo entero** (`avatar/robots/robot-el-cuerpo-entero.png`) y **las dos presentadoras**
+  (`avatar/presentadoras/`) no se publicaron: de pie y con las manos en el aire no sirven, y Richard va a mandar
+  versiones sentadas. El robot **con la boca dibujada** (`robot-el-boca-abierta-cuerpo-entero.png`) nunca va:
+  con la cara borrada queda igual que el de sin boca, y su boca la pone el estudio.
+- **La robot de coleta de pie** sigue en el catálogo; Mia es la misma robot, sentada.
+
+### Fase 2 (solo diseño): que el agente elija el gesto
+
+Hoy el gesto sale de palabras del texto. Mejor: que el propio agente lo pida con una **client tool** de
+ElevenLabs Agents, por ejemplo `gesto({ pose: "riendo" | "aplaudiendo" | "idea" | "notas" })`. Se declara en
+el agente (`scripts/podcast-agente.ts`, como herramienta del cliente, sin respuesta que esperar) y en el estudio
+se pasa en `clientTools` de `Conversation.startSession`: la función empuja un gesto con la hora de ahora a la
+misma lista que hoy llena el texto, y el motor de poses no cambia (sigue mandando el orden y los 2,5 s). En el
+prompt se le dice cuándo usarla, con mesura. No cuesta minutos de más. No está construido.
 
 ## Cuánto cuesta
 
@@ -223,7 +304,8 @@ que las voces: sirve para ver el uso, aunque los minutos del plan ya estén paga
    lleva `ALTER TABLE` y su semilla no nombra columnas nuevas.
 
 Pruebas: `pruebas/podcast.test.ts`, `pruebas/podcast-rutas.test.ts` (ElevenLabs simulado con msw),
-`pruebas/podcast-estudio.test.tsx` y `pruebas/podcast-avatares.test.ts` (el catálogo y la geometría de la cara).
+`pruebas/podcast-estudio.test.tsx`, `pruebas/podcast-avatares.test.ts` (el catálogo y la geometría de la cara)
+y `pruebas/podcast-poses.test.ts` (el motor de poses de Mia).
 
 ## La clave
 

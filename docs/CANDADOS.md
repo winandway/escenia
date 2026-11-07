@@ -3,20 +3,21 @@
 Cada candado tiene su prueba automática en `pruebas/`. Si alguien rompe la
 pieza, la prueba se pone en rojo antes de que llegue a producción.
 
-| Candado      | Qué protege                                                                                            | Dónde vive                                                      | Prueba                                                        |
-| ------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------- |
-| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                                   | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`) | `pruebas/modelos.test.ts`                                     |
-| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                                   | `src/lib/presupuesto.ts`                                        | `pruebas/sesion-presupuesto.test.ts`                          |
-| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                         | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`           | `pruebas/guion.test.ts` (inserción)                           |
-| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                                 | `src/lib/variedad.ts`                                           | `pruebas/variedad.test.ts`                                    |
-| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                              | `compartido/subtitulos.ts`                                      | `pruebas/subtitulos.test.ts`                                  |
-| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min         | `src/lib/sesion.ts`, `src/lib/clave.ts`                         | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
-| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                      | `src/componentes/useBorrador.ts`                                | `pruebas/borrador.test.tsx`                                   |
-| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                        | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                     |
-| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí     | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
-| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                           | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
-| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos       | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                   |
-| C-LATIDO-2   | El latido de la Estación se escribe a lo sumo cada 5 minutos (antes, cada 3 s: 28.332 filas en un día) | `src/lib/estacion-estado.ts`                                    | `pruebas/estacion-estado.test.ts`                             |
+| Candado      | Qué protege                                                                                                | Dónde vive                                                      | Prueba                                                              |
+| ------------ | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------- |
+| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                                       | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`) | `pruebas/modelos.test.ts`                                           |
+| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                                       | `src/lib/presupuesto.ts`                                        | `pruebas/sesion-presupuesto.test.ts`                                |
+| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                             | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`           | `pruebas/guion.test.ts` (inserción)                                 |
+| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                                     | `src/lib/variedad.ts`                                           | `pruebas/variedad.test.ts`                                          |
+| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                                  | `compartido/subtitulos.ts`                                      | `pruebas/subtitulos.test.ts`                                        |
+| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min             | `src/lib/sesion.ts`, `src/lib/clave.ts`                         | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts`       |
+| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                          | `src/componentes/useBorrador.ts`                                | `pruebas/borrador.test.tsx`                                         |
+| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                            | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                           |
+| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí         | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                           |
+| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                               | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                           |
+| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos           | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                         |
+| C-LATIDO-2   | El latido de la Estación se escribe a lo sumo cada 5 minutos (antes, cada 3 s: 28.332 filas en un día)     | `src/lib/estacion-estado.ts`                                    | `pruebas/estacion-estado.test.ts`                                   |
+| C-PODCAST-3  | El estudio dice que no graba («Abrir en el estudio», la línea de Pantalay); Mia cambia de pose sin nervios | `src/app/podcast/Estudio.tsx`, `compartido/podcast-poses.ts`    | `pruebas/podcast-estudio.test.tsx`, `pruebas/podcast-poses.test.ts` |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
 
@@ -2031,3 +2032,18 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   5 minutos y no de a 3 segundos.
 - **Qué NO tocar:** no quitar el `WHERE` del upsert ni bajar `LATIDO_ESCRIBIR_CADA_MIN` a segundos. Si el
   panel tiene que saber al instante que la Estación está viva, se usa memoria o Analytics, nunca la base.
+
+## C-PODCAST-3 — El estudio no promete grabar, y Mia cambia de pose sin nervios (7 nov 2026)
+
+- **Qué se rompió:** la tarjeta de cada ficha decía «Grabar con esta ficha». Richard lo tocó, creyó que el
+  estudio grababa y no grabó nada: el botón solo abre el estudio; la grabación la hace su grabador de pantalla.
+- **Qué se hizo:** el botón dice «Abrir en el estudio» y, al lado de «Empezar la conversación», una línea
+  discreta dice «Para grabar, usa tu grabador de pantalla (Pantalay)» (`PISTA_GRABAR`), que se esconde con
+  los controles. Ningún botón del estudio dice «grabar».
+- **Mia y sus poses (mismo día):** el motor (`compartido/podcast-poses.ts`) nunca cambia de pose más de una vez
+  cada 2,5 s (`MIN_ENTRE_CAMBIOS`) y manda en este orden: la risa, el aplauso, la idea, los datos y el estado.
+- **Cómo se comprueba:** `pruebas/podcast-estudio.test.tsx` («dice al lado del botón que el estudio no graba»)
+  y `pruebas/podcast-poses.test.ts` («sin nervios» y «el orden manda»). Se comprobaron en rojo con el código de
+  antes. En vivo: la tarjeta de la ficha dice «Abrir en el estudio».
+- **Qué NO tocar:** no volver a poner «Grabar» en un botón que no graba; no bajar `MIN_ENTRE_CAMBIOS` (Mia se
+  ve nerviosa).

@@ -2,6 +2,9 @@
 
 ## Para otros puestos
 
+- [para: revisor-calidad] Revisar el paquete de Mia IA del 7 nov 2026 (siete poses con el motor de poses, la robot plateada, el modo sin visor, el encuadre de cámara web, «Abrir en el estudio» y la línea de Pantalay; docs/PODCAST.md «Mia y sus poses» y C-PODCAST-3): se publicó por orden de Gerencia con `npm run verify` en verde; falta la revisión de calidad del paquete.
+- [para: desarrollador] Cuando Richard mande las imágenes sentadas del robot blanco y de las dos presentadoras (rubia y morena), agregarlas al catálogo siguiendo docs/PODCAST.md («Cómo tienen que ser las imágenes nuevas» y «Cómo se agrega una entrada»); las presentadoras van en modo «sin_visor».
+
 - [para: revisor-calidad] Revisar el paquete del Podcast IA del 7 nov 2026 (los avatares con la robot de coleta, la leyenda según el origen, la entrevista a la IA y las columnas que se agregan solas; docs/PODCAST.md y C-PODCAST-1): se publicó por orden de Gerencia con `npm run verify` en verde y la prueba de voz en vivo; falta la revisión de calidad del paquete.
 
 ## 👤 Esperando por Richard

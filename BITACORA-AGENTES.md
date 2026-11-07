@@ -2,6 +2,7 @@
 
 Una línea por trabajo, la más nueva arriba: `AAAA-MM-DD · puesto · qué hice · resultado · commit`.
 
+2026-11-07 · desarrollador · Podcast IA: Mia IA sentada con siete poses y su motor de poses (fundido, gestos por lo que dice, sin nervios), la robot plateada en cámara web, el modo sin visor para las personas, «Abrir en el estudio» y la línea de Pantalay (C-PODCAST-3), guía de imágenes y de cómo se agrega un avatar; ficha «Mia IA» en vivo con avatar mia · ok, falta la revisión de calidad · 1316b40
 2026-11-07 · revisor-calidad · revisión del paquete de Luna (8b9992a, ec08082, d8d4472) · DEVUELTO por dos fallos, arreglados enseguida: la ficha de ejemplo pasada a «real» se grababa sin permiso, y el borrador no recordaba una casilla desmarcada (arreglo para todos los formularios en useBorrador) · ver commit siguiente
 2026-11-07 · desarrollador · Podcast IA: catálogo de avatares con la robot de coleta (visor limpio, cara viva generalizada, selector con miniatura), origen ficción/real con la leyenda que dice la verdad, formato «entrevista a la IA» con su prompt, columnas avatar/origen/tipo que se agregan solas (migradas en vivo), ficha Luna IA del episodio 1 y la de ejemplo con coleta y voz paisa; dos pruebas de voz (paisa confirmada) · ok, falta la revisión de calidad · ver commits del 7 nov
 2026-11-06 · revisor-calidad · revisión única del Podcast IA (cf24774) · APROBADO, con dos débiles arreglados después: el canario ya ve la falta de voces y el día del tope es UTC−5 · ver commit siguiente
