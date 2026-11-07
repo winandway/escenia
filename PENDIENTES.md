@@ -55,6 +55,7 @@
 
 ## Fila (lo hace la IA)
 
+- [ ] **EN COLA, después de los movimientos de Mia (otra sesión):** cambios a los cuatro videos de la campaña de Kipuu, del PDF «Kipuu-Cambios-Videos_1» (7 nov 2026). El plan, video por video, está en publicidad/kipuu/CAMBIOS-CAMPANA-7NOV.md (privado). Al terminar se entregan en Descargas como Kipuu-1-Pagas, Kipuu-2-Seguros, Kipuu-3-Borra y Kipuu-4-Espejo, en 1080×1920.
 - [x] El Director, primera parte (27 oct 2026): chat en el panel que propone el anuncio en una tarjeta con su precio; la IA mira las fotos y propone; solo el botón de Richard aprueba y gasta (C-DIRECTOR-1). Guía docs/DIRECTOR.md.
 - [x] Director, segunda parte (27 oct 2026): videos en el chat (la Mac los mira y arma hojas de cuadros con su hora), la prueba en vivo sin cortes y la locución con tu voz, con su tarjeta y su precio (C-DIRECTOR-3).
 - [ ] Taller en la nube: la Estación en un contenedor (Cloudflare Containers o Modal; gana el que arme el video del agua en menos de cinco minutos y más barato), cuentas de cliente y créditos prepago.
