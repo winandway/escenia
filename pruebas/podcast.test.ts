@@ -21,6 +21,8 @@ import {
   AJUSTE_AGENTE_ID,
   AJUSTE_CLAVE,
   AJUSTE_ERROR,
+  AJUSTE_VOCES,
+  HOY_SQL,
   TopeDelPodcast,
   abrirConversacion,
   cerrarConversacion,
@@ -217,6 +219,11 @@ describe("el canario del podcast", () => {
     await guardarAjuste(db, AJUSTE_CLAVE, `prueba-${crypto.randomUUID()}`);
     expect((await estadoDelPodcast(db, {})).estado).toBe("apagado");
     await guardarAjuste(db, AJUSTE_AGENTE_ID, "agent_prueba");
+    // Clave y agente sin voces: el estudio no abriría nada, así que el canario no puede decir «ok».
+    expect((await estadoDelPodcast(db, {})).estado).toBe("error");
+    await guardarAjuste(db, AJUSTE_VOCES, "{roto");
+    expect((await estadoDelPodcast(db, {})).estado).toBe("error");
+    await guardarAjuste(db, AJUSTE_VOCES, JSON.stringify({ neutra: "voz_prueba" }));
     expect((await estadoDelPodcast(db, {})).estado).toBe("ok");
     await guardarAjuste(db, AJUSTE_ERROR, JSON.stringify({ mensaje: "La clave no sirve.", fecha: "" }));
     expect(await estadoDelPodcast(db, {})).toEqual({
@@ -270,5 +277,11 @@ describe("lo que el navegador necesita para el invitado", () => {
     expect(config).toMatch(/source: "\/podcast",[\s\S]*camera=\(self\), microphone=\(self\)/);
     expect(config).toContain("wss://api.elevenlabs.io");
     expect(config).not.toMatch(/connect-src[^"]*https:\/\/api\.elevenlabs\.io/);
+  });
+});
+
+describe("el día del tope de minutos", () => {
+  it("es el día de Richard (UTC−5), no el de UTC, al abrir y al contar", () => {
+    expect(HOY_SQL).toBe("date('now', '-5 hours')");
   });
 });

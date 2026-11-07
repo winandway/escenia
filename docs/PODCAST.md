@@ -82,8 +82,11 @@ cuando llegue la primera historia real.
 - Tablas `podcast_fichas` y `podcast_conversaciones` (en `schema.sql`, se crean solas al publicar).
   Ajustes: `podcast_minutos_dia` (tope), `podcast_agente_id`, `podcast_voces` (los ids del banco, sin la voz
   de Richard), `podcast_elevenlabs_clave` y `podcast_error` (la última falla, para el canario).
-- **Canario:** pieza `podcast` en `/datos/salud`: `apagado` sin clave o sin agente, `error` si la última
-  conversación no se pudo abrir (clave revocada, agente borrado, sin minutos), `ok` si no.
+- **Canario:** pieza `podcast` en `/datos/salud`: `apagado` sin clave o sin agente, `error` si faltan las voces
+  del invitado (lista vacía o dañada: el estudio no abriría nada) o si la última conversación no se pudo abrir
+  (clave revocada, agente borrado, sin minutos), `ok` si no.
+- **El día del tope** es el de Richard (UTC−5, `HOY_SQL` en `src/lib/podcast.ts`), no el de UTC: con
+  `date('now')` el día se reiniciaba a las 7 de la noche. Lo señaló el revisor de calidad el 6 nov 2026.
 
 ## Cuánto cuesta
 

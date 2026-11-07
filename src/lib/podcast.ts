@@ -107,10 +107,16 @@ export async function topeMinutos(db: BaseDatos): Promise<number> {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+/**
+ * El «hoy» del tope es el día de Richard (hora del este de EE. UU. y de Colombia, UTC−5), no el de UTC:
+ * con date('now') el día se reiniciaba a las 7 de la noche.
+ */
+export const HOY_SQL = "date('now', '-5 hours')";
+
 /** Segundos usados hoy: las cerradas por lo que duraron y las abiertas por lo más que pueden durar. */
 export async function segundosUsadosHoy(db: BaseDatos): Promise<number> {
   const f = await db.uno<{ total: number | null }>(
-    `SELECT SUM(COALESCE(segundos, ?)) AS total FROM podcast_conversaciones WHERE fecha = date('now')`,
+    `SELECT SUM(COALESCE(segundos, ?)) AS total FROM podcast_conversaciones WHERE fecha = ${HOY_SQL}`,
     [MAX_SEGUNDOS_CONVERSACION],
   );
   return f?.total ?? 0;
@@ -166,7 +172,9 @@ export async function abrirConversacion(db: BaseDatos, fichaId: number): Promise
   const motivo = cabeOtraConversacion(await segundosUsadosHoy(db), await topeMinutos(db));
   if (motivo) throw new TopeDelPodcast(motivo);
   await autorizarGasto(db, costoAgenteUsd(MAX_SEGUNDOS_CONVERSACION));
-  const r = await db.ejecutar("INSERT INTO podcast_conversaciones (ficha_id) VALUES (?)", [fichaId]);
+  const r = await db.ejecutar(`INSERT INTO podcast_conversaciones (ficha_id, fecha) VALUES (?, ${HOY_SQL})`, [
+    fichaId,
+  ]);
   if (!r.ultimoId) throw new Error("No se pudo abrir la conversación.");
   return r.ultimoId;
 }
@@ -219,7 +227,14 @@ export async function estadoDelPodcast(
 ): Promise<{ estado: "ok" | "apagado" | "error"; motivo: string }> {
   await db.uno("SELECT COUNT(id) AS n FROM podcast_conversaciones");
   await db.uno("SELECT COUNT(id) AS n FROM podcast_fichas");
-  if (!(await conexionDelPodcast(db, env))) return { estado: "apagado", motivo: "" };
+  const conexion = await conexionDelPodcast(db, env);
+  if (!conexion) return { estado: "apagado", motivo: "" };
+  // Clave y agente sin voces (o con la lista dañada): cada conversación daría 503 y el estudio no abriría nada.
+  if (Object.keys(conexion.voces).length === 0)
+    return {
+      estado: "error",
+      motivo: "Podcast: faltan las voces del invitado; corre otra vez scripts/podcast-agente.ts.",
+    };
   const error = await ultimoErrorDelPodcast(db);
   return error ? { estado: "error", motivo: `Podcast: ${error.mensaje}` } : { estado: "ok", motivo: "" };
 }
