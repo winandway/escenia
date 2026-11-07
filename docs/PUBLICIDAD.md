@@ -392,3 +392,9 @@ habla. «Que se diferencie y que venda»: es para una campaña en Facebook con v
   tragaluz libre para la nube), tema claro con el logo de siempre, paleta `#e0f2fe` → `#0b2a6f`, música
   `corporate-inspiring-piano-pulse-business.mp3`, portada «¿TU NUBE BORRA / TUS FOTOS?» con la etiqueta «EN KIPUU
   SE QUEDAN». Misma voz y mismo guion que el «espejo» (`trabajo_de: "plan-copia"`).
+- **El corto de 16 s (gratis):** se cortó el video terminado, sin producir de nuevo. Se dejaron tres partes de la
+  voz (el espejo, «tus fotos se suben solas…» y el cierre) y se cortó entre palabras, con los tiempos de
+  `voz.json` de la carpeta de trabajo. El audio lleva fundidos de 30 ms en cada unión y un soplido encima para
+  tapar el salto de la música. Ojo: la imagen nueva entra unos cuadros después de la primera palabra. Por eso el
+  video de la última parte arranca 0,12 s más tarde que su audio y se congela su primer cuadro (`tpad`); si no,
+  se cuelan tres cuadros del gráfico anterior. Archivo «Comercial Kipuu Verano 16s» (y su versión de WhatsApp).
