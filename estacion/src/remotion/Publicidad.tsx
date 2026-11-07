@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { Fragment } from "react";
 import { loadFont } from "@remotion/google-fonts/Anton";
 import { textoSobre } from "./monigotes-diseno";
 import {
@@ -21,9 +22,15 @@ import {
   cierreConFoto,
   contenidoDelTelefono,
   curvaDelRayo,
+  entradaTrasPortada,
+  etiquetaDePortada,
   formatoCifra,
+  type IconoFicha,
+  lineasDeEtiqueta,
   ladoDelTelefonoEn,
+  medidasDeInsignia,
   mezclarVistas,
+  opacidadDeEntrada,
   personaEnPizarra,
   puntoEnCurva,
   puntoEnPantalla,
@@ -38,6 +45,7 @@ import {
   type Vista,
   type VistaPersona,
   vistaPersonaEn,
+  SALIDA_PORTADA_CUADROS,
   ZONA_PUBLICIDAD as Z,
 } from "./publicidad-diseno";
 
@@ -66,7 +74,19 @@ const Tarjeta: React.FC<{
   completa?: boolean;
   /** Diseño «teléfono»: la pantalla entera en una tarjeta alta, quieta (sin acercar ni mover). */
   telefono?: boolean;
-}> = ({ tramo, anterior, duracion, indice, acento, fondo, completa = false, telefono = false }) => {
+  /** Entra ya opaca (crece un poco, sin fundido): a mitad del fundido se veía lavada. */
+  opaca?: boolean;
+}> = ({
+  tramo,
+  anterior,
+  duracion,
+  indice,
+  acento,
+  fondo,
+  completa = false,
+  telefono = false,
+  opaca = false,
+}) => {
   const frame = useCurrentFrame();
   const caja = completa
     ? { ancho: 1080, alto: 1920 }
@@ -96,7 +116,7 @@ const Tarjeta: React.FC<{
           border: `6px solid ${acento}`,
           boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
           background: "#fff",
-          opacity: entra,
+          opacity: opacidadDeEntrada(entra, opaca),
           transform: `scale(${0.9 + 0.1 * entra})`,
         }}
       >
@@ -206,7 +226,7 @@ const Tarjeta: React.FC<{
         border: completa ? undefined : `6px solid ${acento}`,
         boxShadow: completa ? undefined : "0 30px 80px rgba(0,0,0,0.55)",
         background: completa ? "transparent" : fondo,
-        opacity: entra,
+        opacity: opacidadDeEntrada(entra, opaca),
       }}
     >
       {contenido}
@@ -798,19 +818,21 @@ const FondoDePaleta: React.FC<{ paleta: NonNullable<PropsPublicidad["paleta"]> }
  * color de la marca), quietos desde el cuadro 0 para que la miniatura de WhatsApp los muestre completos;
  * al llegar `hastaMs` suben y se van.
  */
-const Portada: React.FC<{ portada: NonNullable<PropsPublicidad["portada"]>; acento: string }> = ({
-  portada,
-  acento,
-}) => {
+const Portada: React.FC<{
+  portada: NonNullable<PropsPublicidad["portada"]>;
+  acento: string;
+  /** La etiqueta de arriba (vacía si hay una etiqueta fija en la esquina). */
+  etiqueta: string;
+}> = ({ portada, acento, etiqueta }) => {
   const frame = useCurrentFrame();
-  const sale = interpolate(frame, [f(portada.hastaMs), f(portada.hastaMs) + 10], [0, 1], {
+  const sale = interpolate(frame, [f(portada.hastaMs), f(portada.hastaMs) + SALIDA_PORTADA_CUADROS], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.in(Easing.cubic),
   });
   return (
     <AbsoluteFill style={{ opacity: 1 - sale, transform: `translateY(${-160 * sale}px)` }}>
-      {portada.etiqueta && (
+      {etiqueta && (
         <div
           style={{
             position: "absolute",
@@ -825,7 +847,7 @@ const Portada: React.FC<{ portada: NonNullable<PropsPublicidad["portada"]>; acen
             boxShadow: "0 8px 22px rgba(0,0,0,0.4)",
           }}
         >
-          {portada.etiqueta}
+          {etiqueta}
         </div>
       )}
       <div
@@ -898,6 +920,185 @@ const TextoGrande: React.FC<{ texto: string; acento: string; quieto?: boolean }>
   );
 };
 
+/**
+ * La etiqueta fija de la esquina de arriba a la derecha («14 DÍAS GRATIS · SIN TARJETA»), como la de la
+ * portada: blanca, un poco girada y quieta desde el cuadro 0 (sale en la miniatura). En renglones, para que
+ * quepa en la esquina sin chocar con la nube del centro.
+ */
+const EtiquetaFija: React.FC<{ texto: string }> = ({ texto }) => {
+  const lineas = lineasDeEtiqueta(texto);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        right: 34,
+        top: 48,
+        background: "#fff",
+        color: "#111",
+        fontSize: lineas.length > 1 ? 40 : 44,
+        lineHeight: 1.08,
+        padding: lineas.length > 1 ? "10px 24px" : "6px 22px",
+        borderRadius: lineas.length > 1 ? 24 : 999,
+        transform: "rotate(3deg)",
+        boxShadow: "0 8px 22px rgba(0,0,0,0.4)",
+        textAlign: "center",
+      }}
+    >
+      {lineas.map((l) => (
+        <div key={l}>{l}</div>
+      ))}
+    </div>
+  );
+};
+
+/** Los íconos de la ficha, dibujados en blanco sobre el círculo del color de la marca. */
+const IconoDeFicha: React.FC<{ icono: IconoFicha }> = ({ icono }) => {
+  const trazo = {
+    stroke: "#fff",
+    strokeWidth: 6,
+    fill: "none",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  } as const;
+  return (
+    <svg width={56} height={56} viewBox="0 0 56 56">
+      {icono === "servidor" && (
+        <>
+          {[6, 21, 36].map((y) => (
+            <g key={y}>
+              <rect x={7} y={y} width={42} height={13} rx={3} {...trazo} strokeWidth={4.5} />
+              <circle cx={15} cy={y + 6.5} r={2.6} fill="#fff" />
+              <path d={`M 26 ${y + 6.5} H 41`} {...trazo} strokeWidth={4} />
+            </g>
+          ))}
+        </>
+      )}
+      {icono === "candado" && (
+        <>
+          <path d="M 17 25 V 18 A 11 11 0 0 1 39 18 V 25" {...trazo} />
+          <rect x={10} y={25} width={36} height={25} rx={5} fill="#fff" />
+          <circle cx={28} cy={36} r={3.6} fill="#0b1b4d" />
+          <path d="M 28 37 V 43" stroke="#0b1b4d" strokeWidth={4} strokeLinecap="round" />
+        </>
+      )}
+      {icono === "escudo" && (
+        <>
+          <path d="M 28 5 L 47 12 V 27 C 47 39 39 47 28 51 C 17 47 9 39 9 27 V 12 Z" {...trazo} />
+          <path d="M 19 28 L 26 35 L 38 22" {...trazo} />
+        </>
+      )}
+      {icono === "nube" && (
+        <path
+          d="M 16 42 C 7 42 7 30 15 29 C 14 19 26 15 31 22 C 35 14 49 17 47 28 C 54 29 54 42 45 42 Z"
+          {...trazo}
+        />
+      )}
+    </svg>
+  );
+};
+
+/**
+ * La ficha de un momento arriba, en la franja del texto grande: una tarjeta blanca con el borde de la marca
+ * y un dato por renglón, cada uno con su ícono y en una sola línea (sin partir «AES-256»); entran uno tras
+ * otro con un rebote y ya opacos.
+ */
+const Ficha: React.FC<{ datos: Tramo["ficha"]; acento: string }> = ({ datos, acento }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({ frame, fps, config: { damping: 13, stiffness: 170 } });
+  const pocos = datos.length <= 2;
+  const circulo = pocos ? 92 : 72;
+  return (
+    <AbsoluteFill style={{ top: Z.texto.y - 25, alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          background: "#fff",
+          border: `6px solid ${acento}`,
+          borderRadius: 30,
+          padding: "16px 34px 16px 22px",
+          maxWidth: 980,
+          boxShadow: "0 16px 40px rgba(0,0,0,0.45)",
+          transform: `scale(${0.82 + 0.18 * s})`,
+        }}
+      >
+        {datos.map((d, k) => {
+          // El primero entra con la tarjeta (nunca se ve vacía); el siguiente, un momento después.
+          const sk = spring({ frame: frame - k * 6, fps, config: { damping: 12, stiffness: 190 } });
+          return (
+            <div
+              key={d.texto}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 18,
+                opacity: Math.min(1, Math.max(0, sk * 2.5)),
+                transform: `translateX(${(1 - sk) * -40}px)`,
+              }}
+            >
+              <div
+                style={{
+                  width: circulo,
+                  height: circulo,
+                  flexShrink: 0,
+                  borderRadius: "50%",
+                  background: d.icono ? acento : "transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `scale(${circulo / 92})`,
+                }}
+              >
+                {d.icono && <IconoDeFicha icono={d.icono} />}
+              </div>
+              <div
+                style={{
+                  color: "#0b1b4d",
+                  fontSize: pocos ? 58 : 46,
+                  lineHeight: 1.05,
+                  whiteSpace: "nowrap",
+                  textTransform: "uppercase",
+                }}
+              >
+                {d.texto}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * La insignia oficial de la tienda en el cierre, tal cual (sin sombra, sin brillo, sin cambiarle nada: son
+ * las reglas de Google Play), con su aire alrededor; entra subiendo un poco después de la primera línea.
+ */
+const Insignia: React.FC<{ insignia: NonNullable<PropsPublicidad["cierre"]["insignia"]> }> = ({
+  insignia,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({ frame: frame - 9, fps, config: { damping: 14 } });
+  const m = medidasDeInsignia(insignia);
+  return (
+    <Img
+      src={staticFile(insignia.imagen)}
+      style={{
+        position: "relative",
+        width: m.ancho,
+        height: m.alto,
+        marginTop: m.aire - 30,
+        marginBottom: m.aire - 30,
+        opacity: Math.min(1, Math.max(0, s)),
+        transform: `translateY(${(1 - s) * 30}px)`,
+      }}
+    />
+  );
+};
+
 /** Las etiquetas (lo que se puede encender, por ejemplo): cada una entra cuando se dice. */
 const Etiquetas: React.FC<{ chips: { texto: string; inicioMs: number }[]; desdeMs: number }> = ({
   chips,
@@ -956,7 +1157,9 @@ const Cierre: React.FC<{
   paleta: PropsPublicidad["paleta"];
   /** El producto debajo de las líneas. */
   imagen?: string | null;
-}> = ({ logo, lineas, acento, oscuro, paleta, imagen = null }) => {
+  /** La insignia de la tienda debajo de la primera línea (y su línea legal abajo). */
+  insignia?: PropsPublicidad["cierre"]["insignia"];
+}> = ({ logo, lineas, acento, oscuro, paleta, imagen = null, insignia = null }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = spring({ frame, fps, config: { damping: 13, stiffness: 140 } });
@@ -997,37 +1200,40 @@ const Cierre: React.FC<{
       {lineas.map((l, i) => {
         const si = spring({ frame: frame - 6 - i * 5, fps, config: { damping: 12 } });
         return (
-          <div
-            key={l}
-            style={{
-              // Encima de la foto de fondo (si la hay): lo posicionado se pinta en el orden del documento.
-              position: "relative",
-              transform: `translateY(${(1 - si) * 40}px)`,
-              opacity: si,
-              fontSize: i === 0 ? (logo ? 92 : 118) : logo ? 60 : 72,
-              color: i === 0 ? (conFoto ? "#fff" : acento) : oscuro ? "#fff" : "#111",
-              // Sobre la oficina clara (tema claro con foto), la letra oscura lleva un halo blanco para leerse.
-              textShadow:
-                conFoto && !oscuro && i > 0
-                  ? "0 0 18px rgba(255,255,255,0.95), 0 0 6px rgba(255,255,255,0.95)"
-                  : undefined,
-              marginTop: 18,
-              textAlign: "center",
-              padding: "0 40px",
-              // Sobre la foto de fondo, la dirección del color de la marca no se leía (Kipuu v2, 5 nov 2026):
-              // va en una píldora del color de la marca, con letra blanca.
-              ...(i === 0 && conFoto
-                ? {
-                    background: acento,
-                    borderRadius: 26,
-                    padding: "8px 44px",
-                    boxShadow: "0 14px 40px rgba(0,0,0,0.45)",
-                  }
-                : {}),
-            }}
-          >
-            {l}
-          </div>
+          <Fragment key={l}>
+            {i === 1 && insignia && <Insignia insignia={insignia} />}
+            <div
+              style={{
+                // Encima de la foto de fondo (si la hay): lo posicionado se pinta en el orden del documento.
+                position: "relative",
+                transform: `translateY(${(1 - si) * 40}px)`,
+                opacity: si,
+                fontSize: i === 0 ? (logo ? 92 : 118) : logo ? 60 : 72,
+                color: i === 0 ? (conFoto ? "#fff" : acento) : oscuro ? "#fff" : "#111",
+                // Sobre la oficina clara (tema claro con foto), la letra oscura lleva un halo blanco para leerse.
+                textShadow:
+                  conFoto && !oscuro && i > 0
+                    ? "0 0 18px rgba(255,255,255,0.95), 0 0 6px rgba(255,255,255,0.95)"
+                    : undefined,
+                marginTop: 18,
+                textAlign: "center",
+                padding: "0 40px",
+                // Sobre la foto de fondo, la dirección del color de la marca no se leía (Kipuu v2, 5 nov 2026):
+                // va en una píldora del color de la marca, con letra blanca.
+                ...(i === 0 && conFoto
+                  ? {
+                      background: acento,
+                      borderRadius: 26,
+                      padding: "8px 44px",
+                      boxShadow: "0 14px 40px rgba(0,0,0,0.45)",
+                    }
+                  : {}),
+              }}
+            >
+              {l}
+            </div>
+            {i === 0 && lineas.length === 1 && insignia && <Insignia insignia={insignia} />}
+          </Fragment>
         );
       })}
       {imagen && (
@@ -1035,14 +1241,33 @@ const Cierre: React.FC<{
           src={staticFile(imagen)}
           style={{
             position: "relative",
-            marginTop: 50,
+            marginTop: insignia ? 30 : 50,
             width: 900,
-            height: 820,
+            // Con la insignia de la tienda, el producto va más bajo para que el cierre quepa entero.
+            height: insignia ? 600 : 820,
             objectFit: "contain",
             transform: `scale(${0.8 + 0.2 * spring({ frame: frame - 10, fps, config: { damping: 13 } })}) translateY(${-8 * Math.sin(frame / 18)}px)`,
             filter: "drop-shadow(0 30px 40px rgba(0,0,0,0.25))",
           }}
         />
+      )}
+      {insignia?.legal && (
+        <div
+          style={{
+            position: "absolute",
+            left: 60,
+            right: 60,
+            bottom: 34,
+            textAlign: "center",
+            fontFamily: "Helvetica, Arial, sans-serif",
+            fontSize: 24,
+            color: oscuro || conFoto ? "rgba(255,255,255,0.92)" : "#333",
+            textShadow: oscuro || conFoto ? "0 1px 6px rgba(0,0,0,0.8)" : undefined,
+            opacity: Math.min(1, Math.max(0, (frame - 12) / 8)),
+          }}
+        >
+          {insignia.legal}
+        </div>
       )}
       {!logo && (
         <svg
@@ -1189,6 +1414,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
               fondo={oscuro ? "#0b120e" : "#fff"}
               completa={pantalla}
               telefono={telefono}
+              opaca={p.tarjetaOpaca}
             />
           </Sequence>
         );
@@ -1204,8 +1430,10 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
       )}
       {/* El texto grande o las etiquetas de cada momento. */}
       {p.tramos.map((t, i) => {
-        if (!t.texto && !t.chips.length && !t.cifra) return null;
-        const desde = f(t.inicioMs);
+        if (!t.texto && !t.chips.length && !t.cifra && !t.ficha.length) return null;
+        // Mientras la portada está o se va, el texto espera: si no, se ve un título fantasma detrás.
+        const entraMs = entradaTrasPortada(t.inicioMs, p.portada);
+        const desde = f(entraMs);
         const hasta = Math.min(f(t.finMs), f(p.cierre.inicioMs));
         if (hasta <= desde) return null;
         return (
@@ -1213,9 +1441,11 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
             {t.cifra ? (
               <Cifra cifra={t.cifra} acento={p.acento} />
             ) : t.chips.length ? (
-              <Etiquetas chips={t.chips} desdeMs={t.inicioMs} />
+              <Etiquetas chips={t.chips} desdeMs={entraMs} />
+            ) : t.ficha.length ? (
+              <Ficha datos={t.ficha} acento={p.acento} />
             ) : (
-              <TextoGrande texto={t.texto ?? ""} acento={p.acento} quieto={t.inicioMs === 0} />
+              <TextoGrande texto={t.texto ?? ""} acento={p.acento} quieto={entraMs === 0} />
             )}
           </Sequence>
         );
@@ -1238,6 +1468,8 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           <Img src={staticFile(p.logo)} style={{ height: Z.logo.alto - 20 }} />
         </div>
       )}
+      {/* La etiqueta fija de la esquina, todo el anuncio menos el cierre (que ya la dice, con el logo grande ahí). */}
+      {!enCierre && p.etiquetaFija && <EtiquetaFija texto={p.etiquetaFija} />}
       {/* Tarjeta final con el logo. */}
       <Sequence from={f(p.cierre.inicioMs)} layout="none">
         <Cierre
@@ -1247,6 +1479,7 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
           oscuro={oscuro}
           paleta={p.paleta}
           imagen={p.cierre.imagen}
+          insignia={p.cierre.insignia}
         />
       </Sequence>
       {/* La persona por tramos (medio cuerpo o cuerpo completo); fuera del cierre. */}
@@ -1356,7 +1589,13 @@ export const Publicidad: React.FC<PropsPublicidad> = (p) => {
         </div>
       )}
       {/* La portada del primer cuadro: el título grande, quieto desde el cuadro 0. */}
-      {p.portada && ms < p.portada.hastaMs + 400 && <Portada portada={p.portada} acento={p.acento} />}
+      {p.portada && ms < p.portada.hastaMs + 400 && (
+        <Portada
+          portada={p.portada}
+          acento={p.acento}
+          etiqueta={etiquetaDePortada(p.portada, p.etiquetaFija)}
+        />
+      )}
       {/* Subtítulos al estilo CapCut, encima de todo (también de la persona de cuerpo completo). */}
       {sub && !enCierre && !(p.portada && ms < p.portada.hastaMs) && (
         <div

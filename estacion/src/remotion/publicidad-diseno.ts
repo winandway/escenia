@@ -26,6 +26,10 @@ export const esquemaRayos = z.object({
   desde: z.array(puntoEnFracciones).min(1).max(12),
 });
 
+/** Los íconos de la ficha de un momento (dibujados, sin imágenes de nadie). */
+export const ICONOS_FICHA = ["servidor", "candado", "escudo", "nube"] as const;
+export type IconoFicha = (typeof ICONOS_FICHA)[number];
+
 export const esquemaPublicidad = z.object({
   marca: z.string(),
   acento: z.string().regex(/^#[0-9a-f]{6}$/i),
@@ -71,6 +75,17 @@ export const esquemaPublicidad = z.object({
     })
     .nullable()
     .default(null),
+  /**
+   * Una etiqueta quieta en la esquina de arriba a la derecha durante todo el anuncio (menos el cierre, que
+   * ya la dice y lleva el logo grande ahí): «14 DÍAS GRATIS · SIN TARJETA» (Kipuu, 7 nov 2026). Cada « · »
+   * parte un renglón para que quepa en la esquina sin chocar con la nube del centro.
+   */
+  etiquetaFija: z.string().nullable().default(null),
+  /**
+   * La tarjeta de cada momento entra ya opaca (crece un poco, sin fundido). Con el fundido, un cuadro a mitad
+   * de la entrada la dejaba casi transparente, «lavada» (Kipuu, video 3, 7 nov 2026).
+   */
+  tarjetaOpaca: z.boolean().default(false),
   /**
    * Video transparente (WebM con alfa) del avatar que habla, o una foto quieta (PNG), o nada. Con
    * `recuadro`, la persona trae su fondo y va dentro de un marco redondeado del color de la marca.
@@ -119,6 +134,13 @@ export const esquemaPublicidad = z.object({
       oscurecer: z.boolean().default(false),
       /** Cómo entra la tarjeta: con un golpe de zoom o barriendo de lado. */
       entrada: z.enum(["golpe", "barrido"]).default("golpe"),
+      /**
+       * Una ficha con datos y su ícono en la franja del texto grande (en vez de etiquetas sueltas): «Datacenters
+       * en EE. UU. · Cifrado AES-256» sobre la presentadora de cuerpo entero (Kipuu, video 2, 7 nov 2026).
+       */
+      ficha: z
+        .array(z.object({ texto: z.string(), icono: z.enum(ICONOS_FICHA).nullable().default(null) }))
+        .default([]),
       /** Cómo se ve la persona desde este momento (diseño «pantalla»); null: sigue como venía. */
       vistaPersona: esquemaVistaPersona.nullable().default(null),
       /**
@@ -177,6 +199,19 @@ export const esquemaPublicidad = z.object({
     inicioMs: z.number(),
     lineas: z.array(z.string()),
     imagen: z.string().nullable().default(null),
+    /**
+     * La insignia oficial de una tienda (la de Google Play en español, bajada de play.google.com) debajo de la
+     * primera línea, tal cual, sin sombra ni cambios; `legal`: la línea de la marca, chiquita abajo.
+     */
+    insignia: z
+      .object({
+        imagen: z.string(),
+        ancho: z.number().positive(),
+        alto: z.number().positive(),
+        legal: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
   }),
   sfx: z.object({ cortes: z.array(z.string()), final: z.string().nullable() }),
   /** Sonidos largos a su hora (el chorro del agua), con entrada y salida suaves. */
@@ -533,4 +568,54 @@ export function puntoEnCurva(c: readonly [Punto, Punto, Punto, Punto], t: number
 /** El cierre conserva la foto de fondo en los dos temas (antes solo en el oscuro; la oficina de verano va en claro). */
 export function cierreConFoto(paleta: { foto: string | null } | null | undefined): boolean {
   return Boolean(paleta?.foto);
+}
+
+/** Lo que tarda la portada en irse (sube y se apaga): 10 cuadros. */
+export const SALIDA_PORTADA_CUADROS = 10;
+export const SALIDA_PORTADA_MS = Math.round((SALIDA_PORTADA_CUADROS / 30) * 1000);
+
+/**
+ * Cuándo puede entrar el texto grande (o las etiquetas, la cifra o la ficha) de un momento: si la portada
+ * todavía está en pantalla o se está yendo, espera a que se haya ido del todo. Antes entraba debajo y se veía
+ * un «título fantasma» transparente detrás del de la portada (Kipuu, video 2, 7 nov 2026: «¿ARCHIVOS
+ * REGADOS?» detrás de «TUS ARCHIVOS SEGUROS EN LA NUBE»).
+ */
+export function entradaTrasPortada(inicioMs: number, portada: { hastaMs: number } | null): number {
+  return portada ? Math.max(inicioMs, portada.hastaMs + SALIDA_PORTADA_MS) : inicioMs;
+}
+
+/** La etiqueta fija en renglones: cada « · » parte uno («14 DÍAS GRATIS · SIN TARJETA» → dos). */
+export function lineasDeEtiqueta(texto: string): string[] {
+  return texto
+    .split(/\s+·\s+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
+/** La etiqueta de la portada: con una etiqueta fija en la esquina, la portada no pone la suya (irían encima). */
+export function etiquetaDePortada(portada: { etiqueta: string } | null, etiquetaFija: string | null): string {
+  return etiquetaFija ? "" : (portada?.etiqueta ?? "");
+}
+
+/** La opacidad de la tarjeta mientras entra: la opaca va entera desde el primer cuadro. */
+export function opacidadDeEntrada(entra: number, opaca: boolean): number {
+  return opaca ? 1 : entra;
+}
+
+/** El ancho de la insignia de la tienda en el cierre (en un video de 1080 de ancho). */
+export const ANCHO_INSIGNIA = 560;
+
+/**
+ * La insignia de Google Play con sus reglas de uso (página de insignias de Google Play, 7 nov 2026): nunca
+ * deformada (el alto sale de su proporción), no menos de 28 px de alto, y un aire alrededor de al menos un
+ * cuarto de su alto, sin nada encima.
+ */
+export function medidasDeInsignia(img: { ancho: number; alto: number }): {
+  ancho: number;
+  alto: number;
+  aire: number;
+} {
+  const ancho = ANCHO_INSIGNIA;
+  const alto = Math.max(28, Math.round((ancho * img.alto) / Math.max(1, img.ancho)));
+  return { ancho, alto, aire: Math.ceil(alto / 4) };
 }

@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { VOCES } from "@compartido/guion";
 import { COSTO_AVATAR_POR_SEGUNDO } from "@compartido/publicidad";
-import { esquemaRegion, esquemaVistaPersona } from "./remotion/publicidad-diseno";
+import { esquemaRegion, esquemaVistaPersona, ICONOS_FICHA } from "./remotion/publicidad-diseno";
 
 /** Lo más largo que puede salir un anuncio: un Short de venta no pasa de 45 segundos. */
 export const SEGUNDOS_MAXIMOS = 45;
@@ -69,6 +69,14 @@ export const esquemaPlanPublicidad = z
         hasta_ms: z.number().min(500).max(6000).default(2200),
       })
       .optional(),
+    /**
+     * Una etiqueta quieta en la esquina de arriba durante todo el anuncio, como la de la portada: «14 DÍAS
+     * GRATIS · SIN TARJETA» (Kipuu, 7 nov 2026). Cada « · » parte un renglón. Con ella, la portada no pone
+     * su etiqueta (irían una encima de la otra).
+     */
+    etiqueta_fija: z.string().min(2).max(40).optional(),
+    /** La tarjeta de cada momento entra ya opaca, sin fundido (Kipuu, 7 nov 2026: «entra casi transparente»). */
+    tarjeta_opaca: z.boolean().default(false),
     /** Letras por segundo de la voz (11,6 es el ritmo de los documentales; un comercial va a 13,5). */
     letras_por_segundo: z.number().min(8).max(16).optional(),
     /**
@@ -123,6 +131,15 @@ export const esquemaPlanPublicidad = z
           frase: z.string().min(2),
           imagen: z.string().optional(),
           texto: z.string().max(40).optional(),
+          /**
+           * Una ficha con uno a tres datos y su ícono, en la franja del texto grande: «Datacenters en EE. UU. ·
+           * Cifrado AES-256» (Kipuu, 7 nov 2026). Va en vez del texto grande y de las etiquetas.
+           */
+          ficha: z
+            .array(z.object({ texto: z.string().min(2).max(28), icono: z.enum(ICONOS_FICHA).optional() }))
+            .min(1)
+            .max(3)
+            .optional(),
           /** Etiquetas que entran una a una, cada una cuando se dice su palabra. */
           chips: z
             .array(z.object({ texto: z.string().max(24), palabra: z.string().min(2) }))
@@ -191,6 +208,11 @@ export const esquemaPlanPublicidad = z
       lineas: z.array(z.string().max(32)).max(4),
       /** El producto (mejor sin fondo) debajo de las líneas de la tarjeta final. */
       imagen: z.string().optional(),
+      /**
+       * La insignia oficial de una tienda debajo de la primera línea («Disponible en Google Play», bajada de
+       * la página de insignias de Google Play; se usa tal cual) y su línea legal, chiquita abajo.
+       */
+      insignia: z.object({ imagen: z.string().min(1), legal: z.string().max(90).optional() }).optional(),
     }),
   })
   .superRefine((p, ctx) => {
@@ -314,6 +336,40 @@ export function aparicionesDelPlan(
     if (t.finMs - inicio > 0) salida.push({ ...persona, inicioMs: inicio, finMs: t.finMs });
   }
   return salida;
+}
+
+/**
+ * Dónde se guarda la persona ya hecha: cada versión de un anuncio (`trabajo_de`) la suya. Antes todas
+ * escribían `personas.json` en la carpeta compartida y la de verano pisó a la Maggie del espejo de Kipuu
+ * (6 nov 2026): al volver a armar el espejo, habría salido la otra chica.
+ */
+export function archivoDePersonas(nombre: string): string {
+  return nombre === "anuncio" ? "personas.json" : `personas-${nombre}.json`;
+}
+
+/**
+ * Lo que no cuadra entre la persona guardada y la que pide el plan (vacío si sirve): otra cantidad de
+ * apariciones, otros tiempos (la voz cambió) u otra foto (otra versión). Las guardadas antes del 7 nov 2026
+ * no traen la foto: valen si los tiempos coinciden.
+ */
+export function personasDeOtraVersion(
+  guardadas: { inicioMs: number; finMs: number; imagen?: string }[],
+  esperadas: { inicioMs: number; finMs: number; imagen: string }[],
+): string[] {
+  const malas: string[] = [];
+  if (guardadas.length !== esperadas.length)
+    malas.push(`hay ${guardadas.length} apariciones guardadas y el plan pide ${esperadas.length}`);
+  esperadas.forEach((e, k) => {
+    const g = guardadas[k];
+    if (!g) return;
+    if (Math.abs(g.inicioMs - e.inicioMs) > 2 || Math.abs(g.finMs - e.finMs) > 2)
+      malas.push(
+        `la ${k + 1} va de ${g.inicioMs} a ${g.finMs} ms y el plan pide de ${e.inicioMs} a ${e.finMs}`,
+      );
+    else if (g.imagen !== undefined && g.imagen !== e.imagen)
+      malas.push(`la ${k + 1} es ${g.imagen} y el plan pide ${e.imagen}`);
+  });
+  return malas;
 }
 
 /**

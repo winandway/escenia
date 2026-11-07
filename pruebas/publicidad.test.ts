@@ -874,3 +874,159 @@ describe("la tela detrás de la persona no se come la ropa verde (C-CROMA-ROPA, 
     expect(fuente).not.toMatch(/background: VERDE/);
   });
 });
+
+describe("Kipuu, campaña del 7 nov 2026: los cambios del PDF a los cuatro videos", () => {
+  // El PDF «Kipuu-Cambios-Videos_1» (Richard, 7 nov 2026): etiqueta fija en la esquina, cierre de Google Play,
+  // tarjeta que entra opaca, una ficha en vez de las etiquetas sueltas y el título fantasma de la portada.
+  const base = {
+    marca: "Kipuu",
+    logo: "l.png",
+    partes: ["¿Tu nube es un espejo? Kipuu no es un espejo. Entra a Kipuu punto com hoy."],
+    momentos: [{ frase: "Tu nube es" }, { frase: "Kipuu no es" }, { frase: "un espejo" }],
+    cierre: { frase: "Entra a Kipuu", lineas: ["kipuu.com"] },
+  };
+
+  it("el texto de un momento no entra mientras la portada está en pantalla o se va (título fantasma)", async () => {
+    const { entradaTrasPortada, SALIDA_PORTADA_MS } =
+      await import("../estacion/src/remotion/publicidad-diseno");
+    // La portada se queda hasta los 2000 ms y tarda 10 cuadros en irse.
+    expect(SALIDA_PORTADA_MS).toBe(333);
+    // «¿ARCHIVOS REGADOS?» entraba a los 1391 ms, debajo de «TUS ARCHIVOS SEGUROS EN LA NUBE».
+    expect(entradaTrasPortada(1391, { hastaMs: 2000 })).toBe(2333);
+    expect(entradaTrasPortada(2100, { hastaMs: 2000 })).toBe(2333);
+    // Lo que entra después de la portada, o un anuncio sin portada, no cambia.
+    expect(entradaTrasPortada(3409, { hastaMs: 2000 })).toBe(3409);
+    expect(entradaTrasPortada(1391, null)).toBe(1391);
+    const { readFileSync } = await import("node:fs");
+    const fuente = readFileSync(new URL("../estacion/src/remotion/Publicidad.tsx", import.meta.url), "utf8");
+    expect(fuente).toContain("entradaTrasPortada(t.inicioMs, p.portada)");
+  });
+
+  it("la etiqueta fija va en la esquina todo el video, en renglones, y la portada no pone la suya encima", async () => {
+    const plan = esquemaPlanPublicidad.parse({ ...base, etiqueta_fija: "14 DÍAS GRATIS · SIN TARJETA" });
+    expect(plan.etiqueta_fija).toBe("14 DÍAS GRATIS · SIN TARJETA");
+    // Un plan viejo no la trae.
+    expect(esquemaPlanPublicidad.parse(base).etiqueta_fija).toBeUndefined();
+    expect(esquemaPublicidad.shape.etiquetaFija.parse(undefined)).toBeNull();
+    const { lineasDeEtiqueta, etiquetaDePortada } =
+      await import("../estacion/src/remotion/publicidad-diseno");
+    expect(lineasDeEtiqueta("14 DÍAS GRATIS · SIN TARJETA")).toEqual(["14 DÍAS GRATIS", "SIN TARJETA"]);
+    expect(lineasDeEtiqueta("DESDE US$4,99 AL MES")).toEqual(["DESDE US$4,99 AL MES"]);
+    const portada = { etiqueta: "KIPUU PARA EMPRESAS" };
+    expect(etiquetaDePortada(portada, "14 DÍAS GRATIS · SIN TARJETA")).toBe("");
+    expect(etiquetaDePortada(portada, null)).toBe("KIPUU PARA EMPRESAS");
+    expect(etiquetaDePortada(null, null)).toBe("");
+    const { readFileSync } = await import("node:fs");
+    const armado = readFileSync(new URL("../estacion/src/publicidad.ts", import.meta.url), "utf8");
+    expect(armado).toContain("etiquetaFija: plan.etiqueta_fija ?? null");
+    const fuente = readFileSync(new URL("../estacion/src/remotion/Publicidad.tsx", import.meta.url), "utf8");
+    expect(fuente).toContain("<EtiquetaFija");
+  });
+
+  it("el cierre lleva la insignia oficial de Google Play con su aire y su línea legal, y sin ella sigue igual", async () => {
+    const plan = esquemaPlanPublicidad.parse({
+      ...base,
+      cierre: {
+        frase: "Entra a Kipuu",
+        lineas: ["Descárgalo gratis", "14 días gratis, sin tarjeta"],
+        insignia: {
+          imagen: "google-play/disponible-en-google-play.png",
+          legal: "Google Play es marca de Google LLC.",
+        },
+      },
+    });
+    expect(plan.cierre.insignia?.imagen).toBe("google-play/disponible-en-google-play.png");
+    expect(esquemaPlanPublicidad.parse(base).cierre.insignia).toBeUndefined();
+    const cierre = esquemaPublicidad.shape.cierre.parse({ inicioMs: 1000, lineas: ["kipuu.com"] });
+    expect(cierre.insignia).toBeNull();
+    const { medidasDeInsignia } = await import("../estacion/src/remotion/publicidad-diseno");
+    // La insignia en español de la página de Google Play mide 646 × 250 (con su margen transparente).
+    const m = medidasDeInsignia({ ancho: 646, alto: 250 });
+    expect(m.ancho).toBe(560);
+    expect(m.alto).toBe(217);
+    // Sus reglas: no menos de 28 px de alto y un aire de al menos un cuarto de su alto alrededor.
+    expect(m.alto).toBeGreaterThanOrEqual(28);
+    expect(m.aire).toBeGreaterThanOrEqual(m.alto / 4);
+    // Nunca se deforma: el alto sale de su proporción.
+    expect(m.ancho / m.alto).toBeCloseTo(646 / 250, 1);
+    const { readFileSync } = await import("node:fs");
+    const fuente = readFileSync(new URL("../estacion/src/remotion/Publicidad.tsx", import.meta.url), "utf8");
+    expect(fuente).toContain("<Insignia");
+  });
+
+  it("la tarjeta puede entrar ya opaca (antes se veía lavada a mitad del fundido), y por defecto sigue igual", async () => {
+    expect(esquemaPlanPublicidad.parse({ ...base, tarjeta_opaca: true }).tarjeta_opaca).toBe(true);
+    expect(esquemaPlanPublicidad.parse(base).tarjeta_opaca).toBe(false);
+    expect(esquemaPublicidad.shape.tarjetaOpaca.parse(undefined)).toBe(false);
+    const { opacidadDeEntrada } = await import("../estacion/src/remotion/publicidad-diseno");
+    // A mitad de la entrada: la de siempre va a medias; la opaca, entera.
+    expect(opacidadDeEntrada(0.3, false)).toBe(0.3);
+    expect(opacidadDeEntrada(0.3, true)).toBe(1);
+    expect(opacidadDeEntrada(0, true)).toBe(1);
+  });
+
+  it("un momento puede llevar una ficha con sus datos e íconos (datacenters en EE. UU., cifrado AES-256)", () => {
+    const plan = esquemaPlanPublicidad.parse({
+      ...base,
+      momentos: [
+        ...base.momentos.slice(0, 2),
+        {
+          frase: "un espejo",
+          ficha: [
+            { texto: "Datacenters en EE. UU.", icono: "servidor" },
+            { texto: "Cifrado AES-256", icono: "candado" },
+          ],
+        },
+      ],
+    });
+    expect(plan.momentos[2]?.ficha?.[1]).toEqual({ texto: "Cifrado AES-256", icono: "candado" });
+    // Un ícono que no existe, o más de tres datos, no entran.
+    expect(() =>
+      esquemaPlanPublicidad.parse({
+        ...base,
+        momentos: [
+          ...base.momentos.slice(0, 2),
+          { frase: "un espejo", ficha: [{ texto: "X", icono: "cohete" }] },
+        ],
+      }),
+    ).toThrow();
+    const tramo = esquemaPublicidad.shape.tramos.element.parse({
+      inicioMs: 0,
+      finMs: 100,
+      imagen: null,
+      texto: null,
+      chips: [],
+    });
+    expect(tramo.ficha).toEqual([]);
+  });
+
+  it("cada versión de un anuncio guarda su persona aparte y el armado no usa la de otra versión", async () => {
+    const { archivoDePersonas, personasDeOtraVersion } = await import("../estacion/src/publicidad-plan");
+    expect(archivoDePersonas("anuncio")).toBe("personas.json");
+    expect(archivoDePersonas("plan-verano")).toBe("personas-plan-verano.json");
+    const esperadas = [
+      { imagen: "avatar/maggie.png", inicioMs: 0, finMs: 4425 },
+      { imagen: "avatar/maggie-2.png", inicioMs: 4425, finMs: 8499 },
+    ];
+    // Las de la chica de verano no sirven para el espejo de Maggie (pasó el 6 nov 2026: se pisaban).
+    expect(
+      personasDeOtraVersion(
+        [
+          { imagen: "verano/chica.png", inicioMs: 0, finMs: 4425 },
+          { imagen: "verano/chica.png", inicioMs: 4425, finMs: 8499 },
+        ],
+        esperadas,
+      ),
+    ).toHaveLength(2);
+    expect(personasDeOtraVersion(esperadas, esperadas)).toEqual([]);
+    // Otros tiempos (la voz cambió y no se rehízo la persona) tampoco sirven.
+    expect(personasDeOtraVersion([esperadas[0]!], esperadas)).toHaveLength(1);
+    // Las guardadas antes de este cambio no traen la imagen: valen si los tiempos coinciden.
+    expect(
+      personasDeOtraVersion(
+        esperadas.map(({ inicioMs, finMs }) => ({ inicioMs, finMs })),
+        esperadas,
+      ),
+    ).toEqual([]);
+  });
+});

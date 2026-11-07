@@ -16,11 +16,13 @@ import { promisify } from "node:util";
 import { bloquesDeSubtitulos } from "./monigotes-plan";
 import {
   aparicionesDelPlan,
+  archivoDePersonas,
   costoPublicidadUsd,
   esquemaPlanPublicidad,
   gananciaDeVoz,
   iniciosDePartes,
   type PlanPublicidad,
+  personasDeOtraVersion,
   puntaDelDedo,
   recorteDeEncuadre,
   textoDeParte,
@@ -376,6 +378,8 @@ export type AparicionGuardada = {
   quieta?: boolean;
   /** La punta del dedo en la figura (fracciones, sin voltear). */
   dedo?: { x: number; y: number } | null;
+  /** La foto del plan que se hizo hablar (para no armar una versión con la persona de otra). */
+  imagen?: string;
   costoUsd: number;
 };
 
@@ -506,6 +510,8 @@ export async function pasoPersonas(
   avisar: (t: string) => unknown = (t) => console.log(`  ${t}`),
   /** Solo deja las figuras sobre verde (para revisarlas antes de pagar el avatar). */
   soloPreparar = false,
+  /** La versión del anuncio: cada una guarda su persona aparte (`archivoDePersonas`). */
+  nombre = "anuncio",
 ): Promise<AparicionGuardada[]> {
   const voz = JSON.parse(await readFile(path.join(trabajo, "voz.json"), "utf8")) as VozGuardada;
   const { inicios, cierreMs } = tiemposDelPlan(plan, voz);
@@ -566,6 +572,7 @@ export async function pasoPersonas(
         espejo,
         quieta: true,
         dedo,
+        imagen: a.imagen,
         costoUsd: 0,
       });
       continue;
@@ -692,11 +699,12 @@ export async function pasoPersonas(
       espejo,
       quieta: false,
       dedo: null,
+      imagen: a.imagen,
       costoUsd,
     });
   }
   if (soloPreparar) return salida;
-  await writeFile(path.join(trabajo, "personas.json"), JSON.stringify(salida, null, 2));
+  await writeFile(path.join(trabajo, archivoDePersonas(nombre)), JSON.stringify(salida, null, 2));
   const total = salida.reduce((t, x) => t + x.costoUsd, 0);
   console.log(`  personas: ${salida.length} apariciones · $${total.toFixed(3)} nuevos`);
   return salida;
@@ -846,23 +854,39 @@ export async function pasoArmar(
 
   const { inicios, cierreMs } = tiemposDelPlan(plan, voz);
   const conPersonas = plan.momentos.some((m) => m.persona);
+  // La persona de esta versión (o la de la primera, si esta usa la misma); nunca la de otra versión.
+  const archivoPersonas = existsSync(path.join(trabajo, archivoDePersonas(nombre)))
+    ? archivoDePersonas(nombre)
+    : "personas.json";
+  const guardadas = conPersonas
+    ? (JSON.parse(await readFile(path.join(trabajo, archivoPersonas), "utf8")) as AparicionGuardada[])
+    : [];
+  const otraVersion = personasDeOtraVersion(
+    guardadas,
+    aparicionesDelPlan(
+      plan.momentos.map((m, i) => ({ inicioMs: inicios[i] ?? 0, persona: m.persona })),
+      cierreMs,
+    ),
+  );
+  if (conPersonas && otraVersion.length)
+    throw new Error(
+      `La persona guardada (${archivoPersonas}) no es la de este plan: ${otraVersion.join(" · ")}. Corre --paso avatar.`,
+    );
   const apariciones = conPersonas
     ? await Promise.all(
-        (JSON.parse(await readFile(path.join(trabajo, "personas.json"), "utf8")) as AparicionGuardada[]).map(
-          async (a, k) => ({
-            inicioMs: a.inicioMs,
-            finMs: a.finMs,
-            ruta: await copiar(a.ruta, `persona-${k + 1}${path.extname(a.ruta)}`),
-            ancho: a.ancho,
-            alto: a.alto,
-            encuadre: a.encuadre,
-            cara: a.cara ?? null,
-            lado: a.lado ?? "izquierda",
-            espejo: a.espejo ?? false,
-            quieta: a.quieta ?? false,
-            dedo: a.dedo ?? null,
-          }),
-        ),
+        guardadas.map(async (a, k) => ({
+          inicioMs: a.inicioMs,
+          finMs: a.finMs,
+          ruta: await copiar(a.ruta, `persona-${k + 1}${path.extname(a.ruta)}`),
+          ancho: a.ancho,
+          alto: a.alto,
+          encuadre: a.encuadre,
+          cara: a.cara ?? null,
+          lado: a.lado ?? "izquierda",
+          espejo: a.espejo ?? false,
+          quieta: a.quieta ?? false,
+          dedo: a.dedo ?? null,
+        })),
       )
     : [];
   const { default: sharp } = await import("sharp");
@@ -984,6 +1008,7 @@ export async function pasoArmar(
           : null,
       texto: m.texto ?? null,
       chips: (m.chips ?? []).map((c, k) => ({ texto: c.texto, inicioMs: chipsInicio[k] ?? inicioMs })),
+      ficha: (m.ficha ?? []).map((d) => ({ texto: d.texto, icono: d.icono ?? null })),
     });
   }
   const duracionMs = voz.duracionMs + plan.cola_ms;
@@ -1009,6 +1034,8 @@ export async function pasoArmar(
     portada: plan.portada
       ? { lineas: plan.portada.lineas, etiqueta: plan.portada.etiqueta, hastaMs: plan.portada.hasta_ms }
       : null,
+    etiquetaFija: plan.etiqueta_fija ?? null,
+    tarjetaOpaca: plan.tarjeta_opaca,
     avatar: conPersonas ? null : avatarProps,
     apariciones,
     audio,
@@ -1021,6 +1048,12 @@ export async function pasoArmar(
       inicioMs: cierreMs,
       lineas: plan.cierre.lineas,
       imagen: plan.cierre.imagen ? (await imagenEnPublico(plan.cierre.imagen)).nombre : null,
+      insignia: plan.cierre.insignia
+        ? await (async (ins) => {
+            const img = await imagenEnPublico(ins.imagen);
+            return { imagen: img.nombre, ancho: img.ancho, alto: img.alto, legal: ins.legal ?? null };
+          })(plan.cierre.insignia)
+        : null,
     },
     sfx: { cortes, final },
     efectos: await Promise.all(
@@ -1116,20 +1149,21 @@ async function principal() {
   await mkdir(trabajo, { recursive: true });
   const paso = opcion("--paso") ?? "voz";
   if (paso === "voz") return void (await pasoVoz(plan, trabajo));
-  if (paso === "verdes") return void (await pasoPersonas(plan, carpeta, trabajo, undefined, true));
+  // Cada versión (`trabajo_de`) guarda su persona aparte: la de verano pisaba a la del espejo.
+  const version = plan.trabajo_de ? nombre : "anuncio";
+  if (paso === "verdes") return void (await pasoPersonas(plan, carpeta, trabajo, undefined, true, version));
   if (paso === "avatar")
     return void (plan.momentos.some((m) => m.persona)
-      ? await pasoPersonas(plan, carpeta, trabajo)
+      ? await pasoPersonas(plan, carpeta, trabajo, undefined, false, version)
       : await pasoAvatar(plan, carpeta, trabajo));
-  if (paso === "armar")
-    return void (await pasoArmar(plan, carpeta, trabajo, plan.trabajo_de ? nombre : "anuncio"));
+  if (paso === "armar") return void (await pasoArmar(plan, carpeta, trabajo, version));
   if (paso === "cuadros") {
     // Cuadros sueltos para revisar el diseño: --en 0,60,300 (números de cuadro, a 30 por segundo).
     const en = (opcion("--en") ?? "0")
       .split(",")
       .map(Number)
       .filter((n) => Number.isFinite(n));
-    return void (await pasoArmar(plan, carpeta, trabajo, plan.trabajo_de ? nombre : "anuncio", en));
+    return void (await pasoArmar(plan, carpeta, trabajo, version, en));
   }
   throw new Error(`Paso desconocido: ${paso}`);
 }

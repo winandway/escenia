@@ -23,6 +23,8 @@ const publicidadVacia: PropsPublicidad = {
   diseno: "centro",
   paleta: null,
   portada: null,
+  etiquetaFija: null,
+  tarjetaOpaca: false,
   avatar: null,
   apariciones: [],
   audio: "",
@@ -32,7 +34,7 @@ const publicidadVacia: PropsPublicidad = {
   duracionMs: 3000,
   tramos: [],
   subtitulos: [],
-  cierre: { inicioMs: 3000, lineas: [], imagen: null },
+  cierre: { inicioMs: 3000, lineas: [], imagen: null, insignia: null },
   sfx: { cortes: [], final: null },
 };
 
