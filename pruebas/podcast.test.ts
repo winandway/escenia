@@ -383,7 +383,7 @@ describe("lo que el navegador necesita para el invitado", () => {
   it("solo el estudio abre el micrófono, la cámara y el WebSocket de ElevenLabs", () => {
     const config = readFileSync(path.join(raiz, "next.config.ts"), "utf8");
     expect(config).toContain('"camera=(), microphone=(), geolocation=()"');
-    expect(config).toMatch(/source: "\/podcast",[\s\S]*camera=\(self\), microphone=\(self\)/);
+    expect(config).toMatch(/source: "\/podcast\/:path\*",[\s\S]*camera=\(self\), microphone=\(self\)/);
     expect(config).toContain("wss://api.elevenlabs.io");
     expect(config).not.toMatch(/connect-src[^"]*https:\/\/api\.elevenlabs\.io/);
   });

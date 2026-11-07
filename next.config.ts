@@ -33,7 +33,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        // Todo MENOS el estudio del podcast. Antes iba a todas las rutas y una segunda regla «reemplazaba»
+        // las cabeceras en /podcast, pero en el servidor publicado llegaban las dos y Chrome bloqueaba la
+        // cámara y el micrófono sin preguntar (Richard, 7 nov 2026: «No pude encender tu cámara»). Ahora
+        // cada ruta recibe UNA sola Permissions-Policy (C-PODCAST-2).
+        source: "/((?!podcast(?:/|$)).*)",
         headers: [
           { key: "Content-Security-Policy", value: csp },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
@@ -44,12 +48,17 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
-      // Va después: para /podcast estas dos cabeceras reemplazan a las de arriba.
+      // El estudio del podcast (y sus fichas): cámara y micrófono del propio sitio, con el resto de escudos igual.
       {
-        source: "/podcast",
+        source: "/podcast/:path*",
         headers: [
           { key: "Content-Security-Policy", value: cspPodcast },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
     ];
