@@ -322,9 +322,14 @@ describe("los gestos los decide la IA, con mesura", () => {
       expect(leerPedidoDeGesto(malo), JSON.stringify(malo)).toBeNull();
   });
 
-  it("de respaldo solo queda la etiqueta «[laughs]»: las palabras sueltas ya no disparan nada", () => {
+  it("de respaldo solo queda la etiqueta de risa («[laughs]» o «[riendo]»): las palabras sueltas ya no disparan nada", () => {
     expect(gestoDeRisa("[laughs] Bueno, sí.")).toBe("riendo");
     expect(gestoDeRisa("Ay [Laughs] qué cosas.")).toBe("riendo");
+    // En la prueba real del 7 nov 2026 la IA escribió «[riendo]» en vez de llamar a la herramienta: es la misma
+    // etiqueta de risa, en español. Las demás etiquetas de gesto no disparan nada.
+    expect(gestoDeRisa("[riendo] ¡Ja, ja, ja! Como IA, no.")).toBe("riendo");
+    expect(gestoDeRisa("[aplaudiendo] ¡Esa es una excelente pregunta!")).toBeNull();
+    expect(gestoDeRisa("[curiosa] Fíjate.")).toBeNull();
     for (const texto of [
       "¡Jajaja! Qué cosas.",
       "¡Qué buena pregunta, Richard!",

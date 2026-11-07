@@ -120,7 +120,7 @@ export const HERRAMIENTA_GESTO = {
   type: "client",
   name: NOMBRE_HERRAMIENTA_GESTO,
   description:
-    "Mueve tu cuerpo en el video con un gesto mientras hablas. Como mucho una vez por respuesta y solo cuando de verdad corresponda (casi siempre no corresponde): riendo si algo es gracioso; aplaudiendo si Richard dijo algo muy bueno o hizo una gran pregunta; idea si arrancas a explicar algo nuevo; notas si citas datos o cifras. Si no corresponde, no la uses. Nunca la menciones en voz alta.",
+    "Mueve tu cuerpo en el video con un gesto mientras hablas. Como mucho una vez por respuesta y solo cuando de verdad corresponda (casi siempre no corresponde): riendo si algo es gracioso; aplaudiendo si Richard dijo algo muy bueno o hizo una gran pregunta; idea si arrancas a explicar algo nuevo; notas si citas datos o cifras. Si no corresponde, no la uses. Nunca la menciones en voz alta ni escribas el gesto entre corchetes: el gesto solo sale si llamas a esta herramienta.",
   expects_response: false,
   execution_mode: "immediate",
   parameters: {
@@ -144,6 +144,7 @@ const REGLA_GESTOS = [
   "   - idea: cuando arrancas a explicar algo nuevo.",
   "   - notas: cuando citas datos o cifras.",
   "   Si no corresponde, ningún gesto. Llámala al empezar la frase a la que corresponde, sin decirlo en voz alta y sin dejar de hablar.",
+  "   Los gestos nunca se escriben entre corchetes en lo que dices (nada de «[riendo]» ni «[aplaudiendo]»): solo se hacen llamando a la herramienta. Los corchetes son solo para cómo suena tu voz.",
 ].join("\n");
 
 // Las marcas que encierran la historia: si el texto las trae, se cambian para que no corten el bloque.

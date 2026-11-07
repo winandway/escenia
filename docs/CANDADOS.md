@@ -2067,12 +2067,19 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
     `execution_mode: "immediate"`), atendida en `clientTools` del estudio con `leerPedidoDeGesto`. El prompt
     (entrevista e historia) dice: como mucho una vez por respuesta y solo cuando de verdad corresponda. El
     motor frena igual: uno por respuesta, 25 s entre uno y otro (`ENTRE_GESTOS_MS`), solo hablando.
-  - De respaldo, solo la etiqueta «[laughs]» (`gestoDeRisa` en `Estudio.tsx`).
+  - De respaldo, solo la etiqueta de risa «[laughs]» o «[riendo]» (`gestoDeRisa` en `Estudio.tsx`).
+  - **La prueba real** (una conversación de 46 s): la IA llamó a `gesto` con «notas» al citar una cifra, antes del
+    primer audio, y la voz no se trabó. Pero para reírse escribió «[riendo]» (y «[aplaudiendo]») en el texto en
+    vez de llamar a la herramienta. El prompt y la descripción de la herramienta ahora dicen que los gestos nunca
+    se escriben entre corchetes, y «[riendo]» cuenta como la risa de respaldo (prueba en
+    `pruebas/podcast-poses.test.ts` y `pruebas/podcast.test.ts`, vistas en rojo).
   - El cambio es un fundido de 700 ms con curva suave y un acomodo del cuerpo (`ACOMODO` en
     `RobotInvitado.tsx`); la respiración es de 4,5 s; la cara piensa con la misma regla (`piensa`).
   - `scripts/podcast-agente.ts` crea o pone al día la herramienta (su id en
     `~/.config/motor-escenia/podcast-herramienta-gesto`) y la engancha al agente por `tool_ids`.
-- **En qué commit quedó funcionando:** `5d604ee` (rama `podcast-mia-calma`, fusionada a `main`).
+- **En qué commit quedó funcionando:** `5d604ee` (rama `podcast-mia-calma`, fusionada a `main` en `9b91229`) y
+  el ajuste de los corchetes después de la prueba real (el commit siguiente, «fix(podcast): los gestos no se
+  escriben entre corchetes»).
 - **Cómo se comprueba que sigue funcionando:** `pruebas/podcast-poses.test.ts` (escuchando no cambia nunca,
   pensar solo tras 1,2 s, mínimo de 6 s aunque el estado salte cada medio segundo, un gesto por respuesta y 25 s
   entre gestos, la herramienta solo acepta las cuatro poses, solo «[laughs]» de respaldo, y una conversación
@@ -2096,7 +2103,7 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   webp y mide la silueta del micrófono (`compartido/podcast-mia-escenario.ts`, generado).
 - **El tropiezo:** a la altura de la boca, el micrófono tapaba el aro del oído en la pose «idea» (ahí la cabeza
   baja). Se bajó a la altura de la barbilla (`x: -281, y: 752, dibujo: 800, giro: -24`).
-- **En qué commit quedó funcionando:** `5d604ee`.
+- **En qué commit quedó funcionando:** `5d604ee` (en `main` desde `9b91229`).
 - **Cómo se comprueba:** `pruebas/podcast-avatares.test.ts` («el escenario de Mia»): la casa es un webp sin alfa
   de 1920 × 1080; el micrófono, con alfa; su silueta deja 25 px de aire con el visor y con cada aro en las siete
   poses y con su vaivén; entra por el borde izquierdo y no baja hasta la etiqueta. Se comprobó en rojo poniendo

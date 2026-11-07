@@ -72,12 +72,13 @@ export function msDeLaRespuesta(texto: string): number {
 }
 
 /**
- * El único gesto que todavía sale del texto: la risa, y solo con la etiqueta explícita «[laughs]» de la voz. Es
- * el respaldo de la herramienta `gesto`; las palabras sueltas («jaja», «genial», cifras) ya no disparan nada
- * porque Mia parecía un GIF (Richard, 7 nov 2026). El motor le aplica la misma pausa de 25 s.
+ * El único gesto que todavía sale del texto: la risa, y solo con la etiqueta explícita de la voz, «[laughs]» (o
+ * «[riendo]», la misma en español: en la prueba real del 7 nov 2026 la IA la escribió en vez de llamar a la
+ * herramienta). Es el respaldo de la herramienta `gesto`; las palabras sueltas («jaja», «genial», cifras) ya no
+ * disparan nada porque Mia parecía un GIF (Richard, 7 nov 2026). El motor le aplica la misma pausa de 25 s.
  */
 export function gestoDeRisa(texto: string): PoseDeGesto | null {
-  return /\[laughs\]/i.test(texto) ? "riendo" : null;
+  return /\[(?:laughs|riendo)\]/i.test(texto) ? "riendo" : null;
 }
 
 const reloj = (s: number) =>

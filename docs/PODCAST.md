@@ -212,8 +212,8 @@ simples y deterministas, sin pagar animación por minuto).
   habla. Un gesto que llega antes de que hable espera a que empiece (y si la IA ya pidió un gesto antes de los
   1,2 s, no se pone a pensar: ya sabe qué decir). Si deja de hablar (terminó o Richard la interrumpió) antes de
   que salga, se tira; uno que llega 8 s tarde, también.
-- **De respaldo** queda solo la etiqueta explícita «[laughs]» de la voz v3, que pide «riendo» con las mismas
-  reglas. Las demás palabras ya no disparan nada.
+- **De respaldo** queda solo la etiqueta explícita de risa de la voz v3, «[laughs]» (o «[riendo]», la misma en
+  español), que pide «riendo» con las mismas reglas. Las demás palabras y etiquetas ya no disparan nada.
 - **El texto de cada respuesta** (el SDK `@elevenlabs/client` 1.35 lo entrega en `onMessage` con `role:
 "agent"`) solo sirve para saber si la respuesta es corta o larga, a unas 15 letras por segundo.
 - **La herramienta en el navegador:** el estudio la atiende en `clientTools` de `Conversation.startSession`.
@@ -228,6 +228,14 @@ simples y deterministas, sin pagar animación por minuto).
 - **Cuántos cambios:** en 60 s de conversación normal, de 3 a 6 cambios de pose (sin contar el parpadeo ni la
   boca). El video de la simulación tiene 4: piensa, levanta el dedo cuando arranca a explicar, vuelve a las
   manos en la silla y, cuando Richard habla, a las manos juntas.
+
+**La prueba real (7 nov 2026, una conversación de 46 s, unos 6,5 centavos):** Richard preguntó cuántos
+planetas se han descubierto fuera del sistema solar y la IA llamó a `gesto` con «notas» justo cuando contestó
+con la cifra (más de cinco mil exoplanetas). La llamada llegó **antes del primer audio** de la respuesta y la
+voz siguió sin trabarse. En la segunda respuesta, que empezaba riéndose, la IA **no** llamó a la herramienta:
+escribió «[riendo]» en el texto (y antes, «[aplaudiendo]»), confundiendo los gestos con las etiquetas de la voz.
+Por eso el prompt y la descripción de la herramienta dicen ahora que los gestos nunca se escriben entre
+corchetes, y el respaldo de la risa acepta «[riendo]». Ese ajuste se publicó sin otra conversación de prueba.
 
 **El video** (60 s, conversación simulada sin gastar, con su casa y su micrófono):
 `docs/capturas/podcast-mia-movimiento.mp4`. Se graba con
