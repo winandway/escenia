@@ -1,8 +1,15 @@
-// La Estación se considera viva si dio señal en los últimos 2 minutos.
+// La Estación se considera viva si dio señal en los últimos 12 minutos.
 import { esquemaGuion, type Guion } from "@compartido/guion";
 import type { BaseDatos } from "./db";
 
-export const LATIDO_MAX_MS = 2 * 60_000;
+/**
+ * C-LATIDO-2 (7 nov 2026): el latido se ESCRIBE a lo sumo cada 5 minutos. Antes se escribía en cada
+ * llamada de la Estación (una cada 3 segundos): 28.332 filas escritas el 6 nov, la segunda base que más
+ * escribió en YaDominios. Regla global del 5 nov: mirar no escribe; un latido se graba cada pocos minutos.
+ * Por eso la Estación cuenta como viva hasta 12 minutos después de la última escritura (dos latidos y margen).
+ */
+export const LATIDO_ESCRIBIR_CADA_MIN = 5;
+export const LATIDO_MAX_MS = 12 * 60_000;
 
 /**
  * Deja constancia de que la Estación acaba de hablar con el panel. Lo llaman
@@ -15,8 +22,10 @@ export async function tocarLatido(db: BaseDatos, version = ""): Promise<void> {
     `INSERT INTO estacion_latido (id, visto_en, version) VALUES (1, datetime('now'), ?)
      ON CONFLICT(id) DO UPDATE SET
        visto_en = excluded.visto_en,
-       version = CASE WHEN excluded.version = '' THEN estacion_latido.version ELSE excluded.version END`,
-    [version],
+       version = CASE WHEN excluded.version = '' THEN estacion_latido.version ELSE excluded.version END
+     WHERE estacion_latido.visto_en < datetime('now', ?)
+        OR (excluded.version <> '' AND excluded.version <> estacion_latido.version)`,
+    [version, `-${LATIDO_ESCRIBIR_CADA_MIN} minutes`],
   );
 }
 

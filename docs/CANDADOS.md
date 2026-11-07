@@ -3,19 +3,20 @@
 Cada candado tiene su prueba automática en `pruebas/`. Si alguien rompe la
 pieza, la prueba se pone en rojo antes de que llegue a producción.
 
-| Candado      | Qué protege                                                                                        | Dónde vive                                                      | Prueba                                                        |
-| ------------ | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
-| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                               | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`) | `pruebas/modelos.test.ts`                                     |
-| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                               | `src/lib/presupuesto.ts`                                        | `pruebas/sesion-presupuesto.test.ts`                          |
-| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                     | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`           | `pruebas/guion.test.ts` (inserción)                           |
-| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                             | `src/lib/variedad.ts`                                           | `pruebas/variedad.test.ts`                                    |
-| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                          | `compartido/subtitulos.ts`                                      | `pruebas/subtitulos.test.ts`                                  |
-| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min     | `src/lib/sesion.ts`, `src/lib/clave.ts`                         | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
-| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                  | `src/componentes/useBorrador.ts`                                | `pruebas/borrador.test.tsx`                                   |
-| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                    | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                     |
-| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
-| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                       | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
-| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos   | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                   |
+| Candado      | Qué protege                                                                                            | Dónde vive                                                      | Prueba                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------- |
+| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                                   | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`) | `pruebas/modelos.test.ts`                                     |
+| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                                   | `src/lib/presupuesto.ts`                                        | `pruebas/sesion-presupuesto.test.ts`                          |
+| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                         | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`           | `pruebas/guion.test.ts` (inserción)                           |
+| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                                 | `src/lib/variedad.ts`                                           | `pruebas/variedad.test.ts`                                    |
+| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                              | `compartido/subtitulos.ts`                                      | `pruebas/subtitulos.test.ts`                                  |
+| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min         | `src/lib/sesion.ts`, `src/lib/clave.ts`                         | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
+| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                      | `src/componentes/useBorrador.ts`                                | `pruebas/borrador.test.tsx`                                   |
+| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                        | `src/lib/estacion-auth.ts`                                      | `pruebas/escudos.test.ts`                                     |
+| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí     | `compartido/tematicas/index.ts`                                 | `pruebas/escudos.test.ts`                                     |
+| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                           | `src/lib/prompt.ts`                                             | `pruebas/escudos.test.ts`                                     |
+| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos       | `compartido/podcast.ts`, `src/lib/podcast.ts`                   | `pruebas/podcast*.test.ts*`                                   |
+| C-LATIDO-2   | El latido de la Estación se escribe a lo sumo cada 5 minutos (antes, cada 3 s: 28.332 filas en un día) | `src/lib/estacion-estado.ts`                                    | `pruebas/estacion-estado.test.ts`                             |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
 
@@ -2011,3 +2012,22 @@ pruebas/podcast-estudio.test.tsx`. Comprobado en rojo el 6 nov 2026 metiendo cad
 pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado en rojo antes de construir cada parte (el origen, el tipo y el avatar: las pruebas fallaban y después pasaron) y metiendo a propósito una columna nueva en la semilla de `schema.sql` (se puso en rojo «schema.sql corre sin romperse sobre una base vieja»).
   - **Qué NO tocar:** no poner `ALTER TABLE` en `schema.sql`; no hacer que un origen desconocido caiga en «real»;
     no quitar la regla de «personaje creado para el podcast» del prompt de ficción.
+
+## C-LATIDO-2 — El latido de la Estación no se come la base (7 nov 2026)
+
+- **Qué se rompió:** el parte de consumo de YaDominios del 7 nov (id 1a1b61a03dfe3186) puso a Escenia como la
+  segunda base que más escribió el 6 nov: 28.172 filas y 1.184 s de procesador. Casi todo salía de un solo
+  `INSERT INTO estacion_latido … ON CONFLICT(id) DO UPDATE` (28.332 filas): una escritura cada 3 segundos,
+  porque `tocarLatido` se llamaba en cada consulta de la Estación al panel. Lo avisó el gerente de correo.
+- **Causa:** el latido se grababa siempre, aunque la hora anterior fuera de hacía 3 segundos. Va contra la
+  regla global del 5 nov: mirar no escribe; un latido se graba cada pocos minutos.
+- **Qué se hizo:** el mismo upsert lleva `WHERE estacion_latido.visto_en < datetime('now', '-5 minutes') OR`
+  la versión cambió. Si no toca, SQLite no escribe nada: comprobado contra la base en vivo, que respondió
+  `rowsWritten: 0`. La Estación cuenta como viva hasta 12 minutos después de la última escritura
+  (`LATIDO_MAX_MS`), dos latidos con margen. De unas 28.000 filas al día se baja a unas 288.
+- **Cómo se comprueba:** `pruebas/estacion-estado.test.ts` («el latido no se come la base»): veinte llamadas
+  seguidas no cambian la hora, una versión nueva sí se anota y, pasados 5 minutos, vuelve a escribir. Se
+  comprobó en rojo poniendo `OR 1 = 1` en la condición. En vivo, la hora de `estacion_latido` avanza de a
+  5 minutos y no de a 3 segundos.
+- **Qué NO tocar:** no quitar el `WHERE` del upsert ni bajar `LATIDO_ESCRIBIR_CADA_MIN` a segundos. Si el
+  panel tiene que saber al instante que la Estación está viva, se usa memoria o Analytics, nunca la base.

@@ -16,7 +16,7 @@ describe("latido de la Estación (C-LATIDO-1)", () => {
   it("un aviso de avance (sin versión) refresca la hora y conserva la versión", async () => {
     const db = baseEnMemoria();
     await tocarLatido(db, "0.1.0");
-    db.cruda.exec("UPDATE estacion_latido SET visto_en = datetime('now', '-10 minutes')");
+    db.cruda.exec("UPDATE estacion_latido SET visto_en = datetime('now', '-20 minutes')");
     expect(estacionViva(await latidoEstacion(db))).toBe(false);
     await tocarLatido(db);
     const latido = await latidoEstacion(db);
@@ -24,9 +24,31 @@ describe("latido de la Estación (C-LATIDO-1)", () => {
     expect(latido?.version).toBe("0.1.0");
   });
 
-  it("una señal de hace más de 2 minutos ya no cuenta", () => {
-    const hace3min = new Date(Date.now() - 3 * 60_000).toISOString().slice(0, 19).replace("T", " ");
-    expect(estacionViva({ visto_en: hace3min })).toBe(false);
+  it("una señal de hace más de 12 minutos ya no cuenta; una de hace 6 sí (el latido se escribe cada 5)", () => {
+    const hace = (min: number) =>
+      new Date(Date.now() - min * 60_000).toISOString().slice(0, 19).replace("T", " ");
+    expect(estacionViva({ visto_en: hace(13) })).toBe(false);
+    expect(estacionViva({ visto_en: hace(6) })).toBe(true);
+  });
+});
+
+describe("el latido no se come la base (C-LATIDO-2)", () => {
+  it("a lo sumo una escritura cada 5 minutos, salvo que cambie la versión", async () => {
+    const db = baseEnMemoria();
+    await tocarLatido(db, "0.1.0");
+    // Hace 1 minuto: las llamadas cada 3 segundos NO escriben.
+    db.cruda.exec("UPDATE estacion_latido SET visto_en = datetime('now', '-1 minutes')");
+    const antes = (await latidoEstacion(db))?.visto_en;
+    for (let i = 0; i < 20; i++) await tocarLatido(db);
+    expect((await latidoEstacion(db))?.visto_en).toBe(antes);
+    // Una versión nueva de la Estación sí se anota enseguida.
+    await tocarLatido(db, "0.2.0");
+    expect((await latidoEstacion(db))?.version).toBe("0.2.0");
+    // Pasados los 5 minutos, vuelve a escribir.
+    db.cruda.exec("UPDATE estacion_latido SET visto_en = datetime('now', '-6 minutes')");
+    await tocarLatido(db);
+    expect(estacionViva(await latidoEstacion(db), Date.now())).toBe(true);
+    expect((await latidoEstacion(db))?.visto_en).not.toBe(antes);
   });
 });
 
