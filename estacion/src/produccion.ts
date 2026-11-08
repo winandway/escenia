@@ -535,6 +535,7 @@ export async function producir(
     marca: marcaVideo,
     presentador: grabacion?.presentador ?? null,
     ventana: null,
+    portada: null,
     // El canal queda guardado con las props (la miniatura se agrega después, en memoria):
     // así rearmar.ts puede volver a armar el cierre sin preguntarle nada al panel.
     cierre: { canalNombre: canal?.nombre ?? "", canalUsuario: canal?.usuario ?? "", miniatura: null },

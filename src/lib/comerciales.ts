@@ -4,9 +4,14 @@ import type { Voz } from "@compartido/guion";
 // (el texto es del cliente) y su trabajo. Mismo camino que una grabación.
 import {
   cambiarImagenesDelPlan,
+  esquemaPortadaElegida,
+  leerPortada,
+  mismaPortada,
   type CambioDeImagen,
   type ComercialNuevo,
   type ImagenDelPlan,
+  type PortadaElegida,
+  type PortadaGuardada,
 } from "@compartido/comerciales";
 import { esquemaGuion } from "@compartido/guion";
 import type { Guion } from "@compartido/guion";
@@ -32,6 +37,8 @@ export type FilaComercial = {
   revisar: number;
   /** JSON: las imágenes que mandó la Mac con el plan. */
   imagenes: string;
+  /** C-COMERCIAL-4: JSON con la miniatura elegida en el panel ('' = la automática). */
+  portada: string;
 };
 
 export const TEMATICA_COMERCIAL = "comercial";
@@ -310,4 +317,125 @@ export async function armarComercial(db: BaseDatos, id: number): Promise<number 
     [c.guion_id, c.guion_id, c.guion_id],
   );
   return (await planDeComercial(db, id))?.trabajoId || null;
+}
+
+// ── C-COMERCIAL-4: la miniatura elegida desde el panel ───────────────────────────────────────
+
+/** Las imágenes que salen en el video ya armado, en orden y sin repetir (las que se ofrecen). */
+export function imagenesDelVideo(guion: Guion): string[] {
+  const vistas = new Set<string>();
+  for (const e of guion.escenas)
+    for (const p of e.visual.planos ?? []) if (p.tipo === "imagen" && p.archivo) vistas.add(p.archivo);
+  return [...vistas];
+}
+
+export type ComercialParaPortada = {
+  comercial: FilaComercial;
+  guionId: number;
+  trabajoId: number;
+  opciones: string[];
+  portada: PortadaGuardada | null;
+};
+
+/** Lo que hace falta para elegir la miniatura: solo cuando el video ya está hecho. */
+export async function comercialParaPortada(db: BaseDatos, id: number): Promise<ComercialParaPortada | null> {
+  const c = await comercialPorId(db, id);
+  if (!c?.guion_id) return null;
+  const fila = await db.uno<{ contenido: string; trabajo_id: number | null }>(
+    `SELECT g.contenido, (SELECT MAX(t.id) FROM trabajos t WHERE t.guion_id = g.id AND t.estado = 'hecho') AS trabajo_id
+     FROM guiones g WHERE g.id = ?`,
+    [c.guion_id],
+  );
+  if (!fila?.trabajo_id) return null;
+  const guion = esquemaGuion.parse(JSON.parse(fila.contenido));
+  return {
+    comercial: c,
+    guionId: c.guion_id,
+    trabajoId: fila.trabajo_id,
+    opciones: imagenesDelVideo(guion),
+    portada: leerPortada(c.portada),
+  };
+}
+
+export type RespuestaPortada = { ok: true; cambio: boolean } | { ok: false; error: string };
+
+/**
+ * Richard pide la miniatura con la imagen y los textos que eligió. La imagen tiene que ser una de
+ * las que salen en el video. Pedir lo mismo que ya está hecho no escribe nada (mirar no escribe).
+ */
+export async function pedirPortada(db: BaseDatos, id: number, datos: unknown): Promise<RespuestaPortada> {
+  const parseo = esquemaPortadaElegida.safeParse(datos);
+  if (!parseo.success) return { ok: false, error: parseo.error.issues[0]?.message ?? "Revisa los datos." };
+  const p = await comercialParaPortada(db, id);
+  if (!p) return { ok: false, error: "Este comercial todavía no tiene su video terminado." };
+  const elegida: PortadaElegida = parseo.data;
+  if (!p.opciones.includes(elegida.archivo))
+    return { ok: false, error: "Esa imagen no sale en el video: elige una de la lista." };
+  if (mismaPortada(elegida, p.portada)) return { ok: true, cambio: false };
+  const guardada: PortadaGuardada = { ...elegida, estado: "pedida", error: "" };
+  await db.ejecutar("UPDATE comerciales SET portada = ? WHERE id = ?", [JSON.stringify(guardada), id]);
+  return { ok: true, cambio: true };
+}
+
+export type PortadaParaLaMac = {
+  comercial_id: number;
+  guion_id: number;
+  trabajo_id: number;
+  carpetas: string[];
+  archivo: string;
+  titulo: string;
+  frase: string;
+};
+
+/**
+ * La Mac pide la siguiente miniatura por dibujar y queda tomada. Una tomada hace más de 20 minutos
+ * (la Mac se apagó a mitad) vuelve a la fila. Sin miniaturas pedidas, la consulta no escribe nada.
+ */
+export async function tomarSiguientePortada(db: BaseDatos): Promise<PortadaParaLaMac | null> {
+  const filas = await db.todos<FilaComercial>(
+    `SELECT * FROM comerciales WHERE portada LIKE '%"estado":"pedida"%' OR portada LIKE '%"estado":"tomada"%' ORDER BY id ASC LIMIT 5`,
+  );
+  for (const c of filas) {
+    const portada = leerPortada(c.portada);
+    if (!portada) continue;
+    const vencida =
+      portada.estado === "tomada" &&
+      (await db.uno<{ si: number }>(
+        "SELECT 1 AS si FROM comerciales WHERE id = ? AND actualizado_en < datetime('now', '-20 minutes')",
+        [c.id],
+      ));
+    if (portada.estado !== "pedida" && !vencida) continue;
+    const p = await comercialParaPortada(db, c.id);
+    if (!p) continue;
+    const tomada = JSON.stringify({ ...portada, estado: "tomada", error: "" });
+    const r = await db.ejecutar(
+      "UPDATE comerciales SET portada = ?, actualizado_en = datetime('now') WHERE id = ? AND portada = ?",
+      [tomada, c.id, c.portada],
+    );
+    if (r.cambios === 0) continue;
+    return {
+      comercial_id: c.id,
+      guion_id: p.guionId,
+      trabajo_id: p.trabajoId,
+      carpetas: carpetasDe(c),
+      archivo: portada.archivo,
+      titulo: portada.titulo,
+      frase: portada.frase,
+    };
+  }
+  return null;
+}
+
+/** La Mac cuenta cómo le fue: hecha, o el error en palabras para mostrarlo en el panel. */
+export async function terminarPortada(db: BaseDatos, id: number, error: string | null): Promise<boolean> {
+  const c = await comercialPorId(db, id);
+  const portada = leerPortada(c?.portada);
+  if (!c || portada?.estado !== "tomada") return false;
+  const nueva = { ...portada, estado: error ? "error" : "hecha", error: (error ?? "").slice(0, 500) };
+  const r = await db.ejecutar("UPDATE comerciales SET portada = ? WHERE id = ? AND portada = ?", [
+    JSON.stringify(nueva),
+    id,
+    c.portada,
+  ]);
+  return r.cambios > 0;
 }

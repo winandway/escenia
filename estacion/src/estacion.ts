@@ -4,9 +4,11 @@
 import { config } from "./config";
 import { buscarProduccionSinEntregar, guardarProduccion, huellaDeGuion, marcarEntregada } from "./entrega";
 import { atenderComercial, materialDeComercial } from "./comerciales";
+import { atenderPortadaComercial } from "./portada-comercial";
 import { atenderGrabacion, materialDeGrabacion } from "./grabaciones";
 import { atenderPublicidad } from "./publicidades";
 import { vigilarAvisosDeAyuda } from "./avisos";
+import { vigilarClienteYouTube } from "./youtube-autorizar";
 import { atenderTrabajoDelDirector, vigilarVideosDelDirector } from "./director";
 import { panel } from "./panel";
 import { armarPortadas, guardarTextos, textosDeLaPublicacion } from "./portadas";
@@ -232,6 +234,8 @@ async function principal() {
   vigilarVideosDelDirector();
   // Las respuestas de soporte a los casos de ayuda se avisan al iPhone cada 15 s (C-AYUDA-1).
   vigilarAvisosDeAyuda();
+  // En cuanto Richard deje en Descargas el cliente OAuth de Google, se pide el permiso de YouTube (C-YOUTUBE-2).
+  vigilarClienteYouTube();
   // Si se queda 10 minutos sin hablar con el panel, se sale y launchd la vuelve a arrancar.
   vigilar((minutos) => {
     console.error(`[${hora()}] La Estación lleva ${minutos} min sin señal de vida: se reinicia sola.`);
@@ -247,6 +251,7 @@ async function principal() {
         (await unaVuelta()) ||
         (await atenderGrabacion()) ||
         (await atenderComercial()) ||
+        (await atenderPortadaComercial()) ||
         (await atenderPublicidad()) ||
         (await atenderTrabajoDelDirector());
       if (hubo) espera = 1000;

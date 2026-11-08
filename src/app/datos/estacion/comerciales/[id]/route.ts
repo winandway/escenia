@@ -12,6 +12,7 @@ import {
   comercialPorId,
   planDeComercial,
   registrarPlanComercial,
+  terminarPortada,
 } from "@/lib/comerciales";
 import { PresupuestoAgotado } from "@/lib/presupuesto";
 import { esquemaGuion } from "@compartido/guion";
@@ -22,6 +23,8 @@ export const dynamic = "force-dynamic";
 const esquema = z.discriminatedUnion("accion", [
   z.object({ accion: z.literal("avance"), paso: z.string().max(200) }),
   z.object({ accion: z.literal("error"), error: z.string().max(2000) }),
+  // C-COMERCIAL-4: la miniatura elegida ya está dibujada y subida (error: null) o no se pudo.
+  z.object({ accion: z.literal("portada"), error: z.string().max(500).nullable() }),
   z.object({
     accion: z.literal("plan"),
     imagenes: z
@@ -48,6 +51,7 @@ export async function POST(req: Request, ctx: RouteContext<"/datos/estacion/come
   if (!parseo.success)
     return Response.json({ error: parseo.error.issues[0]?.message ?? "Cuerpo inválido." }, { status: 400 });
   const d = parseo.data;
+  if (d.accion === "portada") return Response.json({ ok: await terminarPortada(db, id, d.error) });
   await tocarLatido(db);
   if (d.accion === "avance") {
     await anotarAvanceComercial(db, id, d.paso);

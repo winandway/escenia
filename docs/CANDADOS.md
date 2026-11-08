@@ -2234,3 +2234,44 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   Google Play suelto (para mandar a descargar va la insignia, no el logo).
 - **El candado:** `pruebas/publicidad.test.ts`, «el cierre lleva la insignia oficial de Google Play». Comprobado en
   rojo el 7 nov 2026. Commit bd29063.
+
+## C-COMERCIAL-4 — La miniatura del comercial se elige en el panel (8 nov 2026)
+
+- **Qué se pidió:** que Richard elija desde el panel cuál imagen del cliente va en la miniatura del comercial y
+  cambie el texto, sin pasar por la Mac.
+- **Cómo funciona:** «Elegir la miniatura» en la tarjeta (solo con el video terminado) → `/comerciales/<id>/miniatura`
+  ofrece SOLO las imágenes que salen en el video (`imagenesDelVideo`) → `pedirPortada` guarda la columna
+  `portada` (JSON, estado `pedida`) → la Estación la toma (`tomarSiguientePortada`, una vez; tomada hace más de
+  20 min vuelve a la fila) → `estacion/src/portada-comercial.ts` dibuja `Miniatura` con `props.portada`
+  (`propsConPortada`) usando las props guardadas del trabajo, sin gastar → sube el PNG con
+  `{pieza:"largo", portada:true}` (gana a la automática) → `terminarPortada` (hecha o el error a la vista).
+- **Qué NO tocar:** pedir lo mismo que ya está hecho NO escribe (`mismaPortada`); preguntar sin miniaturas
+  pedidas solo lee. La plantilla `Miniatura.tsx` no importa de fuera (copia local de `textosMiniatura`).
+- **Base en vivo:** la columna `portada` se agregó el 8 nov 2026 con `ALTER TABLE` por HTTP, antes de publicar.
+- **El candado:** `pruebas/portada-comercial.test.ts`. Comprobado en rojo apagando el uso de `p.portada` en
+  `contenidoMiniatura`, la comprobación de la imagen y `mismaPortada` (3 pruebas en rojo).
+
+## C-TALLER-2 — El taller en la nube no pasa de 6 dólares al mes (8 nov 2026)
+
+- **Qué es:** el trabajador `escenia-taller` (carpeta `taller/`) en la cuenta de Cloudflare de Windoce, con un
+  contenedor standard-4 (4 vCPU, 12 GiB), **máximo una instancia**, que se apaga a los 2 minutos sin trabajo.
+  Lo aprobó Gerencia. Se publica con `cd taller && npx wrangler deploy` (arma la imagen con el Docker de la Mac
+  desde `estacion/contenedor/Dockerfile`).
+- **El tope en código:** antes de encender el contenedor se mira cuántos segundos van en el mes (almacén del
+  Durable Object); desde `TOPE_SEGUNDOS_MES` (50.000 s ≈ 5,50 $) responde 429 y no enciende. Cada trabajo suma
+  una sola escritura. `/salud` (canario) dice segundos, dólares y verde/amarillo/rojo, y no escribe nada.
+- **Secreto:** `TALLER_SECRETO` en el trabajador; la copia vive en `~/.config/motor-escenia/taller-secreto`.
+- **Medido:** el contenedor armó el comercial vertical de 62 s (t40) en 258 s en la Mac, emulando amd64 con 2 GB
+  de memoria (la meta era menos de 5 minutos).
+- **El candado:** `pruebas/taller-tope.test.ts`. Comprobado en rojo subiendo el tope a 90.000 s (pasaría de 6 $).
+- **Docker de la Mac:** el 8 nov 2026 «no bajaba imágenes»; ese mismo día ya bajó la base del espejo de Amazon
+  sin tocar nada (la red de Docker Desktop usa su proxy interno). Si vuelve a fallar: reiniciar Docker Desktop.
+
+## C-YOUTUBE-2 — El permiso de YouTube se pide solo cuando aparece el archivo en Descargas (8 nov 2026)
+
+- **Cómo:** `vigilarClienteYouTube` (arranca con la Estación, cada 10 min): si no hay llave larga, busca el
+  `client_secret*.json` más nuevo en Descargas (o el ya guardado en `~/.config/motor-escenia/youtube-cliente.json`),
+  lo copia ahí (600), abre el navegador y espera hasta 6 h el «Permitir»; guarda `youtube.json` (600).
+- **Qué NO tocar:** con la llave puesta no lee Descargas ni abre nada; un archivo a medio bajar (`.crdownload`) no
+  cuenta; los permisos son solo subir y leer (`PERMISOS_YOUTUBE`).
+- **El candado:** `pruebas/youtube-autorizar.test.ts`. Comprobado en rojo aceptando cualquier `client_secret*`.

@@ -74,6 +74,11 @@ function Fila({ c, macEncendida }: { c: ComercialConVideo; macEncendida: boolean
             {aviso.tono === "listo" ? "Ver y descargar el video" : "Ver cómo va"}
           </Link>
         )}
+        {c.guion_id && aviso.tono === "listo" && !revisar && (
+          <Link href={`/comerciales/${c.id}/miniatura`} className="boton-suave">
+            Elegir la miniatura
+          </Link>
+        )}
         {c.estado === "error" && (
           <form action={reintentar}>
             <input type="hidden" name="id" value={c.id} />

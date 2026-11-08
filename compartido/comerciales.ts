@@ -84,3 +84,48 @@ export function cambiarImagenesDelPlan(guion: Guion, cambios: CambioDeImagen[], 
     }),
   };
 }
+
+// ── La miniatura elegida desde el panel (C-COMERCIAL-4, 8 nov 2026) ──────────────────────────
+// Richard elige en el panel cuál de las imágenes del cliente va en la miniatura y escribe el
+// título y la frase. Se guarda en la columna `portada` (JSON) del comercial; la Mac la toma,
+// vuelve a dibujar la miniatura con la misma plantilla (sin gastar nada) y la sube.
+
+export const MAX_TITULO_PORTADA = 40;
+export const MAX_FRASE_PORTADA = 80;
+export const ESTADOS_PORTADA = ["pedida", "tomada", "hecha", "error"] as const;
+
+export const esquemaPortadaElegida = z.object({
+  archivo: z.string().trim().min(1, "Elige la imagen que va en la miniatura.").max(160),
+  titulo: z
+    .string()
+    .trim()
+    .min(1, "Escribe el texto grande de la miniatura.")
+    .max(MAX_TITULO_PORTADA, `El texto grande pasa de ${MAX_TITULO_PORTADA} letras: se vería apretado.`),
+  frase: z.string().trim().max(MAX_FRASE_PORTADA, `La frase pasa de ${MAX_FRASE_PORTADA} letras: acórtala.`),
+});
+export type PortadaElegida = z.infer<typeof esquemaPortadaElegida>;
+
+export const esquemaPortadaGuardada = esquemaPortadaElegida.extend({
+  estado: z.enum(ESTADOS_PORTADA),
+  error: z.string().max(500).default(""),
+});
+export type PortadaGuardada = z.infer<typeof esquemaPortadaGuardada>;
+
+/** La miniatura guardada de un comercial; vacía o rota = no hay ninguna pedida. */
+export function leerPortada(json: string | null | undefined): PortadaGuardada | null {
+  if (!json) return null;
+  try {
+    const r = esquemaPortadaGuardada.safeParse(JSON.parse(json));
+    return r.success ? r.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** ¿Lo pedido es lo mismo que ya está hecho? Entonces no se vuelve a dibujar ni se escribe nada. */
+export const mismaPortada = (a: PortadaElegida, b: PortadaGuardada | null) =>
+  b !== null &&
+  b.estado !== "error" &&
+  a.archivo === b.archivo &&
+  a.titulo.trim() === b.titulo &&
+  a.frase.trim() === b.frase;

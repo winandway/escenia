@@ -11,6 +11,7 @@ import type { PropsVideo } from "./props";
 const { fontFamily } = loadFont("normal", { weights: ["700", "900"], subsets: ["latin", "latin-ext"] });
 const { fontFamily: serif } = loadSerif("normal", { weights: ["900"], subsets: ["latin", "latin-ext"] });
 
+/** Copia de textosMiniatura (compartido/miniatura.ts): la plantilla no puede importar de fuera. */
 function textosMiniatura(titulo: string): { nombre: string; gancho: string } {
   const [antes, ...resto] = titulo.split(/[:—–]/);
   const recortar = (s: string, max: number) => {
@@ -20,19 +21,31 @@ function textosMiniatura(titulo: string): { nombre: string; gancho: string } {
   return { nombre: recortar(antes ?? titulo, 28), gancho: recortar(resto.join(" "), 60) };
 }
 
+/** La foto y los textos de la miniatura: los que eligió Richard en el panel (C-COMERCIAL-4) o, si no
+ * eligió nada, la primera foto con cara y los textos sacados del título. */
+export function contenidoMiniatura(p: PropsVideo): {
+  foto: { ruta: string; ancho: number; alto: number; enfoque: { x: number; y: number } | null } | null;
+  nombre: string;
+  gancho: string;
+} {
+  if (p.portada)
+    return { foto: { ...p.portada.foto, enfoque: null }, nombre: p.portada.nombre, gancho: p.portada.gancho };
+  const fotos = p.escenas.flatMap((e) => [...(e.foto ? [e.foto] : []), ...e.fotos]);
+  return { foto: fotos.find((f) => f.enfoque) ?? fotos[0] ?? null, ...textosMiniatura(p.titulo) };
+}
+
 export const Miniatura: React.FC<PropsVideo> = (p) => {
   const { width, height } = useVideoConfig();
-  // La mejor foto: la primera con cara detectada; si no, la primera que haya.
-  const fotos = p.escenas.flatMap((e) => [...(e.foto ? [e.foto] : []), ...e.fotos]);
-  const foto = fotos.find((f) => f.enfoque) ?? fotos[0] ?? null;
+  const { foto, nombre, gancho } = contenidoMiniatura(p);
   const documental = p.tema === "documental";
   const marca = p.marca;
   const acento = marca ? marca.acento : documental ? "#e8b04b" : "#f59e0b";
   const fuenteTitulo = marca ? mono : documental ? serif : fontFamily;
-  const { nombre, gancho } = textosMiniatura(p.titulo);
   // Con marca, la foto ocupa la derecha y el texto va sobre el fondo del canal:
   // así las letras nunca tapan la cara (en una foto vertical quedaban encima).
-  const PARTE_FOTO = marca ? 0.6 : 1;
+  // La imagen que eligió Richard (un logo, una captura del cliente) se ve ENTERA en la mitad derecha.
+  const elegida = p.portada !== null;
+  const PARTE_FOTO = marca ? 0.6 : elegida ? 0.5 : 1;
   const pos = foto
     ? posicionObjeto(
         { ancho: foto.ancho, alto: foto.alto },
@@ -69,8 +82,10 @@ export const Miniatura: React.FC<PropsVideo> = (p) => {
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "cover",
-              objectPosition: `${pos.x}% ${pos.y}%`,
+              objectFit: elegida ? "contain" : "cover",
+              objectPosition: elegida ? "50% 50%" : `${pos.x}% ${pos.y}%`,
+              padding: elegida ? 40 : 0,
+              boxSizing: "border-box",
             }}
           />
         </div>

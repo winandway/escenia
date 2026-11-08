@@ -93,7 +93,6 @@ panel /comerciales ──▶ tabla `comerciales` (subida)
 
 ## Lo que falta
 
-- Elegir el momento y el texto de la miniatura desde el panel (como en los demás).
 - Cambiar en el plan un diagrama o un texto en grande (hoy se cambian y se quitan imágenes).
 
 ## Las piezas
@@ -110,3 +109,17 @@ panel /comerciales ──▶ tabla `comerciales` (subida)
 | La Estación: bajar, partir PDF, plan                                | `estacion/src/comerciales.ts`                                 |
 | Pruebas                                                             | `pruebas/comerciales.test.ts`                                 |
 | Candados                                                            | C-IMAGENES-1 y C-COMERCIAL-1 en `docs/CANDADOS.md`            |
+
+## Elegir la miniatura desde el panel (C-COMERCIAL-4, 8 nov 2026)
+
+Con el video terminado, la tarjeta del comercial muestra **«Elegir la miniatura»**. Ahí se ve la
+miniatura de ahora, la lista de las imágenes del cliente que salen en el video (solo esas) y dos
+casillas: el texto grande (hasta 40 letras) y la frase de abajo (opcional, hasta 80). Se toca
+**«Hacer esta miniatura»** y la Mac la vuelve a dibujar con el mismo diseño, **sin gastar nada**
+(ni voz ni IA): la imagen elegida se ve entera en la mitad derecha. En un minuto queda al lado del
+video, en su página, para descargarla. Lo escrito se guarda solo mientras se escribe.
+
+- Por dentro: columna `portada` (JSON) del comercial → `/datos/estacion/comerciales/portada` (la
+  Mac la toma) → `estacion/src/portada-comercial.ts` dibuja la composición `Miniatura` con
+  `props.portada` → sube el PNG como miniatura del largo con `portada: true` (gana a la automática).
+- Pedir lo mismo que ya está hecho no escribe nada; una tomada hace más de 20 minutos vuelve a la fila.

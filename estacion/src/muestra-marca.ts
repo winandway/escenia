@@ -131,6 +131,7 @@ async function principal() {
     },
     presentador: null,
     ventana: null,
+    portada: null,
     cierre: { canalNombre: "Full Código", canalUsuario: "@FullCodigo", miniatura: null },
   };
 

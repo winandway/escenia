@@ -52,7 +52,7 @@
 - [x] Nombre y @ del canal de tecnología: ya salen solos como «Full Código» y «@FullCodigo» (30 sep 2026); en Ajustes se pueden cambiar.
 - 👤 Seguir generando las pistas de docs/MUSICA.md en Suno (ya hay 4 de salsa en /Users/windocellc/Motor-Escenia/music-cortinas-libre-de-copy/) → cada temática tendrá su música; sin pista que encaje, el video sale con la «neutral» o sin música.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
-- 👤 YouTube desde la Mac (docs/YOUTUBE.md, «Lo que hace falta»): en Google Cloud, proyecto Escenia, crear un «ID de cliente de OAuth» tipo App de escritorio y dejar el JSON en Descargas → la IA autoriza la Mac (Richard toca «Permitir» una vez) y desde ahí los videos suben solos en privado, con su miniatura y sus enlaces con UTM.
+- 👤 YouTube desde la Mac (docs/YOUTUBE.md, «Lo que hace falta»): en Google Cloud, proyecto Escenia, crear un «ID de cliente de OAuth» tipo App de escritorio y dejar el JSON en Descargas → la Estación lo ve sola, abre el navegador de la Mac y Richard toca «Permitir» una vez (C-YOUTUBE-2); desde ahí los videos suben solos en privado, con su miniatura y sus enlaces con UTM.
 
 ## Fila (lo hace la IA)
 
@@ -78,7 +78,7 @@
 - [x] Biblioteca de Imágenes (carpetas, muchos archivos de una vez, PDF partido en páginas) y menú Comerciales: el video publicitario de un cliente con su texto, nuestra voz y sus imágenes, en Neón con personajes, sin marca ni Shorts (5 oct 2026). Candados C-IMAGENES-1 y C-COMERCIAL-1.
 - [x] Menú del panel rediseñado: botones por grupos, el activo encendido y la luz de la Mac (5 oct 2026).
 - [x] Comerciales: versión vertical para redes y ver y corregir el plan antes de armar (8 nov 2026, C-COMERCIAL-3).
-- [ ] Comerciales: elegir la miniatura desde el panel.
+- [x] Comerciales: elegir la miniatura desde el panel (8 nov 2026, C-COMERCIAL-4, docs/COMERCIALES.md).
 - [ ] **PRÓXIMO PLAN del formato Canción (lo dejó Richard el 6 oct 2026, «que no quede en el tintero»):**
   1. **Escenas animadas de verdad**: al armar el video, dos o tres escenas cortas (las más importantes, por ejemplo el coro) pasan por el modelo de imagen a video que se recomendó, Wan 2.2 (5B) en fal.ai, quince centavos por clip de cinco segundos. Autorizado por él ese día con ese modelo y esa cantidad; tope de 3 clips por video en el código y dentro del tope diario. El resto de bocetos sigue con movimiento de cámara.
   2. **Karaoke**: un video donde suena SU pista (la de Sonidos), la letra va saliendo palabra por palabra y arriba corre el video de bocetos, para que la gente cante encima. Sin él en cámara: la pista, la letra y los dibujos.

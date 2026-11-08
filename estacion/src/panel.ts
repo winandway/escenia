@@ -57,6 +57,22 @@ const esquemaComercial = z.object({
     })
     .nullable(),
 });
+// C-COMERCIAL-4: la miniatura de un comercial que Richard eligió en el panel.
+const esquemaPortadaComercial = z.object({
+  portada: z
+    .object({
+      comercial_id: z.number().int(),
+      guion_id: z.number().int(),
+      trabajo_id: z.number().int(),
+      carpetas: z.array(z.string()),
+      archivo: z.string(),
+      titulo: z.string(),
+      frase: z.string(),
+    })
+    .nullable(),
+});
+export type PortadaComercialDelPanel = NonNullable<z.infer<typeof esquemaPortadaComercial>["portada"]>;
+
 export type ComercialDelPanel = NonNullable<z.infer<typeof esquemaComercial>["comercial"]>;
 
 // Publicidad en Short (menú «Publicidad»): el anuncio pedido desde el panel.
@@ -237,6 +253,12 @@ export const panel = {
     llamar(`/datos/estacion/comerciales/${id}`, { accion: "avance", paso }),
   errorComercial: (id: number, error: string) =>
     llamar(`/datos/estacion/comerciales/${id}`, { accion: "error", error: error.slice(0, 2000) }),
+  /** ¿Hay una miniatura de comercial elegida en el panel por dibujar? Si hay, queda tomada. */
+  async portadaComercialSiguiente(): Promise<PortadaComercialDelPanel | null> {
+    return esquemaPortadaComercial.parse(await llamar("/datos/estacion/comerciales/portada", {})).portada;
+  },
+  portadaComercialTerminada: (id: number, error: string | null) =>
+    llamar(`/datos/estacion/comerciales/${id}`, { accion: "portada", error: error?.slice(0, 500) ?? null }),
   /** Con las imágenes que hay en la Mac, el panel arma el plan, guarda el guion y lo manda a producir. */
   planDeComercial: (
     id: number,

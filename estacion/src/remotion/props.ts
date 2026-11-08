@@ -153,6 +153,16 @@ export const esquemaPropsVideo = z.object({
     })
     .nullable()
     .default(null),
+  // C-COMERCIAL-4: la miniatura que Richard eligió en el panel (la imagen del cliente y sus dos
+  // textos). Sin esto, la miniatura toma la primera foto y los textos salen del título.
+  portada: z
+    .object({
+      foto: z.object({ ruta: z.string(), ancho: z.number(), alto: z.number() }),
+      nombre: z.string(),
+      gancho: z.string(),
+    })
+    .nullable()
+    .default(null),
   // Marca del canal (logo, nombre, @ y lema): con marca, el video sale con el
   // aspecto del canal (letra de código, colores del logo, logo fijo y cierre propio).
   marca: z

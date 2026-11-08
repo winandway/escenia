@@ -99,6 +99,7 @@ const vacio: PropsVideo = {
   marca: null,
   presentador: null,
   ventana: null,
+  portada: null,
   cierre: null,
 };
 
