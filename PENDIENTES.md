@@ -76,7 +76,8 @@
 - [x] Miniaturas de un video con presentador: sale Richard recortado de su grabación, con fondo nuevo, palabra tachada y marcas en pastillas (5 oct 2026). Candado C-PORTADA-2.
 - [x] Biblioteca de Imágenes (carpetas, muchos archivos de una vez, PDF partido en páginas) y menú Comerciales: el video publicitario de un cliente con su texto, nuestra voz y sus imágenes, en Neón con personajes, sin marca ni Shorts (5 oct 2026). Candados C-IMAGENES-1 y C-COMERCIAL-1.
 - [x] Menú del panel rediseñado: botones por grupos, el activo encendido y la luz de la Mac (5 oct 2026).
-- [ ] Comerciales: versión vertical para redes; ver y corregir el plan antes de armar; elegir la miniatura.
+- [x] Comerciales: versión vertical para redes y ver y corregir el plan antes de armar (8 nov 2026, C-COMERCIAL-3).
+- [ ] Comerciales: elegir la miniatura desde el panel.
 - [ ] **PRÓXIMO PLAN del formato Canción (lo dejó Richard el 6 oct 2026, «que no quede en el tintero»):**
   1. **Escenas animadas de verdad**: al armar el video, dos o tres escenas cortas (las más importantes, por ejemplo el coro) pasan por el modelo de imagen a video que se recomendó, Wan 2.2 (5B) en fal.ai, quince centavos por clip de cinco segundos. Autorizado por él ese día con ese modelo y esa cantidad; tope de 3 clips por video en el código y dentro del tope diario. El resto de bocetos sigue con movimiento de cámara.
   2. **Karaoke**: un video donde suena SU pista (la de Sonidos), la letra va saliendo palabra por palabra y arriba corre el video de bocetos, para que la gente cante encima. Sin él en cámara: la pista, la letra y los dibujos.

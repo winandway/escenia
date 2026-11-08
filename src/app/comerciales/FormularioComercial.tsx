@@ -28,6 +28,7 @@ export function FormularioComercial({ carpetas }: { carpetas: string[] }) {
       voz: datos.get("voz"),
       instrucciones: datos.get("instrucciones") ?? "",
       carpetas: datos.getAll("carpetas").map(String),
+      revisar: datos.get("revisar") === "si",
     });
     if (!parseo.success)
       return setEstado({ fase: "listo", error: parseo.error.issues[0]?.message ?? "Revisa los datos." });
@@ -156,10 +157,17 @@ export function FormularioComercial({ carpetas }: { carpetas: string[] }) {
             placeholder="Qué debe salir y cuándo: por ejemplo, que todos los logos pasen uno detrás de otro cuando habla de sus trabajos"
           />
         </div>
+        <label className="flex cursor-pointer items-start gap-2 text-sm text-neutral-200">
+          <input type="checkbox" name="revisar" value="si" defaultChecked className="mt-1 accent-amber-500" />
+          <span>
+            Quiero ver el plan antes de armar (qué imagen va en cada frase), por si cambio alguna. Sin marcar,
+            el video se arma de una.
+          </span>
+        </label>
         <p className="text-xs text-neutral-400">
           Formato: <strong className="text-neutral-200">{NOMBRE_FORMATO.mixto}</strong>, sin marca de canal ni
-          Shorts: el video es del cliente. Solo salen sus imágenes y diagramas de neón; nada de fotos de
-          internet.
+          Shorts: el video es del cliente. Sale en horizontal y también en vertical para redes. Solo salen sus
+          imágenes y diagramas de neón; nada de fotos de internet.
         </p>
         {estado.error && (
           <p role="alert" className="rounded-md border border-red-900 bg-red-950/50 p-3 text-sm text-red-200">

@@ -93,7 +93,7 @@ async function unaVuelta(): Promise<boolean> {
         estiloDelTrabajo({ ...trabajo, comercial }),
         material,
         comercial
-          ? { idioma: comercial.idioma, sinShorts: true, imagenes }
+          ? { idioma: comercial.idioma, sinShorts: true, imagenes, vertical: true }
           : cancion
             ? { sinShorts: true }
             : {},
@@ -116,6 +116,14 @@ async function unaVuelta(): Promise<boolean> {
         }
       },
     );
+    // Comercial: la versión vertical del video entero (C-COMERCIAL-3).
+    if (r.vertical) {
+      await avisar("subiendo la versión vertical al panel", 98);
+      await panel.subirVideo(trabajo.guion_id, "9x16", r.vertical.ruta, {
+        duracion_seg: r.vertical.duracionSeg,
+        voz_de_prueba: r.vozDePrueba,
+      });
+    }
     for (const [k, s] of r.shorts.entries()) {
       await avisar(`subiendo el short ${k + 1} de ${r.shorts.length} al panel`, 98);
       await panel.subirVideo(trabajo.guion_id, "9x16", s.ruta, {
@@ -142,6 +150,17 @@ async function unaVuelta(): Promise<boolean> {
         duracion_seg: r.duracionSeg,
         voz_de_prueba: r.vozDePrueba,
       },
+      ...(r.vertical
+        ? [
+            {
+              formato: "9x16" as const,
+              ruta_local: r.vertical.ruta,
+              bytes: r.vertical.bytes,
+              duracion_seg: r.vertical.duracionSeg,
+              voz_de_prueba: r.vozDePrueba,
+            },
+          ]
+        : []),
       ...r.shorts.map((s) => ({
         formato: "9x16" as const,
         ruta_local: s.ruta,

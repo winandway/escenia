@@ -52,6 +52,8 @@ export type ResultadoProduccion = {
   rutaSubtitulos: string;
   costoVozUsd: number;
   creditos: string[];
+  /** C-COMERCIAL-3: la versión vertical (9:16) del comercial entero, para redes. Sin título ni cierre. */
+  vertical?: { ruta: string; bytes: number; duracionSeg: number } | null;
 };
 
 const aqui = path.dirname(fileURLToPath(import.meta.url));
@@ -144,7 +146,8 @@ export async function producir(
   // Formato Presentador: la voz y la imagen vienen de una grabación de Richard, no del generador.
   grabacion: { voz: ResultadoVoz; presentador: NonNullable<PropsVideo["presentador"]> } | null = null,
   // Comerciales (docs/COMERCIALES.md): el idioma del texto, sin Shorts, y las imágenes del cliente.
-  opciones: { idioma?: "es" | "en"; sinShorts?: boolean; imagenes?: ImagenLocal[] } = {},
+  // `vertical`: además del 16:9, el video entero en 9:16 (un comercial, para redes).
+  opciones: { idioma?: "es" | "en"; sinShorts?: boolean; imagenes?: ImagenLocal[]; vertical?: boolean } = {},
 ): Promise<ResultadoProduccion> {
   const comercial = (opciones.imagenes?.length ?? 0) > 0;
   // Formato Canción (docs/CANCION.md): su audio en vivo tal cual, sin música ni efectos del
@@ -581,6 +584,24 @@ export async function producir(
     serveUrl,
   );
 
+  // Comercial (C-COMERCIAL-3): el video ENTERO también en vertical, para Instagram, TikTok y Facebook.
+  // Es la composición de los Shorts sin ventana: sin título al arrancar, sin «ver video completo» y
+  // sin marca (un comercial no lleva). No gasta nada: es solo armado en la Mac.
+  let vertical: ResultadoProduccion["vertical"] = null;
+  if (opciones.vertical && !cancion) {
+    await avisar("armando la versión vertical (9:16) para redes", 82);
+    const salida = path.join(carpetaTrabajo, "video-9x16.mp4");
+    const rv = await renderizar(
+      "TechExplainerShort",
+      { ...props, ventana: null },
+      carpetaPublica,
+      salida,
+      () => {},
+      serveUrl,
+    );
+    vertical = { ruta: salida, bytes: rv.bytes, duracionSeg: rv.duracionSeg };
+  }
+
   // Shorts 9:16: el mismo video en trozos, cada uno con su título y su cierre. (Un comercial no lleva.)
   const plan = opciones.sinShorts || cancion ? [] : planificarShorts(paraShorts);
   const shorts: ShortProducido[] = [];
@@ -623,6 +644,7 @@ export async function producir(
     rutaSubtitulos,
     costoVozUsd: voz.costoUsd,
     creditos: [...new Set(creditos)],
+    vertical,
   };
 }
 

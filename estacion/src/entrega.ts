@@ -47,7 +47,13 @@ export async function marcarEntregada(numero: number) {
 }
 
 function archivosDe(r: ResultadoProduccion): string[] {
-  return [r.rutaMp4, r.rutaVoz, r.rutaSubtitulos, ...r.shorts.map((s) => s.ruta)];
+  return [
+    r.rutaMp4,
+    r.rutaVoz,
+    r.rutaSubtitulos,
+    ...r.shorts.map((s) => s.ruta),
+    ...(r.vertical ? [r.vertical.ruta] : []),
+  ];
 }
 
 /** Una producción de este mismo guion que se armó completa y nunca llegó al panel. */

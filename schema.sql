@@ -241,7 +241,12 @@ CREATE TABLE IF NOT EXISTS comerciales (
   error TEXT NOT NULL DEFAULT '',
   guion_id INTEGER REFERENCES guiones(id),
   creado_en TEXT NOT NULL DEFAULT (datetime('now')),
-  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  -- C-COMERCIAL-3 (8 nov 2026): 1 = el plan espera a que Richard lo vea y toque «Armar el video».
+  -- `imagenes`: la lista (JSON) que mandó la Mac con el plan, para poder cambiar una imagen.
+  -- En la base en vivo se agregaron con ALTER TABLE una sola vez (ver C-COMERCIAL-3).
+  revisar INTEGER NOT NULL DEFAULT 0,
+  imagenes TEXT NOT NULL DEFAULT '[]'
 );
 CREATE INDEX IF NOT EXISTS comerciales_por_estado ON comerciales(estado, id);
 

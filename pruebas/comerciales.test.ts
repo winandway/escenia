@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { baseEnMemoria } from "./base-memoria";
-import { esquemaComercialNuevo, MIN_PALABRAS_COMERCIAL } from "@compartido/comerciales";
+import {
+  cambiarImagenesDelPlan,
+  esquemaComercialNuevo,
+  MIN_PALABRAS_COMERCIAL,
+} from "@compartido/comerciales";
 import { esquemaGuion, esquemaGuionGenerado, TIPOS_PLANO } from "@compartido/guion";
 import { esquemaGuionDeLaIA, guionDesdeLaIA, tipoDePlanoValido } from "@compartido/guion-ia";
 import { dejarSoloFiguras } from "@compartido/ilustrado";
@@ -14,8 +18,12 @@ import { logoDelCliente } from "@compartido/portada";
 import { textoParaLaVoz } from "@compartido/pronunciacion";
 import { buscarTematica } from "@compartido/tematicas";
 import {
+  armarComercial,
   comercialDeGuion,
   comercialesVisibles,
+  esperaRevision,
+  guardarCambiosDelPlan,
+  planEnRevision,
   comercialPorId,
   crearComercial,
   otraVersionComercial,
@@ -477,5 +485,85 @@ describe("comerciales: lo que se ve y se lee va en el idioma del cliente", () =>
     expect(logoDelCliente(props, 0, 1)?.ruta).toBe("imagenes/marca.png");
     expect(logoDelCliente(props, 0, 0)?.ruta).toBe("imagenes/a.png");
     expect(logoDelCliente({ ...props, escenas: [] }, 0, 0)).toBeNull();
+  });
+});
+
+describe("comerciales: ver y corregir el plan antes de armar (C-COMERCIAL-3)", () => {
+  let db: ReturnType<typeof baseEnMemoria>;
+  beforeEach(() => {
+    db = baseEnMemoria();
+  });
+  const IMAGENES = [
+    { nombre: "01 Dame Mexico.png", transparente: true, ancho: 561, alto: 587 },
+    { nombre: "02 Pro In Shop.png", transparente: true, ancho: 600, alto: 600 },
+  ];
+
+  it("desde la Mac, sin decir nada, se arma de una (como antes)", () => {
+    expect(esquemaComercialNuevo.parse(PEDIDO).revisar).toBe(false);
+  });
+
+  it("con «revisar», el plan queda en borrador y SIN trabajo: no se gasta nada hasta «Armar el video»", async () => {
+    const id = await crearComercial(db, esquemaComercialNuevo.parse({ ...PEDIDO, revisar: true }));
+    const tomado = await tomarSiguienteComercial(db);
+    const r = await registrarPlanComercial(db, tomado!, PLAN, { modelo: "m", costoUsd: 0.03 }, IMAGENES);
+    expect(r.trabajoId).toBe(0);
+    expect((await db.uno<{ n: number }>("SELECT COUNT(id) AS n FROM trabajos"))?.n).toBe(0);
+    expect(
+      (await db.uno<{ estado: string }>("SELECT estado FROM guiones WHERE id = ?", [r.guionId]))?.estado,
+    ).toBe("borrador");
+    // Un segundo pedido del plan devuelve el mismo guion (la Mac reintenta y no duplica nada).
+    expect(await registrarPlanComercial(db, tomado!, PLAN, { modelo: "m", costoUsd: 0 }, IMAGENES)).toEqual(
+      r,
+    );
+    const [visible] = await comercialesVisibles(db);
+    expect(esperaRevision(visible!)).toBe(true);
+    expect((await planEnRevision(db, id))?.editable).toBe(true);
+
+    // Cambia la imagen por otra de la lista; un nombre que la Mac no tiene no entra.
+    expect(
+      await guardarCambiosDelPlan(db, id, [{ escena: 0, plano: 0, archivo: "02 Pro In Shop.png" }]),
+    ).toBe(true);
+    expect((await planEnRevision(db, id))?.guion.escenas[0]?.visual.planos?.[0]?.archivo).toBe(
+      "02 Pro In Shop.png",
+    );
+    await guardarCambiosDelPlan(db, id, [{ escena: 0, plano: 0, archivo: "inventada.png" }]);
+    expect((await planEnRevision(db, id))?.guion.escenas[0]?.visual.planos?.[0]?.archivo).toBe(
+      "02 Pro In Shop.png",
+    );
+    // La narración sigue siendo el texto del cliente.
+    expect((await planEnRevision(db, id))?.guion.escenas[0]?.narracion).toBe(PLAN.escenas[0]?.narracion);
+
+    // «Armar el video»: aprobado y UN trabajo, aunque se toque dos veces.
+    const trabajo = await armarComercial(db, id);
+    expect(trabajo).toBeGreaterThan(0);
+    expect(await armarComercial(db, id)).toBe(trabajo);
+    expect((await db.uno<{ n: number }>("SELECT COUNT(id) AS n FROM trabajos"))?.n).toBe(1);
+    expect(
+      (await db.uno<{ estado: string }>("SELECT estado FROM guiones WHERE id = ?", [r.guionId]))?.estado,
+    ).toBe("aprobado");
+    // Ya armado, el plan no se cambia.
+    expect(
+      await guardarCambiosDelPlan(db, id, [{ escena: 0, plano: 0, archivo: "01 Dame Mexico.png" }]),
+    ).toBe(false);
+    expect((await planEnRevision(db, id))?.editable).toBe(false);
+    // «Armar otra versión» conserva el «revisar».
+    const otra = await otraVersionComercial(db, id);
+    expect((await comercialPorId(db, otra!))?.revisar).toBe(1);
+  });
+
+  it("quitar una imagen saca solo ese plano; los «dato» y el texto no se tocan", () => {
+    const nuevo = cambiarImagenesDelPlan(
+      PLAN,
+      [{ escena: 0, plano: 0, archivo: "" }],
+      ["01 Dame Mexico.png"],
+    );
+    expect(nuevo.escenas[0]?.visual.planos?.map((p) => p.tipo)).toEqual(["dato"]);
+    // Un cambio sobre un plano «dato» no hace nada.
+    const igual = cambiarImagenesDelPlan(
+      PLAN,
+      [{ escena: 0, plano: 1, archivo: "01 Dame Mexico.png" }],
+      ["01 Dame Mexico.png"],
+    );
+    expect(igual.escenas[0]?.visual.planos?.[1]).toEqual(PLAN.escenas[0]?.visual.planos?.[1]);
   });
 });

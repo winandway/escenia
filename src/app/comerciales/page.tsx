@@ -3,7 +3,7 @@ import { MenuTresPuntos } from "@/app/calendario/MenuTresPuntos";
 import { RefrescoSolo } from "@/app/grabaciones/RefrescoSolo";
 import { Marco } from "@/componentes/Marco";
 import { exigirSesion } from "@/lib/auth";
-import { carpetasDe, comercialesVisibles, type ComercialConVideo } from "@/lib/comerciales";
+import { carpetasDe, comercialesVisibles, esperaRevision, type ComercialConVideo } from "@/lib/comerciales";
 import { latidoEstacion } from "@/lib/consultas";
 import { contexto } from "@/lib/entorno";
 import { estacionViva } from "@/lib/estacion-estado";
@@ -25,7 +25,14 @@ const COLOR = {
 } as const;
 
 function Fila({ c, macEncendida }: { c: ComercialConVideo; macEncendida: boolean }) {
-  const aviso = avisoDeGrabacion(c, macEncendida);
+  const revisar = esperaRevision(c);
+  const aviso = revisar
+    ? {
+        texto: "El plan está listo. Míralo, cambia la imagen que no te guste y toca «Armar el video».",
+        tono: "trabajando" as const,
+        enCurso: false,
+      }
+    : avisoDeGrabacion(c, macEncendida);
   return (
     <li className="tarjeta min-w-0 text-sm">
       <div className="flex items-start gap-2">
@@ -57,7 +64,12 @@ function Fila({ c, macEncendida }: { c: ComercialConVideo; macEncendida: boolean
       </div>
       <p className={`mt-3 ${COLOR[aviso.tono]}`}>{aviso.texto}</p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        {c.guion_id && (
+        {revisar && (
+          <Link href={`/comerciales/${c.id}`} className="boton">
+            Ver el plan
+          </Link>
+        )}
+        {c.guion_id && !revisar && (
           <Link href={`/guiones/${c.guion_id}`} className="boton">
             {aviso.tono === "listo" ? "Ver y descargar el video" : "Ver cómo va"}
           </Link>
@@ -92,14 +104,14 @@ export default async function PaginaComerciales() {
     latidoEstacion(db),
   ]);
   const viva = estacionViva(latido);
-  const enCurso = comerciales.some((c) => avisoDeGrabacion(c).enCurso);
+  const enCurso = comerciales.some((c) => !esperaRevision(c) && avisoDeGrabacion(c).enCurso);
   return (
     <Marco titulo="Comerciales">
       <RefrescoSolo activo={enCurso} />
       <p className="mb-6 max-w-2xl text-sm text-neutral-300">
         Un video publicitario con lo que manda el cliente: su texto (lo lee nuestra voz), sus logos y sus
         capturas. Sale en Neón con personajes: diagramas de neón y sus imágenes moviéndose. Sin marca de
-        canal.
+        canal, en horizontal y en vertical para redes.
       </p>
       {!viva && (
         <p role="status" className="tarjeta mb-6 border-amber-700 text-sm text-amber-200">

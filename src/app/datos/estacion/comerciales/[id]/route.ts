@@ -83,10 +83,13 @@ export async function POST(req: Request, ctx: RouteContext<"/datos/estacion/come
       { modelo: await ajuste(db, "modelo_guion", MODELO_POR_DEFECTO), apiKey: env.ANTHROPIC_API_KEY },
     );
     const guion = esquemaGuion.parse(r.guion);
-    const hecho = await registrarPlanComercial(db, comercial, guion, {
-      modelo: r.modelo,
-      costoUsd: r.costoUsd,
-    });
+    const hecho = await registrarPlanComercial(
+      db,
+      comercial,
+      guion,
+      { modelo: r.modelo, costoUsd: r.costoUsd },
+      d.imagenes,
+    );
     return Response.json({ ok: true, guion_id: hecho.guionId, trabajo_id: hecho.trabajoId });
   } catch (e) {
     if (!(e instanceof PresupuestoAgotado)) console.error("[comerciales/plan]", e);

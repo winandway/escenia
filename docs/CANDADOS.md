@@ -3,24 +3,25 @@
 Cada candado tiene su prueba automática en `pruebas/`. Si alguien rompe la
 pieza, la prueba se pone en rojo antes de que llegue a producción.
 
-| Candado      | Qué protege                                                                                                | Dónde vive                                                       | Prueba                                                        |
-| ------------ | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
-| C-MODELOS-1  | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                                       | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`)  | `pruebas/modelos.test.ts`                                     |
-| C-GASTO-1    | Tope de gasto diario; sin valor válido el tope es $0                                                       | `src/lib/presupuesto.ts`                                         | `pruebas/sesion-presupuesto.test.ts`                          |
-| C-OPINION-1  | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                             | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`            | `pruebas/guion.test.ts` (inserción)                           |
-| C-VARIEDAD-1 | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                                     | `src/lib/variedad.ts`                                            | `pruebas/variedad.test.ts`                                    |
-| C-SUBT-1     | Letras → palabras con tiempos exactos, escenas sin huecos                                                  | `compartido/subtitulos.ts`                                       | `pruebas/subtitulos.test.ts`                                  |
-| C-SESION-1   | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min             | `src/lib/sesion.ts`, `src/lib/clave.ts`                          | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
-| C-BORRADOR-1 | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                          | `src/componentes/useBorrador.ts`                                 | `pruebas/borrador.test.tsx`                                   |
-| C-ESTACION-1 | Solo la Mac con el secreto exacto toma trabajos                                                            | `src/lib/estacion-auth.ts`                                       | `pruebas/escudos.test.ts`                                     |
-| C-PILOTO-1   | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí         | `compartido/tematicas/index.ts`                                  | `pruebas/escudos.test.ts`                                     |
-| C-PROMPT-1   | El prompt no lleva temas concretos y exige no inventar datos                                               | `src/lib/prompt.ts`                                              | `pruebas/escudos.test.ts`                                     |
-| C-PODCAST-1  | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos           | `compartido/podcast.ts`, `src/lib/podcast.ts`                    | `pruebas/podcast*.test.ts*`                                   |
-| C-LATIDO-2   | El latido de la Estación se escribe a lo sumo cada 5 minutos (antes, cada 3 s: 28.332 filas en un día)     | `src/lib/estacion-estado.ts`                                     | `pruebas/estacion-estado.test.ts`                             |
-| C-PODCAST-3  | El estudio dice que no graba («Abrir en el estudio», la línea de Pantalay)                                 | `src/app/podcast/Estudio.tsx`                                    | `pruebas/podcast-estudio.test.tsx`                            |
-| C-PODCAST-4  | Mia se mueve con calma: escuchando no cambia, pensar tras 1,2 s, mínimo 6 s, gestos de la IA (1 cada 25 s) | `compartido/podcast-poses.ts`, `compartido/podcast.ts` (`gesto`) | `pruebas/podcast-poses.test.ts`, `pruebas/podcast.test.ts`    |
-| C-PODCAST-5  | La casa de Mia detrás y su micrófono delante, que nunca le tapa la cara en ninguna de las siete poses      | `compartido/podcast-avatares.ts` (`escenario`)                   | `pruebas/podcast-avatares.test.ts`                            |
-| C-PODCAST-6  | La cabeza de Mia se mueve sola (asiente, se inclina, mira) y el cambio de pose sin doble imagen            | `compartido/podcast-cabeza.ts` + `scripts/podcast-cabeza.ts`     | `pruebas/podcast-cabeza.test.ts`                              |
+| Candado       | Qué protege                                                                                                                                           | Dónde vive                                                                          | Prueba                                                        |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| C-MODELOS-1   | Ningún modelo de IA fuera de la lista puede correr, ni desde Ajustes                                                                                  | `compartido/modelos.ts` (`asegurarModelo`, `asegurarModeloVoz`)                     | `pruebas/modelos.test.ts`                                     |
+| C-GASTO-1     | Tope de gasto diario; sin valor válido el tope es $0                                                                                                  | `src/lib/presupuesto.ts`                                                            | `pruebas/sesion-presupuesto.test.ts`                          |
+| C-OPINION-1   | No se aprueba un guion sin la opinión de Richard (≥ 40 letras)                                                                                        | `src/app/guiones/[id]/acciones.ts` + `OPINION_MINIMA`                               | `pruebas/guion.test.ts` (inserción)                           |
+| C-VARIEDAD-1  | Aviso si un guion se parece a uno reciente o repite estructura 3 veces                                                                                | `src/lib/variedad.ts`                                                               | `pruebas/variedad.test.ts`                                    |
+| C-SUBT-1      | Letras → palabras con tiempos exactos, escenas sin huecos                                                                                             | `compartido/subtitulos.ts`                                                          | `pruebas/subtitulos.test.ts`                                  |
+| C-SESION-1    | Sesión con huella en la base; cerrar sesión la mata en el servidor; 5 intentos por IP / 15 min                                                        | `src/lib/sesion.ts`, `src/lib/clave.ts`                                             | `pruebas/sesion-presupuesto.test.ts`, `pruebas/clave.test.ts` |
+| C-BORRADOR-1  | Ningún formulario pierde lo escrito; contraseñas nunca se guardan                                                                                     | `src/componentes/useBorrador.ts`                                                    | `pruebas/borrador.test.tsx`                                   |
+| C-ESTACION-1  | Solo la Mac con el secreto exacto toma trabajos                                                                                                       | `src/lib/estacion-auth.ts`                                                          | `pruebas/escudos.test.ts`                                     |
+| C-PILOTO-1    | Publicar en Caprichoso TV está cerrado (`PUBLICACION_PERMITIDA`); producir y revisar sus videos sí                                                    | `compartido/tematicas/index.ts`                                                     | `pruebas/escudos.test.ts`                                     |
+| C-PROMPT-1    | El prompt no lleva temas concretos y exige no inventar datos                                                                                          | `src/lib/prompt.ts`                                                                 | `pruebas/escudos.test.ts`                                     |
+| C-PODCAST-1   | El invitado solo sabe su ficha; la leyenda dice la verdad (IA, ficción o real); topes de minutos                                                      | `compartido/podcast.ts`, `src/lib/podcast.ts`                                       | `pruebas/podcast*.test.ts*`                                   |
+| C-COMERCIAL-3 | Un comercial con «revisar» no gasta hasta «Armar el video»; solo se cambian imágenes de la lista de la Mac; un solo trabajo; sale también en vertical | `src/lib/comerciales.ts`, `compartido/comerciales.ts`, `estacion/src/produccion.ts` | `pruebas/comerciales.test.ts` (C-COMERCIAL-3)                 |
+| C-LATIDO-2    | El latido de la Estación se escribe a lo sumo cada 5 minutos (antes, cada 3 s: 28.332 filas en un día)                                                | `src/lib/estacion-estado.ts`                                                        | `pruebas/estacion-estado.test.ts`                             |
+| C-PODCAST-3   | El estudio dice que no graba («Abrir en el estudio», la línea de Pantalay)                                                                            | `src/app/podcast/Estudio.tsx`                                                       | `pruebas/podcast-estudio.test.tsx`                            |
+| C-PODCAST-4   | Mia se mueve con calma: escuchando no cambia, pensar tras 1,2 s, mínimo 6 s, gestos de la IA (1 cada 25 s)                                            | `compartido/podcast-poses.ts`, `compartido/podcast.ts` (`gesto`)                    | `pruebas/podcast-poses.test.ts`, `pruebas/podcast.test.ts`    |
+| C-PODCAST-5   | La casa de Mia detrás y su micrófono delante, que nunca le tapa la cara en ninguna de las siete poses                                                 | `compartido/podcast-avatares.ts` (`escenario`)                                      | `pruebas/podcast-avatares.test.ts`                            |
+| C-PODCAST-6   | La cabeza de Mia se mueve sola (asiente, se inclina, mira) y el cambio de pose sin doble imagen                                                       | `compartido/podcast-cabeza.ts` + `scripts/podcast-cabeza.ts`                        | `pruebas/podcast-cabeza.test.ts`                              |
 
 | C-RANGO-1 | Los videos del almacén se sirven por rangos (206) para que el reproductor funcione y se pueda saltar | `src/lib/rango.ts` + `datos/archivos/[...clave]` | `pruebas/rango.test.ts` |
 
@@ -2016,6 +2017,33 @@ pruebas/podcast-estudio.test.tsx`. Comprobado en rojo el 6 nov 2026 metiendo cad
 pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado en rojo antes de construir cada parte (el origen, el tipo y el avatar: las pruebas fallaban y después pasaron) y metiendo a propósito una columna nueva en la semilla de `schema.sql` (se puso en rojo «schema.sql corre sin romperse sobre una base vieja»).
   - **Qué NO tocar:** no poner `ALTER TABLE` en `schema.sql`; no hacer que un origen desconocido caiga en «real»;
     no quitar la regla de «personaje creado para el podcast» del prompt de ficción.
+
+## C-COMERCIAL-3 — Ver y corregir el plan del comercial antes de armar, y su versión vertical (8 nov 2026)
+
+- **Qué faltaba:** el plan de un comercial (qué imagen entra en cada frase) se armaba y se producía de una:
+  si una imagen no iba, había que rehacer todo y pagar la voz otra vez. Y el comercial salía solo en 16:9,
+  sin versión para Instagram, TikTok y Facebook.
+- **Qué se hizo:**
+  - En el formulario, la casilla «Quiero ver el plan antes de armar» (marcada por defecto). Con ella, el
+    guion nace en **borrador y sin trabajo** (`registrarPlanComercial`, columna `comerciales.revisar`), y la
+    lista de imágenes que mandó la Mac queda en `comerciales.imagenes`.
+  - La página `/comerciales/<id>` muestra cada parte con su texto y un selector por imagen (con miniatura si
+    está en la biblioteca). Se cambia o se quita una imagen; la narración no se toca nunca
+    (`cambiarImagenesDelPlan`). «Armar el video» (`armarComercial`) aprueba el guion y crea UN trabajo,
+    aunque se toque dos veces. Ya armado, el plan no se cambia.
+  - La Estación arma además el video entero en 9:16 (`opciones.vertical` en `producir`): es la composición
+    de los Shorts **sin ventana**, así que no lleva título de Short ni cierre de «ver video completo». Se
+    sube como un segundo video del guion. No gasta nada: es solo armado en la Mac.
+- **Base en vivo:** las columnas `revisar` y `imagenes` se agregaron el 8 nov 2026 con `ALTER TABLE` por
+  HTTP (una sola vez; `schema.sql` las trae para bases nuevas). Desde la Mac (`pedir-comercial.ts`) sin
+  decir nada se arma de una, como antes.
+- **Cómo se comprueba:** `pruebas/comerciales.test.ts`, bloque C-COMERCIAL-3. Comprobado en rojo poniendo
+  `revisar = false` fijo en `registrarPlanComercial`. En pantalla (panel empaquetado, 375 px): la lista dice
+  «El plan está listo…» con «Ver el plan»; se cambió una imagen, se quitó otra y «Armar el video» dejó el
+  guion aprobado con un trabajo. El vertical se probó sin gasto con
+  `cd estacion && npx tsx src/probar-vertical.ts t40` (1080×1920, 62 s, sin título ni cierre).
+- **Qué NO tocar:** no crear el trabajo antes de «Armar el video» cuando `revisar = 1`; no dejar elegir un
+  archivo que no esté en la lista de la Mac; no usar la ventana de Shorts para el vertical del comercial.
 
 ## C-LATIDO-2 — El latido de la Estación no se come la base (7 nov 2026)
 

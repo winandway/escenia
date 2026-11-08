@@ -21,6 +21,10 @@ un PDF de diecinueve capturas de páginas.
    como lo mandó el cliente, en español o en inglés), quién narra (la voz femenina o la
    de Richard), **las carpetas** de imágenes que se usan y, si hace falta, instrucciones
    («que pasen todos los logos cuando habla de sus trabajos»). Botón «Pedir el video».
+   Viene marcada la casilla **«Quiero ver el plan antes de armar»**: cuando el plan está
+   listo, la lista dice «El plan está listo…» y el botón **«Ver el plan»** abre cada frase
+   del texto con la imagen que entra en ese momento. Se cambia o se quita la que no vaya y
+   se toca **«Armar el video»**. Hasta ahí no se gasta nada (C-COMERCIAL-3).
    Después, en la lista, se ve cómo avanza y «Ver y descargar el video».
 
 El formato es **Neón con personajes** siempre, pero en un comercial **no hay fotos de
@@ -29,7 +33,8 @@ suyo. Las «personas» son sus imágenes: cada logo y cada captura entra cuando 
 dice su frase. Lo demás son diagramas de neón (los pasos de su servicio, sus paquetes).
 
 **Sin marca de canal, sin cierre de «suscríbete» y sin Shorts**: el video es del
-cliente. Sale el video horizontal con su miniatura.
+cliente. Sale el video horizontal con su miniatura **y el mismo video entero en
+vertical (9:16)** para Instagram, TikTok y Facebook, sin título ni cierre de Short.
 
 ## Lo que pasa por dentro
 
@@ -89,8 +94,7 @@ panel /comerciales ──▶ tabla `comerciales` (subida)
 ## Lo que falta
 
 - Elegir el momento y el texto de la miniatura desde el panel (como en los demás).
-- Una versión vertical (9:16) del comercial, para redes.
-- Que Richard pueda ver el plan (qué imagen va en cada frase) y cambiar una antes de armar.
+- Cambiar en el plan un diagrama o un texto en grande (hoy se cambian y se quitan imágenes).
 
 ## Las piezas
 
