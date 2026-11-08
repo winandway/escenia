@@ -4,7 +4,7 @@
 #   docker build -f estacion/contenedor/Dockerfile -t escenia-estacion .
 # Las piezas que hoy usan herramientas solo de macOS (sips, el recorte de personas con Vision)
 # todavía no corren aquí: ver «Lo que falta» en planes/TALLER-NUBE.md.
-FROM node:24-bookworm-slim
+FROM public.ecr.aws/docker/library/node:24-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg poppler-utils ca-certificates fonts-noto-color-emoji \
