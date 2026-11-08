@@ -179,7 +179,11 @@ export async function atenderComercial(): Promise<boolean> {
     );
     await avisar("armando el plan del video con tus imágenes");
     const r = await panel.planDeComercial(c.id, paraElPlan(imagenes));
-    console.log(`[${hora()}] Plan listo: guion ${r.guion_id}, trabajo #${r.trabajo_id}.`);
+    console.log(
+      r.trabajo_id
+        ? `[${hora()}] Plan listo: guion ${r.guion_id}, trabajo #${r.trabajo_id}.`
+        : `[${hora()}] Plan listo: guion ${r.guion_id}. Espera a que Richard lo revise y toque «Armar el video» (C-COMERCIAL-3).`,
+    );
   } catch (e) {
     const msj = e instanceof Error ? e.message : String(e);
     console.error(`[${hora()}] Falló el comercial #${c.id}:`, msj);
