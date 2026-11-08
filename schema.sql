@@ -246,7 +246,10 @@ CREATE TABLE IF NOT EXISTS comerciales (
   -- `imagenes`: la lista (JSON) que mandó la Mac con el plan, para poder cambiar una imagen.
   -- En la base en vivo se agregaron con ALTER TABLE una sola vez (ver C-COMERCIAL-3).
   revisar INTEGER NOT NULL DEFAULT 0,
-  imagenes TEXT NOT NULL DEFAULT '[]'
+  imagenes TEXT NOT NULL DEFAULT '[]',
+  -- C-COMERCIAL-4 (8 nov 2026): la miniatura que Richard eligió en el panel (JSON: archivo, titulo,
+  -- frase, estado pedida|tomada|hecha|error). Vacía = la automática. En vivo: ALTER TABLE una vez.
+  portada TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS comerciales_por_estado ON comerciales(estado, id);
 
