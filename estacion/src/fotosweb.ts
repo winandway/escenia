@@ -8,6 +8,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { aJpeg, medirImagen } from "./medidas";
 import {
   candidatasDeSerper,
   elegirCandidata,
@@ -32,9 +33,7 @@ export function fotosWebActivas(): boolean {
 
 async function dimensiones(ruta: string): Promise<{ ancho: number; alto: number } | null> {
   try {
-    const { stdout } = await exec("sips", ["-g", "pixelWidth", "-g", "pixelHeight", ruta]);
-    const ancho = Number(/pixelWidth:\s*(\d+)/.exec(stdout)?.[1]);
-    const alto = Number(/pixelHeight:\s*(\d+)/.exec(stdout)?.[1]);
+    const { ancho, alto } = await medirImagen(ruta);
     return ancho > 0 && alto > 0 ? { ancho, alto } : null;
   } catch {
     return null;
@@ -98,7 +97,7 @@ export async function buscarFotoWeb(
         const crudo = path.join(carpeta, `${nombre}.descarga`);
         await writeFile(crudo, cuerpo);
         // A JPEG normalizado (quita webp/png raros) y como mucho 2048 px.
-        await exec("sips", ["-s", "format", "jpeg", "-Z", "2048", crudo, "--out", destino]);
+        await aJpeg(crudo, destino, 2048);
         await exec("rm", ["-f", crudo]);
       }
       const dim = await dimensiones(destino);

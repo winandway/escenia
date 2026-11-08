@@ -9,6 +9,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import { medirImagen } from "./medidas";
 import { config } from "./config";
 import { panel, type ImagenDelPanel } from "./panel";
 
@@ -47,18 +48,12 @@ async function paginaVacia(ruta: string): Promise<boolean> {
 
 /** Medidas de una imagen y si tiene fondo transparente (lo dice el propio archivo). */
 async function medir(ruta: string): Promise<{ ancho: number; alto: number; transparente: boolean }> {
-  const { stdout } = await exec("sips", ["-g", "pixelWidth", "-g", "pixelHeight", "-g", "hasAlpha", ruta]);
-  // Cada dato sale en su línea («  pixelWidth: 561»).
-  const valor = (clave: string) =>
-    stdout
-      .split("\n")
-      .find((l) => l.trim().startsWith(`${clave}:`))
-      ?.split(":")[1]
-      ?.trim() ?? "";
+  // En la Mac con sips; en Linux (el taller en la nube) con ffprobe (C-TALLER-1).
+  const m = await medirImagen(ruta);
   return {
-    ancho: Number(valor("pixelWidth")) || 1,
-    alto: Number(valor("pixelHeight")) || 1,
-    transparente: valor("hasAlpha") === "yes" && /\.(png|webp)$/i.test(ruta),
+    ancho: m.ancho || 1,
+    alto: m.alto || 1,
+    transparente: m.alfa && /\.(png|webp)$/i.test(ruta),
   };
 }
 

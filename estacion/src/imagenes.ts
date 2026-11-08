@@ -6,8 +6,7 @@ import { existsSync } from "node:fs";
 import { copyFile, link, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { aJpeg } from "./medidas";
 import {
   asegurarModeloImagen,
   IMAGENES_PERMITIDAS,
@@ -17,8 +16,6 @@ import {
 } from "@compartido/modelos";
 import { promptDeBoceto } from "@compartido/cancion";
 import { config } from "./config";
-
-const exec = promisify(execFile);
 
 export type ImagenIA = { ruta: string; ancho: number; alto: number; credito: string; costoUsd: number };
 
@@ -64,7 +61,7 @@ async function reducirReferencia(ruta: string): Promise<{ dataUri: string; huell
     // A un archivo propio de este proceso y luego se renombra: dos procesos que reducen la misma
     // foto a la vez (dos escenas de Chase en paralelo, 8 oct 2026) ya no se pisan.
     const temporal = `${reducida}.${process.pid}.${Date.now()}.jpg`;
-    await exec("sips", ["-s", "format", "jpeg", "-Z", "1280", ruta, "--out", temporal]);
+    await aJpeg(ruta, temporal, 1280);
     await rename(temporal, reducida);
   }
   return { dataUri: `data:image/jpeg;base64,${(await readFile(reducida)).toString("base64")}`, huella };
