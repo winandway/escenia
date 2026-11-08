@@ -6,33 +6,11 @@ import { loadFont } from "@remotion/google-fonts/Inter";
 import { loadFont as loadSerif } from "@remotion/google-fonts/PlayfairDisplay";
 import { posicionObjeto } from "./enfoque";
 import { FONDO_MARCA, LogoRedondo, mono } from "./Marca";
+import { contenidoMiniatura } from "./miniatura-contenido";
 import type { PropsVideo } from "./props";
 
 const { fontFamily } = loadFont("normal", { weights: ["700", "900"], subsets: ["latin", "latin-ext"] });
 const { fontFamily: serif } = loadSerif("normal", { weights: ["900"], subsets: ["latin", "latin-ext"] });
-
-/** Copia de textosMiniatura (compartido/miniatura.ts): la plantilla no puede importar de fuera. */
-function textosMiniatura(titulo: string): { nombre: string; gancho: string } {
-  const [antes, ...resto] = titulo.split(/[:—–]/);
-  const recortar = (s: string, max: number) => {
-    const limpio = s.replace(/\s+/g, " ").trim();
-    return limpio.length <= max ? limpio : `${limpio.slice(0, max - 1).replace(/\s+\S*$/u, "")}…`;
-  };
-  return { nombre: recortar(antes ?? titulo, 28), gancho: recortar(resto.join(" "), 60) };
-}
-
-/** La foto y los textos de la miniatura: los que eligió Richard en el panel (C-COMERCIAL-4) o, si no
- * eligió nada, la primera foto con cara y los textos sacados del título. */
-export function contenidoMiniatura(p: PropsVideo): {
-  foto: { ruta: string; ancho: number; alto: number; enfoque: { x: number; y: number } | null } | null;
-  nombre: string;
-  gancho: string;
-} {
-  if (p.portada)
-    return { foto: { ...p.portada.foto, enfoque: null }, nombre: p.portada.nombre, gancho: p.portada.gancho };
-  const fotos = p.escenas.flatMap((e) => [...(e.foto ? [e.foto] : []), ...e.fotos]);
-  return { foto: fotos.find((f) => f.enfoque) ?? fotos[0] ?? null, ...textosMiniatura(p.titulo) };
-}
 
 export const Miniatura: React.FC<PropsVideo> = (p) => {
   const { width, height } = useVideoConfig();

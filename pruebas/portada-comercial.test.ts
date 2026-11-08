@@ -13,7 +13,7 @@ import {
   tomarSiguienteComercial,
   tomarSiguientePortada,
 } from "@/lib/comerciales";
-import { contenidoMiniatura } from "../estacion/src/remotion/Miniatura";
+import { contenidoMiniatura } from "../estacion/src/remotion/miniatura-contenido";
 import { propsConPortada } from "../estacion/src/portada-elegida";
 
 const PEDIDO = esquemaComercialNuevo.parse({
