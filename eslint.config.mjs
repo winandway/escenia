@@ -22,7 +22,14 @@ export default defineConfig([
   },
   {
     // El guion del agente del podcast lee y guarda la clave en una carpeta fija de la Mac (~/.config).
-    files: ["scripts/podcast-agente.ts", "scripts/podcast-probar-voz.ts"],
+    // Lo mismo los de YouTube (la llave en ~/.config/motor-escenia y los videos en estacion/out).
+    files: [
+      "scripts/podcast-agente.ts",
+      "scripts/podcast-probar-voz.ts",
+      "scripts/subir-youtube.ts",
+      "scripts/metricas-youtube.ts",
+      "scripts/autorizar-youtube.ts",
+    ],
     rules: { "security/detect-non-literal-fs-filename": "off" },
   },
   {

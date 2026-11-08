@@ -4,6 +4,7 @@
 - Candados y canario: [docs/CANDADOS.md](docs/CANDADOS.md).
 - La Estación (la Mac): [docs/ESTACION.md](docs/ESTACION.md).
 - Auditoría de la API de YouTube: [docs/AUDITORIA-YOUTUBE.md](docs/AUDITORIA-YOUTUBE.md).
+- Subir a YouTube en privado, UTM y métricas (Fase 3, C-YOUTUBE-1): [docs/YOUTUBE.md](docs/YOUTUBE.md).
 - Contrato de YaDominios Cloud (sin red): [docs/CONTRATO-YADOMINIOS.md](docs/CONTRATO-YADOMINIOS.md).
 - Fotos reales de internet (Serper): [docs/FOTOS-INTERNET.md](docs/FOTOS-INTERNET.md).
 - Avatar parlante (plan): [docs/AVATAR.md](docs/AVATAR.md).

@@ -52,6 +52,7 @@
 - [x] Nombre y @ del canal de tecnología: ya salen solos como «Full Código» y «@FullCodigo» (30 sep 2026); en Ajustes se pueden cambiar.
 - 👤 Seguir generando las pistas de docs/MUSICA.md en Suno (ya hay 4 de salsa en /Users/windocellc/Motor-Escenia/music-cortinas-libre-de-copy/) → cada temática tendrá su música; sin pista que encaje, el video sale con la «neutral» o sin música.
 - 👤 Pedir la auditoría de la API de YouTube con el texto de docs/AUDITORIA-YOUTUBE.md.
+- 👤 YouTube desde la Mac (docs/YOUTUBE.md, «Lo que hace falta»): en Google Cloud, proyecto Escenia, crear un «ID de cliente de OAuth» tipo App de escritorio y dejar el JSON en Descargas → la IA autoriza la Mac (Richard toca «Permitir» una vez) y desde ahí los videos suben solos en privado, con su miniatura y sus enlaces con UTM.
 
 ## Fila (lo hace la IA)
 
@@ -145,7 +146,8 @@
 - [ ] Fase 2: biblioteca de recursos, cortes comerciales
 - [ ] ⏸ EN PAUSA (29 sep 2026, lo pidió Richard: primero otras cosas) Avatar parlante de Richard. Plan completo y guardado en docs/AVATAR.md (precios verificados el 29 sep 2026). Para retomarlo: foto en /Users/windocellc/Motor-Escenia/avatar/richard.jpg + su visto bueno a la prueba de 20 s ($1.12).
 - [x] Fase 3 (parte): textos de YouTube automáticos al terminar cada video: título, títulos de shorts, descripción y 30 palabras clave, con copiar (27 sep 2026, C-PUBLICACION-1).
-- [ ] Fase 3: subida a YouTube (privado hasta la auditoría), `containsSyntheticMedia`, UTM, métricas
+- [x] Fase 3 (8 nov 2026, C-YOUTUBE-1, docs/YOUTUBE.md): subida a YouTube en privado con `containsSyntheticMedia`, miniatura y UTM; métricas sin escribir en la base. Falta la llave (👤 arriba).
+- [ ] Fase 3: botón «Subir a YouTube en privado» en la página del guion y las métricas en el panel.
 - [ ] Fase 4: radar (disparado desde la Mac, la plataforma no tiene cron)
 
 - [x] (IA) Revisión de prueba de la última compilación pedida y aprobada (la 6, 1 nov 2026).

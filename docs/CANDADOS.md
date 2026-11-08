@@ -2045,6 +2045,21 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
 - **Qué NO tocar:** no crear el trabajo antes de «Armar el video» cuando `revisar = 1`; no dejar elegir un
   archivo que no esté en la lista de la Mac; no usar la ventana de Shorts para el vertical del comercial.
 
+## C-YOUTUBE-1 — La subida a YouTube es siempre en privado (8 nov 2026)
+
+- **Qué es:** la Fase 3 (docs/YOUTUBE.md). La Mac sube una pieza (largo o Short) de un guion
+  aprobado con sus textos del panel, su miniatura y la marca de contenido sintético; los enlaces
+  de la descripción llevan UTM; las métricas se leen sin escribir en la base.
+- **Qué protege:** que nada quede público sin que Richard lo vea en Studio (`privacyStatus`
+  fijo en «private», y `subirVideo` se niega si no lo es); que un comercial de un cliente no
+  vaya a nuestros canales; que un guion sin aprobar no se suba; que no se suba dos veces lo mismo.
+- **Cómo se comprueba:** `pruebas/youtube.test.ts` (todo simulado). Comprobado en rojo
+  cambiando «private» por «public» (fallan dos) y quitando la excepción de los enlaces de
+  YouTube en `compartido/utm.ts` (falla una). En seco con datos reales:
+  `estacion/node_modules/.bin/tsx scripts/subir-youtube.ts --guion 19 --pieza largo --prueba`.
+- **Qué NO tocar:** no hacer configurable la privacidad; no pedir más permisos que subir y leer
+  (`PERMISOS_YOUTUBE`); la llave vive solo en `~/.config/motor-escenia/youtube.json`.
+
 ## C-LATIDO-2 — El latido de la Estación no se come la base (7 nov 2026)
 
 - **Qué se rompió:** el parte de consumo de YaDominios del 7 nov (id 1a1b61a03dfe3186) puso a Escenia como la
