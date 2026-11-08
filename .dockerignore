@@ -1,0 +1,17 @@
+# Lo único que entra al contenedor de la Estación es lo que copia estacion/contenedor/Dockerfile.
+**/node_modules
+**/.env
+**/.dev.vars
+estacion/out
+estacion/cache
+estacion/voz
+.open-next
+.next
+out-deploy
+.dist-worker
+.git
+planes
+encargos
+publicidad
+avatar
+monigotes
