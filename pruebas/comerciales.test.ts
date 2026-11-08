@@ -541,6 +541,12 @@ describe("comerciales: ver y corregir el plan antes de armar (C-COMERCIAL-3)", (
     expect(
       (await db.uno<{ estado: string }>("SELECT estado FROM guiones WHERE id = ?", [r.guionId]))?.estado,
     ).toBe("aprobado");
+    // Un corte dejó el guion aprobado SIN trabajo: el siguiente toque lo crea (y uno solo).
+    await db.ejecutar("DELETE FROM trabajos");
+    const repuesto = await armarComercial(db, id);
+    expect(repuesto).toBeGreaterThan(0);
+    expect(await armarComercial(db, id)).toBe(repuesto);
+    expect((await db.uno<{ n: number }>("SELECT COUNT(id) AS n FROM trabajos"))?.n).toBe(1);
     // Ya armado, el plan no se cambia.
     expect(
       await guardarCambiosDelPlan(db, id, [{ escena: 0, plano: 0, archivo: "01 Dame Mexico.png" }]),

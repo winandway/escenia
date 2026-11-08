@@ -31,6 +31,8 @@ export async function guardarPlan(datos: FormData): Promise<RespuestaPlan> {
   const armar = datos.get("accion") === "armar";
   const { db } = await contexto();
   const guardado = await guardarCambiosDelPlan(db, id.data, await cambiosDelFormulario(datos));
+  // Un segundo toque a «Armar» con el video ya en marcha no es un error: se lleva a la lista.
+  if (!guardado && armar && (await armarComercial(db, id.data))) return { ok: true, error: "", armado: true };
   if (!guardado)
     return {
       ok: false,

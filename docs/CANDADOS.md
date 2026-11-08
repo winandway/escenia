@@ -2042,6 +2042,11 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   «El plan está listo…» con «Ver el plan»; se cambió una imagen, se quitó otra y «Armar el video» dejó el
   guion aprobado con un trabajo. El vertical se probó sin gasto con
   `cd estacion && npx tsx src/probar-vertical.ts t40` (1080×1920, 62 s, sin título ni cierre).
+- **Revisión de calidad (8 nov 2026):** «Armar el video» crea el trabajo solo si el guion no tiene
+  ninguno (un corte entre aprobar y crear el trabajo ya no deja el comercial trabado; prueba con el
+  trabajo borrado, comprobada en rojo); si el vertical falla, el horizontal se entrega igual y se
+  avisa; guardar el plan sin cambios no escribe. Un comercial armado ANTES de este cambio y que se
+  retome sin entregar sale sin vertical: se pide «Volver a producir» si hace falta.
 - **Qué NO tocar:** no crear el trabajo antes de «Armar el video» cuando `revisar = 1`; no dejar elegir un
   archivo que no esté en la lista de la Mac; no usar la ventana de Shorts para el vertical del comercial.
 

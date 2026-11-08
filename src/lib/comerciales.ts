@@ -280,9 +280,12 @@ export async function guardarCambiosDelPlan(
     cambios,
     imagenesDe(p.comercial).map((i) => i.nombre),
   );
+  const json = JSON.stringify(esquemaGuion.parse(nuevo));
+  // Mirar no escribe: si nada cambió, no se toca la base.
+  if (json === JSON.stringify(p.guion)) return true;
   const r = await db.ejecutar(
     "UPDATE guiones SET contenido = ?, actualizado_en = datetime('now') WHERE id = ? AND estado = 'borrador'",
-    [JSON.stringify(esquemaGuion.parse(nuevo)), p.guionId],
+    [json, p.guionId],
   );
   return r.cambios > 0;
 }
@@ -294,11 +297,17 @@ export async function guardarCambiosDelPlan(
 export async function armarComercial(db: BaseDatos, id: number): Promise<number | null> {
   const c = await comercialPorId(db, id);
   if (!c?.guion_id || c.estado !== "planeada") return null;
-  const aprobado = await db.ejecutar(
+  await db.ejecutar(
     "UPDATE guiones SET estado = 'aprobado', actualizado_en = datetime('now') WHERE id = ? AND estado = 'borrador'",
     [c.guion_id],
   );
-  if (aprobado.cambios === 0) return (await planDeComercial(db, id))?.trabajoId || null;
-  const t = await db.ejecutar("INSERT INTO trabajos (guion_id, tipo) VALUES (?, 'producir')", [c.guion_id]);
-  return t.ultimoId ?? null;
+  // El trabajo nace solo si no hay ninguno: si un corte dejó el guion aprobado sin trabajo, el
+  // siguiente toque lo crea; si ya había, no se duplica (lo encontró el revisor el 8 nov 2026).
+  await db.ejecutar(
+    `INSERT INTO trabajos (guion_id, tipo) SELECT ?, 'producir'
+     WHERE EXISTS (SELECT 1 FROM guiones WHERE id = ? AND estado = 'aprobado')
+       AND NOT EXISTS (SELECT 1 FROM trabajos WHERE guion_id = ?)`,
+    [c.guion_id, c.guion_id, c.guion_id],
+  );
+  return (await planDeComercial(db, id))?.trabajoId || null;
 }

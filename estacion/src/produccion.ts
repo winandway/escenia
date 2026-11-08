@@ -591,15 +591,22 @@ export async function producir(
   if (opciones.vertical && !cancion) {
     await avisar("armando la versión vertical (9:16) para redes", 82);
     const salida = path.join(carpetaTrabajo, "video-9x16.mp4");
-    const rv = await renderizar(
-      "TechExplainerShort",
-      { ...props, ventana: null },
-      carpetaPublica,
-      salida,
-      () => {},
-      serveUrl,
-    );
-    vertical = { ruta: salida, bytes: rv.bytes, duracionSeg: rv.duracionSeg };
+    // Si el vertical falla, el horizontal ya armado se entrega igual (no se rehace todo): se avisa.
+    try {
+      const rv = await renderizar(
+        "TechExplainerShort",
+        { ...props, ventana: null },
+        carpetaPublica,
+        salida,
+        () => {},
+        serveUrl,
+      );
+      vertical = { ruta: salida, bytes: rv.bytes, duracionSeg: rv.duracionSeg };
+    } catch (e) {
+      const msj = e instanceof Error ? e.message : String(e);
+      console.error(`  La versión vertical falló (sale solo la horizontal): ${msj}`);
+      await avisar(`la versión vertical falló (sale solo la horizontal): ${msj.slice(0, 120)}`, 82);
+    }
   }
 
   // Shorts 9:16: el mismo video en trozos, cada uno con su título y su cierre. (Un comercial no lleva.)
