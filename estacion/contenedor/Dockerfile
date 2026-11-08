@@ -25,4 +25,7 @@ COPY estacion/src ./src
 COPY estacion/recursos ./recursos
 COPY estacion/remotion.config.ts estacion/tsconfig.json ./
 
-CMD ["npx", "tsx", "src/estacion.ts"]
+EXPOSE 8080
+# En la nube arranca el servidor del taller (src/taller.ts); en una máquina propia, la Estación:
+#   docker run … escenia-estacion npx tsx src/estacion.ts
+CMD ["npx", "tsx", "src/taller.ts"]

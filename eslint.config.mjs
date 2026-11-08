@@ -49,6 +49,9 @@ export default defineConfig([
     "next-env.d.ts",
     "cloudflare-env.d.ts",
     "estacion/node_modules/**",
+    // El taller en la nube (Cloudflare Containers) tiene sus tipos dentro de taller/.
+    "taller/node_modules/**",
+    "taller/.wrangler/**",
     "estacion/out/**",
     "estacion/cache/**",
     "out-deploy/**",

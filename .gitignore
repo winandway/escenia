@@ -51,6 +51,8 @@ next-env.d.ts
 /playwright-report
 # estación
 estacion/node_modules
+taller/node_modules
+taller/.wrangler
 estacion/out
 estacion/cache
 estacion/.env

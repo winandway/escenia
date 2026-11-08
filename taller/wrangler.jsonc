@@ -1,0 +1,22 @@
+{
+  // El taller en la nube de Escenia (C-TALLER-2). Cuenta: la de Windoce (4d9e…556c), comprobada
+  // con sus trabajadores conocidos antes de crear nada. El contenedor sale del mismo Dockerfile que
+  // la Estación (estacion/contenedor/Dockerfile), armado desde la raíz del proyecto.
+  "name": "escenia-taller",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "account_id": "4d9e131f2c18bc10ac4700d689d5556c",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "containers": [
+    {
+      "class_name": "Taller",
+      "image": "../estacion/contenedor/Dockerfile",
+      "image_build_context": "..",
+      "instance_type": "standard-4",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": { "bindings": [{ "name": "TALLER", "class_name": "Taller" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Taller"] }]
+}
