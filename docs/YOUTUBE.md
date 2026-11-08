@@ -36,8 +36,13 @@ Losupe, Beellon) se filtra por campaña para ver qué trajo cada video.
    API v3» activada.
 2. **Credenciales → Crear credenciales → ID de cliente de OAuth → App de escritorio**, nombre
    «Escenia Mac». Descargar el JSON.
-3. Pasarle a la IA ese archivo (queda en Descargas). La IA corre `autorizar-youtube.ts`; se abre
-   el navegador, Richard elige la cuenta del canal y toca «Permitir». Desde ahí no se vuelve a pedir.
+3. Dejar ese archivo en Descargas y nada más. **La Estación lo ve sola** (mira cada 10 minutos,
+   C-YOUTUBE-2), lo guarda en `~/.config/motor-escenia/youtube-cliente.json`, abre el navegador de
+   la Mac y espera hasta 6 horas a que Richard elija la cuenta del canal y toque «Permitir». Si
+   nadie toca, lo vuelve a abrir una hora después. Con la llave guardada no se vuelve a pedir ni se
+   mira Descargas. (A mano, si hiciera falta: `scripts/autorizar-youtube.ts`.)
+   Si macOS no deja que la Estación lea Descargas, el aviso queda en su registro y la IA copia el
+   archivo a `~/.config/motor-escenia/youtube-cliente.json`, que la Estación también mira.
 
 Mientras la pantalla de consentimiento esté «en prueba», Google vence el permiso a los 7 días:
 hay que pasarla a «En producción» (no necesita revisión para uso propio) para que no se venza.
