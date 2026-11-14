@@ -19,7 +19,8 @@ import {
 } from "remotion";
 import { sitiosDeNodos, type Sitio } from "./diagrama-sitios";
 import { usePresentador } from "./Presentador";
-import { Baldosa, iconoNeon } from "./IconosNeon";
+import { Baldosa, iconoNeon, logoNeon } from "./IconosNeon";
+import { logoDeMarca } from "./logos";
 import { FPS, type DiagramaVideo } from "./props";
 
 const { fontFamily: anton } = cargarAnton("normal", { weights: ["400"], subsets: ["latin", "latin-ext"] });
@@ -614,11 +615,18 @@ export const DiagramaNeon: React.FC<{
                     transform={`translate(0 ${-flota - (1 - Math.min(1, entra)) * (local >= 0 ? 46 : 0)}) scale(${local >= 0 ? 0.82 + entra * 0.18 : 0.92})`}
                     style={{ filter: prendido > 0 ? brillo(color, esActivo ? 1.15 : 0.6) : undefined }}
                   >
-                    {iconoNeon(
-                      n.icono,
-                      prendido > 0 ? color : colores.objeto,
-                      prendido > 0 ? (color === colores.luz ? colores.objeto : colores.luz) : colores.objeto,
-                    )}
+                    {(() => {
+                      const c = prendido > 0 ? color : colores.objeto;
+                      const c2 =
+                        prendido > 0
+                          ? color === colores.luz
+                            ? colores.objeto
+                            : colores.luz
+                          : colores.objeto;
+                      // Si el objeto nombra a una empresa, va su logo en vez del ícono (C-LOGOS-1).
+                      const logo = logoDeMarca(n.etiqueta);
+                      return logo ? logoNeon(logo, c, c2) : iconoNeon(n.icono, c, c2);
+                    })()}
                   </g>
                 </g>
               </g>

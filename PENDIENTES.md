@@ -69,7 +69,7 @@
 - [x] Presentador: la IA arma el plan sola desde la transcripción (5 oct 2026; probado en vivo con la grabación de prueba: copió las 110 palabras y armó 3 diagramas).
 - [x] Presentador: subir la grabación desde el panel (por partes) y que la Estación la tome sola (5 oct 2026). Página «Grabaciones», con «Probar en otro formato» para comparar diseños con el mismo video. Candado C-GRABACIONES-1.
 - [x] Formato «Neón con personajes» (`mixto`, 5 oct 2026): cuarta opción al subir una grabación; diagramas de neón y las personas nombradas, dibujadas sobre el neón. Candado C-FORMATO-MIXTO-1.
-- [ ] Neón con personajes: que también salgan los logos de las empresas que se nombran (OpenAI, Google), no solo las personas.
+- [x] Neón con personajes: los logos de las empresas que se nombran (13 nov 2026, C-LOGOS-1): placa de vidrio con el logo libre de Simple Icons; OpenAI, Microsoft y Amazon (que esa biblioteca no trae) salen con su nombre en neón.
 - [ ] Presentador: corregir el plan (un diagrama, una foto) desde el panel antes de armar.
 - [x] Presentador: el fondo verde se encuentra donde esté y se borra sin comerse la ropa; el principio y el final mudos se cortan solos (5 oct 2026, con la primera grabación real de Richard). Candado C-CROMA-1.
 - [x] Los nombres de sus productos salen bien escritos aunque la transcripción los escriba mal («Billon» → «Beellon»; 5 oct 2026). Candado C-NOMBRES-1.

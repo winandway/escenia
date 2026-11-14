@@ -692,3 +692,71 @@ export const Baldosa: React.FC<{ color: string; lado?: number; encendida: number
     />
   </g>
 );
+
+/**
+ * El logo de una empresa como objeto de neón (C-LOGOS-1): una placa de vidrio parada sobre la baldosa,
+ * con el logo dibujado en la luz del objeto. Si la marca no tiene trazo libre (OpenAI), va su nombre.
+ */
+export function logoNeon(
+  logo: { trazo: string | null; sigla: string | null },
+  c: string,
+  c2: string,
+): ReactNode {
+  const ancho = 112;
+  const alto = 112;
+  const arriba = -alto - 18;
+  const lado = 70;
+  return (
+    <g>
+      <rect
+        x={-ancho / 2}
+        y={arriba}
+        width={ancho}
+        height={alto}
+        rx={18}
+        fill={c}
+        fillOpacity={0.12}
+        stroke={c}
+        strokeWidth={GROSOR}
+      />
+      <line
+        x1={-ancho / 2 + 14}
+        y1={arriba + alto}
+        x2={0}
+        y2={-6}
+        stroke={c2}
+        strokeWidth={1.6}
+        strokeOpacity={0.6}
+      />
+      <line
+        x1={ancho / 2 - 14}
+        y1={arriba + alto}
+        x2={0}
+        y2={-6}
+        stroke={c2}
+        strokeWidth={1.6}
+        strokeOpacity={0.6}
+      />
+      {logo.trazo ? (
+        <g transform={`translate(${-lado / 2} ${arriba + (alto - lado) / 2}) scale(${lado / 24})`}>
+          <path d={logo.trazo} fill={c} fillOpacity={0.85} stroke={c2} strokeWidth={0.35} />
+        </g>
+      ) : (
+        <text
+          x={0}
+          y={arriba + alto / 2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill={c}
+          stroke={c2}
+          strokeWidth={0.8}
+          fontFamily="Inter, Helvetica, Arial, sans-serif"
+          fontWeight={800}
+          fontSize={Math.min(34, (ancho - 16) / Math.max(3, (logo.sigla ?? "").length * 0.62))}
+        >
+          {logo.sigla}
+        </text>
+      )}
+    </g>
+  );
+}

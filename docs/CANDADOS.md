@@ -2317,3 +2317,28 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   rojo antes de escribir el código).
 - **Qué NO tocar:** no juntar dos palabras en minúscula sin mayúscula ni dominio («eso ya dominios lo
   teníamos» se queda igual); no pasar de 100 términos (ElevenLabs cobra 20 s mínimo por transcripción).
+
+## C-LOGOS-1 — En el neón, la empresa que se nombra sale con su logo (13 nov 2026)
+
+- **Qué se pidió:** Richard, 5 oct 2026: que en Neón con personajes salgan también los logos de las empresas.
+- **Qué se hizo:** `logoDeMarca(etiqueta)` (estacion/src/remotion/logos.ts, dentro de la carpeta de la
+  plantilla porque Remotion no ve `@compartido`) reconoce la marca por la etiqueta del objeto (sola o seguida
+  de otras palabras; las de una o dos letras, como «X», solo exactas) y `Diagrama.tsx` dibuja `logoNeon`
+  (IconosNeon.tsx) en vez del ícono. Trazos de `simple-icons` **16.36.0 fijo** (CC0); las marcas que no trae
+  van con su nombre en neón. Las reglas de la IA (plan-grabacion.ts y prompt.ts) piden la empresa como objeto
+  con su nombre tal cual. **No se tocó el esquema del diagrama** (C-ESTILOS-1: no caben más opcionales).
+- **Cómo se comprueba:** `npx vitest run pruebas/logos-neon.test.ts` (en rojo sin el módulo, comprobado el 13
+  nov 2026). A ojo: `npx tsx src/muestra-estilos.ts --solo neon` con etiquetas de empresas; la captura de
+  referencia es docs/capturas/logos-neon.png.
+- **Qué NO tocar:** no inventar ni copiar a mano logos que Simple Icons retiró (OpenAI, Microsoft…); no
+  agregar palabras corrientes como marca («Metas», «Una manzana» no son marcas); no subir la versión sin
+  mirar que los trazos siguen ahí.
+
+## C-TALLER-3 — El video de prueba del taller pasa el esquema y lleva audio (13 nov 2026)
+
+- **Qué se rompió:** la primera prueba en la nube (13 nov, ya con máquina de Cloudflare) falló en 4 s: al video
+  sintético le faltaban `clip` en cada escena y `producto`; y con `audio` vacío la plantilla pedía la carpeta
+  entera y Remotion daba 404.
+- **Qué se hizo:** `propsDePrueba` lleva `clip: null`, `producto: null` y `audio: "silencio.wav"`, y `prueba()`
+  arma 62 s de silencio con ffmpeg antes de dibujar. En la Mac el video sale en 21 s.
+- **Cómo se comprueba:** `npx vitest run pruebas/taller-prueba.test.ts` (en rojo con el código viejo).

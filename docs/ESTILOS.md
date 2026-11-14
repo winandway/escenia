@@ -189,3 +189,20 @@ Richard preguntó cuál es el formato más económico. Con los gastos anotados e
 reales de tecnología»** (`casos-tech`): casos que no caducan, contados como intriga, con un consejo
 práctico al final. Primer video: guion 19, «Le robaron 25 millones con una videollamada falsa», 27 ¢
 (guion, voz y textos) con largo de 3 min 38 s y tres Shorts.
+
+## Logos de las empresas en el neón (13 nov 2026)
+
+Pedido por Richard el 5 oct 2026: _«que también salgan los logos de las empresas que se nombran (OpenAI,
+Google), no solo las personas»_. En cualquier diagrama de neón (Neón y Neón con personajes), el objeto cuya
+etiqueta es el nombre de una empresa o de un producto conocido sale como una **placa de vidrio con su logo**
+en la luz del objeto, en vez del ícono genérico. La IA ya sabe que tiene que poner la empresa como objeto con
+su nombre tal cual.
+
+![Diagrama de neón con los logos de Google y Anthropic, y OpenAI con su nombre](capturas/logos-neon.png)
+
+- Los logos salen de **Simple Icons** (biblioteca libre, CC0, versión fija 16.36.0): unas 80 marcas elegidas
+  (Google, Gemini, Anthropic, Claude, Meta, WhatsApp, YouTube, TikTok, NVIDIA, Tesla, Apple, Netflix…).
+- Las marcas que esa biblioteca retiró a pedido de la empresa (**OpenAI**, Microsoft, Amazon, xAI, LinkedIn,
+  Adobe…) salen con **su nombre escrito en neón**: no se inventa ningún logo. «ChatGPT» y «Sora» cuentan como
+  OpenAI; «Grok», como xAI.
+- No cuesta nada: se dibuja en la Mac. La lista vive en `estacion/src/remotion/logos.ts`. Candado C-LOGOS-1.
