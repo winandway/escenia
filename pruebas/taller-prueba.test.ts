@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { propsDePrueba } from "../estacion/src/taller";
+import { propsDePrueba } from "../estacion/src/taller-prueba";
 
 // C-TALLER-3: el video sintético con el que se mide el taller en la nube tiene que pasar el esquema de
 // la plantilla. El 13 nov 2026 la primera prueba en la nube falló al instante porque le faltaban `clip`
