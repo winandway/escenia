@@ -2275,3 +2275,24 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
 - **Qué NO tocar:** con la llave puesta no lee Descargas ni abre nada; un archivo a medio bajar (`.crdownload`) no
   cuenta; los permisos son solo subir y leer (`PERMISOS_YOUTUBE`).
 - **El candado:** `pruebas/youtube-autorizar.test.ts`. Comprobado en rojo aceptando cualquier `client_secret*`.
+
+## C-RECORTE-1 — Un tramo de presentadora ya pagado se recorta aunque la voz se haya corrido (13 nov 2026)
+
+- **Qué se rompió y cómo se veía:** en el Kipuu del 7 nov 2026 se rehízo una frase del anuncio 2 y se
+  volvió a pagar un tramo de Maggie de 8,2 s (16,4 ¢) que decía exactamente lo mismo que antes.
+- **Causa real:** al cambiar la parte 4, toda la voz de después llegó 153 ms antes, pero los tramos de la
+  persona siguen empezando y terminando a la misma hora del plan. El pedazo nuevo traía al final 130 ms del
+  arranque de la frase siguiente, que el viejo no tenía, y `recortarDeAnterior` exigía que todo el pedazo
+  cuadrara con un solo desfase. Tampoco aguantaba que el hueco entre dos partes cambiara un milisegundo.
+- **Qué se hizo:** la comparación pasó a `desfaseQueCuadra` (estacion/src/publicidad-plan.ts, pura): parte el
+  pedazo en trozos de voz (silencios de 20 ms o más), busca el primero en todo el viejo y cada uno de los demás
+  con su propio desfase (hasta 40 ms, un cuadro, del primero); lo que asoma en las puntas (hasta 250 ms) no se
+  exige; entre trozo y trozo y fuera de las puntas el viejo tiene que estar callado (si hablaba, la boca se
+  movería en un silencio y se paga). `recortarDeAnterior` estira el video con su primer o último cuadro quieto
+  (`tpad`) cuando el tramo nuevo empieza antes o termina después que el viejo.
+- **Cómo se comprueba:** `npx vitest run pruebas/recortar-anterior.test.ts` (se pone en rojo con un solo
+  desfase: comprobado el 13 nov 2026, fallaban el caso del hueco de 1 ms, el de 30 ms y el del Kipuu). Con el
+  audio real de publicidad/kipuu/trabajo/plan-comercial (voz.wav contra anterior/voz.wav, mismas horas de
+  personas.json): cuadran los tramos 1, 2, 3, 5, 6 y 7; el 4 no (cambió la frase).
+- **Qué NO tocar:** no subir el corrimiento por encima de un cuadro ni la punta por encima de 250 ms (la boca
+  se iría de la voz); no quitar la comprobación de que el viejo calle donde el nuevo calla.

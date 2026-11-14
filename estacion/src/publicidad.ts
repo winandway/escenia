@@ -23,6 +23,7 @@ import {
   gananciaDeVoz,
   iniciosDePartes,
   type PlanPublicidad,
+  desfaseQueCuadra,
   personasDeOtraVersion,
   puntaDelDedo,
   recorteDeEncuadre,
@@ -418,7 +419,7 @@ async function muestras(wav: string): Promise<Int16Array> {
 
 /**
  * Si un video de la persona ya pagado dice lo mismo (la misma figura y el mismo habla, muestra por
- * muestra) y solo cambió el silencio de las puntas, se recorta ese video al pedazo nuevo: gratis. Sale
+ * muestra, aunque cada parte se haya corrido hasta un cuadro) y solo cambió el silencio, se recorta ese video al pedazo nuevo: gratis. Sale
  * de «anterior/» (la voz y la persona de antes de rehacer la voz). Devuelve si lo pudo hacer.
  */
 export async function recortarDeAnterior(
@@ -435,10 +436,6 @@ export async function recortarDeAnterior(
     await readFile(path.join(anterior, "personas.json"), "utf8"),
   ) as AparicionGuardada[];
   const nuevo = await muestras(pedazoWav);
-  const umbral = 400;
-  const primera = (x: Int16Array) => x.findIndex((v) => Math.abs(v) > umbral);
-  let ultima = nuevo.length - 1;
-  while (ultima > 0 && Math.abs(nuevo[ultima] ?? 0) <= umbral) ultima--;
   for (const [j, v] of viejas.entries()) {
     if (v.quieta) continue;
     const clave = path.basename(v.ruta).replace(/\.webm$/, "");
@@ -465,21 +462,24 @@ export async function recortarDeAnterior(
       "pcm_s16le",
       pedazoViejo,
     ]);
-    const viejo = await muestras(pedazoViejo);
-    const d = primera(viejo) - primera(nuevo);
-    if (d < 0 || ultima + d >= viejo.length) continue;
-    let igual = true;
-    for (let i = Math.max(0, primera(nuevo)); i <= ultima && igual; i++)
-      igual = Math.abs((viejo[i + d] ?? 0) - (nuevo[i] ?? 0)) <= 2;
-    if (!igual) continue;
+    // Cada trozo de voz con su propio desfase (C-RECORTE-1, el Kipuu del 7 nov 2026).
+    const d = desfaseQueCuadra(await muestras(pedazoViejo), nuevo);
+    if (d === null) continue;
+    // Si el tramo nuevo empieza antes o termina después que el video viejo (lo que asoma de la frase
+    // vecina, hasta 250 ms), el video se estira con su primer o último cuadro quieto.
+    const antesS = Math.max(0, -d) / 44100;
     await exec("ffmpeg", [
       "-y",
       "-v",
       "error",
       "-ss",
-      String(d / 44100),
+      String(Math.max(0, d) / 44100),
       "-i",
       mp4Viejo,
+      "-vf",
+      `tpad=start_duration=${antesS}:start_mode=clone:stop_duration=0.5:stop_mode=clone`,
+      "-af",
+      `adelay=${Math.round(antesS * 1000)}:all=1,apad`,
       "-t",
       String(nuevo.length / 44100),
       "-c:v",

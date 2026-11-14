@@ -488,7 +488,9 @@ Video por video:
 **Lo que costó (0,36 $):** la parte 6 de la voz del 3 y el 4 (1,1 ¢) y su tramo final de presentadora en los dos
 (5,3 ¢ cada uno); la parte 4 de la voz del 2 (0,6 ¢) y dos tramos de Maggie (7,2 ¢ el de esa frase y 16,4 ¢ uno de
 8,2 s que no se pudo recortar gratis de lo ya pagado); y la transcripción para comprobar las dos frases (0,1 ¢).
-Ojo para la próxima: `recortarDeAnterior` compara con un solo desfase, y un tramo que cruza el hueco entre dos
-partes no cuadra si ese hueco cambió un milisegundo al rehacer otra parte; ese tramo se paga de nuevo.
+Ese tramo de 8,2 s ya no se volvería a pagar (13 nov 2026, C-RECORTE-1): la voz de después se había corrido
+153 ms y el tramo traía al final el arranque de la frase siguiente; ahora cada trozo de voz se busca con su propio
+desfase y lo que asoma de la frase vecina en las puntas (hasta 250 ms) no se exige. Con el audio real de ese día
+cuadran los tramos 5, 6 y 7, y solo el 4 (el de la frase que sí cambió) se paga.
 Cambiar la voz del 2 también cambió la de la versión 1 (`plan-comercial.json`, retirada): comparten carpeta, así
 que su plan quedó con la misma frase.

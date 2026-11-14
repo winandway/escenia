@@ -559,3 +559,92 @@ export function planParaArmar(d: {
     cierre: d.plan.cierre,
   });
 }
+
+/** Desde qué volumen (muestra de 16 bits) se considera que hay voz al comparar pedazos. */
+const UMBRAL_VOZ = 400;
+/** Un silencio de al menos esto (20 ms) separa dos trozos de voz al comparar pedazos. */
+const SILENCIO_QUE_SEPARA = Math.round(0.02 * 44100);
+/** Lo más que puede correrse un trozo respecto del primero (40 ms, un cuadro): más, y la boca se va de la voz. */
+const CORRIMIENTO_MAXIMO = Math.round(0.04 * 44100);
+
+/** Los trozos con voz de un pedazo (desde, hasta, incluidos), separados por silencios de 20 ms o más. */
+function trozosConVoz(x: Int16Array): [number, number][] {
+  const trozos: [number, number][] = [];
+  let desde = -1;
+  let ultimaVoz = -1;
+  for (let i = 0; i < x.length; i++) {
+    if (Math.abs(x[i] ?? 0) <= UMBRAL_VOZ) continue;
+    if (desde < 0) desde = i;
+    else if (i - ultimaVoz > SILENCIO_QUE_SEPARA) {
+      trozos.push([desde, ultimaVoz]);
+      desde = i;
+    }
+    ultimaVoz = i;
+  }
+  if (desde >= 0) trozos.push([desde, ultimaVoz]);
+  return trozos;
+}
+
+/** Lo que puede asomar de la frase vecina en la punta de un tramo (250 ms) sin que haga falta pagarlo. */
+const PUNTA_VECINA = Math.round(0.25 * 44100);
+
+/**
+ * Si el pedazo de voz `nuevo` ya estaba dicho, muestra por muestra, dentro del pedazo `viejo` (el de
+ * un video de la persona ya pagado), devuelve desde qué muestra del viejo hay que recortar ese video
+ * (negativa si el video tiene que empezar con su primer cuadro quieto); si no cuadra, `null`. Lo usa
+ * `recortarDeAnterior` para no volver a pagar un tramo de presentadora (C-RECORTE-1).
+ *
+ * El caso que lo pidió, el Kipuu del 7 nov 2026 (16 ¢ pagados de nuevo): al rehacer una parte, la voz de
+ * después se corrió 153 ms, pero el tramo de la persona sigue empezando y terminando a la misma hora;
+ * el pedazo nuevo trae al final el arranque de la frase siguiente, que el viejo no tenía, y con un solo
+ * desfase no cuadraba nunca. Ahora:
+ * - cada trozo de voz se busca con su propio desfase (hasta un cuadro de corrimiento, por si el hueco
+ *   entre dos partes cambió un milisegundo);
+ * - lo que asoma de la frase vecina en las puntas (hasta 250 ms) no se exige: es el arranque de otra
+ *   parte, y la boca quieta ese instante no se nota;
+ * - entre trozo y trozo, el viejo tiene que estar callado (si no, la boca se movería en un silencio).
+ */
+export function desfaseQueCuadra(viejo: Int16Array, nuevo: Int16Array): number | null {
+  const todos = trozosConVoz(nuevo);
+  // Los trozos del centro: los que asoman en las puntas (frase vecina) no se exigen.
+  const trozos = todos.filter(([a, b]) => b >= PUNTA_VECINA && a <= nuevo.length - 1 - PUNTA_VECINA);
+  // Si todo el pedazo es corto (menos de medio segundo), se exige entero.
+  const exigidos = trozos.length ? trozos : todos;
+  const [primero] = exigidos;
+  if (!primero) return null;
+  const cuadra = ([desde, hasta]: [number, number], d: number): boolean => {
+    if (desde + d < 0 || hasta + d >= viejo.length) return false;
+    for (let i = desde; i <= hasta; i++)
+      if (Math.abs((viejo[i + d] ?? 0) - (nuevo[i] ?? 0)) > 2) return false;
+    return true;
+  };
+  // El primer trozo exigido se busca en todo el viejo (puede venir cortado por la punta del tramo, así
+  // que no sirve alinear arranques); casi todos los intentos fallan en la primera muestra.
+  let d0: number | null = null;
+  for (let d = -primero[0]; d0 === null && primero[1] + d < viejo.length; d++) if (cuadra(primero, d)) d0 = d;
+  if (d0 === null) return null;
+  // El video viejo no puede quedarse corto más que la punta permitida (se estira con su cuadro quieto).
+  if (d0 < -PUNTA_VECINA || nuevo.length + d0 > viejo.length + PUNTA_VECINA) return null;
+  let dAnterior = d0;
+  let finAnterior = -1;
+  for (const trozo of exigidos) {
+    let hallado: number | null = null;
+    for (let paso = 0; paso <= 2 * CORRIMIENTO_MAXIMO && hallado === null; paso++) {
+      // Primero el desfase del trozo anterior, después cada vez más lejos (+1, −1, +2, −2…).
+      const d = dAnterior + (paso % 2 ? (paso + 1) / 2 : -paso / 2);
+      if (Math.abs(d - d0) <= CORRIMIENTO_MAXIMO && cuadra(trozo, d)) hallado = d;
+    }
+    if (hallado === null) return null;
+    if (finAnterior >= 0)
+      for (let j = finAnterior + 1; j < trozo[0] + hallado; j++)
+        if (Math.abs(viejo[j] ?? 0) > UMBRAL_VOZ) return null;
+    finAnterior = trozo[1] + hallado;
+    dAnterior = hallado;
+  }
+  // Fuera de las puntas, el viejo no puede hablar donde el nuevo calla (antes del primero y después del último).
+  const ultimoHasta = (exigidos[exigidos.length - 1] ?? primero)[1];
+  for (let i = PUNTA_VECINA; i < primero[0]; i++) if (Math.abs(viejo[i + d0] ?? 0) > UMBRAL_VOZ) return null;
+  for (let i = ultimoHasta + 1; i < nuevo.length - PUNTA_VECINA; i++)
+    if (Math.abs(viejo[i + dAnterior] ?? 0) > UMBRAL_VOZ) return null;
+  return d0;
+}
