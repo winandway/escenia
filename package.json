@@ -65,6 +65,9 @@
     },
     "miniflare": {
       "undici": "^7.30.1"
+    },
+    "jsdom": {
+      "undici": "8.12.3"
     }
   }
 }

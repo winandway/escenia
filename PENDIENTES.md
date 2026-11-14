@@ -89,7 +89,7 @@
 - [ ] Shorts de un video corto (menos de dos minutos): hoy sale UN vertical con el video entero (108 s en el guion 12). Decidir con Richard si prefiere dos o tres piezas de 30 a 60 segundos.
 - [ ] Presentador: quitar el fondo sin croma (recorte de personas de macOS, cuadro por cuadro).
 - [ ] Formato Pizarra: fotos recortadas como calcomanías, con flechas y fechas (para historias de música con presentador).
-- [ ] Auditoría de dependencias: cuando salga `braces` corregido (aviso GHSA-vfj7-8cjw-p6xm, solo toca a la herramienta que revisa el código), actualizar y comprobar que `npm run audit:todo` da cero. Ver C-AUDITORIA-1.
+- [x] Auditoría de dependencias (14 nov 2026): `braces` ya no sale; el aviso grave que quedaba (undici dentro de jsdom, solo pruebas) se cerró fijando undici 8.12.3 para jsdom. `npm run audit:todo` sin nada grave; quedan 14 moderados de herramientas de desarrollo.
 - [x] Dos estilos nuevos de video (5 oct 2026): ilustrado (personas dibujadas, para tecnología) y neón (diagramas, temática «Así funciona»). Candado C-ESTILOS-1, guía docs/ESTILOS.md.
 - [ ] Estilo ilustrado: varias personas dibujadas juntas en un plano, y marcadores de juego (barra de «vida») encima de la figura.
 - [ ] Estilo neón: editar el diagrama a mano en el panel, y meter capturas reales del software dentro de un objeto.
