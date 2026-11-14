@@ -13,11 +13,26 @@ import {
 } from "@compartido/modelos";
 import {
   corregirNombres,
+  juntarNombres,
+  leerNombresPropios,
+  NOMBRES_PROPIOS,
   palabrasDeTranscripcion,
+  terminosParaTranscribir,
   type PalabraDeVideo,
   type PalabraTranscrita,
 } from "@compartido/presentador";
 import { config } from "./config";
+import { panel } from "./panel";
+
+/** Los nombres de fábrica más los que Richard agregó en Ajustes; sin panel, los de fábrica (con aviso). */
+async function nombresConocidos() {
+  try {
+    return juntarNombres(leerNombresPropios(await panel.nombresPropios()));
+  } catch (e) {
+    console.warn(`  [nombres] no se pudieron leer los de Ajustes, sigo con los de fábrica: ${String(e)}`);
+    return NOMBRES_PROPIOS;
+  }
+}
 
 export type Transcripcion = { texto: string; palabras: PalabraDeVideo[]; costoUsd: number };
 
@@ -34,6 +49,7 @@ export async function transcribir(rutaAudio: string, duracionSeg: number): Promi
     carpeta,
     `${createHash("sha1").update(audio).update(modelo).digest("hex").slice(0, 20)}.json`,
   );
+  const nombres = await nombresConocidos();
   let crudo: { text?: string; words?: PalabraTranscrita[] };
   let costoUsd = 0;
   if (existsSync(guardada)) {
@@ -44,6 +60,9 @@ export async function transcribir(rutaAudio: string, duracionSeg: number): Promi
     cuerpo.set("language_code", "es");
     cuerpo.set("timestamps_granularity", "word");
     cuerpo.set("tag_audio_events", "false");
+    // Sus marcas, para que las escriba bien desde el principio (C-NOMBRES-2; 20 % más caro).
+    const terminos = terminosParaTranscribir(nombres);
+    for (const t of terminos) cuerpo.append("keyterms", t);
     cuerpo.set("file", new Blob([new Uint8Array(audio)], { type: "audio/mpeg" }), path.basename(rutaAudio));
     const r = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
       method: "POST",
@@ -55,10 +74,10 @@ export async function transcribir(rutaAudio: string, duracionSeg: number): Promi
       throw new Error(`ElevenLabs respondió ${r.status} al transcribir: ${(await r.text()).slice(0, 300)}`);
     crudo = (await r.json()) as typeof crudo;
     await writeFile(guardada, JSON.stringify(crudo));
-    costoUsd = costoTranscripcionUsd(modelo, duracionSeg);
+    costoUsd = costoTranscripcionUsd(modelo, duracionSeg, terminos.length > 0);
   }
-  const palabras = palabrasDeTranscripcion(crudo.words ?? []);
+  const palabras = palabrasDeTranscripcion(crudo.words ?? [], nombres);
   if (palabras.length === 0) throw new Error("La transcripción salió vacía: ¿la grabación tiene voz?");
   // El texto que recibe la IA para armar el plan lleva los mismos nombres corregidos que los subtítulos.
-  return { texto: corregirNombres((crudo.text ?? "").trim()), palabras, costoUsd };
+  return { texto: corregirNombres((crudo.text ?? "").trim(), nombres), palabras, costoUsd };
 }

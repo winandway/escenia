@@ -171,3 +171,11 @@ y no sube al panel (para eso está «Grabaciones»).
 | El dibujo de la capa                           | `estacion/src/remotion/Presentador.tsx`                                                        |
 | Pruebas                                        | `pruebas/presentador.test.ts`, `pruebas/grabaciones.test.ts`, `pruebas/permiso-subida.test.ts` |
 | Candados                                       | C-PRESENTADOR-1 y C-GRABACIONES-1 en `docs/CANDADOS.md`                                        |
+
+## Tus marcas bien escritas (13 nov 2026)
+
+La transcripción escribe las palabras como suenan. Para que tus marcas salgan bien en los subtítulos y en el
+plan, el motor ya conoce Beellon, YaDominios, QRBOTT, Mercatren, Tokiia, Tintora, Blisor y Losupe, y le pasa
+esa lista a la transcripción antes de escuchar. Para agregar otra: panel → Ajustes → «Nombres que la
+transcripción tiene que escribir bien», uno por línea; si quieres, después de dos puntos, cómo la escribe mal
+(«Kipuu: kipu, ki pu»). Los nombres de dos palabras («Ya Dominios») se juntan solos. Candado C-NOMBRES-2.

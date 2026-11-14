@@ -190,6 +190,10 @@ const esquemaSonidos = z.object({
 export type SonidoDelPanel = z.infer<typeof esquemaSonidos>["sonidos"][number];
 
 export const panel = {
+  /** Los nombres propios que Richard agregó en Ajustes, como los escribió (C-NOMBRES-2). */
+  async nombresPropios(): Promise<string> {
+    return z.object({ texto: z.string() }).parse(await llamar("/datos/estacion/nombres", {})).texto;
+  },
   /** La biblioteca de sonidos de Richard (C-SONIDOS-1). */
   async sonidos(): Promise<SonidoDelPanel[]> {
     return esquemaSonidos.parse(await llamar("/datos/estacion/sonidos", {})).sonidos;

@@ -11,6 +11,9 @@ import {
   AIRE_DESPUES_MS,
   APERTURA_MS,
   corregirNombres,
+  juntarNombres,
+  leerNombresPropios,
+  terminosParaTranscribir,
   corteDeGrabacion,
   momentosDelPresentador,
   NOMBRES_PROPIOS,
@@ -136,6 +139,58 @@ describe("presentador: los nombres propios de Richard (C-NOMBRES-1)", () => {
       { text: "Billon.com,", start: 1.3, end: 2, type: "word" },
     ]);
     expect(palabras.map((p) => p.text)).toEqual(["mira", " Beellon.com,"]);
+  });
+});
+
+describe("presentador: nombres propios de dos palabras y los que agrega Richard (C-NOMBRES-2)", () => {
+  it("«Ya Dominios» y «QR Bot» se juntan en su nombre", () => {
+    expect(corregirNombres("Compra tu dominio en Ya Dominios, y el menú con QR Bot.")).toBe(
+      "Compra tu dominio en YaDominios, y el menú con QRBOTT.",
+    );
+    expect(corregirNombres("Entra a ya dominios.com y a Ya-Dominios")).toBe(
+      "Entra a YaDominios.com y a YaDominios",
+    );
+  });
+
+  it("en minúscula y sin ninguna mayúscula, dos palabras corrientes se quedan como están", () => {
+    expect(corregirNombres("eso ya dominios lo teníamos")).toBe("eso ya dominios lo teníamos");
+  });
+
+  it("en los subtítulos, las dos palabras se vuelven una sola, con la hora de las dos", () => {
+    const palabras = palabrasDeTranscripcion([
+      { text: "en", start: 1, end: 1.1, type: "word" },
+      { text: " ", start: 1.1, end: 1.15, type: "spacing" },
+      { text: "Ya", start: 1.15, end: 1.3, type: "word" },
+      { text: " ", start: 1.3, end: 1.32, type: "spacing" },
+      { text: "Dominios.", start: 1.32, end: 1.9, type: "word" },
+      { text: "Listo", start: 2, end: 2.3, type: "word" },
+    ]);
+    expect(palabras.map((p) => p.text)).toEqual(["en", " YaDominios.", " Listo"]);
+    expect(palabras[1]).toMatchObject({ startMs: 1150, endMs: 1900 });
+  });
+
+  it("Richard agrega nombres desde Ajustes: uno por línea, con sus formas mal escritas", () => {
+    const suyos = leerNombresPropios("Pantalay: panta lay, pantalai\nKipuu: kipu, ki pu\n\n  \nTumbite");
+    expect(suyos).toEqual([
+      { correcto: "Pantalay", variantes: ["panta lay", "pantalai"] },
+      { correcto: "Kipuu", variantes: ["kipu", "ki pu"] },
+      { correcto: "Tumbite", variantes: [] },
+    ]);
+    const todos = juntarNombres(suyos);
+    expect(corregirNombres("Bájate Kipu y mira Panta Lay en Billon", todos)).toBe(
+      "Bájate Kipuu y mira Pantalay en Beellon",
+    );
+    // Los de fábrica siguen ahí.
+    expect(todos.some((n) => n.correcto === "Beellon")).toBe(true);
+  });
+
+  it("a la transcripción le llega la lista de nombres bien escritos (máximo 100, sin repetir)", () => {
+    const t = terminosParaTranscribir(juntarNombres([{ correcto: "Beellon", variantes: [] }]));
+    expect(t).toContain("YaDominios");
+    expect(new Set(t).size).toBe(t.length);
+    expect(t.length).toBeLessThanOrEqual(100);
+    const muchos = Array.from({ length: 150 }, (_, i) => ({ correcto: `Marca${i}`, variantes: [] }));
+    expect(terminosParaTranscribir(muchos)).toHaveLength(100);
   });
 });
 

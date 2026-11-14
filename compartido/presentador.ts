@@ -24,12 +24,17 @@ export type PalabraDeVideo = {
  * palabras que usa el video para los subtítulos y para saber cuándo entra cada
  * imagen. Los ruidos («(risas)») y los espacios no cuentan.
  */
-export function palabrasDeTranscripcion(palabras: PalabraTranscrita[]): PalabraDeVideo[] {
+export function palabrasDeTranscripcion(
+  palabras: PalabraTranscrita[],
+  nombres = NOMBRES_PROPIOS,
+): PalabraDeVideo[] {
   const salida: PalabraDeVideo[] = [];
-  for (const p of palabras) {
-    if ((p.type ?? "word") !== "word") continue;
+  for (const p of juntarPalabrasDeNombres(
+    palabras.filter((x) => (x.type ?? "word") === "word"),
+    nombres,
+  )) {
     // Los nombres propios de Richard salen bien escritos desde aquí (subtítulos y plan).
-    const texto = corregirNombres(p.text.trim());
+    const texto = corregirNombres(p.text.trim(), nombres);
     if (!texto || typeof p.start !== "number" || typeof p.end !== "number") continue;
     const startMs = Math.round(p.start * 1000);
     salida.push({
@@ -56,8 +61,8 @@ export const NOMBRES_PROPIOS: { correcto: string; variantes: string[] }[] = [
   { correcto: "Mercatren", variantes: ["mercatrén", "mercatrem", "mercatrend"] },
   { correcto: "Tokiia", variantes: ["tokia", "toquia", "tokiya"] },
   { correcto: "Tintora", variantes: ["tintorá", "tintoora"] },
-  { correcto: "QRBOTT", variantes: ["qrbot", "qrbott", "kiurbot"] },
-  { correcto: "YaDominios", variantes: ["yadominios"] },
+  { correcto: "QRBOTT", variantes: ["qrbot", "qrbott", "kiurbot", "qr bot", "qr bott", "q r bot"] },
+  { correcto: "YaDominios", variantes: ["yadominios", "ya dominios"] },
   { correcto: "Losupe", variantes: ["losupe", "losupé"] },
 ];
 
@@ -70,6 +75,10 @@ const sinTilde = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "
  * en minúscula, es una cifra y se queda como está.
  */
 export function corregirNombres(texto: string, nombres = NOMBRES_PROPIOS): string {
+  // Primero los de varias palabras («Ya Dominios» → «YaDominios», C-NOMBRES-2): basta con que una
+  // de las palabras llegue con mayúscula o que vaya pegado a un «.com»; todo en minúscula y suelto
+  // pueden ser palabras corrientes.
+  texto = juntarNombresEnTexto(texto, nombres);
   return texto.replace(/\p{Lu}[\p{L}\d]*/gu, (palabra) => {
     const llave = sinTilde(palabra).toLowerCase();
     const nombre = nombres.find(
@@ -77,6 +86,122 @@ export function corregirNombres(texto: string, nombres = NOMBRES_PROPIOS): strin
     );
     return nombre ? nombre.correcto : palabra;
   });
+}
+
+/**
+ * Los nombres de varias palabras dentro de un texto («Ya Dominios» → «YaDominios»), sin armar
+ * expresiones con lo que escribió Richard: se recorren las palabras y se comparan grupos de 2 a 4
+ * separadas solo por espacios o guiones.
+ */
+function juntarNombresEnTexto(texto: string, nombres: typeof NOMBRES_PROPIOS): string {
+  const variantes = new Map<string, string>();
+  for (const n of nombres) for (const v of n.variantes) if (v.includes(" ")) variantes.set(v, n.correcto);
+  if (!variantes.size) return texto;
+  const palabras = [...texto.matchAll(/[\p{L}\d]+/gu)].map((m) => ({
+    desde: m.index,
+    hasta: m.index + m[0].length,
+    texto: m[0],
+  }));
+  let salida = "";
+  let hecho = 0;
+  for (let i = 0; i < palabras.length; i++) {
+    for (let k = 4; k >= 2; k--) {
+      const grupo = palabras.slice(i, i + k);
+      if (grupo.length < k) continue;
+      const separadas = grupo
+        .slice(1)
+        .every((p, n) => /^[\s-]+$/u.test(texto.slice((grupo[n] as typeof p).hasta, p.desde)));
+      const correcto = variantes.get(grupo.map((p) => sinTilde(p.texto).toLowerCase()).join(" "));
+      if (!separadas || !correcto) continue;
+      const desde = (grupo[0] as (typeof grupo)[number]).desde;
+      const hasta = (grupo[k - 1] as (typeof grupo)[number]).hasta;
+      // Con mayúscula, o pegado a un dominio («ya dominios.com»), es el nombre.
+      const esNombre =
+        grupo.some((p) => /\p{Lu}/u.test(p.texto)) ||
+        /^\.(com|net|org|app|dev|co)\b/i.test(texto.slice(hasta));
+      if (!esNombre) continue;
+      salida += texto.slice(hecho, desde) + correcto;
+      hecho = hasta;
+      i += k - 1;
+      break;
+    }
+  }
+  return salida + texto.slice(hecho);
+}
+
+/** Lo que se compara de una palabra: sin tilde, en minúscula y sin la puntuación de las puntas. */
+const llaveDePalabra = (t: string) =>
+  sinTilde(t)
+    .toLowerCase()
+    .replace(/^[^\p{L}\d]+|[^\p{L}\d]+$/gu, "");
+
+/**
+ * Las palabras de un nombre de varias palabras («Ya» + «Dominios.») se vuelven una sola, con la hora
+ * de la primera a la última y la puntuación de la última, para que el subtítulo diga «YaDominios.»
+ * (C-NOMBRES-2). Basta con que una llegue con mayúscula; las de en medio no pueden traer puntuación.
+ */
+function juntarPalabrasDeNombres(palabras: PalabraTranscrita[], nombres: typeof NOMBRES_PROPIOS) {
+  const variantes = new Set(nombres.flatMap((n) => n.variantes.filter((v) => v.includes(" "))));
+  if (!variantes.size) return palabras;
+  const salida: PalabraTranscrita[] = [];
+  for (let i = 0; i < palabras.length; i++) {
+    let juntada: PalabraTranscrita | null = null;
+    for (let k = 4; k >= 2 && !juntada; k--) {
+      const grupo = palabras.slice(i, i + k);
+      if (grupo.length < k) continue;
+      const enMedioLimpias = grupo.slice(0, -1).every((p) => !/[^\p{L}\d]$/u.test(p.text.trim()));
+      const llave = grupo.map((p) => llaveDePalabra(p.text)).join(" ");
+      if (!enMedioLimpias || !variantes.has(llave) || !grupo.some((p) => /\p{Lu}/u.test(p.text))) continue;
+      const ultima = grupo[k - 1] as PalabraTranscrita;
+      juntada = {
+        ...grupo[0],
+        text: grupo.map((p) => p.text.trim()).join(" "),
+        end: ultima.end,
+      };
+      i += k - 1;
+    }
+    salida.push(juntada ?? (palabras[i] as PalabraTranscrita));
+  }
+  return salida;
+}
+
+/**
+ * Los nombres que Richard agrega desde Ajustes (C-NOMBRES-2): uno por línea, el nombre bien escrito y,
+ * si quiere, después de dos puntos, las formas en que lo escribe mal la transcripción, separadas por
+ * comas («Kipuu: kipu, ki pu»). Las líneas vacías no cuentan; como mucho 100 nombres.
+ */
+export function leerNombresPropios(texto: string): typeof NOMBRES_PROPIOS {
+  const salida: typeof NOMBRES_PROPIOS = [];
+  for (const linea of texto.split(/\r?\n/)) {
+    const [antes = "", despues = ""] = linea.split(":");
+    const correcto = antes.trim().slice(0, 40);
+    if (!correcto) continue;
+    const variantes = despues
+      .split(",")
+      .map((v) => sinTilde(v).toLowerCase().replace(/\s+/g, " ").trim().slice(0, 40))
+      .filter(Boolean);
+    salida.push({ correcto, variantes });
+    if (salida.length >= 100) break;
+  }
+  return salida;
+}
+
+/** Los de fábrica más los que agregó Richard (los suyos mandan si repite un nombre). */
+export function juntarNombres(suyos: typeof NOMBRES_PROPIOS): typeof NOMBRES_PROPIOS {
+  const llave = (n: { correcto: string }) => sinTilde(n.correcto).toLowerCase();
+  const propios = new Set(suyos.map(llave));
+  return [...NOMBRES_PROPIOS.filter((n) => !propios.has(llave(n))), ...suyos];
+}
+
+/**
+ * La lista que se le pasa a la transcripción para que escriba bien esos nombres (`keyterms` de
+ * ElevenLabs, 20 % más caro: unos 4 centavos más por hora de grabación). Sin repetir y como mucho 100:
+ * con más, ElevenLabs cobra 20 segundos como mínimo por cada transcripción.
+ */
+export function terminosParaTranscribir(nombres = NOMBRES_PROPIOS): string[] {
+  return [
+    ...new Set(nombres.map((n) => n.correcto.replace(/[<>{}[\]\\]/g, "").trim()).filter(Boolean)),
+  ].slice(0, 100);
 }
 
 /**

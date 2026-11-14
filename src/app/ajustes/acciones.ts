@@ -11,6 +11,7 @@ const esquema = z.object({
   presupuesto_diario_usd: z.coerce.number().min(0).max(100),
   modelo_guion: z.string().refine(esModeloPermitido, "Ese modelo está bloqueado."),
   instrucciones_extra: z.string().trim().max(4000).default(""),
+  nombres_propios: z.string().trim().max(4000).default(""),
   canal_ia_nombre: z.string().trim().max(60).default(""),
   canal_ia_usuario: z.string().trim().max(60).default(""),
   canal_caprichoso_nombre: z.string().trim().max(60).default(""),
@@ -28,6 +29,7 @@ export async function guardarAjustes(_previo: EstadoAjustes, datos: FormData): P
   await guardarAjuste(db, "presupuesto_diario_usd", String(d.presupuesto_diario_usd));
   await guardarAjuste(db, "modelo_guion", d.modelo_guion);
   await guardarAjuste(db, "instrucciones_extra", d.instrucciones_extra);
+  await guardarAjuste(db, "nombres_propios", d.nombres_propios);
   for (const clave of [
     "canal_ia_nombre",
     "canal_ia_usuario",

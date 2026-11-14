@@ -69,8 +69,15 @@ export function asegurarModeloTranscripcion(modelo: string): ModeloTranscripcion
   return modelo as ModeloTranscripcion;
 }
 
-export function costoTranscripcionUsd(modelo: ModeloTranscripcion, segundos: number): number {
-  return (segundos / 3600) * TRANSCRIPCION_PERMITIDA[modelo];
+/** Pasarle a la transcripción la lista de nombres propios (`keyterms`) cuesta un 20 % más (C-NOMBRES-2). */
+export const RECARGO_TERMINOS = 0.2;
+
+export function costoTranscripcionUsd(
+  modelo: ModeloTranscripcion,
+  segundos: number,
+  conTerminos = false,
+): number {
+  return (segundos / 3600) * TRANSCRIPCION_PERMITIDA[modelo] * (conTerminos ? 1 + RECARGO_TERMINOS : 1);
 }
 
 // Imágenes: solo modelos de ~$0.03 por imagen (regla global: los caros están

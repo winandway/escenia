@@ -14,7 +14,7 @@ export const metadata = { title: "Ajustes" };
 export default async function PaginaAjustes() {
   await exigirSesion();
   const { db, env } = await contexto();
-  const [presupuesto, modelo, instrucciones, gasto, iaNombre, iaUsuario, capNombre, capUsuario] =
+  const [presupuesto, modelo, instrucciones, gasto, iaNombre, iaUsuario, capNombre, capUsuario, nombres] =
     await Promise.all([
       ajuste(db, "presupuesto_diario_usd", "3"),
       ajuste(db, "modelo_guion", MODELO_POR_DEFECTO),
@@ -24,6 +24,7 @@ export default async function PaginaAjustes() {
       ajuste(db, "canal_ia_usuario", CANALES["canal-ia"].porDefecto.usuario),
       ajuste(db, "canal_caprichoso_nombre", CANALES["caprichoso-tv"].porDefecto.nombre),
       ajuste(db, "canal_caprichoso_usuario", CANALES["caprichoso-tv"].porDefecto.usuario),
+      ajuste(db, "nombres_propios"),
     ]);
   const gastosMes = await db.todos<{ servicio: string; total: number }>(
     "SELECT servicio, SUM(costo_usd) AS total FROM gastos WHERE fecha >= date('now','start of month') GROUP BY servicio",
@@ -58,6 +59,7 @@ export default async function PaginaAjustes() {
         presupuesto={presupuesto}
         modelo={modelo}
         instrucciones={instrucciones}
+        nombres={nombres}
         modelos={Object.entries(MODELOS_PERMITIDOS).map(([id, m]) => ({
           id,
           texto: `${id} — $${m.entrada}/$${m.salida} por millón de tokens`,

@@ -9,6 +9,7 @@ type Props = {
   presupuesto: string;
   modelo: string;
   instrucciones: string;
+  nombres: string;
   modelos: { id: string; texto: string }[];
   canales: { iaNombre: string; iaUsuario: string; capNombre: string; capUsuario: string };
 };
@@ -77,6 +78,24 @@ export function FormularioAjustes(p: Props) {
           className="campo"
           placeholder="Muletillas que no quieres, cómo te gusta cerrar, palabras que sí usas…"
         />
+      </div>
+      <div>
+        <label htmlFor="nombres_propios" className="etiqueta">
+          Nombres que la transcripción tiene que escribir bien (uno por línea)
+        </label>
+        <textarea
+          id="nombres_propios"
+          name="nombres_propios"
+          rows={4}
+          maxLength={4000}
+          defaultValue={p.nombres}
+          className="campo"
+          placeholder="Nombre bien escrito: forma mal escrita, otra forma mal escrita"
+        />
+        <p className="mt-1 text-xs text-neutral-500">
+          Tus marcas y productos. Después de los dos puntos, si quieres, cómo los escribe mal la
+          transcripción. Se suman a los que ya conoce el motor (Beellon, YaDominios, QRBOTT…).
+        </p>
       </div>
       <fieldset className="tarjeta space-y-3">
         <legend className="px-1 text-sm font-medium text-neutral-300">

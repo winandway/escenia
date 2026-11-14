@@ -2296,3 +2296,24 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
   personas.json): cuadran los tramos 1, 2, 3, 5, 6 y 7; el 4 no (cambió la frase).
 - **Qué NO tocar:** no subir el corrimiento por encima de un cuadro ni la punta por encima de 250 ms (la boca
   se iría de la voz); no quitar la comprobación de que el viejo calle donde el nuevo calla.
+
+## C-NOMBRES-2 — Nombres de dos palabras, la lista para la transcripción y los nombres de Richard (13 nov 2026)
+
+- **Qué faltaba:** «Ya Dominios» y «QR Bot» salían separados en los subtítulos y en el plan (C-NOMBRES-1 solo
+  corregía palabras sueltas), la transcripción no sabía de antemano cuáles son sus marcas y Richard no podía
+  agregar una nueva sin tocar el código.
+- **Qué se hizo (compartido/presentador.ts):** las variantes pueden tener varias palabras («ya dominios»,
+  «qr bot»); `corregirNombres` las junta si una llega con mayúscula o va pegada a un «.com» (todo en
+  minúscula y suelto pueden ser palabras corrientes), y `palabrasDeTranscripcion` une esas palabras en una
+  sola con la hora de la primera a la última. `leerNombresPropios` lee la casilla nueva de **Ajustes**
+  («Nombres que la transcripción tiene que escribir bien»: uno por línea, `Nombre: mal1, mal2`) y
+  `juntarNombres` la suma a los de fábrica. La Estación la pide por `/datos/estacion/nombres` (solo lee) y le
+  pasa la lista a ElevenLabs como `keyterms` (`terminosParaTranscribir`, máximo 100; 20 % más caro, unos
+  4 centavos más por hora, ya contado en `costoTranscripcionUsd`). Sin panel, sigue con los de fábrica y lo
+  dice en el registro.
+- **Comprobado en vivo (13 nov 2026, menos de un centavo):** una frase de la voz de la Mac con «Ya Dominios»,
+  «Kiur Bot» y «Bílon» salió transcrita como «YaDominios», «QRBOTT» y «Beellon».
+- **Cómo se comprueba:** `npx vitest run pruebas/presentador.test.ts` (bloque C-NOMBRES-2; comprobado en
+  rojo antes de escribir el código).
+- **Qué NO tocar:** no juntar dos palabras en minúscula sin mayúscula ni dominio («eso ya dominios lo
+  teníamos» se queda igual); no pasar de 100 términos (ElevenLabs cobra 20 s mínimo por transcripción).
