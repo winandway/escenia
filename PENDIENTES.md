@@ -58,7 +58,7 @@
 
 ## Fila (lo hace la IA)
 
-- Divoox, videos en Docs (19 nov 2026): pedida a Gerencia la meta «Videos de Divoox en Docs». Cuando llegue, Escenia hace de cada video que entre: la versión en inglés (ejemplos y moneda de EE. UU., sin ciudad), la portada WebP en los dos idiomas, el MP4 de 720 con arranque rápido y el texto en los dos idiomas. El de socios va en versión neutra, sin el logo de Jehová Jireh en la miniatura. «Así arrancamos» espera a que se encienda el programa de equipos; «Así va a funcionar tu línea» no entra hasta que exista «Mi línea».
+- Divoox, videos en Docs (19 nov 2026): meta de Gerencia hecha y entregada a la sesión de Docs. Socios y «Así arrancamos» en español e inglés, con MP4 de 720, portada WebP y texto, en Entregas → Divoox → Videos de Divoox → «3 - Para Docs». Pendiente: Gerencia confirma si cambia algún paso de «Así arrancamos» cuando se publiquen las líneas, y entran a Docs cuando Richard encienda el programa de equipos. Costó 23 ¢.
 
 - Subir Next.js del panel a 16.4.6 (npm audit, 19 nov 2026: aviso de gravedad media en 16.2.0–16.4.4, sobre «use cache»; el arreglo es un cambio menor). Comprobar con `npm run verify` y la prueba en el navegador antes de publicar.
 
