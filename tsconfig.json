@@ -34,5 +34,14 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "estacion", ".open-next", "movil", ".claude", "taller"]
+  "exclude": [
+    "node_modules",
+    "estacion",
+    ".open-next",
+    "movil",
+    ".claude",
+    "taller",
+    "encargos",
+    "publicidad"
+  ]
 }
