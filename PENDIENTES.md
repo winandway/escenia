@@ -58,6 +58,8 @@
 
 ## Fila (lo hace la IA)
 
+- Subir Next.js del panel a 16.4.6 (npm audit, 19 nov 2026: aviso de gravedad media en 16.2.0–16.4.4, sobre «use cache»; el arreglo es un cambio menor). Comprobar con `npm run verify` y la prueba en el navegador antes de publicar.
+
 - Divoox, video explicativo «Tu línea en Divoox» (pedido de Richard, 19 nov 2026), DESPUÉS de los dos comerciales para socios. Estudio y propuesta en encargos/divoox-socios/video-lineas/ESTUDIO.md. Antes de hacerlo: saber qué de «Mi línea» ya funciona en la app (pregunta enviada a la sesión de Divoox de los cupones de regalo, que hizo el PDF). El video no promete lo que la app no hace.
 
 - [x] Que `recortarDeAnterior` acepte un desfase por cada parte de la voz (13 nov 2026, C-RECORTE-1): con el audio real del Kipuu del 7 nov, el tramo de 8,2 s que se volvió a pagar (16 ¢) ahora se recorta gratis; la causa real era que la voz se corrió 153 ms y el tramo traía el arranque de la frase siguiente.
