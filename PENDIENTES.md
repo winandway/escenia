@@ -58,6 +58,8 @@
 
 ## Fila (lo hace la IA)
 
+- Divoox, videos en Docs (19 nov 2026): pedida a Gerencia la meta «Videos de Divoox en Docs». Cuando llegue, Escenia hace de cada video que entre: la versión en inglés (ejemplos y moneda de EE. UU., sin ciudad), la portada WebP en los dos idiomas, el MP4 de 720 con arranque rápido y el texto en los dos idiomas. El de socios va en versión neutra, sin el logo de Jehová Jireh en la miniatura. «Así arrancamos» espera a que se encienda el programa de equipos; «Así va a funcionar tu línea» no entra hasta que exista «Mi línea».
+
 - Subir Next.js del panel a 16.4.6 (npm audit, 19 nov 2026: aviso de gravedad media en 16.2.0–16.4.4, sobre «use cache»; el arreglo es un cambio menor). Comprobar con `npm run verify` y la prueba en el navegador antes de publicar.
 
 - ✅ Divoox, video «Así va a funcionar tu línea» entregado el 19 nov 2026 (73 s, 12,7 ¢, en futuro y con «pantallas ilustrativas»). Cuando la sesión de Divoox construya «Mi línea», se rehace con las capturas reales (encargos/divoox-socios/video-lineas).
