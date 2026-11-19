@@ -53,6 +53,9 @@ export default defineConfig([
     "taller/node_modules/**",
     "taller/.wrangler/**",
     "estacion/out/**",
+    // Material local fuera de git (comerciales hechos a mano con Remotion, fotos de clientes): no está en el repo.
+    "encargos/**",
+    "publicidad/**",
     "estacion/cache/**",
     "out-deploy/**",
     ".dist-worker/**",
