@@ -14,6 +14,31 @@ import { Cancion } from "./Cancion";
 import { TechExplainer } from "./TechExplainer";
 import { Monigotes, esquemaMonigotes, type PropsMonigotes } from "./Monigotes";
 import { Publicidad, esquemaPublicidad, type PropsPublicidad } from "./Publicidad";
+import { FPS_BLOQUES, TutorialBloques, type PropsTutorialBloques } from "./TutorialBloques";
+
+// Formato «Tutorial en bloques» (docs/TUTORIAL-BLOQUES.md): el plan entero llega en las props.
+const tutorialVacio: PropsTutorialBloques = {
+  medir: false,
+  plan: {
+    duracion: 3,
+    colores: { marca: "#F20D20", oscuro: "#101010", exito: "#14A44D", resalte: "#FFD400" },
+    coloresCaptura: {},
+    palabras: [],
+    sinSubtitulos: [],
+    portada: { hasta: 0, etiqueta: "", lineas: [], logo: "", remate: "", sello: { t: 99, texto: "" } },
+    escenas: [],
+    progresos: [],
+    cierre: {
+      desde: 99,
+      logo: "",
+      titulo: "",
+      insignia: "",
+      toque: 99,
+      remate: { t: 99, texto: "" },
+      legal: "",
+    },
+  },
+};
 
 const publicidadVacia: PropsPublicidad = {
   marca: "",
@@ -206,6 +231,18 @@ export const Root: React.FC = () => (
       height={1920}
       durationInFrames={duracionEnFrames(vacio.duracionMs)}
       calculateMetadata={({ props }) => ({ durationInFrames: framesDe(props) })}
+    />
+    <Composition
+      id="TutorialBloques"
+      component={TutorialBloques}
+      defaultProps={tutorialVacio}
+      fps={FPS_BLOQUES}
+      width={1080}
+      height={1920}
+      durationInFrames={90}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: Math.max(1, Math.round(props.plan.duracion * FPS_BLOQUES)),
+      })}
     />
   </>
 );
