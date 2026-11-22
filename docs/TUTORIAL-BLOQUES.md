@@ -31,9 +31,14 @@ su sitio.
 
 1. **Guion por bloques** (un bloque por paso). Se escribe en `scripts/voz.mts` del encargo; cada bloque se graba
    aparte con la voz del banco y se guarda por su texto: cambiar un bloque cuesta solo ese bloque (1 a 3 ¢).
-2. **Capturas** en `public/pantallas/` a 780×1600 (`scripts/preparar-capturas.py`: las recorta, tapa datos personales
-   y marca los HUECOS de las pantallas que faltan). Antes de usar una, se mira que no traiga datos de una persona real.
-3. **Escenas**: una por bloque (`scripts/escenas.ts`). Las que tienen al personaje salen de su hoja. Se mira cada una
+2. **Capturas** en `public/pantallas/` a 780×1600 (`scripts/preparar-capturas.py` del encargo: las lleva a 1600 de
+   alto sin estirarlas y completa los lados repitiendo su borde). Antes de usarlas: que no traigan datos de una persona
+   real y que no digan lo que no deben (`swift estacion/herramientas/leer-texto.swift <capturas>/*.png` lee su texto con
+   la Mac; en Divoox, ninguna puede decir «repartidor»). Si falta una pantalla, va un hueco marcado y el video sale como
+   BORRADOR.
+3. **Escenas**: una por bloque (`scripts/escenas.ts`). Las que tienen al personaje salen de su hoja. **En Divoox la
+   moto es siempre la Bera SBR 150** (moto de calle de 150 cc, roja; nunca deportiva ni vespa): se pide con la foto de
+   la Bera de `publicidad/divoox/marca/fotos` como referencia (`scripts/bera.ts` del piloto) y nunca se voltea. Se mira cada una
    antes de seguir: nada de figuras de juguete con cabeza amarilla ni letras inventadas (se vuelve a pedir, o la cámara
    la deja fuera con `limites`).
 4. **Pantallas verdes y recortes** (gratis): `python3 -I estacion/herramientas/pantalla-verde.py <escena.png> <id>-pantalla.json <id>-frente.png`
@@ -43,21 +48,21 @@ su sitio.
 6. **Revisar y armar** (desde `estacion/`):
    - `npx tsx src/tutorial-bloques.ts <carpeta> cuadros 0,12,30` → cuadros sueltos para mirar;
    - `npx tsx src/tutorial-bloques.ts <carpeta> zona` → tiene que decir «Zona segura: bien»;
-   - `npx tsx src/tutorial-bloques.ts <carpeta> video` → el video mudo (unos 25 min para 95 s);
+   - `npx tsx src/tutorial-bloques.ts <carpeta> video` → el video mudo (unos 6 min para 95 s en la Mac);
    - `npx tsx src/tutorial-bloques.ts <carpeta> mezclar` → las dos entregas (la de publicar y la «(WhatsApp)»);
    - `npx tsx src/tutorial-bloques.ts <carpeta> hoja <mp4> 2` y `… control <mp4>` → hoja de cuadros y
      transcripción de control (que diga el guion, en orden).
 
 ## Cuánto cuesta un video
 
-| Qué                                                                        | Cuánto                                                      |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Hoja del personaje (una vez por personaje; se reutiliza en los siguientes) | 3 ¢                                                         |
-| Escenas de bloques (12 a 14, a 3 ¢)                                        | 36 a 42 ¢                                                   |
-| Voz por bloques (unos 1.350 caracteres a 0,10 $ el millar)                 | 13 a 14 ¢                                                   |
-| Transcripción de control                                                   | menos de 1 ¢                                                |
-| Teléfono 3D, dedo, transiciones, cámara, recortes, música y efectos        | 0                                                           |
-| **Total por video**                                                        | **unos 50 a 60 ¢** (por debajo del dólar que pidió Richard) |
+| Qué                                                                        | Cuánto                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Hoja del personaje (una vez por personaje; se reutiliza en los siguientes) | 3 ¢                                                    |
+| Escenas de bloques (12 a 14, a 3 ¢)                                        | 36 a 42 ¢                                              |
+| Voz por bloques (unos 1.350 caracteres a 0,10 $ el millar)                 | 13 a 14 ¢                                              |
+| Transcripción de control                                                   | menos de 1 ¢                                           |
+| Teléfono 3D, dedo, transiciones, cámara, recortes, música y efectos        | 0                                                      |
+| **Total por video**                                                        | **unos 50 ¢** (por debajo del dólar que pidió Richard) |
 
 Si se reutilizan escenas de un tutorial a otro (la plaza, el camino, la oficina), baja a 25–35 ¢.
 

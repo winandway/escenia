@@ -310,8 +310,11 @@ const Rotulos: React.FC<{
         let tam = 46;
         let ancho = anchoBungee(r.texto, tam) + 52;
         const alto = 92;
-        const dentro = (cx: number) =>
-          Math.min(ZONA_SEGURA.x1 - ancho / 2 - 8, Math.max(ZONA_SEGURA.x0 + ancho / 2, cx));
+        const dentro = (cx: number) => {
+          // El rótulo entra con un rebote (crece hasta un 6 %): se deja ese aire para que no pise la zona segura.
+          const medio = (ancho * 1.07) / 2;
+          return Math.min(ZONA_SEGURA.x1 - medio - 4, Math.max(ZONA_SEGURA.x0 + medio + 2, cx));
+        };
         let x = dentro(v.left + r.x * v.escala);
         let y = Math.min(1310, Math.max(ZONA_SEGURA.arriba + 100, v.top + r.y * v.escala));
         const choca = (cx: number, cy: number) =>
