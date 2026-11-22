@@ -2342,3 +2342,17 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
 - **Qué se hizo:** `propsDePrueba` lleva `clip: null`, `producto: null` y `audio: "silencio.wav"`, y `prueba()`
   arma 62 s de silencio con ffmpeg antes de dibujar. En la Mac el video sale en 21 s.
 - **Cómo se comprueba:** `npx vitest run pruebas/taller-prueba.test.ts` (en rojo con el código viejo).
+
+## C-BLOQUES-1 — Tutorial en bloques: estilo propio, captura bien pegada y subtítulos que no se pegan (22 nov 2026)
+
+- **Qué protege:** el formato «Tutorial en bloques» (docs/TUTORIAL-BLOQUES.md). Ningún pedido de imagen nombra un
+  juego ni una marca de bloques (Richard: el estilo es nuestro); la captura real cae exacta en las cuatro esquinas de la
+  pantalla del dibujo; la palabra que crece en los subtítulos no se come el espacio; ningún tramo de más de 5 s sin una
+  imagen nueva; un efecto por cambio, nunca encima del nombre de la marca.
+- **Dónde vive:** `compartido/bloques.ts`, `estacion/src/remotion/TutorialBloques.tsx`, `estacion/src/remotion/Telefono3D.tsx`,
+  `estacion/src/tutorial-bloques.ts`, `estacion/herramientas/pantalla-verde.py`.
+- **Prueba:** `pruebas/bloques.test.ts` (en rojo comprobado: sin «lego» en la lista y con 12 px de margen). En cada video,
+  `npx tsx src/tutorial-bloques.ts <carpeta> zona` tiene que decir «Zona segura: bien».
+- **Qué NO tocar:** la plantilla importa `compartido/bloques.ts` por ruta relativa (`../../../compartido/bloques`): el
+  empaquetador de Remotion no resuelve el alias `@compartido`. El teléfono 3D precarga todas las capturas antes del
+  primer cuadro y suelta la espera DESPUÉS de montar (si no, sale un teléfono en blanco).

@@ -299,6 +299,8 @@ export type SelloPlan = {
   tam?: number;
 };
 export type RotuloPlan = { t: number; hasta?: number; texto: string; x: number; y: number };
+/** Una imagen que salta encima (la insignia oficial de una tienda, un logo): se pega tal cual, sin cambiarla. */
+export type PegatinaPlan = { t: number; hasta?: number; src: string; top: number; ancho: number; x?: number };
 export type ProgresoPlan = {
   desde: number;
   hasta: number;
@@ -325,6 +327,7 @@ export type EscenaPlan = {
   chips?: ChipPlan[];
   sellos?: SelloPlan[];
   rotulos?: RotuloPlan[];
+  pegatinas?: PegatinaPlan[];
   confeti?: number;
   destellos?: number[];
 };
@@ -374,7 +377,7 @@ export function cambiosDelPlan(plan: PlanTutorialBloques): number[] {
     for (const c of e.chips ?? []) t.push(c.desde);
     for (const s of e.sellos ?? []) t.push(s.t);
     for (const r of e.rotulos ?? []) t.push(r.t);
-    for (const k of e.camara.slice(1)) t.push(k.t);
+    for (const g of e.pegatinas ?? []) t.push(g.t);
     for (const d of e.destellos ?? []) t.push(d);
     for (const q of [...(e.telefono?.toques ?? []), ...(e.pantalla?.toques ?? [])]) t.push(q.t);
   }
@@ -423,6 +426,7 @@ export function efectosDelPlan(plan: PlanTutorialBloques, marcas: number[] = [])
     for (const c of s.chips ?? []) e.push({ t: c.desde, sfx: "pop", db: -18 });
     for (const x of s.sellos ?? []) e.push({ t: x.t, sfx: "boom", db: -13 });
     for (const r of s.rotulos ?? []) e.push({ t: r.t, sfx: "pop", db: -18 });
+    for (const g of s.pegatinas ?? []) e.push({ t: g.t, sfx: "pop", db: -15 });
     for (const d of s.destellos ?? []) e.push({ t: d, sfx: "obturador", db: -14 });
     if (s.confeti !== undefined) e.push({ t: s.confeti, sfx: "ding", db: -16 });
   });

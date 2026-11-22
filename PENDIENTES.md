@@ -2,6 +2,9 @@
 
 ## Para otros puestos
 
+- [para: revisor-calidad] Revisar el paquete del «Tutorial en bloques» del 22 nov 2026 (compartido/bloques.ts, estacion/src/remotion/TutorialBloques.tsx y Telefono3D.tsx con three.js, estacion/src/tutorial-bloques.ts, estacion/herramientas/pantalla-verde.py; docs/TUTORIAL-BLOQUES.md y C-BLOQUES-1): se publicó por orden de Gerencia con `npm run verify` en verde; falta la revisión de calidad del paquete.
+- [para: desarrollador] Cuando llegue «capturas-registro-driver-hoy» (Documentos → Entregas → Divoox, con PASOS.txt), meter sus pantallas en el tutorial «Cómo crear tu cuenta en Divoox Driver» y quitarle el BORRADOR: pasos en encargos/divoox-tutorial-bloques/PRODUCCION.md («Cómo se meten las pantallas de hoy»). Faltan seis: crear cuenta, datos 1 a 3, servicios y el aviso «Cómo revisamos tus documentos».
+
 - [para: revisor-calidad] Revisar el paquete de Mia IA del 7 nov 2026 (siete poses con el motor de poses, la robot plateada, el modo sin visor, el encuadre de cámara web, «Abrir en el estudio» y la línea de Pantalay; docs/PODCAST.md «Mia y sus poses» y C-PODCAST-3): se publicó por orden de Gerencia con `npm run verify` en verde; falta la revisión de calidad del paquete.
 - [para: desarrollador] Cuando Richard mande las imágenes sentadas del robot blanco y de las dos presentadoras (rubia y morena), agregarlas al catálogo siguiendo docs/PODCAST.md («Cómo tienen que ser las imágenes nuevas» y «Cómo se agrega una entrada»); las presentadoras van en modo «sin_visor».
 

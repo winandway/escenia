@@ -14,6 +14,7 @@ import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame } from "remotion";
 import { loadFont as cargarBungee } from "@remotion/google-fonts/Bungee";
 import { loadFont as cargarRubik } from "@remotion/google-fonts/Rubik";
+import { altoTelefono3D, BISEL_3D, RotuloToque, Telefono3D, usePrecargarCapturas } from "./Telefono3D";
 import {
   CAPTURA_ALTO,
   CAPTURA_ANCHO,
@@ -31,7 +32,7 @@ import {
   type ProgresoPlan,
   type TelefonoPlan,
   type Transicion,
-} from "@compartido/bloques";
+} from "../../../compartido/bloques";
 
 const { fontFamily: bungee } = cargarBungee("normal", { weights: ["400"], subsets: ["latin", "latin-ext"] });
 const { fontFamily: rubik } = cargarRubik("normal", {
@@ -78,6 +79,12 @@ const bordeGrueso = (px: number, color: string) => {
 };
 const bloque = (px: number, color = "#101010") =>
   Array.from({ length: px }, (_, k) => `${k + 1}px ${k + 1}px 0 ${color}`).join(", ");
+
+/** Ancho aproximado de un texto en Bungee (letra ancha de cartel): 0,8 de su tamaño por letra. */
+const anchoBungee = (texto: string, tam: number) => texto.length * tam * 0.8;
+/** El tamaño de letra para que un texto de Bungee quepa en `ancho` (sin pasar de `maximo`). */
+const tamQueCabe = (texto: string, ancho: number, maximo: number) =>
+  Math.min(maximo, Math.floor(ancho / (texto.length * 0.8)));
 
 // ---------- Cámara ----------
 type Vista = { escala: number; left: number; top: number };
@@ -212,6 +219,7 @@ const Manito: React.FC<{ tam: number }> = ({ tam }) => (
 );
 
 // ---------- La escena (fondo, pantalla, frente, sujeto, rótulos) ----------
+type Caja = { x0: number; y0: number; x1: number; y1: number };
 const Escena: React.FC<{ e: EscenaPlan; t: number; fin: number; plan: PlanTutorialBloques }> = ({
   e,
   t,
@@ -270,52 +278,6 @@ const Escena: React.FC<{ e: EscenaPlan; t: number; fin: number; plan: PlanTutori
             }}
           />
         ) : null}
-        {(e.rotulos ?? []).map((r, k) => {
-          const l = t - r.t;
-          if (l < 0 || (r.hasta !== undefined && t > r.hasta + 0.3)) return null;
-          const pe = resorte(l, 220);
-          const ps = r.hasta === undefined ? 0 : interpolate(t, [r.hasta, r.hasta + 0.3], [0, 1], clamp);
-          return (
-            <div
-              key={k}
-              style={{
-                position: "absolute",
-                left: r.x,
-                top: r.y,
-                transform: `translate(-50%, -100%) scale(${((0.4 + pe * 0.6) * (1 - ps)) / v.escala})`,
-                transformOrigin: "50% 100%",
-                opacity: 1 - ps,
-              }}
-            >
-              <div
-                className="medir"
-                style={{
-                  fontFamily: bungee,
-                  fontSize: 46,
-                  color: "#fff",
-                  background: plan.colores.marca,
-                  padding: "10px 22px 6px",
-                  borderRadius: 14,
-                  boxShadow: bloque(8),
-                  whiteSpace: "nowrap",
-                  border: "4px solid #fff",
-                }}
-              >
-                {r.texto}
-              </div>
-              <div
-                style={{
-                  width: 0,
-                  height: 0,
-                  margin: "0 auto",
-                  borderLeft: "16px solid transparent",
-                  borderRight: "16px solid transparent",
-                  borderTop: `18px solid ${plan.colores.marca}`,
-                }}
-              />
-            </div>
-          );
-        })}
       </div>
       {e.confeti !== undefined ? <Confeti t={t - e.confeti} /> : null}
       {(e.destellos ?? []).map((d, k) => {
@@ -323,6 +285,95 @@ const Escena: React.FC<{ e: EscenaPlan; t: number; fin: number; plan: PlanTutori
         return a > 0 ? <AbsoluteFill key={k} style={{ background: "#fff", opacity: a }} /> : null;
       })}
     </AbsoluteFill>
+  );
+};
+
+/**
+ * Los rótulos que señalan algo de la escena («EN MOTO», «LICENCIA»): siguen a su objeto con la cámara, nunca salen
+ * de la zona segura y nunca quedan detrás del teléfono (se corren a un lado, se achican o bajan).
+ */
+const Rotulos: React.FC<{
+  e: EscenaPlan;
+  t: number;
+  fin: number;
+  plan: PlanTutorialBloques;
+  evitar: Caja | null;
+}> = ({ e, t, fin, plan, evitar }) => {
+  const v = vistaDe(e.camara, t, e.limites, fin);
+  return (
+    <>
+      {(e.rotulos ?? []).map((r, k) => {
+        const l = t - r.t;
+        if (l < 0 || (r.hasta !== undefined && t > r.hasta + 0.3)) return null;
+        const pe = resorte(l, 220);
+        const ps = r.hasta === undefined ? 0 : interpolate(t, [r.hasta, r.hasta + 0.3], [0, 1], clamp);
+        let tam = 46;
+        let ancho = anchoBungee(r.texto, tam) + 52;
+        const alto = 92;
+        const dentro = (cx: number) =>
+          Math.min(ZONA_SEGURA.x1 - ancho / 2 - 8, Math.max(ZONA_SEGURA.x0 + ancho / 2, cx));
+        let x = dentro(v.left + r.x * v.escala);
+        let y = Math.min(1310, Math.max(ZONA_SEGURA.arriba + 100, v.top + r.y * v.escala));
+        const choca = (cx: number, cy: number) =>
+          evitar !== null &&
+          cx + ancho / 2 > evitar.x0 - 10 &&
+          cx - ancho / 2 < evitar.x1 + 10 &&
+          cy > evitar.y0 &&
+          cy - alto < evitar.y1;
+        if (evitar && choca(x, y)) {
+          const libreIzq = evitar.x0 - 14 - ZONA_SEGURA.x0;
+          const libreDer = ZONA_SEGURA.x1 - 8 - (evitar.x1 + 14);
+          const lado = libreIzq >= libreDer ? "izq" : "der";
+          const libre = Math.max(libreIzq, libreDer);
+          if (ancho > libre) {
+            tam = Math.max(30, Math.floor((libre - 52) / (r.texto.length * 0.8)));
+            ancho = anchoBungee(r.texto, tam) + 52;
+          }
+          if (ancho <= libre) x = lado === "izq" ? evitar.x0 - 14 - ancho / 2 : evitar.x1 + 14 + ancho / 2;
+          else y = Math.min(1310, evitar.y1 + alto + 16);
+        }
+        return (
+          <div
+            key={k}
+            style={{
+              position: "absolute",
+              left: x,
+              top: y,
+              transform: `translate(-50%, -100%) scale(${(0.4 + pe * 0.6) * (1 - ps)})`,
+              transformOrigin: "50% 100%",
+              opacity: 1 - ps,
+            }}
+          >
+            <div
+              className="medir"
+              style={{
+                fontFamily: bungee,
+                fontSize: tam,
+                color: "#fff",
+                background: plan.colores.marca,
+                padding: "10px 22px 6px",
+                borderRadius: 14,
+                boxShadow: bloque(8),
+                whiteSpace: "nowrap",
+                border: "4px solid #fff",
+              }}
+            >
+              {r.texto}
+            </div>
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                margin: "0 auto",
+                borderLeft: "16px solid transparent",
+                borderRight: "16px solid transparent",
+                borderTop: `18px solid ${plan.colores.marca}`,
+              }}
+            />
+          </div>
+        );
+      })}
+    </>
   );
 };
 
@@ -360,7 +411,18 @@ const Confeti: React.FC<{ t: number }> = ({ t }) => {
 };
 
 // ---------- El teléfono de bloques ----------
-const BISEL = 16;
+/** Dónde está el teléfono en la pantalla (para que los rótulos no queden detrás); null si no se ve. */
+function cajaTelefono(tel: TelefonoPlan, t: number): Caja | null {
+  if (t < tel.desde || (tel.hasta !== undefined && t > tel.hasta)) return null;
+  const { x, top, ancho } = posicionTelefono(tel, t);
+  // Un poco más grande que su caja: el teléfono 3D gira y se ve más ancho que su medida.
+  return {
+    x0: x - ancho / 2 - 16,
+    y0: top - 16,
+    x1: x + ancho / 2 + 16,
+    y1: top + altoTelefono3D(ancho) + 24,
+  };
+}
 function posicionTelefono(tel: TelefonoPlan, t: number) {
   const ps = [...tel.posiciones].sort((a, b) => a.t - b.t);
   let actual = ps[0] as (typeof ps)[number];
@@ -378,7 +440,7 @@ function posicionTelefono(tel: TelefonoPlan, t: number) {
   }
   return { x, top, ancho };
 }
-const Telefono: React.FC<{ tel: TelefonoPlan; t: number }> = ({ tel, t }) => {
+const Telefono: React.FC<{ tel: TelefonoPlan; t: number; medir: boolean }> = ({ tel, t, medir }) => {
   const l = t - tel.desde;
   if (l < 0 || (tel.hasta !== undefined && t > tel.hasta + 0.5)) return null;
   const { x, top, ancho } = posicionTelefono(tel, t);
@@ -387,80 +449,69 @@ const Telefono: React.FC<{ tel: TelefonoPlan; t: number }> = ({ tel, t }) => {
     tel.hasta === undefined
       ? 0
       : interpolate(t, [tel.hasta, tel.hasta + 0.5], [0, 1], { ...clamp, easing: Easing.in(Easing.cubic) });
-  const pa = ancho - BISEL * 2;
-  const alto = (pa * CAPTURA_ALTO) / CAPTURA_ANCHO;
-  const k = pa / CAPTURA_ANCHO;
-  const caps = [...tel.capturas].sort((a, b) => a.t - b.t);
-  let i = 0;
-  for (let n = 0; n < caps.length; n++) if (t >= (caps[n] as (typeof caps)[number]).t) i = n;
-  const cur = caps[i] as (typeof caps)[number];
-  const prev = i > 0 ? caps[i - 1] : undefined;
-  const pc = prev ? sale(Math.min(1, (t - cur.t) / 0.35)) : 1;
-  const giro = tel.giro ?? -8;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: x - ancho / 2,
-        top: top + (1 - entra) * 1300 + salida * 1400 + Math.sin(t * 1.7) * 7,
-        width: ancho,
-        perspective: 1800,
-      }}
-    >
+  const alto = altoTelefono3D(ancho);
+  const y = top + (1 - entra) * 1300 + salida * 1400 + Math.sin(t * 1.7) * 7;
+  const margen = 1.55;
+  const wC = Math.round(ancho * margen);
+  const hC = Math.round(alto * 1.22);
+  const k = (ancho - BISEL_3D * 2) / CAPTURA_ANCHO;
+  const toque = (tel.toques ?? []).find((q) => t - q.t > -0.2 && t - q.t < 1.1);
+  if (medir) {
+    if (entra < 0.97 || salida > 0) return null;
+    // Para el candado de la zona: el teléfono se mide por su caja (el lienzo 3D no se dibuja).
+    return (
       <div
         className="medir"
         style={{
+          position: "absolute",
+          left: x - ancho / 2,
+          top: y,
           width: ancho,
-          height: alto + BISEL * 2,
-          borderRadius: 34,
-          background: "#141416",
-          padding: BISEL,
-          boxSizing: "border-box",
-          transform: `rotateY(${giro + Math.sin(t * 0.9) * 3}deg) rotateX(${3 + Math.cos(t * 0.7) * 1.5}deg)`,
-          boxShadow: `${bloque(16, "#2b2b30")}, 26px 40px 60px rgba(30,10,40,0.45), inset 0 0 0 3px #3a3a40`,
+          height: alto,
+          background: "#000",
         }}
+      />
+    );
+  }
+  return (
+    <>
+      <div
+        style={{ position: "absolute", left: x - wC / 2, top: y - (hC - alto) / 2, width: wC, height: hC }}
       >
         <div
           style={{
-            position: "relative",
-            width: pa,
-            height: alto,
-            borderRadius: 22,
-            overflow: "hidden",
-            background: "#fff",
+            position: "absolute",
+            left: wC * 0.2,
+            right: wC * 0.2,
+            bottom: hC * 0.06,
+            height: 46,
+            borderRadius: "50%",
+            background: "rgba(30,10,40,0.35)",
+            filter: "blur(14px)",
           }}
-        >
-          {prev && pc < 1 ? (
-            <Img
-              src={staticFile(prev.src)}
-              style={{
-                position: "absolute",
-                left: -pc * pa * 0.35,
-                top: 0,
-                width: pa,
-                height: alto,
-                opacity: 1 - pc * 0.6,
-              }}
-            />
-          ) : null}
-          <div
-            style={{
-              position: "absolute",
-              left: (1 - pc) * pa,
-              top: 0,
-              width: pa,
-              height: alto,
-              boxShadow: pc < 1 ? "-20px 0 40px rgba(0,0,0,0.25)" : undefined,
-            }}
-          >
-            <Img src={staticFile(cur.src)} style={{ width: pa, height: alto }} />
-            {(tel.toques ?? []).map((tq, n) => (
-              <Toque key={n} t={t - tq.t} x={tq.x * k} y={tq.y * k} escala={k} />
-            ))}
-          </div>
-        </div>
+        />
+        <Telefono3D
+          t={t}
+          ancho={ancho}
+          capturas={tel.capturas}
+          toques={tel.toques ?? []}
+          giro={tel.giro ?? -10}
+          margen={margen}
+        />
       </div>
-    </div>
+      {toque ? (
+        <RotuloToque
+          t={t - toque.t}
+          x={Math.min(
+            ZONA_SEGURA.x1 - 150,
+            Math.max(ZONA_SEGURA.x0 + 150, x - ancho / 2 + BISEL_3D + toque.x * k),
+          )}
+          y={y + BISEL_3D + toque.y * k - 70}
+          texto="¡TOCA AQUÍ!"
+          fuente={bungee}
+        />
+      ) : null}
+    </>
   );
 };
 
@@ -541,7 +592,7 @@ const Chip: React.FC<{
   if (d < 0 || (hasta !== undefined && t > hasta + 0.25)) return null;
   const p = resorte(d, 220);
   const fuera = hasta === undefined ? 0 : interpolate(t, [hasta, hasta + 0.25], [0, 1], clamp);
-  const tam = texto.length > 14 ? 58 : 70;
+  const tam = tamQueCabe(texto, 840, 70);
   return (
     <div
       style={{
@@ -601,7 +652,7 @@ const Sello: React.FC<{
   if (d < 0 || (s.hasta !== undefined && t > s.hasta + 0.3)) return null;
   const golpe = interpolate(d, [0, 0.16, 0.3], [0.35, 1.06, 1], { ...clamp, easing: sale });
   const fuera = s.hasta === undefined ? 0 : interpolate(t, [s.hasta, s.hasta + 0.3], [0, 1], clamp);
-  const tam = s.tam ?? 96;
+  const tam = Math.min(s.tam ?? 96, tamQueCabe(s.texto, 760, 200));
   return (
     <div
       style={{
@@ -706,6 +757,29 @@ const Progreso: React.FC<{ p: ProgresoPlan; t: number; colores: PlanTutorialBloq
   );
 };
 
+/** Una imagen que salta encima tal cual (la insignia oficial de Google Play no se toca: ni color, ni sombra). */
+const Pegatina: React.FC<{ g: NonNullable<EscenaPlan["pegatinas"]>[number]; t: number }> = ({ g, t }) => {
+  const d = t - g.t;
+  if (d < 0 || (g.hasta !== undefined && t > g.hasta + 0.3)) return null;
+  const p = resorte(d, 180);
+  const fuera = g.hasta === undefined ? 0 : interpolate(t, [g.hasta, g.hasta + 0.3], [0, 1], clamp);
+  return (
+    <div
+      className="medir"
+      style={{
+        position: "absolute",
+        left: (g.x ?? CENTRO) - g.ancho / 2,
+        top: g.top,
+        width: g.ancho,
+        transform: `scale(${p * (1 - fuera * 0.5)})`,
+        opacity: interpolate(p, [0, 0.3], [0, 1], clamp) * (1 - fuera),
+      }}
+    >
+      <Img src={staticFile(g.src)} style={{ width: g.ancho, display: "block" }} />
+    </div>
+  );
+};
+
 // ---------- Transición de cubos: se arman tapando lo de antes y se desarman mostrando lo nuevo ----------
 const COLS = 9;
 const FILAS = 16;
@@ -767,7 +841,16 @@ const Subtitulos: React.FC<{ plan: PlanTutorialBloques; t: number }> = ({ plan, 
   const trozo = trozos.find((z) => t >= z.desde && t < z.hasta);
   if (!trozo) return null;
   const entra = resorte(t - trozo.desde, 260);
-  const margen = margenPalabra(TAM_SUB, ESCALA_ACTIVA);
+  // Rubik negra en mayúsculas: unos 0,7 del tamaño por letra. Se achica lo justo para que el trozo quepa en 840 px.
+  const letras = trozo.palabras.reduce((n, w) => n + w.text.replace(/[«»]/g, "").length, 0);
+  const largo = Math.max(...trozo.palabras.map((w) => w.text.length));
+  const tam = Math.min(
+    TAM_SUB,
+    Math.floor(
+      840 / (letras * 0.7 + largo * 0.07 + trozo.palabras.length * (margenPalabra(1, ESCALA_ACTIVA) + 0.05)),
+    ),
+  );
+  const margen = margenPalabra(tam, ESCALA_ACTIVA);
   return (
     <div
       className="medir"
@@ -792,7 +875,7 @@ const Subtitulos: React.FC<{ plan: PlanTutorialBloques; t: number }> = ({ plan, 
               margin: `0 ${margen / 2}px`,
               fontFamily: rubik,
               fontWeight: 900,
-              fontSize: TAM_SUB,
+              fontSize: tam,
               lineHeight: 1.1,
               textTransform: "uppercase",
               color: activa ? plan.colores.resalte : "#fff",
@@ -1070,7 +1153,13 @@ export const TutorialBloques: React.FC<PropsTutorialBloques> = ({ plan, medir = 
   const f = useCurrentFrame();
   const t = f / FPS_BLOQUES;
   const escenas = [...plan.escenas].sort((a, b) => a.inicio - b.inicio);
-  if (escenas.length === 0) return <AbsoluteFill style={{ backgroundColor: plan.colores.oscuro }} />;
+  const srcs = React.useMemo(
+    () => [...new Set(plan.escenas.flatMap((x) => (x.telefono?.capturas ?? []).map((c) => c.src)))],
+    [plan.escenas],
+  );
+  const listas = usePrecargarCapturas(srcs);
+  if (escenas.length === 0 || !listas)
+    return <AbsoluteFill style={{ backgroundColor: plan.colores.oscuro }} />;
   let k = 0;
   for (let n = 0; n < escenas.length; n++) if (t >= (escenas[n] as EscenaPlan).inicio) k = n;
   const e = escenas[k] as EscenaPlan;
@@ -1081,7 +1170,8 @@ export const TutorialBloques: React.FC<PropsTutorialBloques> = ({ plan, medir = 
       {medir ? <style>{ESTILO_MEDIR}</style> : null}
       <Escena e={e} t={t} fin={fin} plan={plan} />
       {/* Lo de cada escena que flota encima (teléfono, lupas, rótulos del paso, sellos) */}
-      {e.telefono ? <Telefono tel={e.telefono} t={t} /> : null}
+      {e.telefono ? <Telefono tel={e.telefono} t={t} medir={medir} /> : null}
+      <Rotulos e={e} t={t} fin={fin} plan={plan} evitar={e.telefono ? cajaTelefono(e.telefono, t) : null} />
       {(e.chips ?? []).map((c, n) => (
         <Chip key={n} {...c} t={t} colores={plan.colores} />
       ))}
@@ -1090,6 +1180,9 @@ export const TutorialBloques: React.FC<PropsTutorialBloques> = ({ plan, medir = 
       ))}
       {(e.sellos ?? []).map((s, n) => (
         <Sello key={n} s={s} t={t} colores={plan.colores} />
+      ))}
+      {(e.pegatinas ?? []).map((g, n) => (
+        <Pegatina key={n} g={g} t={t} />
       ))}
       {plan.progresos.map((p, n) => (
         <Progreso key={n} p={p} t={t} colores={plan.colores} />
