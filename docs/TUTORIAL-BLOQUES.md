@@ -34,11 +34,13 @@ su sitio.
 2. **Capturas** en `public/pantallas/` a 780×1600 (`scripts/preparar-capturas.py` del encargo: las lleva a 1600 de
    alto sin estirarlas y completa los lados repitiendo su borde). Antes de usarlas: que no traigan datos de una persona
    real y que no digan lo que no deben (`swift estacion/herramientas/leer-texto.swift <capturas>/*.png` lee su texto con
-   la Mac; en Divoox, ninguna puede decir «repartidor»). Si falta una pantalla, va un hueco marcado y el video sale como
+   la Mac; en Divoox, ninguna puede decir «repartidor» ni nombrar una marca de motos: la tarjeta del conductor de las
+   capturas de prueba traía la marca vetada y se tapa antes de usarla, C-MARCA-1). Si falta una pantalla, va un hueco marcado y el video sale como
    BORRADOR.
 3. **Escenas**: una por bloque (`scripts/escenas.ts`). Las que tienen al personaje salen de su hoja. **En Divoox la
-   moto es siempre la Bera SBR 150** (moto de calle de 150 cc, roja; nunca deportiva ni vespa): se pide con la foto de
-   la Bera de `publicidad/divoox/marca/fotos` como referencia (`scripts/bera.ts` del piloto) y nunca se voltea. Se mira cada una
+   moto es siempre una moto de calle genérica, sin marca** («Motos Divoox»: roja, de 150 cc; nunca deportiva ni vespa) y
+   **jamás una moto de la marca vetada de la competencia ni un modelo reconocible suyo** (C-MARCA-1, regla de Richard del
+   22 nov 2026). Se pide solo con la hoja del conductor (`scripts/moto.ts` del piloto) y nunca se voltea. Se mira cada una
    antes de seguir: nada de figuras de juguete con cabeza amarilla ni letras inventadas (se vuelve a pedir, o la cámara
    la deja fuera con `limites`).
 4. **Pantallas verdes y recortes** (gratis): `python3 -I estacion/herramientas/pantalla-verde.py <escena.png> <id>-pantalla.json <id>-frente.png`

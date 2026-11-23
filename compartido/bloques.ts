@@ -4,6 +4,9 @@
 // Aquí vive lo que no cambia de un video a otro: la ficha de estilo de las imágenes, el candado contra
 // nombres de juegos, la cuenta de la perspectiva de la pantalla y la revisión del ritmo.
 
+// Ruta relativa a propósito: el empaquetador de Remotion no resuelve el alias @compartido (C-BLOQUES-1).
+import { asegurarSinMarcasVetadas } from "./marcas-vetadas";
+
 /**
  * La ficha de estilo: va delante de TODAS las escenas para que se parezcan entre sí. Estilo ORIGINAL de bloques:
  * nunca se nombra un juego (regla de Richard, 22 nov 2026): solo «voxel art», «blocky cubes», «diorama».
@@ -65,11 +68,14 @@ export function nombresProhibidosEn(texto: string): string[] {
   return NOMBRES_PROHIBIDOS.filter((n) => limpio.includes(` ${n} `));
 }
 
-/** Lanza un error si el texto nombra un juego o una marca de bloques. */
+/**
+ * Lanza un error si el texto nombra un juego, una marca de bloques o una marca vetada por un cliente
+ * (las motos de la competencia de Divoox, C-MARCA-1).
+ */
 export function asegurarSinJuegos(texto: string): string {
   const malos = nombresProhibidosEn(texto);
   if (malos.length > 0) throw new Error(`El pedido nombra lo que no se puede nombrar: ${malos.join(", ")}.`);
-  return texto;
+  return asegurarSinMarcasVetadas(texto);
 }
 
 /** El pedido completo de una escena de bloques (texto a imagen). */

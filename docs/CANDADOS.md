@@ -2356,3 +2356,32 @@ pruebas/podcast-estudio.test.tsx pruebas/podcast-avatares.test.ts`. Comprobado e
 - **Qué NO tocar:** la plantilla importa `compartido/bloques.ts` por ruta relativa (`../../../compartido/bloques`): el
   empaquetador de Remotion no resuelve el alias `@compartido`. El teléfono 3D precarga todas las capturas antes del
   primer cuadro y suelta la espera DESPUÉS de montar (si no, sale un teléfono en blanco).
+
+## C-MARCA-1 — Marca vetada en Divoox: ni nombre ni dibujo de las motos de la competencia (22 nov 2026)
+
+- **Qué se rompió y cómo se veía:** los comerciales de Divoox mostraban, en la tarjeta del conductor de las capturas de
+  prueba de la app, el renglón «Moto: <marca> • <modelo> • Negro». En el comercial de los motorizados ese renglón salía
+  hasta resaltado. Además, el formato en bloques pedía la moto con la foto de producto de esa marca como referencia.
+  Regla de Richard (por Gerencia): es la marca de los dueños de la competencia y no se le hace publicidad.
+- **Causa real:** los datos de prueba de la app traen esa marca en el vehículo, y la guía del formato mandaba usar esa
+  moto en todos los videos de Divoox.
+- **Qué se hizo:**
+  - `compartido/marcas-vetadas.ts` guarda la lista: la marca, sus modelos y sus nombres comerciales. Es el único archivo
+    del código que puede escribirlos.
+  - `asegurarSinJuegos` de `compartido/bloques.ts` también frena esos nombres en cualquier pedido de imagen.
+  - Las capturas con la marca se corrigieron con `estacion/herramientas/cambiar-renglon.py`, que deja «Moto:» y escribe
+    «Roja» con la letra de la app, y con `estacion/herramientas/cajas-texto.swift`, que da la caja del renglón.
+  - Las fotos de producto de esa marca y las capturas originales quedaron en `descargas/NO-USAR-marca-vetada-bera/`,
+    fuera de git.
+  - La guía del tutorial pide una moto genérica (`scripts/moto.ts` del encargo).
+- **Prueba:** `pruebas/marcas-vetadas.test.ts`.
+  - Encuentra la marca y sus modelos escritos de cualquier forma, sin confundir «guayabera» ni «libera».
+  - Frena el pedido de imagen que la nombre.
+  - Revisa `compartido/`, `estacion/src`, `estacion/herramientas`, `scripts/` y `src/`: ningún archivo puede nombrarla.
+  - En rojo comprobado: con el freno quitado de `asegurarSinJuegos` y la marca escrita en un comentario, fallaron dos pruebas.
+- **Cómo se comprueba en cada video de Divoox:** `swift estacion/herramientas/leer-texto.swift <capturas>/*.png` no
+  puede devolver la marca. Además se mira la hoja de cuadros: ninguna moto puede ser una foto o un dibujo reconocible de
+  esa marca.
+- **Qué NO tocar:**
+  - La lista vive en un solo archivo: no se copia a otro.
+  - No se afirma en un video que la competencia prohíbe otras marcas: no está confirmado.

@@ -24,7 +24,7 @@
     "@anthropic-ai/sdk": "^0.128.0",
     "@elevenlabs/client": "^1.35.0",
     "@opennextjs/cloudflare": "^1.20.13",
-    "next": "16.4.2",
+    "next": "16.4.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.6.7"
@@ -42,7 +42,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "esbuild": "^0.25.4",
     "eslint": "^9",
-    "eslint-config-next": "16.4.2",
+    "eslint-config-next": "16.4.6",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-security": "^4.0.1",
     "husky": "^9.1.7",
